@@ -5,15 +5,14 @@ import java.util.Collection;
 import java.util.List;
 
 import net.ontopia.infoset.core.LocatorIF;
+import net.ontopia.presto.spi.PrestoField;
+import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.topicmaps.core.OccurrenceIF;
 import net.ontopia.topicmaps.core.TopicNameIF;
 import ontopoly.model.FieldDefinition;
 import ontopoly.model.RoleField;
 import ontopoly.model.Topic;
 import ontopoly.model.TopicType;
-import net.ontopia.presto.spi.PrestoDataProvider;
-import net.ontopia.presto.spi.PrestoField;
-import net.ontopia.presto.spi.PrestoTopic;
 import ontopoly.utils.OntopolyUtils;
 
 public class OntopolyTopic implements PrestoTopic {
