@@ -1,4 +1,4 @@
-Presto is a Hypermedia-driven generic editing framework. It consists of an SPI for data providers and a HTTP interface for retrieving and updating information. The APIs are fully quite stable, but will need maturing before considered final.
+Presto is a Hypermedia-driven generic editing framework. It consists of an SPI for data providers and a HTTP interface for retrieving and updating information. The APIs are quite stable, but will need maturing before considered final.
 
 ==Features==
 
