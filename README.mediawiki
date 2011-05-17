@@ -1,0 +1,10 @@
+Presto is a Hypermedia driven generic editing framework. It consists of an HTTP interface for retrieving information and editing that information. The APIs are fully usable, but still in development and will change.
+
+==Features==
+  * Hypermedia driven generic editing.
+  * Multiple data providers available (CouchDB and Ontopia).
+  * JSON over HTTP using Hypermedia implemented in Java/JAX-RS.
+
+== News ==
+  * 2011-05-16: Presto added to github.
+  
