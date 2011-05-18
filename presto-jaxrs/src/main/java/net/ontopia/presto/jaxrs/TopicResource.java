@@ -303,13 +303,13 @@ public abstract class TopicResource {
   @POST
   @Produces(APPLICATION_JSON_UTF8)
   @Consumes(MediaType.APPLICATION_JSON)
-  @Path("add-field-values-at-index/{topicMapId}/{topicId}/{viewId}/{fieldId}")
+  @Path("add-field-values-at-index/{topicMapId}/{topicId}/{viewId}/{fieldId}/{index}")
   public FieldData addFieldValuesAtIndex(@Context UriInfo uriInfo, 
       @PathParam("topicMapId") final String topicMapId, 
       @PathParam("topicId") final String topicId, 
       @PathParam("viewId") final String viewId,
       @PathParam("fieldId") final String fieldId, 
-      @QueryParam("index") final Integer index, FieldData jsonObject) throws Exception {
+      @PathParam("index") final Integer index, FieldData jsonObject) throws Exception {
 
       PrestoSession session = createSession(topicMapId);
       PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
@@ -342,8 +342,8 @@ public abstract class TopicResource {
   @POST
   @Produces(APPLICATION_JSON_UTF8)
   @Consumes(MediaType.APPLICATION_JSON)
-  @Path("move-field-values-to-index/{topicMapId}/{topicId}/{viewId}/{fieldId}")
-  public FieldData moveFieldValuesAtIndex(@Context UriInfo uriInfo, 
+  @Path("move-field-values-to-index/{topicMapId}/{topicId}/{viewId}/{fieldId}/{index}")
+  public FieldData moveFieldValuesToIndex(@Context UriInfo uriInfo, 
       @PathParam("topicMapId") final String topicMapId, 
       @PathParam("topicId") final String topicId, 
       @PathParam("viewId") final String viewId,
