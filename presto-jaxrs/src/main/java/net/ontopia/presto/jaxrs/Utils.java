@@ -194,7 +194,7 @@ public class Utils {
           fieldLinks.add(new Link("remove-field-values", uriInfo.getBaseUri() + "editor/remove-field-values/" + fieldReference));
           if (!field.isSorted()) {
             fieldLinks.add(new Link("add-field-values-at-index", uriInfo.getBaseUri() + "editor/add-field-values-at-index/" + fieldReference + "?index={index}"));
-            fieldLinks.add(new Link("move-field-values-to-index", uriInfo.getBaseUri() + "editor/move-field-values-to-index/" + fieldReference + "?index={index}"));
+            fieldLinks.add(new Link("move-field-values-to-index", uriInfo.getBaseUri() + "editor/move-field-values-to-index/" + fieldReference + "/{index}"));
           }
         }
         fieldInfo.setLinks(fieldLinks);
@@ -223,8 +223,8 @@ public class Utils {
           fieldLinks.add(new Link("add-field-values", uriInfo.getBaseUri() + "editor/add-field-values/" + fieldReference));
           fieldLinks.add(new Link("remove-field-values", uriInfo.getBaseUri() + "editor/remove-field-values/" + fieldReference));
           if (!field.isSorted()) {
-            fieldLinks.add(new Link("add-field-values-at-index", uriInfo.getBaseUri() + "editor/add-field-values-at-index/" + fieldReference + "?index={index}"));
-            fieldLinks.add(new Link("move-field-values-to-index", uriInfo.getBaseUri() + "editor/move-field-values-to-index/" + fieldReference + "?index={index}"));
+            fieldLinks.add(new Link("add-field-values-at-index", uriInfo.getBaseUri() + "editor/add-field-values-at-index/" + fieldReference + "/{index}"));
+            fieldLinks.add(new Link("move-field-values-to-index", uriInfo.getBaseUri() + "editor/move-field-values-to-index/" + fieldReference + "/{index}"));
           }
         }
       }      
