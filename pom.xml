@@ -27,7 +27,7 @@
   <modules>
     <module>presto-core</module>
     <module>presto-pojo</module>
-    <module>presto-ontopoly</module>
+    <!--module>presto-ontopoly</module-->
     <module>presto-couchdb</module>
     <module>presto-jaxrs</module>
     <module>presto-utils</module>
