@@ -3,6 +3,8 @@ package net.ontopia.presto.spi.impl.pojo;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.codehaus.jackson.JsonNode;
+
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoType;
@@ -21,7 +23,6 @@ public class PojoField implements PrestoField {
     private int minCardinality;
     private int maxCardinality;
     private String dataType;
-    private String externalType;
     private String validationType;
     private boolean isEmbedded;
     private boolean isHidden;
@@ -32,6 +33,7 @@ public class PojoField implements PrestoField {
     private boolean isExistingValuesOnly;
     private String inverseFieldId;
     private String interfaceControl;
+    private JsonNode extra;
 
     private Collection<PrestoType> availableFieldCreateTypes;
     private Collection<PrestoType> availableFieldValueTypes = new HashSet<PrestoType>();
@@ -82,10 +84,6 @@ public class PojoField implements PrestoField {
 
     public String getDataType() {
         return dataType;
-    }
-
-    public String getExternalType() {
-        return externalType;
     }
 
     public String getValidationType() {
@@ -239,8 +237,12 @@ public class PojoField implements PrestoField {
         this.availableFieldValueTypes.add(type);
     }
 
-    public void setExternalType(String externalType) {
-        this.externalType = externalType;
+    public void setExtra(JsonNode extra) {
+        this.extra = extra;
+    }
+
+    public JsonNode getExtra() {
+        return extra;
     }
 
 }

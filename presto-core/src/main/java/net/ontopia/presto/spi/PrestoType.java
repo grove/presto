@@ -37,5 +37,7 @@ public interface PrestoType {
   PrestoView getViewById(String viewId);
 
   Collection<PrestoView> getViews(PrestoView fieldsView);
+  
+  Object getExtra();
 
 }

@@ -120,4 +120,9 @@ public class OntopolyType implements PrestoType {
     return OntopolyView.wrap(session, topicType.getFieldViews(fieldsView));
   }
 
+  public Object getExtra() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
 }

@@ -4,6 +4,7 @@ import java.util.Collection;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
@@ -20,7 +21,7 @@ public class FieldData {
     private String datatype;
     private String validation;
     private String interfaceControl;
-    private String externalType;
+    private JsonNode extra;
     
     private Integer minCardinality;
     private Integer maxCardinality;
@@ -122,12 +123,12 @@ public class FieldData {
         return values;
     }
 
-    public void setExternalType(String externalType) {
-        this.externalType = externalType;
+    public void setExtra(JsonNode extra) {
+        this.extra = extra;
     }
 
-    public String getExternalType() {
-        return externalType;
+    public JsonNode getExtra() {
+        return extra;
     }
 
     public void setValueTypes(Collection<TopicType> valueTypes) {

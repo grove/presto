@@ -20,8 +20,6 @@ public interface PrestoField {
 
   String getDataType();
 
-  String getExternalType();
-
   String getValidationType(); // ISSUE: or concreteType/actualType?
 
   boolean isEmbedded();
@@ -43,5 +41,7 @@ public interface PrestoField {
   String getInverseFieldId();
 
   String getInterfaceControl();
+  
+  Object getExtra();
   
 }

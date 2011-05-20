@@ -65,6 +65,11 @@ public class PojoSchemaModel {
       PojoType type = getPojoType(typeId, types, schemaProvider);
       schemaProvider.addType(type);
 
+      // extra
+      if (typeConfig.has("extra")) {
+        type.setExtra(typeConfig.get("extra"));
+      }
+
       // name
       String name = typeConfig.get("name").getTextValue();
       type.setName(name);
@@ -146,10 +151,9 @@ public class PojoSchemaModel {
             } else {
               field.setDataType("http://www.w3.org/2001/XMLSchema#string");
             }
-            // externalType
-            if (fieldConfig.has("externalType")) {
-              String externalType = fieldConfig.get("externalType").getTextValue();
-              field.setExternalType(externalType);
+            // extra
+            if (fieldConfig.has("extra")) {
+              field.setExtra(fieldConfig.get("extra"));
             }
             // valueView (using current view for now)
             if (fieldConfig.has("valueView")) {

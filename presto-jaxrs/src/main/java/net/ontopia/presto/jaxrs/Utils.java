@@ -30,7 +30,7 @@ import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoView;
 
 public class Utils {
-
+  
   public static Map<String,Object> getTopicData(UriInfo uriInfo, PrestoTopic topic, PrestoType type) {
     Map<String,Object> result = new LinkedHashMap<String,Object>();
 
@@ -168,11 +168,6 @@ public class Utils {
     String interfaceControl = field.getInterfaceControl(); // ISSUE: should we default the interface control?
     if (interfaceControl != null) {
       fieldInfo.setInterfaceControl(interfaceControl);          
-    }
-
-    String externalType = field.getExternalType();
-    if (externalType != null) {
-      fieldInfo.setExternalType(externalType);
     }
 
     if (field.isEmbedded()) {
@@ -457,7 +452,6 @@ public class Utils {
       PrestoFieldUsage field = fields.get(fieldId);
 
       boolean isReferenceField = field.isReferenceField();
-      boolean isExternalType = field.getExternalType() != null;
       boolean isReadOnly = field.isReadOnly(); // ignore readOnly-fields 
       if (!isReadOnly) {
         if  (fields.containsKey(fieldId)) {
@@ -474,10 +468,6 @@ public class Utils {
                     newValues.add(updateEmbeddedReference(uriInfo, session, valueView, embeddedReferenceValue));
                   }
                 }                
-              } else if (isExternalType) {
-                for (Value value : values) {
-                  newValues.add(getPrimitiveValue(value));
-                }
               } else {
                 if (values.size() == 1) {
                   Value value = values.iterator().next();
