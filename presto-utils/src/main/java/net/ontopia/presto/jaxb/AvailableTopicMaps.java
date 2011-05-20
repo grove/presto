@@ -11,7 +11,7 @@ public class AvailableTopicMaps {
     private String id;
     private String name;
     
-    private Collection<Link> links = Collections.emptySet();
+    private Collection<Link> links;
     private Collection<TopicMap> topicMaps = Collections.emptySet();
 
     public AvailableTopicMaps() {        

@@ -1,7 +1,6 @@
 package net.ontopia.presto.jaxb;
 
 import java.util.Collection;
-import java.util.Collections;
 
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
@@ -18,7 +17,7 @@ public class Value {
     // reference
     private String id;
     private String name;
-    private Collection<Link> links = Collections.emptySet();
+    private Collection<Link> links;
     private Topic embedded;
     
     public void setRemovable(Boolean removable) {

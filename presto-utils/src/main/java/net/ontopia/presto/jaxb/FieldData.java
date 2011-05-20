@@ -1,7 +1,6 @@
 package net.ontopia.presto.jaxb;
 
 import java.util.Collection;
-import java.util.Collections;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -26,7 +25,7 @@ public class FieldData {
     private Integer minCardinality;
     private Integer maxCardinality;
     
-    private Collection<Link> links = Collections.emptySet();
+    private Collection<Link> links;
     private Collection<Value> values;
 
     private Collection<TopicType> valueTypes;

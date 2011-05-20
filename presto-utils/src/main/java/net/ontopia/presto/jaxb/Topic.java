@@ -22,7 +22,7 @@ public class Topic {
     private TopicType type;
     private String view;
     
-    private Collection<Link> links = Collections.emptySet();
+    private Collection<Link> links;
     
     private Collection<View> views = Collections.emptySet();
 

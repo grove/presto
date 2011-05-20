@@ -1,7 +1,6 @@
 package net.ontopia.presto.jaxb;
 
 import java.util.Collection;
-import java.util.Collections;
 
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
@@ -12,7 +11,7 @@ public class RootInfo {
     private String name;
     private int version;
     
-    private Collection<Link> links = Collections.emptySet();
+    private Collection<Link> links;
 
     public RootInfo() {        
     }
