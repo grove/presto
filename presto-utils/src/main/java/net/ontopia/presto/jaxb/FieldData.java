@@ -21,7 +21,7 @@ public class FieldData {
     private String datatype;
     private String validation;
     private String interfaceControl;
-    private JsonNode extra;
+    private Object extra;
     
     private Integer minCardinality;
     private Integer maxCardinality;
@@ -123,11 +123,11 @@ public class FieldData {
         return values;
     }
 
-    public void setExtra(JsonNode extra) {
+    public void setExtra(Object extra) {
         this.extra = extra;
     }
 
-    public JsonNode getExtra() {
+    public Object getExtra() {
         return extra;
     }
 
