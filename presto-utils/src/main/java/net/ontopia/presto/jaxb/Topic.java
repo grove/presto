@@ -94,15 +94,15 @@ public class Topic {
     }
 
     public void setLinks(Collection<Link> links) {
-        this.links = links;
+        if (links.isEmpty()) {
+            this.links = null;
+        } else {
+            this.links = links;
+        }
     }
 
     public Collection<Link> getLinks() {
-        if (links == null) {
-            return Collections.emptySet();
-        } else {
-            return links;
-        }
+        return links;
     }
 
     public void setViews(Collection<View> views) {

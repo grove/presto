@@ -21,17 +21,28 @@ public class CouchBucketTopic extends CouchTopic {
 
   @Override
   protected ArrayNode getFieldValue(PrestoField field) {
-    ObjectNode data = getReadBucket(field);
-    if (data != null) {
-      JsonNode value = data.get(field.getId());
+    return getBucketFieldValue(field, getReadBucket(field, true));
+  }
+
+  protected ArrayNode getBucketFieldValue(PrestoField field, ObjectNode bucketData) {
+    if (bucketData != null) {
+      JsonNode value = bucketData.get(field.getId());
       return (ArrayNode)(value != null && value.isArray() ? value : null);
     }
     return null;
   }
-
+  
   @Override
   protected void putFieldValue(PrestoField field, ArrayNode value) {
-    getWriteBucket(field, true).put(field.getId(), value);
+    ObjectNode writeBucket = getWriteBucket(field, true);
+    ObjectNode readBucket = getReadBucket(field, false);
+    if (readBucket != null && equalValues(value, getBucketFieldValue(field, readBucket))) {
+      if (writeBucket.has(field.getId())) {        
+        writeBucket.remove(field.getId());
+      }
+    } else {
+      writeBucket.put(field.getId(), value);
+    }
   }
 
   @Override
@@ -41,11 +52,25 @@ public class CouchBucketTopic extends CouchTopic {
       writeBucket.remove(field.getId());
     }
   }
-
-  protected ObjectNode getReadBucket(PrestoField field) {
+  
+  protected boolean equalValues(Object o1, Object o2) {
+    if (o1 == null)
+      return (o2 == null ? true : false);
+    else if (o2 == null)
+      return false;
+    else
+      return o1.equals(o2);
+  }
+  
+  protected ObjectNode getReadBucket(PrestoField field, boolean includeWriteBucket) {
     ObjectNode data = getData();
     // find the right bucket
     for (String bucketId : getDataProvider().getReadBuckets()) {
+      // ignore write bucket
+      if (!includeWriteBucket && bucketId.equals(getDataProvider().getWriteBucket())) {
+        continue;
+      }
+      // return bucket if it exists and contains field
       if (data.has(bucketId)) {
         ObjectNode bucket = (ObjectNode)data.get(bucketId);
         if (bucket.has(field.getId())) {

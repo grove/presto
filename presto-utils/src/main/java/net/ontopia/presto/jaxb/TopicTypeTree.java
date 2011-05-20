@@ -40,7 +40,11 @@ public class TopicTypeTree {
     }
 
     public void setLinks(Collection<Link> links) {
-      this.links = links;
+        if (links.isEmpty()) {
+            this.links = null;
+        } else {
+            this.links = links;
+        }
     }
 
     public Collection<Link> getLinks() {
