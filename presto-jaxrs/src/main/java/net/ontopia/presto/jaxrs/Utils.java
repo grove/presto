@@ -12,6 +12,8 @@ import java.util.Map;
 
 import javax.ws.rs.core.UriInfo;
 
+import org.codehaus.jackson.JsonNode;
+
 import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxb.Link;
 import net.ontopia.presto.jaxb.Origin;
@@ -146,7 +148,7 @@ public class Utils {
     String fieldReference = databaseId + "/" + topicId + "/" + parentViewId + "/" + fieldId;
 
     FieldData fieldInfo = new FieldData();
-
+    fieldInfo.setExtra((JsonNode) field.getExtra());
     fieldInfo.setId(fieldId);
     fieldInfo.setName(field.getName());
 
