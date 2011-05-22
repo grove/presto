@@ -148,7 +148,7 @@ public abstract class TopicResource {
   @GET
   @Produces(APPLICATION_JSON_UTF8)
   @Path("create-field-instance/{topicMapId}/{parentTopicId}/{parentFieldId}/{playerTypeId}")
-  public Topic createInstance(
+  public Topic createFieldInstance(
       @Context UriInfo uriInfo, 
       @PathParam("topicMapId") final String topicMapId,
       @PathParam("parentTopicId") final String parentTopicId,
@@ -420,11 +420,10 @@ public abstract class TopicResource {
 
     try {
 
-      PrestoTopic topic;
+      PrestoTopic topic = null;
       PrestoType topicType;
       if (topicId.startsWith("_")) {
         topicType = schemaProvider.getTypeById(topicId.substring(1));
-        topic  = null;
       } else {
         topic = dataProvider.getTopicById(topicId);
         topicType = schemaProvider.getTypeById(topic.getTypeId());
@@ -480,9 +479,16 @@ public abstract class TopicResource {
     PrestoDataProvider dataProvider = session.getDataProvider();
 
     try {
+
+      PrestoTopic topic = null;
+      PrestoType topicType;
+      if (topicId.startsWith("_")) {
+        topicType = schemaProvider.getTypeById(topicId.substring(1));
+      } else {
+        topic = dataProvider.getTopicById(topicId);
+        topicType = schemaProvider.getTypeById(topic.getTypeId());
+      }
       
-      PrestoTopic topic = dataProvider.getTopicById(topicId);
-      PrestoType topicType = schemaProvider.getTypeById(topic.getTypeId());
       PrestoView fieldsView = topicType.getViewById(viewId);
 
       PrestoFieldUsage field = topicType.getFieldById(fieldId, fieldsView);
@@ -494,8 +500,8 @@ public abstract class TopicResource {
       Collection<PrestoType> availableFieldCreateTypes = field.getAvailableFieldCreateTypes();
 
       List<TopicType> types = new ArrayList<TopicType>(availableFieldCreateTypes.size());
-      for (PrestoType playerType : availableFieldCreateTypes) {
-        types.add(Utils.getCreateFieldInstance(uriInfo, topic, field, playerType));
+      for (PrestoType createType : availableFieldCreateTypes) {
+        types.add(Utils.getCreateFieldInstance(uriInfo, topic, topicType, field, createType));
       }
 
       result.setTypes(types);

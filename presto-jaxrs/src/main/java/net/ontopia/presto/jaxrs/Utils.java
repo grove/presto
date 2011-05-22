@@ -147,70 +147,70 @@ public class Utils {
 
     String fieldReference = databaseId + "/" + topicId + "/" + parentViewId + "/" + fieldId;
 
-    FieldData fieldInfo = new FieldData();
-    fieldInfo.setExtra((JsonNode) field.getExtra());
-    fieldInfo.setId(fieldId);
-    fieldInfo.setName(field.getName());
+    FieldData fieldData = new FieldData();
+    fieldData.setId(fieldId);
+    fieldData.setName(field.getName());
+    
+    fieldData.setExtra((JsonNode) field.getExtra());
 
     int minCard = field.getMinCardinality();
     if (minCard > 0) {
-      fieldInfo.setMinCardinality(minCard);
+      fieldData.setMinCardinality(minCard);
     }
 
     int maxCard = field.getMaxCardinality();
     if (maxCard > 0) {
-      fieldInfo.setMaxCardinality(maxCard);
+      fieldData.setMaxCardinality(maxCard);
     }
 
     String validationType = field.getValidationType();
     if (validationType != null) {
-      fieldInfo.setValidation(validationType);
+      fieldData.setValidation(validationType);
     }
 
     String interfaceControl = field.getInterfaceControl(); // ISSUE: should we default the interface control?
     if (interfaceControl != null) {
-      fieldInfo.setInterfaceControl(interfaceControl);          
+      fieldData.setInterfaceControl(interfaceControl);          
     }
 
     if (field.isEmbedded()) {
-      fieldInfo.setEmbeddable(true);
+      fieldData.setEmbeddable(true);
     }
 
     if (field.isPrimitiveField()) {
       String dataType = field.getDataType();
       if (dataType != null) {
-        fieldInfo.setDatatype(dataType);
+        fieldData.setDatatype(dataType);
       }
       if (readOnlyMode || field.isReadOnly()) {
-        fieldInfo.setReadOnly(Boolean.TRUE);
-        fieldInfo.setLinks(Collections.EMPTY_LIST);
+        fieldData.setReadOnly(Boolean.TRUE);
+        fieldData.setLinks(Collections.EMPTY_LIST);
       } else {
         List<Link> fieldLinks = new ArrayList<Link>();
         if (!isNewTopic) {
           fieldLinks.add(new Link("add-field-values", uriInfo.getBaseUri() + "editor/add-field-values/" + fieldReference));
           fieldLinks.add(new Link("remove-field-values", uriInfo.getBaseUri() + "editor/remove-field-values/" + fieldReference));
           if (!field.isSorted()) {
-            fieldLinks.add(new Link("add-field-values-at-index", uriInfo.getBaseUri() + "editor/add-field-values-at-index/" + fieldReference + "?index={index}"));
+            fieldLinks.add(new Link("add-field-values-at-index", uriInfo.getBaseUri() + "editor/add-field-values-at-index/" + fieldReference + "/{index}"));
             fieldLinks.add(new Link("move-field-values-to-index", uriInfo.getBaseUri() + "editor/move-field-values-to-index/" + fieldReference + "/{index}"));
           }
         }
-        fieldInfo.setLinks(fieldLinks);
+        fieldData.setLinks(fieldLinks);
       }
 
     } else if (field.isReferenceField()) {
-      // fieldInfo.put("type", field.getFieldType());
-      fieldInfo.setDatatype("reference");
+      fieldData.setDatatype("reference");
 
       // TODO: make this a bit clearer
       boolean allowEdit = !readOnlyMode && !field.isReadOnly();
       boolean allowAddRemove = allowEdit && !field.isNewValuesOnly();
       boolean allowCreate = allowEdit && !field.isExistingValuesOnly();
       if (readOnlyMode || !allowEdit) {
-        fieldInfo.setReadOnly(Boolean.TRUE);
+        fieldData.setReadOnly(Boolean.TRUE);
       }
 
       List<Link> fieldLinks = new ArrayList<Link>();      
-      if (allowCreate && !isNewTopic) {
+      if (allowCreate) {
         fieldLinks.add(new Link("available-field-types", uriInfo.getBaseUri() + "editor/available-field-types/" + fieldReference));
       }
       if (allowAddRemove) {
@@ -225,17 +225,17 @@ public class Utils {
           }
         }
       }      
-      fieldInfo.setLinks(fieldLinks);
+      fieldData.setLinks(fieldLinks);
 
     } else {
       // used by query fields, which can have both primitive and reference values
 
       // fieldInfo.put("type", field.getFieldType());
-      fieldInfo.setDatatype("query");
+      fieldData.setDatatype("query");
       if (readOnlyMode || field.isReadOnly()) {
-        fieldInfo.setReadOnly(Boolean.TRUE);
+        fieldData.setReadOnly(Boolean.TRUE);
       }
-      fieldInfo.setLinks(Collections.EMPTY_LIST);
+      fieldData.setLinks(Collections.EMPTY_LIST);
     }
 
     Collection<PrestoType> availableFieldValueTypes = field.getAvailableFieldValueTypes();
@@ -244,11 +244,11 @@ public class Utils {
       for (PrestoType playerType : availableFieldValueTypes) {
         valueTypes.add(Utils.getTypeInfo(uriInfo, playerType));
       }
-      fieldInfo.setValueTypes(valueTypes);
+      fieldData.setValueTypes(valueTypes);
     }
 
-    fieldInfo.setValues(getValues(uriInfo, field, fieldValues, readOnlyMode));
-    return fieldInfo;
+    fieldData.setValues(getValues(uriInfo, field, fieldValues, readOnlyMode));
+    return fieldData;
   }
 
   public static List<View> getViews(UriInfo uriInfo,
@@ -369,12 +369,14 @@ public class Utils {
     return new TopicType(type.getId(), type.getName());
   }
 
-  public static TopicType getCreateFieldInstance(UriInfo uriInfo, PrestoTopic topic, PrestoFieldUsage field, PrestoType type) {
-
-    TopicType result = getTypeInfo(uriInfo, type);
-
+  public static TopicType getCreateFieldInstance(UriInfo uriInfo, PrestoTopic topic, PrestoType type, PrestoFieldUsage field, PrestoType createType) {
+    TopicType result = getTypeInfo(uriInfo, createType);
+    
+    boolean isNewTopic = topic == null;
+    String topicId = isNewTopic ? "_" + type.getId() : topic.getId();
+    
     List<Link> links = new ArrayList<Link>();
-    links.add(new Link("create-field-instance", uriInfo.getBaseUri() + "editor/create-field-instance/" + field.getSchemaProvider().getDatabaseId() + "/" + topic.getId() + "/" + field.getId() + "/" + type.getId()));
+    links.add(new Link("create-field-instance", uriInfo.getBaseUri() + "editor/create-field-instance/" + field.getSchemaProvider().getDatabaseId() + "/" + topicId + "/" + field.getId() + "/" + createType.getId()));
     result.setLinks(links);
 
     return result;
@@ -496,17 +498,17 @@ public class Utils {
     return topic;
   }
 
-  private static PrestoTopic updateEmbeddedReference(UriInfo uriInfo, PrestoSession session, PrestoView fieldsView, Topic newTopic) {
+  private static PrestoTopic updateEmbeddedReference(UriInfo uriInfo, PrestoSession session, PrestoView fieldsView, Topic embeddedTopic) {
 
     PrestoDataProvider dataProvider = session.getDataProvider();
     PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
 
-    String topicId = newTopic.getId();
+    String topicId = embeddedTopic.getId();
 
     PrestoTopic topic = null;
     PrestoType topicType;
     if (topicId == null) {
-      TopicType type = newTopic.getType();
+      TopicType type = embeddedTopic.getType();
       String topicTypeId = type.getId();
       topicType = schemaProvider.getTypeById(topicTypeId);
     } else {
@@ -514,7 +516,7 @@ public class Utils {
       topicType = schemaProvider.getTypeById(topic.getTypeId());
     }
 
-    return Utils.updateTopic(uriInfo, session, topic, topicType, fieldsView, newTopic);
+    return Utils.updateTopic(uriInfo, session, topic, topicType, fieldsView, embeddedTopic);
   }
 
   private static Map<String, PrestoFieldUsage> getFieldInstanceMap(PrestoTopic topic,
