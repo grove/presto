@@ -49,14 +49,13 @@ public abstract class TopicResource {
 
   @GET
   @Produces(APPLICATION_JSON_UTF8)
-  @Path("")
   public RootInfo getRootInfo(@Context UriInfo uriInfo) throws Exception {
 
     RootInfo result = new RootInfo();
 
     result.setId(uriInfo.getBaseUri() + "editor");
     result.setVersion(0);
-    result.setName("Ontopia Presto REST API");
+    result.setName("Presto - Editor REST API");
 
     List<Link> links = new ArrayList<Link>();
     links.add(new Link("available-topicmaps", uriInfo.getBaseUri() + "editor/available-topicmaps"));
@@ -72,7 +71,7 @@ public abstract class TopicResource {
     AvailableTopicMaps result = new AvailableTopicMaps();
 
     result.setId("topicmaps");
-    result.setName("Ontopia Presto REST API");
+    result.setName("Presto - Editor REST API");
 
     Collection<TopicMap> topicmaps = new ArrayList<TopicMap>();
     
@@ -81,7 +80,7 @@ public abstract class TopicResource {
     topicmap.setName("Litteraturklubben");
 
     List<Link> links = new ArrayList<Link>();
-    links.add(new Link("edit", uriInfo.getBaseUri() + "editor/topicmap-info/litteraturklubben.xtm"));
+    links.add(new Link("edit", uriInfo.getBaseUri() + "editor/topicmap-info/" + topicmap.getId()));
     topicmap.setLinks(links);    
     
     topicmaps.add(topicmap);

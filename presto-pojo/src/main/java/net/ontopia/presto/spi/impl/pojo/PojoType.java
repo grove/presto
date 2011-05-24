@@ -7,8 +7,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.codehaus.jackson.JsonNode;
-
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
@@ -33,7 +31,7 @@ public class PojoType implements PrestoType {
   private Collection<PrestoView> views = new ArrayList<PrestoView>();
   private Map<String,PrestoView> viewsMap = new HashMap<String,PrestoView>();
 
-  private JsonNode extra;
+  private Object extra;
 
   PojoType(String id, PrestoSchemaProvider schemaProvider) {
     this.id = id;
@@ -80,7 +78,7 @@ public class PojoType implements PrestoType {
   }
 
   public boolean isCreatable() {
-    return isCreatable && !isReadOnly;
+    return isCreatable;
   }
   
   public Collection<PrestoType> getDirectSubTypes() {
@@ -167,11 +165,11 @@ public class PojoType implements PrestoType {
     this.fields.add(field);
   }
 
-  public JsonNode getExtra() {
+  public Object getExtra() {
     return extra;
   }
 
-  public void setExtra(JsonNode extra) {
+  public void setExtra(Object extra) {
     this.extra = extra;
   }
   

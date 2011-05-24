@@ -7,8 +7,12 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
+
+import net.ontopia.presto.spi.PrestoType;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -220,27 +224,31 @@ public class PojoSchemaModel {
 
             if (field.isReferenceField()) {
 
-              // availableFieldCreateTypes
-              if (fieldConfig.has("createTypes")) {
-                ArrayNode createTypesArray = (ArrayNode)fieldConfig.get("createTypes");
-                for (JsonNode createTypeIdNode : createTypesArray) {
-                  String createTypeId = createTypeIdNode.getTextValue();
-                  verifyDeclaredType(createTypeId, typesMap, "createTypes",type, field);
-                  PojoType createType = getPojoType(createTypeId, types, schemaProvider);
-                  field.addAvailableFieldCreateType(createType);
-                }
-              }
-
               // availableFieldValueTypes
+              Set<PrestoType> valueTypes = new HashSet<PrestoType>();
               if (fieldConfig.has("valueTypes")) {
                 ArrayNode valueTypesArray = (ArrayNode)fieldConfig.get("valueTypes");
                 for (JsonNode valueTypeIdNode : valueTypesArray) {
                   String valueTypeId = valueTypeIdNode.getTextValue();
                   verifyDeclaredType(valueTypeId, typesMap, "valueTypes",type, field);
                   PojoType valueType = getPojoType(valueTypeId, types, schemaProvider);
-                  field.addAvailableFieldValueType(valueType);
+                  valueTypes.add(valueType);
                 }
               }
+              field.setAvailableFieldValueType(valueTypes);
+            }
+
+            // availableFieldCreateTypes
+            if (fieldConfig.has("createTypes")) {
+              Set<PrestoType> createTypes = new HashSet<PrestoType>();
+              ArrayNode createTypesArray = (ArrayNode)fieldConfig.get("createTypes");
+              for (JsonNode createTypeIdNode : createTypesArray) {
+                String createTypeId = createTypeIdNode.getTextValue();
+                verifyDeclaredType(createTypeId, typesMap, "createTypes",type, field);
+                PojoType createType = getPojoType(createTypeId, types, schemaProvider);
+                createTypes.add(createType);
+              }
+              field.setAvailableFieldCreateType(createTypes);
             }
 
           }

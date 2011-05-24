@@ -4,7 +4,6 @@ import java.util.Collection;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 

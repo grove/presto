@@ -1,9 +1,10 @@
 package net.ontopia.presto.spi.impl.pojo;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-
-import org.codehaus.jackson.JsonNode;
+import java.util.List;
+import java.util.Set;
 
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
@@ -16,10 +17,7 @@ public class PojoField implements PrestoField {
     private PrestoSchemaProvider schemaProvider;
     private String name;
     private boolean isNameField;
-//    private boolean isPrimitiveField;
-//    private boolean isReferenceField;
     private PrestoView valueView;
-//    private String fieldType;
     private int minCardinality;
     private int maxCardinality;
     private String dataType;
@@ -33,7 +31,7 @@ public class PojoField implements PrestoField {
     private boolean isExistingValuesOnly;
     private String inverseFieldId;
     private String interfaceControl;
-    private JsonNode extra;
+    private Object extra;
 
     private Collection<PrestoType> availableFieldCreateTypes;
     private Collection<PrestoType> availableFieldValueTypes = new HashSet<PrestoType>();
@@ -127,8 +125,18 @@ public class PojoField implements PrestoField {
     }
 
     public Collection<PrestoType> getAvailableFieldCreateTypes() {
-        // fall back to value types if none specified
-        return availableFieldCreateTypes == null ? getAvailableFieldValueTypes() : availableFieldCreateTypes;
+        // fall back to creatable value types if no create types are specified
+        if (availableFieldCreateTypes == null) {
+            List<PrestoType> result = new ArrayList<PrestoType>(availableFieldValueTypes.size());
+            for (PrestoType valueType : availableFieldValueTypes) {
+                if (valueType.isCreatable()) {
+                    result.add(valueType);
+                }
+            }
+            return result;
+        } else {
+            return availableFieldCreateTypes;
+        }
     }
 
     public Collection<PrestoType> getAvailableFieldValueTypes() {
@@ -158,21 +166,9 @@ public class PojoField implements PrestoField {
         this.isNameField = isNameField;
     }
 
-//    public void setPrimitiveField(boolean isPrimitiveField) {
-//        this.isPrimitiveField = isPrimitiveField;
-//    }
-//
-//    public void setReferenceField(boolean isReferenceField) {
-//        this.isReferenceField = isReferenceField;
-//    }
-
     public void setValueView(PrestoView valueView) {
         this.valueView = valueView;
     }
-
-//    public void setFieldType(String fieldType) {
-//        this.fieldType = fieldType;
-//    }
 
     public void setMinCardinality(int minCardinality) {
         this.minCardinality = minCardinality;
@@ -226,22 +222,19 @@ public class PojoField implements PrestoField {
         this.interfaceControl = interfaceControl;
     }
 
-    protected void addAvailableFieldCreateType(PrestoType type) {
-        if (this.availableFieldCreateTypes == null) {
-            this.availableFieldCreateTypes = new HashSet<PrestoType>();
-        }
-        this.availableFieldCreateTypes.add(type);
+    protected void setAvailableFieldCreateType(Set<PrestoType> createTypes) {
+        this.availableFieldCreateTypes = createTypes;
     }
 
-    protected void addAvailableFieldValueType(PrestoType type) {
-        this.availableFieldValueTypes.add(type);
+    protected void setAvailableFieldValueType(Set<PrestoType> valueTypes) {
+        this.availableFieldValueTypes = valueTypes;
     }
 
-    public void setExtra(JsonNode extra) {
+    public void setExtra(Object extra) {
         this.extra = extra;
     }
 
-    public JsonNode getExtra() {
+    public Object getExtra() {
         return extra;
     }
 

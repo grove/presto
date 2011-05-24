@@ -12,8 +12,6 @@ import java.util.Map;
 
 import javax.ws.rs.core.UriInfo;
 
-import org.codehaus.jackson.JsonNode;
-
 import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxb.Link;
 import net.ontopia.presto.jaxb.Origin;
@@ -131,7 +129,6 @@ public class Utils {
     return result;
   }
 
-  @SuppressWarnings("unchecked")
   private static FieldData getFieldInfo(UriInfo uriInfo,
       PrestoTopic topic, PrestoFieldUsage field, Collection<? extends Object> fieldValues, boolean readOnlyMode) {
 
@@ -151,7 +148,7 @@ public class Utils {
     fieldData.setId(fieldId);
     fieldData.setName(field.getName());
     
-    fieldData.setExtra((JsonNode) field.getExtra());
+    fieldData.setExtra(field.getExtra());
 
     int minCard = field.getMinCardinality();
     if (minCard > 0) {
@@ -177,15 +174,17 @@ public class Utils {
       fieldData.setEmbeddable(true);
     }
 
+    boolean isReadOnly = readOnlyMode || field.isReadOnly();
+    if (isReadOnly) {
+      fieldData.setReadOnly(Boolean.TRUE);
+    }
+    
     if (field.isPrimitiveField()) {
       String dataType = field.getDataType();
       if (dataType != null) {
         fieldData.setDatatype(dataType);
       }
-      if (readOnlyMode || field.isReadOnly()) {
-        fieldData.setReadOnly(Boolean.TRUE);
-        fieldData.setLinks(Collections.EMPTY_LIST);
-      } else {
+      if (!isReadOnly) {
         List<Link> fieldLinks = new ArrayList<Link>();
         if (!isNewTopic) {
           fieldLinks.add(new Link("add-field-values", uriInfo.getBaseUri() + "editor/add-field-values/" + fieldReference));
@@ -201,21 +200,20 @@ public class Utils {
     } else if (field.isReferenceField()) {
       fieldData.setDatatype("reference");
 
-      // TODO: make this a bit clearer
-      boolean allowEdit = !readOnlyMode && !field.isReadOnly();
-      boolean allowAddRemove = allowEdit && !field.isNewValuesOnly();
-      boolean allowCreate = allowEdit && !field.isExistingValuesOnly();
-      if (readOnlyMode || !allowEdit) {
-        fieldData.setReadOnly(Boolean.TRUE);
-      }
+      boolean allowAddRemove = !isReadOnly && !field.isNewValuesOnly();
+      boolean allowCreate = !isReadOnly && !field.isExistingValuesOnly();
 
       List<Link> fieldLinks = new ArrayList<Link>();      
       if (allowCreate) {
-        fieldLinks.add(new Link("available-field-types", uriInfo.getBaseUri() + "editor/available-field-types/" + fieldReference));
+        if (!field.getAvailableFieldCreateTypes().isEmpty()) {
+            fieldLinks.add(new Link("available-field-types", uriInfo.getBaseUri() + "editor/available-field-types/" + fieldReference));
+        }
       }
       if (allowAddRemove) {
         // ISSUE: should add-values and remove-values be links on list result instead?
-        fieldLinks.add(new Link("available-field-values", uriInfo.getBaseUri() + "editor/available-field-values/" + fieldReference));
+        if (!field.getAvailableFieldValueTypes().isEmpty()) {
+          fieldLinks.add(new Link("available-field-values", uriInfo.getBaseUri() + "editor/available-field-values/" + fieldReference));
+        }
         if (!isNewTopic) {
           fieldLinks.add(new Link("add-field-values", uriInfo.getBaseUri() + "editor/add-field-values/" + fieldReference));
           fieldLinks.add(new Link("remove-field-values", uriInfo.getBaseUri() + "editor/remove-field-values/" + fieldReference));
@@ -229,25 +227,19 @@ public class Utils {
 
     } else {
       // used by query fields, which can have both primitive and reference values
-
-      // fieldInfo.put("type", field.getFieldType());
       fieldData.setDatatype("query");
-      if (readOnlyMode || field.isReadOnly()) {
-        fieldData.setReadOnly(Boolean.TRUE);
-      }
-      fieldData.setLinks(Collections.EMPTY_LIST);
     }
 
     Collection<PrestoType> availableFieldValueTypes = field.getAvailableFieldValueTypes();
     if (!availableFieldValueTypes.isEmpty()) {
       List<TopicType> valueTypes = new ArrayList<TopicType>(availableFieldValueTypes.size());
-      for (PrestoType playerType : availableFieldValueTypes) {
-        valueTypes.add(Utils.getTypeInfo(uriInfo, playerType));
+      for (PrestoType valueType : availableFieldValueTypes) {
+        valueTypes.add(Utils.getTypeInfo(uriInfo, valueType));
       }
       fieldData.setValueTypes(valueTypes);
     }
 
-    fieldData.setValues(getValues(uriInfo, field, fieldValues, readOnlyMode));
+    fieldData.setValues(getValues(uriInfo, field, fieldValues, isReadOnly));
     return fieldData;
   }
 
