@@ -87,8 +87,11 @@ public abstract class CouchTopic implements PrestoTopic {
         values.addAll(dataProvider.getTopicsByIds(topicIds));
       } else {
         for (JsonNode value : fieldNode) {
-          String textValue = value.getTextValue();
-          values.add(textValue);          
+          if (value.isTextual()) {
+              values.add(value.getTextValue());
+          } else {
+              values.add(value.toString());
+          }
         }
       }
     }
