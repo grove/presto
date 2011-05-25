@@ -51,7 +51,7 @@ public class OntopolyType implements PrestoType {
   }
 
   public boolean isCreatable() {
-    return !topicType.isAbstract() && !isReadOnly();
+    return !topicType.isAbstract();
   }
 
   public Collection<PrestoType> getDirectSubTypes() {

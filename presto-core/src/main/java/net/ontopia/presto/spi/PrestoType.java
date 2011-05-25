@@ -3,7 +3,6 @@ package net.ontopia.presto.spi;
 import java.util.Collection;
 import java.util.List;
 
-
 public interface PrestoType {
 
   String getId();
@@ -14,7 +13,7 @@ public interface PrestoType {
 
   boolean isReadOnly(); // can you edit it?
 
-  boolean isHidden(); // will it show up? instances will show up if exposed as field values.
+  boolean isHidden(); // will it show up? instances will show up if exposed as field values though.
 
   boolean isCreatable(); // standalone creatable. default is yes. can still be created through a field if in createTypes.
 

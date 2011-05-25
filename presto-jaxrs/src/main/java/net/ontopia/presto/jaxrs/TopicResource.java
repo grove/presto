@@ -120,21 +120,21 @@ public abstract class TopicResource {
 
   @GET
   @Produces(APPLICATION_JSON_UTF8)
-  @Path("create-instance/{topicMapId}/{topicTypeId}")
+  @Path("create-instance/{topicMapId}/{typeId}")
   public Topic createInstance(
       @Context UriInfo uriInfo, 
       @PathParam("topicMapId") final String topicMapId, 
-      @PathParam("topicTypeId") final String topicTypeId) throws Exception {
+      @PathParam("typeId") final String typeId) throws Exception {
 
     PrestoSession session = createSession(topicMapId);
     PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
 
     try {
 
-      PrestoType topicType = schemaProvider.getTypeById(topicTypeId);
-      PrestoView fieldsView = topicType.getDefaultView();
+      PrestoType type = schemaProvider.getTypeById(typeId);
+      PrestoView view = type.getDefaultView();
 
-      return postProcess(Utils.getNewTopicInfo(uriInfo, topicType, fieldsView));
+      return postProcess(Utils.getNewTopicInfo(uriInfo, type, view));
 
     } catch (Exception e) {
       session.abort();
@@ -159,10 +159,10 @@ public abstract class TopicResource {
     
     try {
 
-      PrestoType topicType = schemaProvider.getTypeById(playerTypeId);
-      PrestoView fieldsView = topicType.getDefaultView();
+      PrestoType type = schemaProvider.getTypeById(playerTypeId);
+      PrestoView view = type.getDefaultView();
 
-      return postProcess(Utils.getNewTopicInfo(uriInfo, topicType, fieldsView, parentTopicId, parentFieldId));
+      return postProcess(Utils.getNewTopicInfo(uriInfo, type, view, parentTopicId, parentFieldId));
 
     } catch (Exception e) {
       session.abort();
@@ -187,9 +187,9 @@ public abstract class TopicResource {
     try {
 
       PrestoTopic topic = dataProvider.getTopicById(topicId);
-      PrestoType topicType = schemaProvider.getTypeById(topic.getTypeId());
+      PrestoType type = schemaProvider.getTypeById(topic.getTypeId());
       
-      return Utils.getTopicData(uriInfo, topic, topicType);
+      return Utils.getTopicData(uriInfo, topic, type);
 
     } catch (Exception e) {
       session.abort();
@@ -215,10 +215,10 @@ public abstract class TopicResource {
     try {
 
       PrestoTopic topic = dataProvider.getTopicById(topicId);
-      PrestoType topicType = schemaProvider.getTypeById(topic.getTypeId());
-      PrestoView fieldsView = topicType.getDefaultView();
+      PrestoType type = schemaProvider.getTypeById(topic.getTypeId());
+      PrestoView view = type.getDefaultView();
       
-      return postProcess(Utils.getTopicInfo(uriInfo, topic, topicType, fieldsView, readOnly));
+      return postProcess(Utils.getTopicInfo(uriInfo, topic, type, view, readOnly));
 
     } catch (Exception e) {
       session.abort();
@@ -244,10 +244,10 @@ public abstract class TopicResource {
     try {
 
       PrestoTopic topic = dataProvider.getTopicById(topicId);
-      PrestoType topicType = schemaProvider.getTypeById(topic.getTypeId());
-      PrestoView fieldsView = topicType.getViewById(viewId);
+      PrestoType type = schemaProvider.getTypeById(topic.getTypeId());
+      PrestoView view = type.getViewById(viewId);
 
-      return postProcess(Utils.getTopicInfo(uriInfo, topic, topicType, fieldsView, readOnly));
+      return postProcess(Utils.getTopicInfo(uriInfo, topic, type, view, readOnly));
 
     } catch (Exception e) {
       session.abort();
@@ -273,19 +273,19 @@ public abstract class TopicResource {
     try {
 
       PrestoTopic topic = null;
-      PrestoType topicType;
+      PrestoType type;
       if (topicId.startsWith("_")) {
-        topicType = schemaProvider.getTypeById(topicId.substring(1));
+        type = schemaProvider.getTypeById(topicId.substring(1));
       } else {
         topic = dataProvider.getTopicById(topicId);
-        topicType = schemaProvider.getTypeById(topic.getTypeId());
+        type = schemaProvider.getTypeById(topic.getTypeId());
       }
 
-      PrestoView fieldsView = topicType.getViewById(viewId);
+      PrestoView view = type.getViewById(viewId);
       
-      topic = Utils.updateTopic(uriInfo, session, topic, topicType, fieldsView, jsonObject);
+      topic = Utils.updateTopic(uriInfo, session, topic, type, view, jsonObject);
       
-      Topic result = Utils.getTopicInfo(uriInfo, topic, topicType, fieldsView, false);
+      Topic result = Utils.getTopicInfo(uriInfo, topic, type, view, false);
       String id = result.getId();
       session.commit();
       onTopicUpdated(id);
@@ -317,10 +317,10 @@ public abstract class TopicResource {
       try {
 
         PrestoTopic topic = dataProvider.getTopicById(topicId);
-        PrestoType topicType = schemaProvider.getTypeById(topic.getTypeId());
-        PrestoView fieldsView = topicType.getViewById(viewId);
+        PrestoType type = schemaProvider.getTypeById(topic.getTypeId());
+        PrestoView view = type.getViewById(viewId);
 
-        PrestoFieldUsage field = topicType.getFieldById(fieldId, fieldsView);
+        PrestoFieldUsage field = type.getFieldById(fieldId, view);
 
         FieldData result = Utils.addFieldValues(uriInfo, session, topic, field, index, jsonObject);
 
@@ -383,10 +383,10 @@ public abstract class TopicResource {
     try {
 
       PrestoTopic topic = dataProvider.getTopicById(topicId);
-      PrestoType topicType = schemaProvider.getTypeById(topic.getTypeId());
-      PrestoView fieldsView = topicType.getViewById(viewId);
+      PrestoType type = schemaProvider.getTypeById(topic.getTypeId());
+      PrestoView view = type.getViewById(viewId);
 
-      PrestoFieldUsage field = topicType.getFieldById(fieldId, fieldsView);
+      PrestoFieldUsage field = type.getFieldById(fieldId, view);
 
       FieldData result =  Utils.removeFieldValues(uriInfo, session, topic, field, jsonObject);
 
@@ -420,17 +420,17 @@ public abstract class TopicResource {
     try {
 
       PrestoTopic topic = null;
-      PrestoType topicType;
+      PrestoType type;
       if (topicId.startsWith("_")) {
-        topicType = schemaProvider.getTypeById(topicId.substring(1));
+        type = schemaProvider.getTypeById(topicId.substring(1));
       } else {
         topic = dataProvider.getTopicById(topicId);
-        topicType = schemaProvider.getTypeById(topic.getTypeId());
+        type = schemaProvider.getTypeById(topic.getTypeId());
       }
 
-      PrestoView fieldsView = topicType.getViewById(viewId);
+      PrestoView view = type.getViewById(viewId);
       
-      PrestoFieldUsage field = topicType.getFieldById(fieldId, fieldsView);
+      PrestoFieldUsage field = type.getFieldById(fieldId, view);
       
       Collection<PrestoTopic> availableFieldValues = dataProvider.getAvailableFieldValues(field);
       return createFieldInfoAllowed(uriInfo, field, availableFieldValues);
@@ -480,17 +480,17 @@ public abstract class TopicResource {
     try {
 
       PrestoTopic topic = null;
-      PrestoType topicType;
+      PrestoType type;
       if (topicId.startsWith("_")) {
-        topicType = schemaProvider.getTypeById(topicId.substring(1));
+        type = schemaProvider.getTypeById(topicId.substring(1));
       } else {
         topic = dataProvider.getTopicById(topicId);
-        topicType = schemaProvider.getTypeById(topic.getTypeId());
+        type = schemaProvider.getTypeById(topic.getTypeId());
       }
       
-      PrestoView fieldsView = topicType.getViewById(viewId);
+      PrestoView view = type.getViewById(viewId);
 
-      PrestoFieldUsage field = topicType.getFieldById(fieldId, fieldsView);
+      PrestoFieldUsage field = type.getFieldById(fieldId, view);
       
       AvailableFieldTypes result = new AvailableFieldTypes();
       result.setId(field.getId());
@@ -500,7 +500,7 @@ public abstract class TopicResource {
 
       List<TopicType> types = new ArrayList<TopicType>(availableFieldCreateTypes.size());
       for (PrestoType createType : availableFieldCreateTypes) {
-        types.add(Utils.getCreateFieldInstance(uriInfo, topic, topicType, field, createType));
+        types.add(Utils.getCreateFieldInstance(uriInfo, topic, type, field, createType));
       }
 
       result.setTypes(types);

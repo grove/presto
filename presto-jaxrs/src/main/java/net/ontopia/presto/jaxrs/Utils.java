@@ -99,46 +99,46 @@ public class Utils {
     return result;
   }
 
-  public static Topic getNewTopicInfo(UriInfo uriInfo, PrestoType topicType, PrestoView fieldsView) {
-    return getNewTopicInfo(uriInfo, topicType, fieldsView, null, null);
+  public static Topic getNewTopicInfo(UriInfo uriInfo, PrestoType type, PrestoView view) {
+    return getNewTopicInfo(uriInfo, type, view, null, null);
   }
 
-  public static Topic getNewTopicInfo(UriInfo uriInfo, PrestoType topicType, PrestoView fieldsView, String parentId, String parentFieldId) {
+  public static Topic getNewTopicInfo(UriInfo uriInfo, PrestoType type, PrestoView view, String parentId, String parentFieldId) {
     Topic result = new Topic();
 
     final boolean readOnlyMode = false;
     if (parentId != null) {
       result.setOrigin(new Origin(parentId, parentFieldId));
     }
-    result.setType(new TopicType(topicType.getId(), topicType.getName()));
+    result.setType(new TopicType(type.getId(), type.getName()));
 
-    result.setView(fieldsView.getId());
+    result.setView(view.getId());
 
     List<Link> topicLinks = new ArrayList<Link>();
-    topicLinks.add(new Link("create", Links.getCreateLinkFor(uriInfo, topicType, fieldsView)));    
+    topicLinks.add(new Link("create", Links.getCreateLinkFor(uriInfo, type, view)));    
     result.setLinks(topicLinks);
 
     List<FieldData> fields = new ArrayList<FieldData>(); 
 
     PrestoTopic topic = null;
-    for (PrestoFieldUsage field : topicType.getFields(fieldsView)) {
+    for (PrestoFieldUsage field : type.getFields(view)) {
       fields.add(getFieldInfo(uriInfo, topic, field, Collections.emptyList(), readOnlyMode));
     }
     result.setFields(fields);
-    result.setViews(Collections.singleton(getView(uriInfo, null, fieldsView, readOnlyMode)));
+    result.setViews(Collections.singleton(getView(uriInfo, null, view, readOnlyMode)));
     return result;
   }
 
   private static FieldData getFieldInfo(UriInfo uriInfo,
       PrestoTopic topic, PrestoFieldUsage field, Collection<? extends Object> fieldValues, boolean readOnlyMode) {
 
-    PrestoType topicType = field.getType();
+    PrestoType type = field.getType();
     PrestoView parentView = field.getView();
 
     boolean isNewTopic = topic == null;
 
     String databaseId = field.getSchemaProvider().getDatabaseId();
-    String topicId = isNewTopic ? "_" + topicType.getId() : topic.getId();
+    String topicId = isNewTopic ? "_" + type.getId() : topic.getId();
     String parentViewId = parentView.getId();
     String fieldId = field.getId();
 
@@ -244,29 +244,29 @@ public class Utils {
   }
 
   public static List<View> getViews(UriInfo uriInfo,
-      PrestoTopic topic, PrestoType topicType, PrestoView fieldsView, boolean readOnlyMode) {
+      PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnlyMode) {
 
-    Collection<PrestoView> fieldViews = topicType.getViews(fieldsView);
+    Collection<PrestoView> otherViews = type.getViews(view);
 
-    List<View> views = new ArrayList<View>(fieldViews.size()); 
-    for (PrestoView _fieldsView : fieldViews) {
-      views.add(getView(uriInfo, topic, _fieldsView, readOnlyMode));
+    List<View> views = new ArrayList<View>(otherViews.size()); 
+    for (PrestoView otherView : otherViews) {
+      views.add(getView(uriInfo, topic, otherView, readOnlyMode));
     }
     return views;
   }
 
   public static View getView(UriInfo uriInfo, PrestoTopic topic,
-      PrestoView _fieldsView, boolean readOnlyMode) {
-    View view = new View();
-    view.setId(_fieldsView.getId());
-    view.setName(_fieldsView.getName());
+      PrestoView view, boolean readOnlyMode) {
+    View result = new View();
+    result.setId(view.getId());
+    result.setName(view.getName());
 
     List<Link> links = new ArrayList<Link>();
     if (topic != null) {
-      links.add(new Link("edit-in-view", Links.getEditLinkFor(uriInfo, topic, _fieldsView, readOnlyMode)));
+      links.add(new Link("edit-in-view", Links.getEditLinkFor(uriInfo, topic, view, readOnlyMode)));
     }
-    view.setLinks(links);
-    return view;
+    result.setLinks(links);
+    return result;
   }
 
   protected static Collection<Value> getValues(UriInfo uriInfo, PrestoFieldUsage field, Collection<? extends Object> fieldValues, boolean readOnlyMode) {
@@ -429,18 +429,18 @@ public class Utils {
   }
 
   public static PrestoTopic updateTopic(UriInfo uriInfo, PrestoSession session,
-      PrestoTopic topic, PrestoType topicType, PrestoView fieldsView,
+      PrestoTopic topic, PrestoType type, PrestoView view,
       Topic data) {
     PrestoDataProvider dataProvider = session.getDataProvider();
 
     PrestoChangeSet changeSet;
     if (topic == null) {
-      changeSet = dataProvider.createTopic(topicType);
+      changeSet = dataProvider.createTopic(type);
     } else {
       changeSet = dataProvider.updateTopic(topic);
     }
 
-    Map<String, PrestoFieldUsage> fields = getFieldInstanceMap(topic, topicType, fieldsView);
+    Map<String, PrestoFieldUsage> fields = getFieldInstanceMap(topic, type, view);
 
     for (FieldData jsonField : data.getFields()) {
       String fieldId = jsonField.getId();
@@ -490,7 +490,7 @@ public class Utils {
     return topic;
   }
 
-  private static PrestoTopic updateEmbeddedReference(UriInfo uriInfo, PrestoSession session, PrestoView fieldsView, Topic embeddedTopic) {
+  private static PrestoTopic updateEmbeddedReference(UriInfo uriInfo, PrestoSession session, PrestoView view, Topic embeddedTopic) {
 
     PrestoDataProvider dataProvider = session.getDataProvider();
     PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
@@ -498,23 +498,23 @@ public class Utils {
     String topicId = embeddedTopic.getId();
 
     PrestoTopic topic = null;
-    PrestoType topicType;
+    PrestoType type;
     if (topicId == null) {
-      TopicType type = embeddedTopic.getType();
-      String topicTypeId = type.getId();
-      topicType = schemaProvider.getTypeById(topicTypeId);
+      TopicType topicType = embeddedTopic.getType();
+      String typeId = topicType.getId();
+      type = schemaProvider.getTypeById(typeId);
     } else {
       topic = dataProvider.getTopicById(topicId);
-      topicType = schemaProvider.getTypeById(topic.getTypeId());
+      type = schemaProvider.getTypeById(topic.getTypeId());
     }
 
-    return Utils.updateTopic(uriInfo, session, topic, topicType, fieldsView, embeddedTopic);
+    return Utils.updateTopic(uriInfo, session, topic, type, view, embeddedTopic);
   }
 
   private static Map<String, PrestoFieldUsage> getFieldInstanceMap(PrestoTopic topic,
-      PrestoType topicType, PrestoView fieldsView) {
+      PrestoType type, PrestoView view) {
     Map<String, PrestoFieldUsage> fields = new HashMap<String, PrestoFieldUsage>();
-    for (PrestoFieldUsage field : topicType.getFields(fieldsView)) {
+    for (PrestoFieldUsage field : type.getFields(view)) {
       fields.put(field.getId(), field);
     }
     return fields;
