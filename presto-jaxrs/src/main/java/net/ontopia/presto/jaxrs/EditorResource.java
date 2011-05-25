@@ -37,7 +37,7 @@ import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoView;
 
 @Path("/editor")
-public abstract class TopicResource {
+public abstract class EditorResource {
     
   public final static String APPLICATION_JSON_UTF8 = "application/json;charset=UTF-8";
 
@@ -264,7 +264,7 @@ public abstract class TopicResource {
   public Topic updateTopic(@Context UriInfo uriInfo, 
       @PathParam("topicMapId") final String topicMapId, 
       @PathParam("topicId") final String topicId, 
-      @PathParam("viewId") final String viewId, Topic jsonObject) throws Exception {
+      @PathParam("viewId") final String viewId, Topic topicData) throws Exception {
 
     PrestoSession session = createSession(topicMapId);
     PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
@@ -283,7 +283,7 @@ public abstract class TopicResource {
 
       PrestoView view = type.getViewById(viewId);
       
-      topic = Utils.updateTopic(uriInfo, session, topic, type, view, jsonObject);
+      topic = Utils.updateTopic(uriInfo, session, topic, type, view, preProcess(topicData));
       
       Topic result = Utils.getTopicInfo(uriInfo, topic, type, view, false);
       String id = result.getId();
@@ -308,7 +308,7 @@ public abstract class TopicResource {
       @PathParam("topicId") final String topicId, 
       @PathParam("viewId") final String viewId,
       @PathParam("fieldId") final String fieldId, 
-      @PathParam("index") final Integer index, FieldData jsonObject) throws Exception {
+      @PathParam("index") final Integer index, FieldData fieldData) throws Exception {
 
       PrestoSession session = createSession(topicMapId);
       PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
@@ -322,7 +322,7 @@ public abstract class TopicResource {
 
         PrestoFieldUsage field = type.getFieldById(fieldId, view);
 
-        FieldData result = Utils.addFieldValues(uriInfo, session, topic, field, index, jsonObject);
+        FieldData result = Utils.addFieldValues(uriInfo, session, topic, field, index, fieldData);
 
         String id = topic.getId();
 
@@ -347,9 +347,9 @@ public abstract class TopicResource {
       @PathParam("topicId") final String topicId, 
       @PathParam("viewId") final String viewId,
       @PathParam("fieldId") final String fieldId, 
-      @PathParam("index") final Integer index, FieldData jsonObject) throws Exception {
+      @PathParam("index") final Integer index, FieldData fieldData) throws Exception {
       
-      return addFieldValuesAtIndex(uriInfo, topicMapId, topicId, viewId, fieldId, index, jsonObject);
+      return addFieldValuesAtIndex(uriInfo, topicMapId, topicId, viewId, fieldId, index, fieldData);
   }
   
   @POST
@@ -360,10 +360,10 @@ public abstract class TopicResource {
       @PathParam("topicMapId") final String topicMapId, 
       @PathParam("topicId") final String topicId, 
       @PathParam("viewId") final String viewId,
-      @PathParam("fieldId") final String fieldId, FieldData jsonObject) throws Exception {
+      @PathParam("fieldId") final String fieldId, FieldData fieldData) throws Exception {
 
       Integer index = null;
-      return addFieldValuesAtIndex(uriInfo, topicMapId, topicId, viewId, fieldId, index, jsonObject);
+      return addFieldValuesAtIndex(uriInfo, topicMapId, topicId, viewId, fieldId, index, fieldData);
   }
 
   @POST
@@ -374,7 +374,7 @@ public abstract class TopicResource {
       @PathParam("topicMapId") final String topicMapId, 
       @PathParam("topicId") final String topicId, 
       @PathParam("viewId") final String viewId,
-      @PathParam("fieldId") final String fieldId, FieldData jsonObject) throws Exception {
+      @PathParam("fieldId") final String fieldId, FieldData fieldData) throws Exception {
 
     PrestoSession session = createSession(topicMapId);
     PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
@@ -388,7 +388,7 @@ public abstract class TopicResource {
 
       PrestoFieldUsage field = type.getFieldById(fieldId, view);
 
-      FieldData result =  Utils.removeFieldValues(uriInfo, session, topic, field, jsonObject);
+      FieldData result =  Utils.removeFieldValues(uriInfo, session, topic, field, fieldData);
 
       String id = topic.getId();
 
@@ -590,6 +590,10 @@ public abstract class TopicResource {
   protected abstract PrestoSession createSession(String topicMapId);
 
   protected void onTopicUpdated(String topicId) {      
+  }
+
+  protected Topic preProcess(Topic topicInfo) {
+    return topicInfo;
   }
 
   protected Topic postProcess(Topic topicInfo) {
