@@ -11,5 +11,5 @@ public interface PrestoTopic {
   String getTypeId();
   
   Collection<Object> getValues(PrestoField field);
-
+  
 }

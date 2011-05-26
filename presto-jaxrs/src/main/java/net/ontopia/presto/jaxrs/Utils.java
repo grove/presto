@@ -85,8 +85,10 @@ public class Utils {
     result.setView(view.getId());
 
     List<Link> topicLinks = new ArrayList<Link>();
-    topicLinks.add(new Link("edit", Links.getEditLinkFor(uriInfo, topic, view)));    
-    //    topicLinks.add(new Link("remove", "http://examples.org/topics/" + topic.getId() + "/remove"));
+    topicLinks.add(new Link("edit", Links.getEditLinkFor(uriInfo, topic, view)));
+    if (type.isRemovable()) {
+      topicLinks.add(new Link("delete", Links.getDeleteLinkFor(uriInfo, type.getSchemaProvider().getDatabaseId(), topic)));
+    }
     result.setLinks(topicLinks);
 
     List<FieldData> fields = new ArrayList<FieldData>(); 
@@ -239,7 +241,7 @@ public class Utils {
       fieldData.setValueTypes(valueTypes);
     }
 
-    fieldData.setValues(getValues(uriInfo, field, fieldValues, isReadOnly));
+    fieldData.setValues(getValues(uriInfo, field, fieldValues, readOnlyMode));
     return fieldData;
   }
 
@@ -530,6 +532,13 @@ public class Utils {
 
   private static String getReferenceValue(Value value) {
     return value.getValue();
+  }
+
+  public static boolean deleteTopic(UriInfo uriInfo, PrestoTopic topic, PrestoType type, PrestoDataProvider dataProvider) {
+      if (!type.isReadOnly()) {
+          return dataProvider.removeTopic(topic);
+      }
+      return false;
   }
 
 }

@@ -26,7 +26,7 @@ public class CouchBucketDataProvider extends CouchDataProvider {
   
   @Override
   protected CouchTopic existing(ObjectNode doc) {
-    return new CouchBucketTopic(this, doc);
+    return doc == null ? null : new CouchBucketTopic(this, doc);
   }
 
   @Override

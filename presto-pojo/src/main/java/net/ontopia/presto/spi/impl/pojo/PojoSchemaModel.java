@@ -91,6 +91,10 @@ public class PojoSchemaModel {
       if (typeConfig.has("creatable")) {
         type.setCreatable(typeConfig.get("creatable").getBooleanValue());
       }
+      // removable
+      if (typeConfig.has("removable")) {
+        type.setRemovable(typeConfig.get("removable").getBooleanValue());
+      }
       
       // extends
       if (typeConfig.has("extends")) {

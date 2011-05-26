@@ -22,6 +22,7 @@ public class PojoType implements PrestoType {
   private boolean isReadOnly;
   private boolean isHidden;
   private boolean isCreatable = true;
+  private boolean isRemovable;
 
   private Collection<PrestoType> directSubTypes = new HashSet<PrestoType>();
 
@@ -79,6 +80,10 @@ public class PojoType implements PrestoType {
 
   public boolean isCreatable() {
     return isCreatable;
+  }
+  
+  public boolean isRemovable() {
+    return isRemovable;
   }
   
   public Collection<PrestoType> getDirectSubTypes() {
@@ -148,6 +153,10 @@ public class PojoType implements PrestoType {
 
   protected void setCreatable(boolean isCreatable) {
     this.isCreatable = isCreatable;
+  }
+
+  protected void setRemovable(boolean isRemovable) {
+    this.isRemovable = isRemovable;
   }
 
   protected void addDirectSubType(PrestoType type) {

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -15,6 +16,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
 import net.ontopia.presto.jaxb.AvailableFieldTypes;
@@ -49,7 +53,7 @@ public abstract class EditorResource {
 
   @GET
   @Produces(APPLICATION_JSON_UTF8)
-  public RootInfo getRootInfo(@Context UriInfo uriInfo) throws Exception {
+  public Response getRootInfo(@Context UriInfo uriInfo) throws Exception {
 
     RootInfo result = new RootInfo();
 
@@ -60,13 +64,14 @@ public abstract class EditorResource {
     List<Link> links = new ArrayList<Link>();
     links.add(new Link("available-topicmaps", uriInfo.getBaseUri() + "editor/available-topicmaps"));
     result.setLinks(links);      
-    return result;
+
+    return Response.ok(result).build();
   }
 
   @GET
   @Produces(APPLICATION_JSON_UTF8)
   @Path("available-topicmaps")
-  public AvailableTopicMaps getTopicMaps(@Context UriInfo uriInfo) throws Exception {
+  public Response getTopicMaps(@Context UriInfo uriInfo) throws Exception {
 
     AvailableTopicMaps result = new AvailableTopicMaps();
 
@@ -85,13 +90,14 @@ public abstract class EditorResource {
     
     topicmaps.add(topicmap);
     result.setTopicMaps(topicmaps);      
-    return result;
+
+    return Response.ok(result).build();
   }
 
   @GET
   @Produces(APPLICATION_JSON_UTF8)
   @Path("topicmap-info/{topicMapId}")
-  public TopicMap getTopicMapInfo(
+  public Response getTopicMapInfo(
       @Context UriInfo uriInfo, 
       @PathParam("topicMapId") final String topicMapId) throws Exception {
 
@@ -107,8 +113,8 @@ public abstract class EditorResource {
       links.add(new Link("available-types-tree-lazy", uriInfo.getBaseUri() + "editor/available-types-tree-lazy/" + session.getDatabaseId()));
       links.add(new Link("edit-topic-by-id", uriInfo.getBaseUri() + "editor/topic/" + session.getDatabaseId() + "/{topicId}"));
       result.setLinks(links);      
-      return result;
 
+      return Response.ok(result).build();
 
     } catch (Exception e) {
       session.abort();
@@ -121,7 +127,7 @@ public abstract class EditorResource {
   @GET
   @Produces(APPLICATION_JSON_UTF8)
   @Path("create-instance/{topicMapId}/{typeId}")
-  public Topic createInstance(
+  public Response createInstance(
       @Context UriInfo uriInfo, 
       @PathParam("topicMapId") final String topicMapId, 
       @PathParam("typeId") final String typeId) throws Exception {
@@ -132,9 +138,13 @@ public abstract class EditorResource {
     try {
 
       PrestoType type = schemaProvider.getTypeById(typeId);
+      if (type == null) {
+        return Response.status(Status.NOT_FOUND).build();
+      }
       PrestoView view = type.getDefaultView();
 
-      return postProcess(Utils.getNewTopicInfo(uriInfo, type, view));
+      Topic result = postProcess(Utils.getNewTopicInfo(uriInfo, type, view));
+      return Response.ok(result).build();
 
     } catch (Exception e) {
       session.abort();
@@ -147,7 +157,7 @@ public abstract class EditorResource {
   @GET
   @Produces(APPLICATION_JSON_UTF8)
   @Path("create-field-instance/{topicMapId}/{parentTopicId}/{parentFieldId}/{playerTypeId}")
-  public Topic createFieldInstance(
+  public Response createFieldInstance(
       @Context UriInfo uriInfo, 
       @PathParam("topicMapId") final String topicMapId,
       @PathParam("parentTopicId") final String parentTopicId,
@@ -160,9 +170,13 @@ public abstract class EditorResource {
     try {
 
       PrestoType type = schemaProvider.getTypeById(playerTypeId);
+      if (type == null) {
+        return Response.status(Status.NOT_FOUND).build();
+      }
       PrestoView view = type.getDefaultView();
 
-      return postProcess(Utils.getNewTopicInfo(uriInfo, type, view, parentTopicId, parentFieldId));
+      Topic result = postProcess(Utils.getNewTopicInfo(uriInfo, type, view, parentTopicId, parentFieldId));
+      return Response.ok(result).build();
 
     } catch (Exception e) {
       session.abort();
@@ -175,7 +189,7 @@ public abstract class EditorResource {
   @GET
   @Produces(APPLICATION_JSON_UTF8)
   @Path("topic-data/{topicMapId}/{topicId}")
-  public Map<String,Object> getTopicData(
+  public Response getTopicData(
       @Context UriInfo uriInfo, 
       @PathParam("topicMapId") final String topicMapId, 
       @PathParam("topicId") final String topicId) throws Exception {
@@ -187,10 +201,55 @@ public abstract class EditorResource {
     try {
 
       PrestoTopic topic = dataProvider.getTopicById(topicId);
+      if (topic == null) {
+        return Response.status(Status.NOT_FOUND).build();
+      }
       PrestoType type = schemaProvider.getTypeById(topic.getTypeId());
       
-      return Utils.getTopicData(uriInfo, topic, type);
+      Map<String,Object> result = Utils.getTopicData(uriInfo, topic, type);
+      return Response.ok(result).build();
 
+    } catch (Exception e) {
+      session.abort();
+      throw e;
+    } finally {
+      session.close();      
+    }
+  }
+
+  @DELETE
+  @Produces(APPLICATION_JSON_UTF8)
+  @Path("topic/{topicMapId}/{topicId}")
+  public Response deleteTopic(
+      @Context UriInfo uriInfo, 
+      @PathParam("topicMapId") final String topicMapId, 
+      @PathParam("topicId") final String topicId) throws Exception {
+
+    PrestoSession session = createSession(topicMapId);
+    PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
+    PrestoDataProvider dataProvider = session.getDataProvider();
+
+    try {
+
+      PrestoTopic topic = dataProvider.getTopicById(topicId);
+      
+      if (topic == null) {
+        // 200
+        ResponseBuilder builder = Response.ok();
+        return builder.build();        
+      } else {
+        PrestoType type = schemaProvider.getTypeById(topic.getTypeId());
+        if (Utils.deleteTopic(uriInfo, topic, type, dataProvider)) {          
+            // 200
+            ResponseBuilder builder = Response.ok();
+            return builder.build();
+        } else {
+            // 403
+            ResponseBuilder builder = Response.status(Status.FORBIDDEN);
+            return builder.build();
+        }
+      }
+      
     } catch (Exception e) {
       session.abort();
       throw e;
@@ -202,7 +261,7 @@ public abstract class EditorResource {
   @GET
   @Produces(APPLICATION_JSON_UTF8)
   @Path("topic/{topicMapId}/{topicId}")
-  public Topic getTopicInDefaultView(
+  public Response getTopicInDefaultView(
       @Context UriInfo uriInfo, 
       @PathParam("topicMapId") final String topicMapId, 
       @PathParam("topicId") final String topicId,
@@ -215,10 +274,14 @@ public abstract class EditorResource {
     try {
 
       PrestoTopic topic = dataProvider.getTopicById(topicId);
+      if (topic == null) {
+          return Response.status(Status.NOT_FOUND).build();
+        }
       PrestoType type = schemaProvider.getTypeById(topic.getTypeId());
       PrestoView view = type.getDefaultView();
       
-      return postProcess(Utils.getTopicInfo(uriInfo, topic, type, view, readOnly));
+      Topic result = postProcess(Utils.getTopicInfo(uriInfo, topic, type, view, readOnly));
+      return Response.ok(result).build();
 
     } catch (Exception e) {
       session.abort();
@@ -231,7 +294,8 @@ public abstract class EditorResource {
   @GET
   @Produces(APPLICATION_JSON_UTF8)
   @Path("topic/{topicMapId}/{topicId}/{viewId}")
-  public Topic getTopicInView(@Context UriInfo uriInfo, 
+  public Response getTopicInView(
+      @Context UriInfo uriInfo, 
       @PathParam("topicMapId") final String topicMapId, 
       @PathParam("topicId") final String topicId,
       @PathParam("viewId") final String viewId,
@@ -244,10 +308,14 @@ public abstract class EditorResource {
     try {
 
       PrestoTopic topic = dataProvider.getTopicById(topicId);
+      if (topic == null) {
+        return Response.status(Status.NOT_FOUND).build();
+      }
       PrestoType type = schemaProvider.getTypeById(topic.getTypeId());
       PrestoView view = type.getViewById(viewId);
 
-      return postProcess(Utils.getTopicInfo(uriInfo, topic, type, view, readOnly));
+      Topic result = postProcess(Utils.getTopicInfo(uriInfo, topic, type, view, readOnly));
+      return Response.ok(result).build();
 
     } catch (Exception e) {
       session.abort();
@@ -261,7 +329,7 @@ public abstract class EditorResource {
   @Produces(APPLICATION_JSON_UTF8)
   @Consumes(MediaType.APPLICATION_JSON)
   @Path("topic/{topicMapId}/{topicId}/{viewId}")
-  public Topic updateTopic(@Context UriInfo uriInfo, 
+  public Response updateTopic(@Context UriInfo uriInfo, 
       @PathParam("topicMapId") final String topicMapId, 
       @PathParam("topicId") final String topicId, 
       @PathParam("viewId") final String viewId, Topic topicData) throws Exception {
@@ -278,6 +346,9 @@ public abstract class EditorResource {
         type = schemaProvider.getTypeById(topicId.substring(1));
       } else {
         topic = dataProvider.getTopicById(topicId);
+        if (topic == null) {
+          return Response.status(Status.NOT_FOUND).build();
+        }
         type = schemaProvider.getTypeById(topic.getTypeId());
       }
 
@@ -290,7 +361,9 @@ public abstract class EditorResource {
       session.commit();
       onTopicUpdated(id);
 
-      return postProcess(result);
+      result = postProcess(result);
+      return Response.ok(result).build();
+
     } catch (Exception e) {
       session.abort();
       throw e;
@@ -303,7 +376,7 @@ public abstract class EditorResource {
   @Produces(APPLICATION_JSON_UTF8)
   @Consumes(MediaType.APPLICATION_JSON)
   @Path("add-field-values-at-index/{topicMapId}/{topicId}/{viewId}/{fieldId}/{index}")
-  public FieldData addFieldValuesAtIndex(@Context UriInfo uriInfo, 
+  public Response addFieldValuesAtIndex(@Context UriInfo uriInfo, 
       @PathParam("topicMapId") final String topicMapId, 
       @PathParam("topicId") final String topicId, 
       @PathParam("viewId") final String viewId,
@@ -317,6 +390,10 @@ public abstract class EditorResource {
       try {
 
         PrestoTopic topic = dataProvider.getTopicById(topicId);
+        if (topic == null) {
+          return Response.status(Status.NOT_FOUND).build();
+        }
+
         PrestoType type = schemaProvider.getTypeById(topic.getTypeId());
         PrestoView view = type.getViewById(viewId);
 
@@ -329,7 +406,8 @@ public abstract class EditorResource {
         session.commit();
         onTopicUpdated(id);
 
-        return result;
+        return Response.ok(result).build();
+        
       } catch (Exception e) {
         session.abort();
         throw e;
@@ -342,7 +420,7 @@ public abstract class EditorResource {
   @Produces(APPLICATION_JSON_UTF8)
   @Consumes(MediaType.APPLICATION_JSON)
   @Path("move-field-values-to-index/{topicMapId}/{topicId}/{viewId}/{fieldId}/{index}")
-  public FieldData moveFieldValuesToIndex(@Context UriInfo uriInfo, 
+  public Response moveFieldValuesToIndex(@Context UriInfo uriInfo, 
       @PathParam("topicMapId") final String topicMapId, 
       @PathParam("topicId") final String topicId, 
       @PathParam("viewId") final String viewId,
@@ -356,7 +434,7 @@ public abstract class EditorResource {
   @Produces(APPLICATION_JSON_UTF8)
   @Consumes(MediaType.APPLICATION_JSON)
   @Path("add-field-values/{topicMapId}/{topicId}/{viewId}/{fieldId}")
-  public FieldData addFieldValues(@Context UriInfo uriInfo, 
+  public Response addFieldValues(@Context UriInfo uriInfo, 
       @PathParam("topicMapId") final String topicMapId, 
       @PathParam("topicId") final String topicId, 
       @PathParam("viewId") final String viewId,
@@ -370,7 +448,7 @@ public abstract class EditorResource {
   @Produces(APPLICATION_JSON_UTF8)
   @Consumes(MediaType.APPLICATION_JSON)
   @Path("remove-field-values/{topicMapId}/{topicId}/{viewId}/{fieldId}")
-  public FieldData removeFieldValues(@Context UriInfo uriInfo, 
+  public Response removeFieldValues(@Context UriInfo uriInfo, 
       @PathParam("topicMapId") final String topicMapId, 
       @PathParam("topicId") final String topicId, 
       @PathParam("viewId") final String viewId,
@@ -383,6 +461,10 @@ public abstract class EditorResource {
     try {
 
       PrestoTopic topic = dataProvider.getTopicById(topicId);
+      if (topic == null) {
+        return Response.status(Status.NOT_FOUND).build();
+      }
+      
       PrestoType type = schemaProvider.getTypeById(topic.getTypeId());
       PrestoView view = type.getViewById(viewId);
 
@@ -395,7 +477,8 @@ public abstract class EditorResource {
       session.commit();
       onTopicUpdated(id);
 
-      return result;
+      return Response.ok(result).build();
+      
     } catch (Exception e) {
       session.abort();
       throw e;
@@ -407,7 +490,7 @@ public abstract class EditorResource {
   @GET
   @Produces(APPLICATION_JSON_UTF8)
   @Path("available-field-values/{topicMapId}/{topicId}/{viewId}/{fieldId}")
-  public AvailableFieldValues getAvailableFieldValues(@Context UriInfo uriInfo, 
+  public Response getAvailableFieldValues(@Context UriInfo uriInfo, 
       @PathParam("topicMapId") final String topicMapId, 
       @PathParam("topicId") final String topicId, 
       @PathParam("viewId") final String viewId,
@@ -425,6 +508,9 @@ public abstract class EditorResource {
         type = schemaProvider.getTypeById(topicId.substring(1));
       } else {
         topic = dataProvider.getTopicById(topicId);
+        if (topic == null) {
+          return Response.status(Status.NOT_FOUND).build();
+        }
         type = schemaProvider.getTypeById(topic.getTypeId());
       }
 
@@ -433,7 +519,9 @@ public abstract class EditorResource {
       PrestoFieldUsage field = type.getFieldById(fieldId, view);
       
       Collection<PrestoTopic> availableFieldValues = dataProvider.getAvailableFieldValues(field);
-      return createFieldInfoAllowed(uriInfo, field, availableFieldValues);
+      AvailableFieldValues result = createFieldInfoAllowed(uriInfo, field, availableFieldValues);
+      
+      return Response.ok(result).build();
 
     } catch (Exception e) {
       session.abort();
@@ -467,7 +555,7 @@ public abstract class EditorResource {
   @GET
   @Produces(APPLICATION_JSON_UTF8)
   @Path("available-field-types/{topicMapId}/{topicId}/{viewId}/{fieldId}")
-  public AvailableFieldTypes getAvailableFieldTypes(@Context UriInfo uriInfo, 
+  public Response getAvailableFieldTypes(@Context UriInfo uriInfo, 
       @PathParam("topicMapId") final String topicMapId, 
       @PathParam("topicId") final String topicId, 
       @PathParam("viewId") final String viewId,
@@ -485,6 +573,9 @@ public abstract class EditorResource {
         type = schemaProvider.getTypeById(topicId.substring(1));
       } else {
         topic = dataProvider.getTopicById(topicId);
+        if (topic == null) {
+          return Response.status(Status.NOT_FOUND).build();
+        }
         type = schemaProvider.getTypeById(topic.getTypeId());
       }
       
@@ -502,9 +593,9 @@ public abstract class EditorResource {
       for (PrestoType createType : availableFieldCreateTypes) {
         types.add(Utils.getCreateFieldInstance(uriInfo, topic, type, field, createType));
       }
-
       result.setTypes(types);
-      return result;
+      
+      return Response.ok(result).build();
       
     } catch (Exception e) {
       session.abort();
@@ -517,7 +608,7 @@ public abstract class EditorResource {
   @GET
   @Produces(APPLICATION_JSON_UTF8)
   @Path("available-types-tree-lazy/{topicMapId}")
-  public AvailableTopicTypes getAvailableTypesTreeLazy(@Context UriInfo uriInfo, 
+  public Response getAvailableTypesTreeLazy(@Context UriInfo uriInfo, 
       @PathParam("topicMapId") final String topicMapId) throws Exception {
 
     PrestoSession session = createSession(topicMapId);
@@ -527,7 +618,8 @@ public abstract class EditorResource {
 
       AvailableTopicTypes result = new AvailableTopicTypes();
       result.setTypes(TypeUtils.getAvailableTypes(uriInfo, schemaProvider.getRootTypes(), false));      
-      return result;
+
+      return Response.ok(result).build();
 
     } catch (Exception e) {
       session.abort();
@@ -540,7 +632,7 @@ public abstract class EditorResource {
   @GET
   @Produces(APPLICATION_JSON_UTF8)
   @Path("available-types-tree-lazy/{topicMapId}/{typeId}")
-  public AvailableTopicTypes getAvailableTypesTreeLazy(@Context UriInfo uriInfo, 
+  public Response getAvailableTypesTreeLazy(@Context UriInfo uriInfo, 
       @PathParam("topicMapId") final String topicMapId, 
       @PathParam("typeId") final String typeId) throws Exception {
 
@@ -552,7 +644,8 @@ public abstract class EditorResource {
 
       AvailableTopicTypes result = new AvailableTopicTypes();
       result.setTypes(TypeUtils.getAvailableTypes(uriInfo, type.getDirectSubTypes(), false));      
-      return result;
+
+      return Response.ok(result).build();
 
     } catch (Exception e) {
       session.abort();
@@ -565,7 +658,7 @@ public abstract class EditorResource {
   @GET
   @Produces(APPLICATION_JSON_UTF8)
   @Path("available-types-tree/{topicMapId}")
-  public AvailableTopicTypes getAvailableTypesTree(@Context UriInfo uriInfo, 
+  public Response getAvailableTypesTree(@Context UriInfo uriInfo, 
       @PathParam("topicMapId") final String topicMapId) throws Exception {
 
     PrestoSession session = createSession(topicMapId);
@@ -575,7 +668,8 @@ public abstract class EditorResource {
 
       AvailableTopicTypes result = new AvailableTopicTypes();
       result.setTypes(TypeUtils.getAvailableTypes(uriInfo, schemaProvider.getRootTypes(), true));      
-      return result;
+
+      return Response.ok(result).build();
 
     } catch (Exception e) {
       session.abort();

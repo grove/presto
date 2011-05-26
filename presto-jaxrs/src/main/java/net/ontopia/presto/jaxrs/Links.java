@@ -7,6 +7,10 @@ import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoView;
 
 public class Links {
+    
+  protected static String getDeleteLinkFor(UriInfo uriInfo, String databaseId, PrestoTopic topic) {
+    return uriInfo.getBaseUri() + "editor/topic/" + databaseId + "/" + topic.getId();
+  }
 
   protected static String getEditLinkFor(UriInfo uriInfo, PrestoTopic topic, PrestoView fieldsView) {
     return uriInfo.getBaseUri() + "editor/topic/" + fieldsView.getSchemaProvider().getDatabaseId() + "/" + topic.getId() + "/" + fieldsView.getId();
