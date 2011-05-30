@@ -210,6 +210,10 @@ public class PojoSchemaModel {
             if (fieldConfig.has("sorted")) {
               field.setSorted(fieldConfig.get("sorted").getBooleanValue());
             }
+            // isCascadingDelete
+            if (fieldConfig.has("cascadingDelete")) {
+              field.setCascadingDelete(fieldConfig.get("cascadingDelete").getBooleanValue());
+            }
             // isNewValuesOnly
             if (fieldConfig.has("newValuesOnly")) {
               field.setNewValuesOnly(fieldConfig.get("newValuesOnly").getBooleanValue());

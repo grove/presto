@@ -179,7 +179,12 @@ public class OntopolyField implements PrestoFieldUsage {
   }
   
   public boolean isSorted() {
-      return true;
+    return true;
+  }
+  
+  public boolean isCascadingDelete() {
+    EditMode editMode = getEditMode();
+    return editMode.isOwnedValues();
   }
   
   public boolean isNewValuesOnly() {

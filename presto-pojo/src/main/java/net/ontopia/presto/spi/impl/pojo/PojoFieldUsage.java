@@ -9,128 +9,132 @@ import net.ontopia.presto.spi.PrestoView;
 
 public class PojoFieldUsage implements PrestoFieldUsage {
 
-    private final PojoField field;
-    private final PrestoType type;
-    private final PrestoView view;
-    
-    PojoFieldUsage(PojoField field, PrestoType type, PrestoView view) {
-        this.field = field;
-        this.type = type;
-        this.view = view;
-    }
+  private final PojoField field;
+  private final PrestoType type;
+  private final PrestoView view;
 
-    @Override
-    public boolean equals(Object other) {
-        if (other instanceof PojoFieldUsage) {
-            PojoFieldUsage o = (PojoFieldUsage)other;
-            return field.equals(o.field) && type.equals(o.type) && view.equals(o.view);
-        }
-        return false;
-    }
-    
-    @Override
-    public int hashCode() {
-        return field.hashCode() + type.hashCode() + view.hashCode();
-    }
+  PojoFieldUsage(PojoField field, PrestoType type, PrestoView view) {
+    this.field = field;
+    this.type = type;
+    this.view = view;
+  }
 
-    public PrestoType getType() {
-        return type;
+  @Override
+  public boolean equals(Object other) {
+    if (other instanceof PojoFieldUsage) {
+      PojoFieldUsage o = (PojoFieldUsage)other;
+      return field.equals(o.field) && type.equals(o.type) && view.equals(o.view);
     }
+    return false;
+  }
 
-    public PrestoView getView() {
-        return view;
-    }
-    
-    public String getId() {
-        return field.getId();
-    }
+  @Override
+  public int hashCode() {
+    return field.hashCode() + type.hashCode() + view.hashCode();
+  }
 
-    public PrestoSchemaProvider getSchemaProvider() {
-        return field.getSchemaProvider();
-    }
+  public PrestoType getType() {
+    return type;
+  }
 
-    public String getName() {
-        return field.getName();
-    }
+  public PrestoView getView() {
+    return view;
+  }
 
-    public boolean isNameField() {
-        return field.isNameField();
-    }
+  public String getId() {
+    return field.getId();
+  }
 
-    public boolean isPrimitiveField() {
-        return field.isPrimitiveField();
-    }
+  public PrestoSchemaProvider getSchemaProvider() {
+    return field.getSchemaProvider();
+  }
 
-    public boolean isReferenceField() {
-        return field.isReferenceField();
-    }
+  public String getName() {
+    return field.getName();
+  }
 
-    public PrestoView getValueView() {
-        return field.getValueView();
-    }
+  public boolean isNameField() {
+    return field.isNameField();
+  }
 
-    public int getMinCardinality() {
-        return field.getMinCardinality();
-    }
+  public boolean isPrimitiveField() {
+    return field.isPrimitiveField();
+  }
 
-    public int getMaxCardinality() {
-        return field.getMaxCardinality();
-    }
+  public boolean isReferenceField() {
+    return field.isReferenceField();
+  }
 
-    public String getDataType() {
-        return field.getDataType();
-    }
+  public PrestoView getValueView() {
+    return field.getValueView();
+  }
 
-    public String getValidationType() {
-        return field.getValidationType();
-    }
+  public int getMinCardinality() {
+    return field.getMinCardinality();
+  }
 
-    public boolean isEmbedded() {
-        return field.isEmbedded();
-    }
+  public int getMaxCardinality() {
+    return field.getMaxCardinality();
+  }
 
-    public boolean isHidden() {
-        return field.isHidden();
-    }
+  public String getDataType() {
+    return field.getDataType();
+  }
 
-    public boolean isTraversable() {
-        return field.isTraversable();
-    }
+  public String getValidationType() {
+    return field.getValidationType();
+  }
 
-    public boolean isReadOnly() {
-        return field.isReadOnly();
-    }
+  public boolean isEmbedded() {
+    return field.isEmbedded();
+  }
 
-    public boolean isSorted() {
-        return field.isSorted();
-    }
+  public boolean isHidden() {
+    return field.isHidden();
+  }
 
-    public boolean isNewValuesOnly() {
-        return field.isNewValuesOnly();
-    }
+  public boolean isTraversable() {
+    return field.isTraversable();
+  }
 
-    public boolean isExistingValuesOnly() {
-        return field.isExistingValuesOnly();
-    }
+  public boolean isReadOnly() {
+    return field.isReadOnly();
+  }
 
-    public String getInverseFieldId() {
-        return field.getInverseFieldId();
-    }
+  public boolean isSorted() {
+    return field.isSorted();
+  }
 
-    public String getInterfaceControl() {
-        return field.getInterfaceControl();
-    }
+  public boolean isCascadingDelete() {
+    return field.isCascadingDelete();
+  }
 
-    public Collection<PrestoType> getAvailableFieldCreateTypes() {
-        return field.getAvailableFieldCreateTypes();
-    }
+  public boolean isNewValuesOnly() {
+    return field.isNewValuesOnly();
+  }
 
-    public Collection<PrestoType> getAvailableFieldValueTypes() {
-        return field.getAvailableFieldValueTypes();
-    }
+  public boolean isExistingValuesOnly() {
+    return field.isExistingValuesOnly();
+  }
 
-    public Object getExtra() {
-        return field.getExtra();
-    }
+  public String getInverseFieldId() {
+    return field.getInverseFieldId();
+  }
+
+  public String getInterfaceControl() {
+    return field.getInterfaceControl();
+  }
+
+  public Collection<PrestoType> getAvailableFieldCreateTypes() {
+    return field.getAvailableFieldCreateTypes();
+  }
+
+  public Collection<PrestoType> getAvailableFieldValueTypes() {
+    return field.getAvailableFieldValueTypes();
+  }
+
+  public Object getExtra() {
+    return field.getExtra();
+  }
 
 }

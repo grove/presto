@@ -16,6 +16,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
 import org.ektorp.CouchDbConnector;
 import org.ektorp.DocumentNotFoundException;
+import org.ektorp.UpdateConflictException;
 import org.ektorp.ViewQuery;
 import org.ektorp.ViewResult;
 import org.ektorp.ViewResult.Row;
@@ -110,9 +111,7 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
   }
 
   public boolean removeTopic(PrestoTopic topic) {    
-    // TODO: Remove inverse references
-    delete((CouchTopic)topic);
-    return true;
+    return delete((CouchTopic)topic);
   }
 
   public void close() {
@@ -132,8 +131,13 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
     getCouchConnector().update(topic.getData());
   }
 
-  void delete(CouchTopic topic) {
-    getCouchConnector().delete(topic.getData());
+  boolean delete(CouchTopic topic) {
+    try {
+      getCouchConnector().delete(topic.getData());
+      return true;
+    } catch (UpdateConflictException e) {
+      return false;
+    }
   }
 
 }

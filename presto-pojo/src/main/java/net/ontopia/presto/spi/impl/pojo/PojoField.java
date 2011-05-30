@@ -27,6 +27,7 @@ public class PojoField implements PrestoField {
     private boolean isTraversable = true;
     private boolean isReadOnly;
     private boolean isSorted;
+    private boolean isCascadingDelete;
     private boolean isNewValuesOnly;
     private boolean isExistingValuesOnly;
     private String inverseFieldId;
@@ -106,6 +107,10 @@ public class PojoField implements PrestoField {
 
     public boolean isSorted() {
         return isSorted;
+    }
+
+    public boolean isCascadingDelete() {
+        return isCascadingDelete;
     }
 
     public boolean isNewValuesOnly() {
@@ -204,6 +209,10 @@ public class PojoField implements PrestoField {
 
     public void setSorted(boolean isSorted) {
         this.isSorted = isSorted;
+    }
+
+    public void setCascadingDelete(boolean isCascadingDelete) {
+        this.isCascadingDelete = isCascadingDelete;
     }
 
     public void setNewValuesOnly(boolean isNewValuesOnly) {

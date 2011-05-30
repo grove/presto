@@ -534,9 +534,28 @@ public class Utils {
     return value.getValue();
   }
 
-  public static boolean deleteTopic(UriInfo uriInfo, PrestoTopic topic, PrestoType type, PrestoDataProvider dataProvider) {
-      if (!type.isReadOnly()) {
-          return dataProvider.removeTopic(topic);
+  public static boolean deleteTopic(UriInfo uriInfo, PrestoTopic topic, PrestoType type, 
+      PrestoSchemaProvider schemaProvider, PrestoDataProvider dataProvider) {
+    return deleteTopic(uriInfo, topic, type, schemaProvider, dataProvider, new HashSet<PrestoTopic>());
+  }
+  
+  private static boolean deleteTopic(UriInfo uriInfo, PrestoTopic topic, PrestoType type, 
+      PrestoSchemaProvider schemaProvider, PrestoDataProvider dataProvider, Collection<PrestoTopic> deleted) {
+      if (type.isRemovable()) {
+        deleted.add(topic);
+        // remove inverse references
+        for (PrestoField field : type.getFields()) {
+          if (field.isCascadingDelete() && field.isReferenceField()) {
+            for (Object value : topic.getValues(field)) {
+              PrestoTopic valueTopic = (PrestoTopic)value;
+              String typeId = valueTopic.getTypeId();
+              PrestoType valueType = schemaProvider.getTypeById(typeId);
+              deleteTopic(uriInfo, valueTopic, valueType, schemaProvider, dataProvider, deleted);
+            }
+          }
+        }
+        // TODO: or should be wo it all in one bulk update?
+        return dataProvider.removeTopic(topic);
       }
       return false;
   }
