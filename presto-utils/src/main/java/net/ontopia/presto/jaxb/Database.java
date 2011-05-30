@@ -5,17 +5,17 @@ import java.util.Collection;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
-public class TopicMap {
+public class Database {
 
     private String id;
     private String name;
 
     private Collection<Link> links;
 
-    public TopicMap() {        
+    public Database() {        
     }
     
-    public TopicMap(String id, String name) {
+    public Database(String id, String name) {
         this.id = id;
         this.name = name;
     }

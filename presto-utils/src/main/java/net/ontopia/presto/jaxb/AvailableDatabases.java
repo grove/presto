@@ -6,28 +6,14 @@ import java.util.Collections;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
-public class AvailableTopicMaps {
+public class AvailableDatabases {
 
-    private String id;
     private String name;
     
     private Collection<Link> links;
-    private Collection<TopicMap> topicMaps = Collections.emptySet();
+    private Collection<Database> databases = Collections.emptySet();
 
-    public AvailableTopicMaps() {        
-    }
-    
-    public AvailableTopicMaps(String id, String name) {
-        this.id = id;
-        this.name = name;
-    }
-    
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getId() {
-        return id;
+    public AvailableDatabases() {        
     }
 
     public void setName(String name) {
@@ -50,12 +36,12 @@ public class AvailableTopicMaps {
         return links;
     }
 
-    public void setTopicMaps(Collection<TopicMap> topicmaps) {
-      this.topicMaps = topicmaps;
+    public void setDatabases(Collection<Database> databases) {
+      this.databases = databases;
     }
 
-    public Collection<TopicMap> getTopicMaps() {
-      return topicMaps;
+    public Collection<Database> getDatabases() {
+      return databases;
     }
 
 }

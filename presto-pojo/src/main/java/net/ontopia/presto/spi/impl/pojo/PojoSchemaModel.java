@@ -41,6 +41,9 @@ public class PojoSchemaModel {
       } else {
         istream = cl.getResourceAsStream(schemaFilename);
       }
+      if (istream == null) {
+        throw new RuntimeException("Cannot find schema file: " + schemaFilename);
+      }
       Reader reader = new InputStreamReader(istream, "UTF-8");
       ObjectMapper mapper = new ObjectMapper();
       ObjectNode objectNode = mapper.readValue(reader, ObjectNode.class);
@@ -95,7 +98,7 @@ public class PojoSchemaModel {
       if (typeConfig.has("removable")) {
         type.setRemovable(typeConfig.get("removable").getBooleanValue());
       }
-      
+
       // extends
       if (typeConfig.has("extends")) {
         String superTypeId = typeConfig.get("extends").getTextValue();
@@ -116,28 +119,28 @@ public class PojoSchemaModel {
           // view name
           String viewName = viewNode.get("name").getTextValue();
           view.setName(viewName);
-          
+
           // fields
           ArrayNode fieldsArray = (ArrayNode)viewNode.get("fields");
           for (JsonNode fieldNode : fieldsArray) {
             String fieldId;
             ObjectNode fieldConfig;
             if (fieldNode.isTextual()) {
-                fieldId = fieldNode.getTextValue();                        
-                fieldConfig = fieldsMap.get(fieldId);
+              fieldId = fieldNode.getTextValue();                        
+              fieldConfig = fieldsMap.get(fieldId);
             } else if (fieldNode.isObject()) {
-                fieldConfig = (ObjectNode)fieldNode;
-                fieldId = fieldConfig.get("id").getTextValue();
+              fieldConfig = (ObjectNode)fieldNode;
+              fieldId = fieldConfig.get("id").getTextValue();
             } else {
-                throw new RuntimeException("Invalid field declaration or field reference: " + fieldNode);
+              throw new RuntimeException("Invalid field declaration or field reference: " + fieldNode);
             }
             if (fieldId == null) {
-                throw new RuntimeException("Field id missing on field object: " + fieldConfig);
+              throw new RuntimeException("Field id missing on field object: " + fieldConfig);
             }
             if (fieldConfig == null) {
-                throw new RuntimeException("Field declaration missing for field with id '" + fieldId + "'");
+              throw new RuntimeException("Field declaration missing for field with id '" + fieldId + "'");
             }
-            
+
             PojoField field = new PojoField(fieldId, schemaProvider);
             type.addField(field);
             field.addDefinedInView(view);
@@ -151,7 +154,7 @@ public class PojoSchemaModel {
             }
 
             // isPrimitiveField/isReferenceField
-            
+
             // dataType
             if (fieldConfig.has("datatype")) {
               String datatype = fieldConfig.get("datatype").getTextValue();
@@ -265,37 +268,41 @@ public class PojoSchemaModel {
 
   private static Map<String, ObjectNode> createTypesMap(ObjectNode json) {
     Map<String,ObjectNode> typesMap = new HashMap<String,ObjectNode>();
-    ObjectNode typesNode = (ObjectNode)json.get("types");
-    Iterator<String> typeNames = typesNode.getFieldNames();
-    while (typeNames.hasNext()) {
-      String typeName = typeNames.next();
-      ObjectNode typeConfig = (ObjectNode)typesNode.get(typeName);
-      typesMap.put(typeName, typeConfig);
+    if (json.has("types")) {
+      ObjectNode typesNode = (ObjectNode)json.get("types");
+      Iterator<String> typeNames = typesNode.getFieldNames();
+      while (typeNames.hasNext()) {
+        String typeName = typeNames.next();
+        ObjectNode typeConfig = (ObjectNode)typesNode.get(typeName);
+        typesMap.put(typeName, typeConfig);
+      }
     }
     return typesMap;
   }
 
   private static Map<String, ObjectNode> createFieldsMap(ObjectNode json) {
     Map<String,ObjectNode> fieldsMap = new HashMap<String,ObjectNode>();
-    ObjectNode fieldsNode = (ObjectNode)json.get("fields");
-    Iterator<String> fieldNames = fieldsNode.getFieldNames();
-    while (fieldNames.hasNext()) {
-      String fieldName = fieldNames.next();
-      ObjectNode fieldConfig = (ObjectNode)fieldsNode.get(fieldName);
-      fieldsMap.put(fieldName, fieldConfig);
+    if (json.has("fields")) {
+      ObjectNode fieldsNode = (ObjectNode)json.get("fields");
+      Iterator<String> fieldNames = fieldsNode.getFieldNames();
+      while (fieldNames.hasNext()) {
+        String fieldName = fieldNames.next();
+        ObjectNode fieldConfig = (ObjectNode)fieldsNode.get(fieldName);
+        fieldsMap.put(fieldName, fieldConfig);
+      }
     }
     return fieldsMap;
   }
 
   private static void verifyDeclaredType(String typeId, Map<String, ObjectNode> typesMap, String jsonField, PojoType type) {
     if (!typesMap.containsKey(typeId)) {
-          throw new RuntimeException("Unknown type '" + typeId + "' in " + jsonField + " on type '" + type.getId() + "'");
+      throw new RuntimeException("Unknown type '" + typeId + "' in " + jsonField + " on type '" + type.getId() + "'");
     }
   }
 
   private static void verifyDeclaredType(String typeId, Map<String, ObjectNode> typesMap, String jsonField, PojoType type, PojoField field) {
     if (!typesMap.containsKey(typeId)) {
-          throw new RuntimeException("Unknown type '" + typeId + "' in " + jsonField + " in field '" + field.getId() + "' on type '" + type.getId() + "'");
+      throw new RuntimeException("Unknown type '" + typeId + "' in " + jsonField + " in field '" + field.getId() + "' on type '" + type.getId() + "'");
     }
   }
 

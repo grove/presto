@@ -21,15 +21,15 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
+import net.ontopia.presto.jaxb.AvailableDatabases;
 import net.ontopia.presto.jaxb.AvailableFieldTypes;
 import net.ontopia.presto.jaxb.AvailableFieldValues;
-import net.ontopia.presto.jaxb.AvailableTopicMaps;
 import net.ontopia.presto.jaxb.AvailableTopicTypes;
+import net.ontopia.presto.jaxb.Database;
 import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxb.Link;
 import net.ontopia.presto.jaxb.RootInfo;
 import net.ontopia.presto.jaxb.Topic;
-import net.ontopia.presto.jaxb.TopicMap;
 import net.ontopia.presto.jaxb.TopicType;
 import net.ontopia.presto.jaxb.Value;
 import net.ontopia.presto.spi.PrestoDataProvider;
@@ -45,24 +45,17 @@ public abstract class EditorResource {
     
   public final static String APPLICATION_JSON_UTF8 = "application/json;charset=UTF-8";
 
-  // TODO: add more endpoints: 
-  //
-  // 1: / - information about server and link to /available-topicmaps
-  // 2: /available-topicmaps - lists available topic maps
-  // 3: /create-instance/{topicMapId}
-
   @GET
   @Produces(APPLICATION_JSON_UTF8)
   public Response getRootInfo(@Context UriInfo uriInfo) throws Exception {
 
     RootInfo result = new RootInfo();
 
-    result.setId(uriInfo.getBaseUri() + "editor");
     result.setVersion(0);
     result.setName("Presto - Editor REST API");
 
     List<Link> links = new ArrayList<Link>();
-    links.add(new Link("available-topicmaps", uriInfo.getBaseUri() + "editor/available-topicmaps"));
+    links.add(new Link("available-databases", uriInfo.getBaseUri() + "editor/available-databases"));
     result.setLinks(links);      
 
     return Response.ok(result).build();
@@ -70,40 +63,40 @@ public abstract class EditorResource {
 
   @GET
   @Produces(APPLICATION_JSON_UTF8)
-  @Path("available-topicmaps")
-  public Response getTopicMaps(@Context UriInfo uriInfo) throws Exception {
+  @Path("available-databases")
+  public Response getDatabases(@Context UriInfo uriInfo) throws Exception {
 
-    AvailableTopicMaps result = new AvailableTopicMaps();
+    AvailableDatabases result = new AvailableDatabases();
 
-    result.setId("topicmaps");
     result.setName("Presto - Editor REST API");
 
-    Collection<TopicMap> topicmaps = new ArrayList<TopicMap>();
-    
-    TopicMap topicmap = new TopicMap();
-    topicmap.setId("litteraturklubben.xtm");
-    topicmap.setName("Litteraturklubben");
-
-    List<Link> links = new ArrayList<Link>();
-    links.add(new Link("edit", uriInfo.getBaseUri() + "editor/topicmap-info/" + topicmap.getId()));
-    topicmap.setLinks(links);    
-    
-    topicmaps.add(topicmap);
-    result.setTopicMaps(topicmaps);      
+    Collection<Database> databases = new ArrayList<Database>();
+    for (String databaseId : getDatabaseIds()) {
+        Database database = new Database();
+        database.setId(databaseId);
+        database.setName(getDatabaseName(databaseId));
+        
+        List<Link> links = new ArrayList<Link>();
+        links.add(new Link("edit", uriInfo.getBaseUri() + "editor/database-info/" + database.getId()));
+        database.setLinks(links);    
+        
+        databases.add(database);
+    }
+    result.setDatabases(databases);      
 
     return Response.ok(result).build();
   }
-
+    
   @GET
   @Produces(APPLICATION_JSON_UTF8)
-  @Path("topicmap-info/{topicMapId}")
-  public Response getTopicMapInfo(
+  @Path("database-info/{databaseId}")
+  public Response getDatabaseInfo(
       @Context UriInfo uriInfo, 
-      @PathParam("topicMapId") final String topicMapId) throws Exception {
+      @PathParam("databaseId") final String databaseId) throws Exception {
 
-    PrestoSession session = createSession(topicMapId);
+    PrestoSession session = createSession(databaseId);
     try {
-      TopicMap result = new TopicMap();
+      Database result = new Database();
 
       result.setId(session.getDatabaseId());
       result.setName(session.getDatabaseName());
@@ -126,13 +119,13 @@ public abstract class EditorResource {
 
   @GET
   @Produces(APPLICATION_JSON_UTF8)
-  @Path("create-instance/{topicMapId}/{typeId}")
+  @Path("create-instance/{databaseId}/{typeId}")
   public Response createInstance(
       @Context UriInfo uriInfo, 
-      @PathParam("topicMapId") final String topicMapId, 
+      @PathParam("databaseId") final String databaseId, 
       @PathParam("typeId") final String typeId) throws Exception {
 
-    PrestoSession session = createSession(topicMapId);
+    PrestoSession session = createSession(databaseId);
     PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
 
     try {
@@ -156,15 +149,15 @@ public abstract class EditorResource {
 
   @GET
   @Produces(APPLICATION_JSON_UTF8)
-  @Path("create-field-instance/{topicMapId}/{parentTopicId}/{parentFieldId}/{playerTypeId}")
+  @Path("create-field-instance/{databaseId}/{parentTopicId}/{parentFieldId}/{playerTypeId}")
   public Response createFieldInstance(
       @Context UriInfo uriInfo, 
-      @PathParam("topicMapId") final String topicMapId,
+      @PathParam("databaseId") final String databaseId,
       @PathParam("parentTopicId") final String parentTopicId,
       @PathParam("parentFieldId") final String parentFieldId, 
       @PathParam("playerTypeId") final String playerTypeId) throws Exception {
 
-    PrestoSession session = createSession(topicMapId);
+    PrestoSession session = createSession(databaseId);
     PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
     
     try {
@@ -188,13 +181,13 @@ public abstract class EditorResource {
 
   @GET
   @Produces(APPLICATION_JSON_UTF8)
-  @Path("topic-data/{topicMapId}/{topicId}")
+  @Path("topic-data/{databaseId}/{topicId}")
   public Response getTopicData(
       @Context UriInfo uriInfo, 
-      @PathParam("topicMapId") final String topicMapId, 
+      @PathParam("databaseId") final String databaseId, 
       @PathParam("topicId") final String topicId) throws Exception {
 
-    PrestoSession session = createSession(topicMapId);
+    PrestoSession session = createSession(databaseId);
     PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
     PrestoDataProvider dataProvider = session.getDataProvider();
     
@@ -219,13 +212,13 @@ public abstract class EditorResource {
 
   @DELETE
   @Produces(APPLICATION_JSON_UTF8)
-  @Path("topic/{topicMapId}/{topicId}")
+  @Path("topic/{databaseId}/{topicId}")
   public Response deleteTopic(
       @Context UriInfo uriInfo, 
-      @PathParam("topicMapId") final String topicMapId, 
+      @PathParam("databaseId") final String databaseId, 
       @PathParam("topicId") final String topicId) throws Exception {
 
-    PrestoSession session = createSession(topicMapId);
+    PrestoSession session = createSession(databaseId);
     PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
     PrestoDataProvider dataProvider = session.getDataProvider();
 
@@ -260,14 +253,14 @@ public abstract class EditorResource {
 
   @GET
   @Produces(APPLICATION_JSON_UTF8)
-  @Path("topic/{topicMapId}/{topicId}")
+  @Path("topic/{databaseId}/{topicId}")
   public Response getTopicInDefaultView(
       @Context UriInfo uriInfo, 
-      @PathParam("topicMapId") final String topicMapId, 
+      @PathParam("databaseId") final String databaseId, 
       @PathParam("topicId") final String topicId,
       @QueryParam("readOnly") final boolean readOnly) throws Exception {
 
-    PrestoSession session = createSession(topicMapId);
+    PrestoSession session = createSession(databaseId);
     PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
     PrestoDataProvider dataProvider = session.getDataProvider();
 
@@ -293,15 +286,15 @@ public abstract class EditorResource {
 
   @GET
   @Produces(APPLICATION_JSON_UTF8)
-  @Path("topic/{topicMapId}/{topicId}/{viewId}")
+  @Path("topic/{databaseId}/{topicId}/{viewId}")
   public Response getTopicInView(
       @Context UriInfo uriInfo, 
-      @PathParam("topicMapId") final String topicMapId, 
+      @PathParam("databaseId") final String databaseId, 
       @PathParam("topicId") final String topicId,
       @PathParam("viewId") final String viewId,
       @QueryParam("readOnly") final boolean readOnly) throws Exception {
 
-    PrestoSession session = createSession(topicMapId);
+    PrestoSession session = createSession(databaseId);
     PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
     PrestoDataProvider dataProvider = session.getDataProvider();
 
@@ -328,13 +321,13 @@ public abstract class EditorResource {
   @PUT
   @Produces(APPLICATION_JSON_UTF8)
   @Consumes(MediaType.APPLICATION_JSON)
-  @Path("topic/{topicMapId}/{topicId}/{viewId}")
+  @Path("topic/{databaseId}/{topicId}/{viewId}")
   public Response updateTopic(@Context UriInfo uriInfo, 
-      @PathParam("topicMapId") final String topicMapId, 
+      @PathParam("databaseId") final String databaseId, 
       @PathParam("topicId") final String topicId, 
       @PathParam("viewId") final String viewId, Topic topicData) throws Exception {
 
-    PrestoSession session = createSession(topicMapId);
+    PrestoSession session = createSession(databaseId);
     PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
     PrestoDataProvider dataProvider = session.getDataProvider();
 
@@ -375,15 +368,15 @@ public abstract class EditorResource {
   @POST
   @Produces(APPLICATION_JSON_UTF8)
   @Consumes(MediaType.APPLICATION_JSON)
-  @Path("add-field-values-at-index/{topicMapId}/{topicId}/{viewId}/{fieldId}/{index}")
+  @Path("add-field-values-at-index/{databaseId}/{topicId}/{viewId}/{fieldId}/{index}")
   public Response addFieldValuesAtIndex(@Context UriInfo uriInfo, 
-      @PathParam("topicMapId") final String topicMapId, 
+      @PathParam("databaseId") final String databaseId, 
       @PathParam("topicId") final String topicId, 
       @PathParam("viewId") final String viewId,
       @PathParam("fieldId") final String fieldId, 
       @PathParam("index") final Integer index, FieldData fieldData) throws Exception {
 
-      PrestoSession session = createSession(topicMapId);
+      PrestoSession session = createSession(databaseId);
       PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
       PrestoDataProvider dataProvider = session.getDataProvider();
 
@@ -419,42 +412,42 @@ public abstract class EditorResource {
   @POST
   @Produces(APPLICATION_JSON_UTF8)
   @Consumes(MediaType.APPLICATION_JSON)
-  @Path("move-field-values-to-index/{topicMapId}/{topicId}/{viewId}/{fieldId}/{index}")
+  @Path("move-field-values-to-index/{databaseId}/{topicId}/{viewId}/{fieldId}/{index}")
   public Response moveFieldValuesToIndex(@Context UriInfo uriInfo, 
-      @PathParam("topicMapId") final String topicMapId, 
+      @PathParam("databaseId") final String databaseId, 
       @PathParam("topicId") final String topicId, 
       @PathParam("viewId") final String viewId,
       @PathParam("fieldId") final String fieldId, 
       @PathParam("index") final Integer index, FieldData fieldData) throws Exception {
       
-      return addFieldValuesAtIndex(uriInfo, topicMapId, topicId, viewId, fieldId, index, fieldData);
+      return addFieldValuesAtIndex(uriInfo, databaseId, topicId, viewId, fieldId, index, fieldData);
   }
   
   @POST
   @Produces(APPLICATION_JSON_UTF8)
   @Consumes(MediaType.APPLICATION_JSON)
-  @Path("add-field-values/{topicMapId}/{topicId}/{viewId}/{fieldId}")
+  @Path("add-field-values/{databaseId}/{topicId}/{viewId}/{fieldId}")
   public Response addFieldValues(@Context UriInfo uriInfo, 
-      @PathParam("topicMapId") final String topicMapId, 
+      @PathParam("databaseId") final String databaseId, 
       @PathParam("topicId") final String topicId, 
       @PathParam("viewId") final String viewId,
       @PathParam("fieldId") final String fieldId, FieldData fieldData) throws Exception {
 
       Integer index = null;
-      return addFieldValuesAtIndex(uriInfo, topicMapId, topicId, viewId, fieldId, index, fieldData);
+      return addFieldValuesAtIndex(uriInfo, databaseId, topicId, viewId, fieldId, index, fieldData);
   }
 
   @POST
   @Produces(APPLICATION_JSON_UTF8)
   @Consumes(MediaType.APPLICATION_JSON)
-  @Path("remove-field-values/{topicMapId}/{topicId}/{viewId}/{fieldId}")
+  @Path("remove-field-values/{databaseId}/{topicId}/{viewId}/{fieldId}")
   public Response removeFieldValues(@Context UriInfo uriInfo, 
-      @PathParam("topicMapId") final String topicMapId, 
+      @PathParam("databaseId") final String databaseId, 
       @PathParam("topicId") final String topicId, 
       @PathParam("viewId") final String viewId,
       @PathParam("fieldId") final String fieldId, FieldData fieldData) throws Exception {
 
-    PrestoSession session = createSession(topicMapId);
+    PrestoSession session = createSession(databaseId);
     PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
     PrestoDataProvider dataProvider = session.getDataProvider();
 
@@ -489,14 +482,14 @@ public abstract class EditorResource {
 
   @GET
   @Produces(APPLICATION_JSON_UTF8)
-  @Path("available-field-values/{topicMapId}/{topicId}/{viewId}/{fieldId}")
+  @Path("available-field-values/{databaseId}/{topicId}/{viewId}/{fieldId}")
   public Response getAvailableFieldValues(@Context UriInfo uriInfo, 
-      @PathParam("topicMapId") final String topicMapId, 
+      @PathParam("databaseId") final String databaseId, 
       @PathParam("topicId") final String topicId, 
       @PathParam("viewId") final String viewId,
       @PathParam("fieldId") final String fieldId) throws Exception {
 
-    PrestoSession session = createSession(topicMapId);
+    PrestoSession session = createSession(databaseId);
     PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
     PrestoDataProvider dataProvider = session.getDataProvider();
 
@@ -554,14 +547,14 @@ public abstract class EditorResource {
 
   @GET
   @Produces(APPLICATION_JSON_UTF8)
-  @Path("available-field-types/{topicMapId}/{topicId}/{viewId}/{fieldId}")
+  @Path("available-field-types/{databaseId}/{topicId}/{viewId}/{fieldId}")
   public Response getAvailableFieldTypes(@Context UriInfo uriInfo, 
-      @PathParam("topicMapId") final String topicMapId, 
+      @PathParam("databaseId") final String databaseId, 
       @PathParam("topicId") final String topicId, 
       @PathParam("viewId") final String viewId,
       @PathParam("fieldId") final String fieldId) throws Exception {
 
-    PrestoSession session = createSession(topicMapId);
+    PrestoSession session = createSession(databaseId);
     PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
     PrestoDataProvider dataProvider = session.getDataProvider();
 
@@ -607,11 +600,11 @@ public abstract class EditorResource {
 
   @GET
   @Produces(APPLICATION_JSON_UTF8)
-  @Path("available-types-tree-lazy/{topicMapId}")
+  @Path("available-types-tree-lazy/{databaseId}")
   public Response getAvailableTypesTreeLazy(@Context UriInfo uriInfo, 
-      @PathParam("topicMapId") final String topicMapId) throws Exception {
+      @PathParam("databaseId") final String databaseId) throws Exception {
 
-    PrestoSession session = createSession(topicMapId);
+    PrestoSession session = createSession(databaseId);
     PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
 
     try {
@@ -631,12 +624,12 @@ public abstract class EditorResource {
 
   @GET
   @Produces(APPLICATION_JSON_UTF8)
-  @Path("available-types-tree-lazy/{topicMapId}/{typeId}")
+  @Path("available-types-tree-lazy/{databaseId}/{typeId}")
   public Response getAvailableTypesTreeLazy(@Context UriInfo uriInfo, 
-      @PathParam("topicMapId") final String topicMapId, 
+      @PathParam("databaseId") final String databaseId, 
       @PathParam("typeId") final String typeId) throws Exception {
 
-    PrestoSession session = createSession(topicMapId);
+    PrestoSession session = createSession(databaseId);
     PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
 
     try {
@@ -657,11 +650,11 @@ public abstract class EditorResource {
 
   @GET
   @Produces(APPLICATION_JSON_UTF8)
-  @Path("available-types-tree/{topicMapId}")
+  @Path("available-types-tree/{databaseId}")
   public Response getAvailableTypesTree(@Context UriInfo uriInfo, 
-      @PathParam("topicMapId") final String topicMapId) throws Exception {
+      @PathParam("databaseId") final String databaseId) throws Exception {
 
-    PrestoSession session = createSession(topicMapId);
+    PrestoSession session = createSession(databaseId);
     PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
 
     try {
@@ -678,11 +671,15 @@ public abstract class EditorResource {
       session.close();      
     }
   }
-
+  
   // overridable methods
   
-  protected abstract PrestoSession createSession(String topicMapId);
+  protected abstract PrestoSession createSession(String databaseId);
 
+  protected abstract Collection<String> getDatabaseIds();
+
+  protected abstract String getDatabaseName(String databaseId);
+  
   protected void onTopicUpdated(String topicId) {      
   }
 
