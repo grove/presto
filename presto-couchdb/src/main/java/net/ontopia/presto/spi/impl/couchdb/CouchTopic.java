@@ -173,7 +173,6 @@ public abstract class CouchTopic implements PrestoTopic {
   void removeValue(PrestoField field, Collection<? extends Object> values) {
     if (!values.isEmpty()) {
       ArrayNode jsonNode = getFieldValue(field);
-      //      System.out.println("R: " + field.getId() + " " + values);
       if (jsonNode != null) {
         Collection<String> existing = new LinkedHashSet<String>(jsonNode.size());
         for (JsonNode item : jsonNode) {

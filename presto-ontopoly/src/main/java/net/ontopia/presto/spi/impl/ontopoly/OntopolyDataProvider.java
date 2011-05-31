@@ -79,7 +79,7 @@ public class OntopolyDataProvider implements PrestoDataProvider {
     return new OntopolyChangeSet(session, topic);
   }
 
-  public boolean removeTopic(PrestoTopic topic) {
+  public boolean removeTopic(PrestoTopic topic, PrestoType type) {
     OntopolyTopic.getWrapped(topic).remove(null);
     return true;
   }

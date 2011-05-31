@@ -4,13 +4,13 @@ import java.util.Collection;
 
 public interface PrestoChangeSet {
 
-  void setValues(PrestoFieldUsage field, Collection<Object> values);
+  void setValues(PrestoField field, Collection<?> values);
 
-  void addValues(PrestoFieldUsage field, Collection<Object> values);
+  void addValues(PrestoField field, Collection<?> values);
 
-  void addValues(PrestoFieldUsage field, Collection<Object> values, int index);
+  void addValues(PrestoField field, Collection<?> values, int index);
 
-  void removeValues(PrestoFieldUsage field, Collection<Object> values);
+  void removeValues(PrestoField field, Collection<?> values);
 
   PrestoTopic save();
   

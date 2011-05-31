@@ -4,14 +4,18 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 
 import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoDataProvider;
+import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoFieldUsage;
+import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 
+import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
 import org.ektorp.CouchDbConnector;
@@ -60,8 +64,10 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
 
     ViewResult viewResult = getCouchConnector().queryView(query);
     for (Row row : viewResult.getRows()) {
-      ObjectNode doc = (ObjectNode)row.getDocAsNode();
-      result.add(existing(doc));
+      JsonNode jsonNode = row.getDocAsNode();
+      if (jsonNode.isObject()) {
+        result.add(existing((ObjectNode)jsonNode));
+      }
     }
     return result;
   }
@@ -110,8 +116,30 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
     return new CouchChangeSet(this, (CouchTopic)topic);
   }
 
-  public boolean removeTopic(PrestoTopic topic) {    
-    return delete((CouchTopic)topic);
+  public boolean removeTopic(PrestoTopic topic, PrestoType type) {
+    return removeTopic(topic, type, true);
+  }
+ 
+  private boolean removeTopic(PrestoTopic topic, PrestoType type, boolean removeDependencies) {
+    PrestoSchemaProvider schemaProvider = type.getSchemaProvider();
+    // find and remove dependencies
+    if (removeDependencies) {
+      for (PrestoTopic dependency : findDependencies(topic, type)) {
+        if (!dependency.equals(topic)) {
+          PrestoType dependencyType = schemaProvider.getTypeById(dependency.getTypeId());
+          removeTopic(dependency, dependencyType, false);
+        }
+      }
+    }
+    // clear incoming foreign keys
+    for (PrestoField field : type.getFields()) {
+      if (field.getInverseFieldId() != null) {
+        boolean isNew = false;
+        removeInverseFieldValue(isNew, topic, field, topic.getValues(field));
+      }
+    }
+    
+    return delete((CouchTopic)topic);    
   }
 
   public void close() {
@@ -136,7 +164,82 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
       getCouchConnector().delete(topic.getData());
       return true;
     } catch (UpdateConflictException e) {
-      return false;
+      CouchTopic topic2 = (CouchTopic)getTopicById(topic.getId());
+      if (topic2 != null) {
+        getCouchConnector().delete(topic2.getData());
+        return true;
+      } else {
+        return false;
+      }
+    }
+  }
+  
+  // dependent topics / cascading deletes
+
+  private Collection<PrestoTopic> findDependencies(PrestoTopic topic, PrestoType type) {
+    Collection<PrestoTopic> dependencies = new HashSet<PrestoTopic>();
+    findDependencies(topic, type, dependencies);
+    return dependencies;
+  }
+  
+  private void findDependencies(PrestoTopic topic, PrestoType type, Collection<PrestoTopic> deleted) {
+
+    if (!deleted.contains(topic) && type.isRemovable()) {
+        // remove inverse references
+        
+        // perform cascading delete
+        for (PrestoField field : type.getFields()) {
+          if (field.isReferenceField()) {
+            if (field.isCascadingDelete()) { 
+              PrestoSchemaProvider schemaProvider = type.getSchemaProvider();
+              for (Object value : topic.getValues(field)) {
+                PrestoTopic valueTopic = (PrestoTopic)value;
+                String typeId = valueTopic.getTypeId();
+                PrestoType valueType = schemaProvider.getTypeById(typeId);
+                deleted.add(valueTopic);
+                findDependencies(valueTopic, valueType, deleted);
+              }
+            }
+          }
+        }
+      }
+  }
+
+  // inverse fields (foreign keys)
+  
+  void addInverseFieldValue(boolean isNew, PrestoTopic topic, PrestoField field, Collection<?> values) {
+    String inverseFieldId = field.getInverseFieldId();
+    if (inverseFieldId != null) {
+      for (Object value : values) {
+        
+        CouchTopic valueTopic = (CouchTopic)value;
+        PrestoType type = field.getSchemaProvider().getTypeById(valueTopic.getTypeId());
+        PrestoField inverseField = type.getFieldById(inverseFieldId);
+        
+        int index = -1;
+        valueTopic.addValue(inverseField, Collections.singleton(topic), index);
+        update(valueTopic);      
+      }
+    }
+  }
+  
+  void removeInverseFieldValue(boolean isNew, PrestoTopic topic, PrestoField field, Collection<?> values) {
+    if (!isNew) {
+      String inverseFieldId = field.getInverseFieldId();
+      if (inverseFieldId != null) {
+        for (Object value : values) {
+          
+          CouchTopic valueTopic = (CouchTopic)value;
+          PrestoType valueType = field.getSchemaProvider().getTypeById(valueTopic.getTypeId());
+          if (field.isCascadingDelete() && valueType.isRemovable()) {
+            removeTopic(valueTopic, valueType);
+          } else {          
+            PrestoField inverseField = valueType.getFieldById(inverseFieldId);
+            valueTopic.removeValue(inverseField, Collections.singleton(topic));
+            update(valueTopic);
+          }
+        }
+      }
     }
   }
 

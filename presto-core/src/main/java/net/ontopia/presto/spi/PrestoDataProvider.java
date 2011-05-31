@@ -14,7 +14,7 @@ public interface PrestoDataProvider {
 
   PrestoChangeSet updateTopic(PrestoTopic topic);
  
-  boolean removeTopic(PrestoTopic topic);
+  boolean removeTopic(PrestoTopic topic, PrestoType type);
   
   void close();
   

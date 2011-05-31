@@ -12,6 +12,9 @@ import java.util.Map;
 
 import javax.ws.rs.core.UriInfo;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxb.Link;
 import net.ontopia.presto.jaxb.Origin;
@@ -30,6 +33,8 @@ import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoView;
 
 public class Utils {
+  
+  private static Logger log = LoggerFactory.getLogger(Utils.class.getName());
   
   public static Map<String,Object> getTopicData(UriInfo uriInfo, PrestoTopic topic, PrestoType type) {
     Map<String,Object> result = new LinkedHashMap<String,Object>();
@@ -430,8 +435,8 @@ public class Utils {
   }
 
   public static PrestoTopic updateTopic(UriInfo uriInfo, PrestoSession session,
-      PrestoTopic topic, PrestoType type, PrestoView view,
-      Topic data) {
+      PrestoTopic topic, PrestoType type, PrestoView view, Topic data) {
+
     PrestoDataProvider dataProvider = session.getDataProvider();
 
     PrestoChangeSet changeSet;
@@ -535,28 +540,8 @@ public class Utils {
 
   public static boolean deleteTopic(UriInfo uriInfo, PrestoTopic topic, PrestoType type, 
       PrestoSchemaProvider schemaProvider, PrestoDataProvider dataProvider) {
-    return deleteTopic(uriInfo, topic, type, schemaProvider, dataProvider, new HashSet<PrestoTopic>());
-  }
-  
-  private static boolean deleteTopic(UriInfo uriInfo, PrestoTopic topic, PrestoType type, 
-      PrestoSchemaProvider schemaProvider, PrestoDataProvider dataProvider, Collection<PrestoTopic> deleted) {
-      if (type.isRemovable()) {
-        deleted.add(topic);
-        // remove inverse references
-        for (PrestoField field : type.getFields()) {
-          if (field.isCascadingDelete() && field.isReferenceField()) {
-            for (Object value : topic.getValues(field)) {
-              PrestoTopic valueTopic = (PrestoTopic)value;
-              String typeId = valueTopic.getTypeId();
-              PrestoType valueType = schemaProvider.getTypeById(typeId);
-              deleteTopic(uriInfo, valueTopic, valueType, schemaProvider, dataProvider, deleted);
-            }
-          }
-        }
-        // TODO: or should be wo it all in one bulk update?
-        return dataProvider.removeTopic(topic);
-      }
-      return false;
+    log.warn("Removing topic " + topic.getId() + " from database " + schemaProvider.getDatabaseId());
+    return dataProvider.removeTopic(topic, type);
   }
 
 }

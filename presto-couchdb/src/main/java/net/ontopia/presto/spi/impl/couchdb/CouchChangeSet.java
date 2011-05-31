@@ -2,13 +2,13 @@ package net.ontopia.presto.spi.impl.couchdb;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoField;
-import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 
@@ -35,25 +35,25 @@ public class CouchChangeSet implements PrestoChangeSet {
     this.type = type;
   }
 
-  public void setValues(PrestoFieldUsage field, Collection<Object> values) {
+  public void setValues(PrestoField field, Collection<?> values) {
     if (saved) {
       throw new RuntimeException("Can only save a changeset once.");
     }
     changes.add(new Change(Change.ChangeType.SET, field, values));
   }
 
-  public void addValues(PrestoFieldUsage field, Collection<Object> values) {
+  public void addValues(PrestoField field, Collection<?> values) {
     addValues(field, values, Change.INDEX_DEFAULT);
   }
   
-  public void addValues(PrestoFieldUsage field, Collection<Object> values, int index) {
+  public void addValues(PrestoField field, Collection<?> values, int index) {
     if (saved) {
       throw new RuntimeException("Can only save a changeset once.");
     }
     changes.add(new Change(Change.ChangeType.ADD, field, values, index));
   }
 
-  public void removeValues(PrestoFieldUsage field, Collection<Object> values) {
+  public void removeValues(PrestoField field, Collection<?> values) {
     if (saved) {
       throw new RuntimeException("Can only save a changeset once.");
     }
@@ -72,43 +72,40 @@ public class CouchChangeSet implements PrestoChangeSet {
         throw new RuntimeException("No topic and no type. I'm sorry, Dave. I'm afraid I can't do that.");
       }
     }
-    
-    List<Change> inverseChanges = new ArrayList<Change>();
 
+    Map<PrestoField, Collection<Object>> addFieldValues = new LinkedHashMap<PrestoField, Collection<Object>>();
+    Map<PrestoField, Collection<Object>> remFieldValues = new LinkedHashMap<PrestoField, Collection<Object>>();
+    
     for (Change change : changes) {
-      PrestoFieldUsage field = change.getField();
-      Collection<Object> values = change.getValues();
+      PrestoField field = change.getField();
+      Collection<?> values = change.getValues();
       switch(change.getType()) {
       case SET: {
         Collection<Object> existingValues = topic.getValues(field);
-        Collection<Object> removableValues = new HashSet<Object>(existingValues);          
-        Collection<Object> addableValues = new HashSet<Object>();
+        Collection<Object> remValues = new HashSet<Object>(existingValues);          
+        Collection<Object> addValues = new HashSet<Object>();
 
         for (Object value : values) {
-          removableValues.remove(value);
+          remValues.remove(value);
           if (!existingValues.contains(value)) {
-            addableValues.add(value);
+            addValues.add(value);
           }
         }
 
-        if (!addableValues.isEmpty()) {
-          inverseChanges.add(new Change(Change.ChangeType.ADD, field, addableValues)); // NOTE: no index
-        }
-        if (!removableValues.isEmpty()) {
-          inverseChanges.add(new Change(Change.ChangeType.REMOVE, field, removableValues));
-        }
+        registerValues(field, addFieldValues, addValues);
+        registerValues(field, remFieldValues, remValues);
 
-        topic.setValue(field, values);        
+        topic.setValue(field, values);
         break;
       }
       case ADD: {
+        registerValues(field, addFieldValues, values);
         topic.addValue(field, values, change.getIndex());
-        inverseChanges.add(change);
         break;
       }
       case REMOVE: {
+        registerValues(field, remFieldValues, values);
         topic.removeValue(field, values);
-        inverseChanges.add(change);
         break;
       }
       }
@@ -124,43 +121,23 @@ public class CouchChangeSet implements PrestoChangeSet {
       dataProvider.update(topic);      
     }
 
-    updateInverseFields(isNew, inverseChanges);
+    for (Map.Entry<PrestoField,Collection<Object>> entry : addFieldValues.entrySet()) {
+      dataProvider.addInverseFieldValue(isNew, topic, entry.getKey(), entry.getValue());      
+    }
+    for (Map.Entry<PrestoField,Collection<Object>> entry : remFieldValues.entrySet()) {
+      dataProvider.removeInverseFieldValue(isNew, topic, entry.getKey(), entry.getValue());      
+    }
 
     return topic;
   }
 
-  private void updateInverseFields(boolean isNew, List<Change> inverseChanges) {
-    // update inverse fields
-    for (Change change : inverseChanges) {
-      PrestoFieldUsage field = change.getField();
-      String inverseFieldId = field.getInverseFieldId();
-      if (inverseFieldId != null) {
-        for (Object value : change.getValues()) {
-          
-          CouchTopic valueTopic = (CouchTopic)value;
-          PrestoType type = field.getSchemaProvider().getTypeById(valueTopic.getTypeId());
-          PrestoField inverseField = type.getFieldById(inverseFieldId);
-          
-          switch(change.getType()) {
-          case SET: {
-            throw new RuntimeException("Should not get one of these.");
-          }
-          case ADD: {
-            valueTopic.addValue(inverseField, Collections.singleton(topic), change.getIndex());
-            dataProvider.update(valueTopic);      
-            break;
-          }
-          case REMOVE: {
-            if (!isNew) {
-              valueTopic.removeValue(inverseField, Collections.singleton(topic));
-              dataProvider.update(valueTopic);      
-            }
-            break;
-          }
-          }
-        }
-      }
+  private void registerValues(PrestoField field, Map<PrestoField, Collection<Object>> fieldValues, Collection<?> values) {
+    Collection<Object> coll = fieldValues.get(field);
+    if (coll == null) {
+      coll = new HashSet<Object>();
+      fieldValues.put(field, coll);
     }
+    coll.addAll(values);
   }
 
   private static class Change {
@@ -170,15 +147,15 @@ public class CouchChangeSet implements PrestoChangeSet {
     static final int INDEX_DEFAULT = -1;
     
     private ChangeType type;
-    private final PrestoFieldUsage field;
-    private final Collection<Object> values;
+    private final PrestoField field;
+    private final Collection<?> values;
     private final int index;
 
-    Change(ChangeType type, PrestoFieldUsage field, Collection<Object> values) {
+    Change(ChangeType type, PrestoField field, Collection<?> values) {
       this(type, field, values, INDEX_DEFAULT);
     }
 
-    Change(ChangeType type, PrestoFieldUsage field, Collection<Object> values, int index) {
+    Change(ChangeType type, PrestoField field, Collection<?> values, int index) {
       this.type = type;
       this.field = field;
       this.values = values;      
@@ -189,10 +166,11 @@ public class CouchChangeSet implements PrestoChangeSet {
       return type;
     }
 
-    public PrestoFieldUsage getField() {
+    public PrestoField getField() {
       return field;
     }
-    public Collection<Object> getValues() {
+    
+    public Collection<?> getValues() {
       return values;
     }
     public int getIndex() {

@@ -6,6 +6,10 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
+import net.ontopia.presto.spi.PrestoChangeSet;
+import net.ontopia.presto.spi.PrestoField;
+import net.ontopia.presto.spi.PrestoTopic;
+import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.utils.ObjectUtils;
 import ontopoly.model.AssociationField;
 import ontopoly.model.FieldDefinition;
@@ -13,10 +17,6 @@ import ontopoly.model.RoleField;
 import ontopoly.model.RoleField.ValueIF;
 import ontopoly.model.Topic;
 import ontopoly.model.TopicType;
-import net.ontopia.presto.spi.PrestoChangeSet;
-import net.ontopia.presto.spi.PrestoFieldUsage;
-import net.ontopia.presto.spi.PrestoTopic;
-import net.ontopia.presto.spi.PrestoType;
 import ontopoly.utils.TopicIdComparator;
 
 public class OntopolyChangeSet implements PrestoChangeSet {
@@ -41,25 +41,25 @@ public class OntopolyChangeSet implements PrestoChangeSet {
     this.type = null;
   }
   
-  public void setValues(PrestoFieldUsage field, Collection<Object> values) {
+  public void setValues(PrestoField field, Collection<?> values) {
     if (saved) {
       throw new RuntimeException("Can only save a changeset once.");
     }
     changes.add(new Change(Change.ChangeType.SET, field, values));
   }
 
-  public void addValues(PrestoFieldUsage field, Collection<Object> values) {
+  public void addValues(PrestoField field, Collection<?> values) {
     addValues(field, values, Change.INDEX_DEFAULT);
   }
   
-  public void addValues(PrestoFieldUsage field, Collection<Object> values, int index) {
+  public void addValues(PrestoField field, Collection<?> values, int index) {
     if (saved) {
       throw new RuntimeException("Can only save a changeset once.");
     }
     changes.add(new Change(Change.ChangeType.ADD, field, values));
   }
 
-  public void removeValues(PrestoFieldUsage field, Collection<Object> values) {
+  public void removeValues(PrestoField field, Collection<?> values) {
     if (saved) {
       throw new RuntimeException("Can only save a changeset once.");
     }
@@ -83,7 +83,7 @@ public class OntopolyChangeSet implements PrestoChangeSet {
       
       FieldDefinition fieldDefinition = FieldDefinition.getFieldDefinition(session.getTopicById(change.getField().getId()), session.getTopicMap());
       
-      Collection<Object> values = change.getValues();
+      Collection<?> values = change.getValues();
       switch(change.getType()) {
       case SET:
         
@@ -127,10 +127,10 @@ public class OntopolyChangeSet implements PrestoChangeSet {
     static enum ChangeType { SET, ADD, REMOVE };
     
     private ChangeType type;
-    private final PrestoFieldUsage field;
-    private final Collection<Object> values;
+    private final PrestoField field;
+    private final Collection<?> values;
     
-    Change(ChangeType type, PrestoFieldUsage field, Collection<Object> values) {
+    Change(ChangeType type, PrestoField field, Collection<?> values) {
       this.type = type;
       this.field = field;
       this.values = values;      
@@ -140,15 +140,15 @@ public class OntopolyChangeSet implements PrestoChangeSet {
       return type;
     }
     
-    public PrestoFieldUsage getField() {
+    public PrestoField getField() {
       return field;
     }
-    public Collection<Object> getValues() {
+    public Collection<?> getValues() {
       return values;
     }
   }
 
-  private void addValues(Topic topic, FieldDefinition fieldDefinition, Collection<Object> values) {
+  private void addValues(Topic topic, FieldDefinition fieldDefinition, Collection<?> values) {
     System.out.println("+V: " + fieldDefinition.getFieldName() + ": " + values);
     
     if (fieldDefinition.getFieldType() == FieldDefinition.FIELD_TYPE_ROLE) {
@@ -170,7 +170,7 @@ public class OntopolyChangeSet implements PrestoChangeSet {
     }
   }
 
-  private void removeValues(Topic topic, FieldDefinition fieldDefinition, Collection<Object> values) {
+  private void removeValues(Topic topic, FieldDefinition fieldDefinition, Collection<?> values) {
     System.out.println("-V: " + fieldDefinition.getFieldName() + ": " + values);
     
     if (fieldDefinition.getFieldType() == FieldDefinition.FIELD_TYPE_ROLE) {
