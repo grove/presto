@@ -531,15 +531,9 @@ public abstract class EditorResource {
     result.setName(field.getName());
 
     List<Value> values = new ArrayList<Value>(availableFieldValues.size());
-    if (!availableFieldValues.isEmpty()) {
-      
-      PrestoView valueView = field.getValueView();
-      boolean traversable = field.isTraversable();
-      
-      for (PrestoTopic value : availableFieldValues) {
-        values.add(Utils.getAllowedTopicFieldValue(uriInfo, value, valueView, traversable));
-      }
-    } 
+    for (PrestoTopic value : availableFieldValues) {
+      values.add(Utils.getAllowedTopicFieldValue(uriInfo, field, value));
+    }
     result.setValues(values);
 
     return result;

@@ -343,16 +343,15 @@ public class Utils {
     return result;
   }
 
-  public static Value getAllowedTopicFieldValue(UriInfo uriInfo, 
-      PrestoTopic value, PrestoView childView, boolean traversable) {
+  public static Value getAllowedTopicFieldValue(UriInfo uriInfo, PrestoFieldUsage field, PrestoTopic value) {
 
     Value result = new Value();
     result.setValue(value.getId());
     result.setName(value.getName());
 
     List<Link> links = new ArrayList<Link>();
-    if (traversable) {
-      links.add(new Link("edit", Links.getEditLinkFor(uriInfo, value, childView)));
+    if (field.isTraversable()) {
+      links.add(new Link("edit", Links.getEditLinkFor(uriInfo, value, field.getValueView())));
     }
     result.setLinks(links);
 
