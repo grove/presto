@@ -32,11 +32,11 @@ public class TopicTypeTree {
     }
 
     public void setTypes(Collection<TopicTypeTree> types) {
-      this.types = types;
+        this.types = types;
     }
 
     public Collection<TopicTypeTree> getTypes() {
-      return types;
+        return types;
     }
 
     public void setLinks(Collection<Link> links) {
@@ -48,7 +48,7 @@ public class TopicTypeTree {
     }
 
     public Collection<Link> getLinks() {
-      return links;
+        return links;
     }
 
 }

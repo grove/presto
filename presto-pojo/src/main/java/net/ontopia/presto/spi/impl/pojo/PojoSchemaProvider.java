@@ -12,13 +12,13 @@ import net.ontopia.presto.spi.PrestoType;
 public class PojoSchemaProvider implements PrestoSchemaProvider {
 
     private String databaseId;
-    
+
     private Map<String,PrestoType> typesMap = new HashMap<String,PrestoType>();
 
     public static PojoSchemaProvider getSchemaProvider(String databaseId, String schemaFile) {
         return PojoSchemaModel.parse(databaseId, schemaFile);
     }
-    
+
     public String getDatabaseId() {
         return databaseId;
     }

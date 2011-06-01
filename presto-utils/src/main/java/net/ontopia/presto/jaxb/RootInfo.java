@@ -9,7 +9,7 @@ public class RootInfo {
 
     private String name;
     private int version;
-    
+
     private Collection<Link> links;
 
     public RootInfo() {        
@@ -36,11 +36,11 @@ public class RootInfo {
     }
 
     public void setVersion(int version) {
-      this.version = version;
+        this.version = version;
     }
 
     public int getVersion() {
-      return version;
+        return version;
     }
 
 }

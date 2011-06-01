@@ -21,10 +21,10 @@ public class FieldData {
     private String validation;
     private String interfaceControl;
     private Object extra;
-    
+
     private Integer minCardinality;
     private Integer maxCardinality;
-    
+
     private Collection<Link> links;
     private Collection<Value> values;
 

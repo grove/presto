@@ -13,11 +13,11 @@ public class AvailableTopicTypes {
     private Collection<TopicTypeTree> types;
 
     public void setTypes(Collection<TopicTypeTree> types) {
-      this.types = types;
+        this.types = types;
     }
 
     public Collection<TopicTypeTree> getTypes() {
-      return types;
+        return types;
     }
 
 }

@@ -9,7 +9,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 public class AvailableDatabases {
 
     private String name;
-    
+
     private Collection<Link> links;
     private Collection<Database> databases = Collections.emptySet();
 
@@ -37,11 +37,11 @@ public class AvailableDatabases {
     }
 
     public void setDatabases(Collection<Database> databases) {
-      this.databases = databases;
+        this.databases = databases;
     }
 
     public Collection<Database> getDatabases() {
-      return databases;
+        return databases;
     }
 
 }

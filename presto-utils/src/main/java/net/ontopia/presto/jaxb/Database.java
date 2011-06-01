@@ -14,12 +14,12 @@ public class Database {
 
     public Database() {        
     }
-    
+
     public Database(String id, String name) {
         this.id = id;
         this.name = name;
     }
-    
+
     public void setId(String id) {
         this.id = id;
     }

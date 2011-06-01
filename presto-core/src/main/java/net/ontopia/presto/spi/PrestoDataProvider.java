@@ -3,19 +3,19 @@ package net.ontopia.presto.spi;
 import java.util.Collection;
 
 public interface PrestoDataProvider {
-  
-  PrestoTopic getTopicById(String id);
-  
-  Collection<PrestoTopic> getTopicsByIds(Collection<String> id);
 
-  Collection<PrestoTopic> getAvailableFieldValues(PrestoFieldUsage field);
+    PrestoTopic getTopicById(String id);
 
-  PrestoChangeSet createTopic(PrestoType type);
+    Collection<PrestoTopic> getTopicsByIds(Collection<String> id);
 
-  PrestoChangeSet updateTopic(PrestoTopic topic);
- 
-  boolean removeTopic(PrestoTopic topic, PrestoType type);
-  
-  void close();
-  
+    Collection<PrestoTopic> getAvailableFieldValues(PrestoFieldUsage field);
+
+    PrestoChangeSet createTopic(PrestoType type);
+
+    PrestoChangeSet updateTopic(PrestoTopic topic);
+
+    boolean removeTopic(PrestoTopic topic, PrestoType type);
+
+    void close();
+
 }

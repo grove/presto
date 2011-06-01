@@ -15,12 +15,12 @@ public class TopicType {
 
     public TopicType() {        
     }
-    
+
     public TopicType(String id, String name) {
         this.id = id;
         this.name = name;
     }
-    
+
     public void setId(String id) {
         this.id = id;
     }

@@ -18,12 +18,12 @@ public class Topic {
     private Boolean readOnlyMode;
 
     private Origin origin;
-    
+
     private TopicType type;
     private String view;
-    
+
     private Collection<Link> links;
-    
+
     private Collection<View> views = Collections.emptySet();
 
     private Collection<FieldData> fields;
@@ -75,9 +75,9 @@ public class Topic {
     public Collection<FieldData> getFields() {
         return fields;
     }
-    
+
     // builder methods
-    
+
     public static Topic topic(String id, String name) {
         Topic result = new Topic();
         result.setId(id);

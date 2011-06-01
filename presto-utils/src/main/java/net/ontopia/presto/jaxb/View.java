@@ -37,7 +37,7 @@ public class View {
     }
 
     public Collection<Link> getLinks() {
-            return links;
+        return links;
     }
 
 }

@@ -31,11 +31,11 @@ public class AvailableFieldValues {
     }
 
     public void setValues(Collection<Value> values) {
-      this.values = values;
+        this.values = values;
     }
 
     public Collection<Value> getValues() {
-      return values;
+        return values;
     }
 
 }

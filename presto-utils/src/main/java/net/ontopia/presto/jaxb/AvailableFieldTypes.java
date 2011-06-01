@@ -31,11 +31,11 @@ public class AvailableFieldTypes {
     }
 
     public void setTypes(Collection<TopicType> types) {
-      this.types = types;
+        this.types = types;
     }
 
     public Collection<TopicType> getTypes() {
-      return types;
+        return types;
     }
 
 }

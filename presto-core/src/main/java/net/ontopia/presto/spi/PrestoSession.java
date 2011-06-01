@@ -2,18 +2,18 @@ package net.ontopia.presto.spi;
 
 public interface PrestoSession {
 
-  String getDatabaseId();
-  
-  String getDatabaseName();
-  
-  void abort();
+    String getDatabaseId();
 
-  void commit();
+    String getDatabaseName();
 
-  void close();
+    void abort();
 
-  PrestoDataProvider getDataProvider();
+    void commit();
 
-  PrestoSchemaProvider getSchemaProvider();
-  
+    void close();
+
+    PrestoDataProvider getDataProvider();
+
+    PrestoSchemaProvider getSchemaProvider();
+
 }

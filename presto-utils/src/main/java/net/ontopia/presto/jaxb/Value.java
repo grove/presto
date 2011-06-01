@@ -10,16 +10,16 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 public class Value {
 
     private Boolean removable;
-    
+
     // primitive
     private String value;
-    
+
     // reference
     private String id;
     private String name;
     private Collection<Link> links;
     private Topic embedded;
-    
+
     public void setRemovable(Boolean removable) {
         this.removable = removable;
     }
@@ -60,5 +60,5 @@ public class Value {
     public Topic getEmbedded() {
         return embedded;
     }
-    
+
 }

@@ -2,12 +2,12 @@ package net.ontopia.presto.spi;
 
 public interface PrestoView {
 
-  String getId();
-  
-  String getName();
+    String getId();
 
-  PrestoSchemaProvider getSchemaProvider();
-  
-  Object getExtra();
+    String getName();
+
+    PrestoSchemaProvider getSchemaProvider();
+
+    Object getExtra();
 
 }

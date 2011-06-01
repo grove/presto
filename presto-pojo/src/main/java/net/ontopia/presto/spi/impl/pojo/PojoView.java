@@ -29,7 +29,7 @@ public class PojoView implements PrestoView {
         }
         return false;
     }
-    
+
     @Override
     public int hashCode() {
         return id.hashCode();
@@ -52,11 +52,11 @@ public class PojoView implements PrestoView {
     }
 
     public Object getExtra() {
-      return extra;
+        return extra;
     }
 
     public void setExtra(Object extra) {
-      this.extra = extra;
+        this.extra = extra;
     }
 
 }

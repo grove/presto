@@ -7,25 +7,25 @@ import org.ektorp.CouchDbConnector;
 
 public class CouchDefaultDataProvider extends CouchDataProvider {
 
-  public CouchDefaultDataProvider(CouchDbConnector db) {
-    super(db);
-  }
-  
-  @Override
-  protected CouchTopic existing(ObjectNode doc) {
-    return new CouchDefaultTopic(this, doc);
-  }
+    public CouchDefaultDataProvider(CouchDbConnector db) {
+        super(db);
+    }
 
-  @Override
-  protected CouchTopic newInstance(PrestoType type) {
-    return new CouchDefaultTopic(this, CouchTopic.newInstanceObjectNode(this, type));
-  }
+    @Override
+    protected CouchTopic existing(ObjectNode doc) {
+        return new CouchDefaultTopic(this, doc);
+    }
 
-  // builder pattern
-  
-  public CouchDefaultDataProvider designDocId(String designDocId) {    
-    this.designDocId = designDocId;
-    return this;
-  }
-  
+    @Override
+    protected CouchTopic newInstance(PrestoType type) {
+        return new CouchDefaultTopic(this, CouchTopic.newInstanceObjectNode(this, type));
+    }
+
+    // builder pattern
+
+    public CouchDefaultDataProvider designDocId(String designDocId) {    
+        this.designDocId = designDocId;
+        return this;
+    }
+
 }

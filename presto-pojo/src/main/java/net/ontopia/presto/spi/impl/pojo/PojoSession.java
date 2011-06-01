@@ -8,7 +8,7 @@ public class PojoSession implements PrestoSession {
 
     private String databaseId;
     private String databaseName;
-    
+
     private PrestoSchemaProvider schemaProvider;
     private PrestoDataProvider dataProvider;
 
@@ -18,7 +18,7 @@ public class PojoSession implements PrestoSession {
         this.schemaProvider = schemaProvider;
         this.dataProvider = dataProvider;        
     }
-    
+
     public String getDatabaseId() {
         return databaseId;
     }

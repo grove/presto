@@ -39,7 +39,7 @@ public class PojoField implements PrestoField {
 
     // helper members
     private Collection<PrestoView> definedInViews = new HashSet<PrestoView>();
-    
+
     PojoField(String id, PrestoSchemaProvider schemaProvider) {
         this.id = id;
         this.schemaProvider = schemaProvider;        
@@ -149,7 +149,7 @@ public class PojoField implements PrestoField {
     }
 
     // -- helper methods
-    
+
     boolean isInView(PrestoView view) {
         for (PrestoView definedInView : definedInViews) {
             if (definedInView.equals(view)) {
@@ -162,7 +162,7 @@ public class PojoField implements PrestoField {
     protected void addDefinedInView(PrestoView view) {
         this.definedInViews.add(view);
     }
-    
+
     public void setName(String name) {
         this.name = name;
     }

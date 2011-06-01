@@ -4,12 +4,12 @@ import java.util.Collection;
 
 public interface PrestoTopic {
 
-  String getId();
+    String getId();
 
-  String getName();
+    String getName();
 
-  String getTypeId();
-  
-  Collection<Object> getValues(PrestoField field);
-  
+    String getTypeId();
+
+    Collection<Object> getValues(PrestoField field);
+
 }

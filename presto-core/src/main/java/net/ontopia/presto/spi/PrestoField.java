@@ -2,48 +2,48 @@ package net.ontopia.presto.spi;
 
 public interface PrestoField {
 
-  String getId();
+    String getId();
 
-  PrestoSchemaProvider getSchemaProvider();
+    PrestoSchemaProvider getSchemaProvider();
 
-  String getName();
-  
-  boolean isNameField();
+    String getName();
 
-  boolean isPrimitiveField();
-  
-  boolean isReferenceField();
-  
-  int getMinCardinality();
+    boolean isNameField();
 
-  int getMaxCardinality();
+    boolean isPrimitiveField();
 
-  String getDataType();
+    boolean isReferenceField();
 
-  String getValidationType(); // ISSUE: or concreteType/actualType?
+    int getMinCardinality();
 
-  boolean isEmbedded();
+    int getMaxCardinality();
 
-  boolean isHidden();
+    String getDataType();
 
-  boolean isTraversable();
+    String getValidationType(); // ISSUE: or concreteType/actualType?
 
-  boolean isReadOnly();
+    boolean isEmbedded();
 
-  boolean isSorted();
+    boolean isHidden();
 
-  boolean isCascadingDelete();
+    boolean isTraversable();
 
-  // reference fields
+    boolean isReadOnly();
 
-  boolean isNewValuesOnly();
+    boolean isSorted();
 
-  boolean isExistingValuesOnly();
-  
-  String getInverseFieldId();
+    boolean isCascadingDelete();
 
-  String getInterfaceControl();
-  
-  Object getExtra();
-  
+    // reference fields
+
+    boolean isNewValuesOnly();
+
+    boolean isExistingValuesOnly();
+
+    String getInverseFieldId();
+
+    String getInterfaceControl();
+
+    Object getExtra();
+
 }
