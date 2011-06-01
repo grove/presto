@@ -90,7 +90,7 @@ public class Presto {
 
     List<Link> typeLinks = new ArrayList<Link>();
     if (!readOnlyMode && type.isCreatable()) {
-      typeLinks.add(new Link("create-instance", Links.getCreateInstanceLinkFor(uriInfo, type)));
+      typeLinks.add(new Link("create-instance", uriInfo.getBaseUri() + "editor/create-instance/" + type.getSchemaProvider().getDatabaseId() + "/" + type.getId()));
     }
     typeInfo.setLinks(typeLinks);
 
@@ -99,9 +99,9 @@ public class Presto {
     result.setView(view.getId());
 
     List<Link> topicLinks = new ArrayList<Link>();
-    topicLinks.add(new Link("edit", Links.getEditLinkFor(uriInfo, topic, view)));
+    topicLinks.add(new Link("edit", uriInfo.getBaseUri() + "editor/topic/" + view.getSchemaProvider().getDatabaseId() + "/" + topic.getId() + "/" + view.getId()));
     if (type.isRemovable()) {
-      topicLinks.add(new Link("delete", Links.getDeleteLinkFor(uriInfo, type.getSchemaProvider().getDatabaseId(), topic)));
+      topicLinks.add(new Link("delete", uriInfo.getBaseUri() + "editor/topic/" + type.getSchemaProvider().getDatabaseId() + "/" + topic.getId()));
     }
     result.setLinks(topicLinks);
 
@@ -131,7 +131,7 @@ public class Presto {
     result.setView(view.getId());
 
     List<Link> topicLinks = new ArrayList<Link>();
-    topicLinks.add(new Link("create", Links.getCreateLinkFor(uriInfo, type, view)));    
+    topicLinks.add(new Link("create", uriInfo.getBaseUri() + "editor/topic/" + type.getSchemaProvider().getDatabaseId() + "/_" + type.getId() + "/" + view.getId()));    
     result.setLinks(topicLinks);
 
     List<FieldData> fields = new ArrayList<FieldData>(); 
@@ -279,7 +279,7 @@ public class Presto {
 
     List<Link> links = new ArrayList<Link>();
     if (topic != null) {
-      links.add(new Link("edit-in-view", Links.getEditLinkFor(uriInfo, topic, view, readOnlyMode)));
+      links.add(new Link("edit-in-view", uriInfo.getBaseUri() + "editor/topic/" + view.getSchemaProvider().getDatabaseId() + "/" + topic.getId() + "/" + view.getId() + (readOnlyMode ? "?readOnly=true" : "")));
     }
     result.setLinks(links);
     return result;
@@ -350,7 +350,8 @@ public class Presto {
 
     List<Link> links = new ArrayList<Link>();
     if (field.isTraversable()) {
-      links.add(new Link("edit", Links.getEditLinkFor(uriInfo, value, field.getValueView(), readOnlyMode)));
+      PrestoView fieldsView = field.getValueView();
+      links.add(new Link("edit", uriInfo.getBaseUri() + "editor/topic/" + fieldsView.getSchemaProvider().getDatabaseId() + "/" + value.getId() + "/" + fieldsView.getId() + (readOnlyMode ? "?readOnly=true" : "")));
     }
     result.setLinks(links);
 
@@ -380,7 +381,8 @@ public class Presto {
 
     List<Link> links = new ArrayList<Link>();
     if (field.isTraversable()) {
-      links.add(new Link("edit", Links.getEditLinkFor(uriInfo, value, field.getValueView())));
+      PrestoView fieldsView = field.getValueView();
+      links.add(new Link("edit", uriInfo.getBaseUri() + "editor/topic/" + fieldsView.getSchemaProvider().getDatabaseId() + "/" + value.getId() + "/" + fieldsView.getId()));
     }
     result.setLinks(links);
 
@@ -585,7 +587,7 @@ public class Presto {
   
         List<Link> links = new ArrayList<Link>();
         if (type.isCreatable()) {
-          links.add(new Link("create-instance", Links.getCreateInstanceLinkFor(uriInfo, type)));
+          links.add(new Link("create-instance", uriInfo.getBaseUri() + "editor/create-instance/" + type.getSchemaProvider().getDatabaseId() + "/" + type.getId()));
         }
     
         if (tree) {
