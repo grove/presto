@@ -41,5 +41,9 @@ public class OntopolyView implements PrestoView {
     }
     return result;
   }
+
+  public Object getExtra() {
+      return null;
+  }
  
 }

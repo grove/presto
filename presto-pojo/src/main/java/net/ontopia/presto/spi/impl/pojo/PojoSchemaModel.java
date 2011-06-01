@@ -120,6 +120,11 @@ public class PojoSchemaModel {
           String viewName = viewNode.get("name").getTextValue();
           view.setName(viewName);
 
+          // extra
+          if (viewNode.has("extra")) {
+            view.setExtra(viewNode.get("extra"));
+          }
+
           // fields
           ArrayNode fieldsArray = (ArrayNode)viewNode.get("fields");
           for (JsonNode fieldNode : fieldsArray) {

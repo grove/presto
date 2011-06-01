@@ -8,4 +8,6 @@ public interface PrestoView {
 
   PrestoSchemaProvider getSchemaProvider();
   
+  Object getExtra();
+
 }

@@ -8,7 +8,9 @@ public class PojoView implements PrestoView {
     private String id;
     private String name;
     private PrestoSchemaProvider schemaProvider;
-    
+
+    private Object extra;
+
     PojoView(String id, PrestoSchemaProvider schemaProvider) {
         this.id = id;
         this.schemaProvider = schemaProvider;        
@@ -47,6 +49,14 @@ public class PojoView implements PrestoView {
 
     protected void setName(String name) {
         this.name = name;
+    }
+
+    public Object getExtra() {
+      return extra;
+    }
+
+    public void setExtra(Object extra) {
+      this.extra = extra;
     }
 
 }
