@@ -24,8 +24,12 @@ import org.ektorp.UpdateConflictException;
 import org.ektorp.ViewQuery;
 import org.ektorp.ViewResult;
 import org.ektorp.ViewResult.Row;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class CouchDataProvider implements PrestoDataProvider {
+
+    private Logger log = LoggerFactory.getLogger(CouchDataProvider.class.getName());
 
     private final ObjectMapper mapper = new ObjectMapper();
 
@@ -50,7 +54,8 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
         ObjectNode doc = null;
         try {
             doc = getCouchConnector().get(ObjectNode.class, topicId);
-        } catch (DocumentNotFoundException e) {      
+        } catch (DocumentNotFoundException e) {
+            log.warn("Topic with id '" + topicId + "' not found.");
         }
         return existing(doc);
     }

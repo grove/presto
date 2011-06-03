@@ -421,7 +421,9 @@ public class Presto {
                 if (isReferenceField) {
                     String valueId = getReferenceValue(value);
                     PrestoTopic valueTopic = dataProvider.getTopicById(valueId);
-                    addableValues.add(valueTopic);
+                    if (valueTopic != null) {
+                        addableValues.add(valueTopic);
+                    }
                 } else {
                     addableValues.add(getPrimitiveValue(value));
                 }
@@ -450,7 +452,9 @@ public class Presto {
                 if (isReferenceField) {
                     String valueId = getReferenceValue(value);
                     PrestoTopic valueTopic = dataProvider.getTopicById(valueId);
-                    removeableValues.add(valueTopic);
+                    if (valueTopic != null) {
+                        removeableValues.add(valueTopic);
+                    }
                 } else {
                     removeableValues.add(getPrimitiveValue(value));
                 }
@@ -499,7 +503,10 @@ public class Presto {
                             } else {
                                 if (values.size() == 1) {
                                     Value value = values.iterator().next();
-                                    newValues.add(dataProvider.getTopicById(getReferenceValue(value)));
+                                    PrestoTopic valueTopic = dataProvider.getTopicById(getReferenceValue(value));
+                                    if (valueTopic != null) {
+                                        newValues.add(valueTopic);
+                                    }
                                 } else {
                                     List<String> valueIds = new ArrayList<String>(values.size());
                                     for (Value value : values) {                
