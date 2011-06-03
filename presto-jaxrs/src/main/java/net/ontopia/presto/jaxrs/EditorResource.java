@@ -230,7 +230,7 @@ public abstract class EditorResource {
                 return builder.build();        
             } else {
                 PrestoType type = schemaProvider.getTypeById(topic.getTypeId());
-                if (new Presto(session, uriInfo).deleteTopic(topic, type, schemaProvider, dataProvider)) {          
+                if (new Presto(session, uriInfo).deleteTopic(topic, type)) {          
                     // 200
                     ResponseBuilder builder = Response.ok();
                     return builder.build();

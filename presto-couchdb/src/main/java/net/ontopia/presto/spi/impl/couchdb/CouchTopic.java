@@ -82,7 +82,9 @@ public abstract class CouchTopic implements PrestoTopic {
             if (isReferenceField) {
                 List<String> topicIds = new ArrayList<String>(fieldNode.size());
                 for (JsonNode value : fieldNode) {
-                    topicIds.add(value.getTextValue());
+                    if (value.isTextual()) {
+                        topicIds.add(value.getTextValue());
+                    }
                 }
                 values.addAll(dataProvider.getTopicsByIds(topicIds));
             } else {
@@ -135,7 +137,9 @@ public abstract class CouchTopic implements PrestoTopic {
             ArrayNode jsonNode = getFieldValue(field);
             if (jsonNode != null) {
                 for (JsonNode existing : jsonNode) {
-                    existingValueIds.add(existing.getTextValue());
+                    if (existing.isTextual()) {
+                        existingValueIds.add(existing.getTextValue());
+                    }
                 }
             }
 

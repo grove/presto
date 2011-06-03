@@ -37,6 +37,7 @@ import net.ontopia.presto.spi.PrestoView;
 public class Presto {
 
     private Logger log = LoggerFactory.getLogger(Presto.class.getName());
+    
     private final PrestoSession session;
     private final UriInfo uriInfo;
 
@@ -563,10 +564,9 @@ public class Presto {
         return value.getValue();
     }
 
-    public boolean deleteTopic(PrestoTopic topic, PrestoType type, 
-            PrestoSchemaProvider schemaProvider, PrestoDataProvider dataProvider) {
-        log.warn("Removing topic " + topic.getId() + " from database " + schemaProvider.getDatabaseId());
-        return dataProvider.removeTopic(topic, type);
+    public boolean deleteTopic(PrestoTopic topic, PrestoType type) {
+        log.warn("Removing topic " + topic.getId() + " from database " + session.getSchemaProvider().getDatabaseId());
+        return session.getDataProvider().removeTopic(topic, type);
     }
 
     public Collection<TopicTypeTree> getAvailableTypes(Collection<PrestoType> types, boolean tree) {

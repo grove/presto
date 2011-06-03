@@ -5,38 +5,38 @@ import java.util.List;
 
 public interface PrestoType {
 
-  String getId();
-  
-  String getName();
+    String getId();
 
-  PrestoSchemaProvider getSchemaProvider();
+    String getName();
 
-  boolean isReadOnly(); // can you edit it?
+    PrestoSchemaProvider getSchemaProvider();
 
-  boolean isHidden(); // will it show up? instances will show up if exposed as field values though.
+    boolean isReadOnly(); // can you edit it?
 
-  boolean isCreatable(); // standalone creatable. default is yes. can still be created through a field if in createTypes.
-  
-  boolean isRemovable();
-  
-  // TODO: getSuperType();
-  
-  Collection<PrestoType> getDirectSubTypes();
+    boolean isHidden(); // will it show up? instances will show up if exposed as field values though.
 
-  List<PrestoField> getFields();
+    boolean isCreatable(); // standalone creatable. default is yes. can still be created through a field if in createTypes.
 
-  List<PrestoFieldUsage> getFields(PrestoView fieldsView);
+    boolean isRemovable();
 
-  PrestoField getFieldById(String fieldId);
+    // TODO: getSuperType();
 
-  PrestoFieldUsage getFieldById(String fieldId, PrestoView view);
-  
-  PrestoView getDefaultView();
+    Collection<PrestoType> getDirectSubTypes();
 
-  PrestoView getViewById(String viewId);
+    List<PrestoField> getFields();
 
-  Collection<PrestoView> getViews(PrestoView fieldsView);
-  
-  Object getExtra();
+    List<PrestoFieldUsage> getFields(PrestoView fieldsView);
+
+    PrestoField getFieldById(String fieldId);
+
+    PrestoFieldUsage getFieldById(String fieldId, PrestoView view);
+
+    PrestoView getDefaultView();
+
+    PrestoView getViewById(String viewId);
+
+    Collection<PrestoView> getViews(PrestoView fieldsView);
+
+    Object getExtra();
 
 }
