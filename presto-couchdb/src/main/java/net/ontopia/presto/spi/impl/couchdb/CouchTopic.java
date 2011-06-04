@@ -75,11 +75,10 @@ public abstract class CouchTopic implements PrestoTopic {
     // methods for retrieving the state of a couchdb document
 
     public Collection<Object> getValues(PrestoField field) {
-        boolean isReferenceField = field.isReferenceField();
         List<Object> values = new ArrayList<Object>();
         ArrayNode fieldNode = getFieldValue(field);
         if (fieldNode != null) { 
-            if (isReferenceField) {
+            if (field.isReferenceField()) {
                 List<String> topicIds = new ArrayList<String>(fieldNode.size());
                 for (JsonNode value : fieldNode) {
                     if (value.isTextual()) {

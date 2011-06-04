@@ -197,25 +197,7 @@ public class Presto {
             fieldData.setReadOnly(Boolean.TRUE);
         }
 
-        if (field.isPrimitiveField()) {
-            String dataType = field.getDataType();
-            if (dataType != null) {
-                fieldData.setDatatype(dataType);
-            }
-            if (!isReadOnly) {
-                List<Link> fieldLinks = new ArrayList<Link>();
-                if (!isNewTopic) {
-                    fieldLinks.add(new Link("add-field-values", uriInfo.getBaseUri() + "editor/add-field-values/" + fieldReference));
-                    fieldLinks.add(new Link("remove-field-values", uriInfo.getBaseUri() + "editor/remove-field-values/" + fieldReference));
-                    if (!field.isSorted()) {
-                        fieldLinks.add(new Link("add-field-values-at-index", uriInfo.getBaseUri() + "editor/add-field-values-at-index/" + fieldReference + "/{index}"));
-                        fieldLinks.add(new Link("move-field-values-to-index", uriInfo.getBaseUri() + "editor/move-field-values-to-index/" + fieldReference + "/{index}"));
-                    }
-                }
-                fieldData.setLinks(fieldLinks);
-            }
-
-        } else if (field.isReferenceField()) {
+        if (field.isReferenceField()) {
             fieldData.setDatatype("reference");
 
             boolean allowAddRemove = !isReadOnly && !field.isNewValuesOnly();
@@ -244,8 +226,22 @@ public class Presto {
             fieldData.setLinks(fieldLinks);
 
         } else {
-            // used by query fields, which can have both primitive and reference values
-            fieldData.setDatatype("query");
+            String dataType = field.getDataType();
+            if (dataType != null) {
+                fieldData.setDatatype(dataType);
+            }
+            if (!isReadOnly) {
+                List<Link> fieldLinks = new ArrayList<Link>();
+                if (!isNewTopic) {
+                    fieldLinks.add(new Link("add-field-values", uriInfo.getBaseUri() + "editor/add-field-values/" + fieldReference));
+                    fieldLinks.add(new Link("remove-field-values", uriInfo.getBaseUri() + "editor/remove-field-values/" + fieldReference));
+                    if (!field.isSorted()) {
+                        fieldLinks.add(new Link("add-field-values-at-index", uriInfo.getBaseUri() + "editor/add-field-values-at-index/" + fieldReference + "/{index}"));
+                        fieldLinks.add(new Link("move-field-values-to-index", uriInfo.getBaseUri() + "editor/move-field-values-to-index/" + fieldReference + "/{index}"));
+                    }
+                }
+                fieldData.setLinks(fieldLinks);
+            }
         }
 
         Collection<PrestoType> availableFieldValueTypes = field.getAvailableFieldValueTypes();
@@ -410,9 +406,9 @@ public class Presto {
 
     public FieldData addFieldValues(PrestoTopic topic, PrestoFieldUsage field, 
             Integer index, FieldData fieldObject) {
-        PrestoDataProvider dataProvider = session.getDataProvider();
 
         if  (field != null) {
+            PrestoDataProvider dataProvider = session.getDataProvider();
             PrestoChangeSet changeSet = dataProvider.updateTopic(topic);        
             boolean isReferenceField = field.isReferenceField();        
             Collection<Object> addableValues = new HashSet<Object>();
@@ -440,10 +436,9 @@ public class Presto {
     }
 
     public FieldData removeFieldValues(PrestoTopic topic, PrestoFieldUsage field, FieldData fieldObject) {
-        PrestoDataProvider dataProvider = session.getDataProvider();
 
         if  (field != null) {
-
+            PrestoDataProvider dataProvider = session.getDataProvider();
             PrestoChangeSet changeSet = dataProvider.updateTopic(topic);
             boolean isReferenceField = field.isReferenceField();
             Collection<Object> removeableValues = new HashSet<Object>();
