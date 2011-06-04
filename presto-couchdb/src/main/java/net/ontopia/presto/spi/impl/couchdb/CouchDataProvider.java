@@ -77,6 +77,53 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
         return result;
     }
 
+    protected Collection<Object> getExternalValues(PrestoTopic topic, PrestoField field) {
+        ObjectNode extra = (ObjectNode)field.getExtra();
+        String type = extra.get("type").getTextValue();
+        if (type == null) {
+            log.error("extra.type not specified on CouchDB field: " + field.getId());
+        } else if (type.equals("query")) {
+            String designDocId = extra.get("designDocId").getTextValue();
+            String viewName = extra.get("viewName").getTextValue();
+            String key;
+            if (extra.has("key")) {
+                key = extra.get("viewName").getTextValue();
+            } else {
+                key = topic.getId();
+            }
+            
+            List<Object> result = new ArrayList<Object>();
+            ViewQuery query = new ViewQuery()
+            .designDocId(designDocId)
+            .viewName(viewName).includeDocs(true).key(key);
+    
+            ViewResult viewResult = getCouchConnector().queryView(query);
+            for (Row row : viewResult.getRows()) {row.getValue();
+                JsonNode value = (JsonNode)row.getDocAsNode();
+                if (value != null) {
+                    if (value.isObject()) {
+                        result.add(existing((ObjectNode)value));
+                    } else {
+                        result.add(value.getTextValue());
+                    }
+                }
+            }
+            if (field.isSorted()) {
+                Collections.sort(result, new Comparator<Object>() {
+                    public int compare(Object o1, Object o2) {
+                        String n1 = (o1 instanceof PrestoTopic) ? ((PrestoTopic)o1).getName() : (o1 == null ? null : o1.toString());
+                        String n2 = (o2 instanceof PrestoTopic) ? ((PrestoTopic)o2).getName() : (o2 == null ? null : o2.toString());
+                        return compareComparables(n1, n2);
+                    }
+                });
+            }
+            return result;
+        } else {
+            log.error("Unknown type specified on CouchDB field: " + field.getId());            
+        }
+        return Collections.emptyList();
+    }
+    
     public Collection<PrestoTopic> getAvailableFieldValues(PrestoFieldUsage field) {
         Collection<PrestoType> types = field.getAvailableFieldValueTypes();
         if (types.isEmpty()) {
