@@ -101,6 +101,7 @@ public class Presto {
 
         List<Link> topicLinks = new ArrayList<Link>();
         topicLinks.add(new Link("edit", uriInfo.getBaseUri() + "editor/topic/" + view.getSchemaProvider().getDatabaseId() + "/" + topic.getId() + "/" + view.getId()));
+        topicLinks.add(new Link("update", uriInfo.getBaseUri() + "editor/topic/" + view.getSchemaProvider().getDatabaseId() + "/" + topic.getId() + "/" + view.getId()));
         if (type.isRemovable()) {
             topicLinks.add(new Link("delete", uriInfo.getBaseUri() + "editor/topic/" + type.getSchemaProvider().getDatabaseId() + "/" + topic.getId()));
         }
@@ -433,7 +434,7 @@ public class Presto {
             } else {
                 changeSet.addValues(field, addableValues, index);        
             }
-            changeSet.save();
+            topic = changeSet.save();
         }
         return getFieldInfo(topic, field, topic.getValues(field), false);
     }
@@ -460,7 +461,7 @@ public class Presto {
                 }
             }
             changeSet.removeValues(field, removeableValues);
-            changeSet.save();
+            topic = changeSet.save();
         }
         return getFieldInfo(topic, field, topic.getValues(field), false);
     }
@@ -498,6 +499,11 @@ public class Presto {
                                     if (embeddedReferenceValue != null) {
                                         PrestoView valueView = field.getValueView();
                                         newValues.add(updateEmbeddedReference(valueView, embeddedReferenceValue));
+                                    } else {
+                                        PrestoTopic valueTopic = dataProvider.getTopicById(getReferenceValue(value));
+                                        if (valueTopic != null) {
+                                            newValues.add(valueTopic);
+                                        }                                        
                                     }
                                 }                
                             } else {
@@ -525,8 +531,7 @@ public class Presto {
                 }
             }
         }
-        topic = changeSet.save();
-        return topic;
+        return changeSet.save();
     }
 
     private PrestoTopic updateEmbeddedReference(PrestoView view, Topic embeddedTopic) {

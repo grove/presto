@@ -190,9 +190,6 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
     private void findDependencies(PrestoTopic topic, PrestoType type, Collection<PrestoTopic> deleted) {
 
         if (!deleted.contains(topic) && type.isRemovable()) {
-            // remove inverse references
-
-            // perform cascading delete
             for (PrestoField field : type.getFields()) {
                 if (field.isReferenceField()) {
                     if (field.isCascadingDelete()) { 
