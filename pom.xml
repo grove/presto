@@ -1,11 +1,11 @@
-<project>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <name>Presto</name>
   <groupId>net.ontopia.presto</groupId>
   <artifactId>presto</artifactId>
   <packaging>pom</packaging>
-  <version>0.1-SNAPSHOT</version>
+  <version>0.2-SNAPSHOT</version>
 
   <build>
 
@@ -34,6 +34,12 @@
   </modules>
 
   <distributionManagement>
+    <repository>
+      <id>agrep01</id>
+      <name>agrep01</name>
+      <url>http://agrep01:8080/artifactory/libs-releases-local</url>
+      <uniqueVersion>false</uniqueVersion>
+    </repository>
     <snapshotRepository>
       <id>agrep01-snapshots</id>
       <name>agrep01-snapshots</name>
@@ -41,5 +47,9 @@
       <uniqueVersion>false</uniqueVersion>
     </snapshotRepository>
   </distributionManagement>
+
+  <scm>
+    <connection>scm:git:git://github.com/grove/presto.git</connection>
+  </scm>
 
 </project>
