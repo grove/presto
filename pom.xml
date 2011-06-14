@@ -34,6 +34,12 @@
   </modules>
 
   <distributionManagement>
+    <repository>
+      <id>agrep01</id>
+      <name>agrep01</name>
+      <url>http://agrep01:8080/artifactory/libs-releases-local</url>
+      <uniqueVersion>false</uniqueVersion>
+    </repository>
     <snapshotRepository>
       <id>agrep01-snapshots</id>
       <name>agrep01-snapshots</name>
