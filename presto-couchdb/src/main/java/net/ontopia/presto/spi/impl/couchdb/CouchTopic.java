@@ -75,9 +75,12 @@ public abstract class CouchTopic implements PrestoTopic {
     // methods for retrieving the state of a couchdb document
 
     public Collection<Object> getValues(PrestoField field) {
+        // get field values from data provider
         if (field.getId().startsWith("external:")) {
             return dataProvider.getExternalValues(this, field);
         }
+        
+        // get field values from topic data
         List<Object> values = new ArrayList<Object>();
         ArrayNode fieldNode = getFieldValue(field);
         if (fieldNode != null) { 
