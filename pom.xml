@@ -42,4 +42,8 @@
     </snapshotRepository>
   </distributionManagement>
 
+  <scm>
+    <connection>scm:git:git://github.com/grove/presto.git</connection>
+  </scm>
+
 </project>
