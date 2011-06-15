@@ -25,9 +25,4 @@ public class CouchDefaultTopic extends CouchTopic {
         getData().put(field.getId(), value);
     }
 
-    @Override
-    protected void removeFieldValue(PrestoField field) {
-        getData().remove(field.getId());
-    }
-
 }

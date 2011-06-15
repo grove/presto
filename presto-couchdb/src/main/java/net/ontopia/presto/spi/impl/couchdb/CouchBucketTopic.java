@@ -36,20 +36,13 @@ public class CouchBucketTopic extends CouchTopic {
     protected void putFieldValue(PrestoField field, ArrayNode value) {
         ObjectNode writeBucket = getWriteBucket(field, true);
         ObjectNode readBucket = getReadBucket(field, false);
+        // remove write bucket field iff value equal to value in closest read bucket
         if (readBucket != null && equalValues(value, getBucketFieldValue(field, readBucket))) {
             if (writeBucket.has(field.getId())) {        
                 writeBucket.remove(field.getId());
             }
         } else {
             writeBucket.put(field.getId(), value);
-        }
-    }
-
-    @Override
-    protected void removeFieldValue(PrestoField field) {
-        ObjectNode writeBucket = getWriteBucket(field, false);
-        if (writeBucket != null) {
-            writeBucket.remove(field.getId());
         }
     }
 

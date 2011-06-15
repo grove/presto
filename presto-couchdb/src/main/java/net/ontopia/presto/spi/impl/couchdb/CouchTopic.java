@@ -70,8 +70,6 @@ public abstract class CouchTopic implements PrestoTopic {
 
     protected abstract void putFieldValue(PrestoField field, ArrayNode value);
 
-    protected abstract void removeFieldValue(PrestoField field);
-
     // methods for retrieving the state of a couchdb document
 
     public Collection<Object> getValues(PrestoField field) {
@@ -117,15 +115,11 @@ public abstract class CouchTopic implements PrestoTopic {
     }
 
     void setValue(PrestoField field, Collection<? extends Object> values) {
-        if (values.isEmpty()) {
-            removeFieldValue(field);
-        } else {
-            ArrayNode arrayNode = dataProvider.getObjectMapper().createArrayNode();
-            for (Object value : values) {
-                arrayNode.add(getValue(value));
-            }
-            putFieldValue(field, arrayNode);
+        ArrayNode arrayNode = dataProvider.getObjectMapper().createArrayNode();
+        for (Object value : values) {
+            arrayNode.add(getValue(value));
         }
+        putFieldValue(field, arrayNode);
     }
 
     void addValue(PrestoField field, Collection<? extends Object> values, int index) {
