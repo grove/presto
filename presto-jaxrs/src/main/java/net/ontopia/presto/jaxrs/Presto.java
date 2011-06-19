@@ -110,7 +110,9 @@ public class Presto {
         List<FieldData> fields = new ArrayList<FieldData>(); 
 
         for (PrestoFieldUsage field : type.getFields(view)) {
-            fields.add(getFieldInfo(topic, field, topic.getValues(field), readOnlyMode));
+            if (!field.isHidden()) {
+                fields.add(getFieldInfo(topic, field, topic.getValues(field), readOnlyMode));
+            }
         }
         result.setFields(fields);
         result.setViews(getViews(topic, type, view, readOnlyMode));
@@ -140,7 +142,9 @@ public class Presto {
 
         PrestoTopic topic = null;
         for (PrestoFieldUsage field : type.getFields(view)) {
-            fields.add(getFieldInfo(topic, field, Collections.emptyList(), readOnlyMode));
+            if (!field.isHidden()) {
+                fields.add(getFieldInfo(topic, field, Collections.emptyList(), readOnlyMode));
+            }
         }
         result.setFields(fields);
         result.setViews(Collections.singleton(getView(null, view, readOnlyMode)));
