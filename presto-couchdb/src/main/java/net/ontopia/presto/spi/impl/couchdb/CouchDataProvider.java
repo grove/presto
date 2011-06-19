@@ -83,7 +83,7 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
         return result;
     }
 
-    protected Collection<Object> getExternalValues(PrestoTopic topic, PrestoField field) {
+    protected Collection<Object> getExternalValues(CouchTopic topic, PrestoField field) {
         ObjectNode extra = (ObjectNode)field.getExtra();
         String type = extra.get("type").getTextValue();
         if (type == null) {
@@ -104,7 +104,7 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
             List<Object> result = new ArrayList<Object>();
             ViewQuery query = new ViewQuery()
             .designDocId(designDocId)
-            .viewName(viewName).includeDocs(true).key(keys);
+            .viewName(viewName).includeDocs(true).keys(keys);
     
             ViewResult viewResult = getCouchConnector().queryView(query);
             for (Row row : viewResult.getRows()) {row.getValue();
@@ -133,7 +133,7 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
         return Collections.emptyList();
     }
     
-    protected Collection<JsonNode> replaceKeyVariables(PrestoTopic topic, PrestoField field, JsonNode key) {
+    protected Collection<JsonNode> replaceKeyVariables(CouchTopic topic, PrestoField field, JsonNode key) {
         PrestoSchemaProvider schemaProvider = field.getSchemaProvider();
         String typeId = topic.getTypeId();
         PrestoType type = schemaProvider.getTypeById(typeId);
@@ -142,12 +142,12 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
         Collection<String> varNames = new HashSet<String>();
         findVariables(key, varNames);
 
-        int totalSize = 0;
+        int totalSize = 1;
         Map<String,List<String>> varValues = new HashMap<String,List<String>>();
         for (String variable : varNames) {
+            List<String> valueStrings = new ArrayList<String>();
             PrestoField valueField = type.getFieldById(variable);
             Collection<Object> values = topic.getValues(valueField);
-            List<String> valueStrings = new ArrayList<String>(values.size());
             for (Object value : values) {
                 if (value instanceof PrestoTopic) {
                     valueStrings.add((((PrestoTopic)value).getId()));
