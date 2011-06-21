@@ -15,10 +15,10 @@ public class Value {
     private String value;
 
     // reference
-    private String id;
     private String name;
     private Collection<Link> links;
     private Topic embedded;
+    private Collection<Value> values;
 
     public void setRemovable(Boolean removable) {
         this.removable = removable;
@@ -32,12 +32,7 @@ public class Value {
     public String getValue() {
         return value;
     }
-    public void setId(String id) {
-        this.id = id;
-    }
-    public String getId() {
-        return id;
-    }
+    
     public void setName(String name) {
         this.name = name;
     }
@@ -60,5 +55,14 @@ public class Value {
     public Topic getEmbedded() {
         return embedded;
     }
+    
+    public Collection<Value> getValues() {
+        return values;
+    }
+    public void setValues(Collection<Value> values) {
+        this.values = values;
+    }
+    
+    
 
 }
