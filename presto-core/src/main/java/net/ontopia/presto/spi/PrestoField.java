@@ -8,7 +8,7 @@ public interface PrestoField {
 
     String getName();
 
-    boolean isNameField();
+    boolean isNameField(); // TODO: Move into extras
 
     boolean isPrimitiveField();
 

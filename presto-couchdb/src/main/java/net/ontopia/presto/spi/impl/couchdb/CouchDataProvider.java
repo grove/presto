@@ -126,6 +126,9 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
                     }
                 });
             }
+            if (extra.has("excludeSelf") && extra.get("excludeSelf").getBooleanValue()) {
+                result.remove(topic);
+            }
             return result;
         } else {
             log.error("Unknown type specified on CouchDB field: " + field.getId());            
