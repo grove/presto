@@ -20,6 +20,11 @@ public class FieldData {
     private String datatype;
     private String validation;
     private String interfaceControl;
+    
+    private Integer valuesLimit;
+    private Integer valuesOffset;
+    private Integer valuesTotal;
+    
     private Object extra;
 
     private Integer minCardinality;
@@ -27,6 +32,8 @@ public class FieldData {
 
     private Collection<Link> links;
     private Collection<Value> values;
+    
+    private Collection<FieldData> valueFields;
 
     private Collection<TopicType> valueTypes;
 
@@ -138,4 +145,38 @@ public class FieldData {
         return valueTypes;
     }
 
+    public Collection<FieldData> getValueFields() {
+        return valueFields;
+    }
+
+    public void setValueFields(Collection<FieldData> fields) {
+        this.valueFields = fields;
+    }
+
+    public Integer getValuesLimit() {
+        return valuesLimit;
+    }
+
+    public void setValuesLimit(Integer valuesLimit) {
+        this.valuesLimit = valuesLimit;
+    }
+
+    public Integer getValuesOffset() {
+        return valuesOffset;
+    }
+
+    public void setValuesOffset(Integer valuesOffset) {
+        this.valuesOffset = valuesOffset;
+    }
+
+    public Integer getValuesTotal() {
+        return valuesTotal;
+    }
+
+    public void setValuesTotal(Integer valuesTotal) {
+        this.valuesTotal = valuesTotal;
+    }
+    
+    
+    
 }
