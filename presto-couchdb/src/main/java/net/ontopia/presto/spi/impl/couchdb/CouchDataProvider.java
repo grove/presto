@@ -91,6 +91,7 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
         } else if (type.equals("query")) {
             String designDocId = extra.get("designDocId").getTextValue();
             String viewName = extra.get("viewName").getTextValue();
+            
             Collection<?> keys = new ArrayList<Object>();
             if (extra.has("key")) {
                 keys = replaceKeyVariables(topic, field, extra.get("key"));
@@ -101,19 +102,44 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
                 keys = Collections.singleton(topic.getId());
             }
             
+            boolean includeDocs = extra.has("includeDocs") && extra.get("includeDocs").getBooleanValue();
+            
             List<Object> result = new ArrayList<Object>();
             ViewQuery query = new ViewQuery()
             .designDocId(designDocId)
-            .viewName(viewName).includeDocs(true).keys(keys);
+            .viewName(viewName)
+            .keys(keys)
+            .includeDocs(includeDocs);
     
             ViewResult viewResult = getCouchConnector().queryView(query);
-            for (Row row : viewResult.getRows()) {row.getValue();
-                JsonNode value = (JsonNode)row.getDocAsNode();
-                if (value != null) {
-                    if (value.isObject()) {
-                        result.add(existing((ObjectNode)value));
+            for (Row row : viewResult.getRows()) {
+                if (includeDocs) {
+                    JsonNode value = (JsonNode)row.getDocAsNode();
+                    if (value != null) {
+                        if (value.isObject()) {
+                            result.add(existing((ObjectNode)value));
+                        } else {
+                            result.add(value.getTextValue());
+                        }
+                    }
+                } else {
+                    JsonNode valueAsNode = row.getValueAsNode();
+                    if (valueAsNode == null) {
+                        // do nothing
+                    } else if (valueAsNode.isTextual()) {
+                        String textValue = valueAsNode.getTextValue();
+                        if (textValue != null) {
+                            if (field.isReferenceField()) {
+                                PrestoTopic valueTopic = topic.getDataProvider().getTopicById(textValue);
+                                if (valueTopic != null) {
+                                    result.add(valueTopic);
+                                }
+                            } else {
+                                result.add(textValue);
+                            }
+                        }
                     } else {
-                        result.add(value.getTextValue());
+                        result.add(valueAsNode.toString());
                     }
                 }
             }
