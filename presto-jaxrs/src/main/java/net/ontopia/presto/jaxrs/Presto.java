@@ -111,7 +111,7 @@ public class Presto {
 
         for (PrestoFieldUsage field : type.getFields(view)) {
             if (!field.isHidden()) {
-                fields.add(getFieldInfo(topic, field, topic.getValues(field), readOnlyMode));
+                fields.add(getFieldInfo(topic, field, readOnlyMode));
             }
         }
         result.setFields(fields);
@@ -143,7 +143,7 @@ public class Presto {
         PrestoTopic topic = null;
         for (PrestoFieldUsage field : type.getFields(view)) {
             if (!field.isHidden()) {
-                fields.add(getFieldInfo(topic, field, Collections.emptyList(), readOnlyMode));
+                fields.add(getFieldInfo(topic, field, readOnlyMode));
             }
         }
         result.setFields(fields);
@@ -152,13 +152,20 @@ public class Presto {
     }
 
     private FieldData getFieldInfo(
-            PrestoTopic topic, PrestoFieldUsage field, Collection<? extends Object> fieldValues, boolean readOnlyMode) {
+            PrestoTopic topic, PrestoFieldUsage field, boolean readOnlyMode) {
 
         PrestoType type = field.getType();
         PrestoView parentView = field.getView();
 
         boolean isNewTopic = topic == null;
 
+        Collection<? extends Object> fieldValues;
+        if (isNewTopic) {
+        	fieldValues = Collections.emptyList();
+        } else {
+        	fieldValues = topic.getValues(field);
+        }
+        
         String databaseId = field.getSchemaProvider().getDatabaseId();
         String topicId = isNewTopic ? "_" + type.getId() : topic.getId();
         String parentViewId = parentView.getId();
@@ -273,8 +280,7 @@ public class Presto {
         return views;
     }
 
-    public View getView(PrestoTopic topic,
-            PrestoView view, boolean readOnlyMode) {
+    public View getView(PrestoTopic topic, PrestoView view, boolean readOnlyMode) {
         View result = new View();
         result.setId(view.getId());
         result.setName(view.getName());
@@ -436,7 +442,7 @@ public class Presto {
             }
             topic = changeSet.save();
         }
-        return getFieldInfo(topic, field, topic.getValues(field), false);
+        return getFieldInfo(topic, field, false);
     }
 
     public FieldData removeFieldValues(PrestoTopic topic, PrestoFieldUsage field, FieldData fieldObject) {
@@ -462,7 +468,7 @@ public class Presto {
             changeSet.removeValues(field, removeableValues);
             topic = changeSet.save();
         }
-        return getFieldInfo(topic, field, topic.getValues(field), false);
+        return getFieldInfo(topic, field, false);
     }
 
     public PrestoTopic updateTopic(PrestoTopic topic, PrestoType type, PrestoView view, Topic data) {
