@@ -105,6 +105,10 @@ public class PojoFieldUsage implements PrestoFieldUsage {
         return field.isSorted();
     }
 
+    public boolean isPageable() {
+        return field.isPageable();
+    }
+
     public boolean isCascadingDelete() {
         return field.isCascadingDelete();
     }

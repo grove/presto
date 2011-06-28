@@ -27,6 +27,8 @@ public class PojoField implements PrestoField {
     private boolean isTraversable = true;
     private boolean isReadOnly;
     private boolean isSorted;
+    private boolean isPageable;
+    private int limit;
     private boolean isCascadingDelete;
     private boolean isNewValuesOnly;
     private boolean isExistingValuesOnly;
@@ -109,6 +111,14 @@ public class PojoField implements PrestoField {
         return isSorted;
     }
 
+    public boolean isPageable() {
+        return isPageable;
+    }
+
+    public int getLimit() {
+        return limit;
+    }
+    
     public boolean isCascadingDelete() {
         return isCascadingDelete;
     }
@@ -209,6 +219,14 @@ public class PojoField implements PrestoField {
 
     public void setSorted(boolean isSorted) {
         this.isSorted = isSorted;
+    }
+
+    public void setPageable(boolean isPageable) {
+        this.isPageable = isPageable;
+    }
+
+    public void setLimit(int limit) {
+        this.limit = limit;
     }
 
     public void setCascadingDelete(boolean isCascadingDelete) {

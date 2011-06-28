@@ -182,6 +182,10 @@ public class OntopolyField implements PrestoFieldUsage {
     return true;
   }
   
+  public boolean isPageable() {
+    return true;
+  }
+  
   public boolean isCascadingDelete() {
     EditMode editMode = getEditMode();
     return editMode.isOwnedValues();

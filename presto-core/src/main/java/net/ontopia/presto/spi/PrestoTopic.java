@@ -1,6 +1,6 @@
 package net.ontopia.presto.spi;
 
-import java.util.Collection;
+import java.util.List;
 
 public interface PrestoTopic {
 
@@ -10,6 +10,15 @@ public interface PrestoTopic {
 
     String getTypeId();
 
-    Collection<Object> getValues(PrestoField field);
+    List<Object> getValues(PrestoField field);
 
+    PagingValues getValues(PrestoField field, int offset, int limit);
+
+    public static interface PagingValues {
+    	List<Object> getValues();
+    	int getOffset();
+    	int getLimit();
+    	int getTotal();
+    }
+    
 }
