@@ -91,7 +91,7 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
         } else if (type.equals("query")) {
             String designDocId = extra.get("designDocId").getTextValue();
             String viewName = extra.get("viewName").getTextValue();
-            
+
             Collection<?> keys = new ArrayList<Object>();
             if (extra.has("key")) {
                 keys = replaceKeyVariables(topic, field, extra.get("key"));
@@ -101,16 +101,16 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
             } else {
                 keys = Collections.singleton(topic.getId());
             }
-            
+
             boolean includeDocs = extra.has("includeDocs") && extra.get("includeDocs").getBooleanValue();
-            
+
             List<Object> result = new ArrayList<Object>();
             ViewQuery query = new ViewQuery()
             .designDocId(designDocId)
             .viewName(viewName)
             .keys(keys)
             .includeDocs(includeDocs);
-    
+
             ViewResult viewResult = getCouchConnector().queryView(query);
             for (Row row : viewResult.getRows()) {
                 if (includeDocs) {
@@ -161,12 +161,12 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
         }
         return Collections.emptyList();
     }
-    
+
     protected Collection<JsonNode> replaceKeyVariables(CouchTopic topic, PrestoField field, JsonNode key) {
         PrestoSchemaProvider schemaProvider = field.getSchemaProvider();
         String typeId = topic.getTypeId();
         PrestoType type = schemaProvider.getTypeById(typeId);
-        
+
         // find set of variables
         Collection<String> varNames = new HashSet<String>();
         findVariables(key, varNames);
@@ -175,13 +175,19 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
         Map<String,List<String>> varValues = new HashMap<String,List<String>>();
         for (String variable : varNames) {
             List<String> valueStrings = new ArrayList<String>();
-            PrestoField valueField = type.getFieldById(variable);
-            Collection<Object> values = topic.getValues(valueField);
-            for (Object value : values) {
-                if (value instanceof PrestoTopic) {
-                    valueStrings.add((((PrestoTopic)value).getId()));
-                } else {
-                    valueStrings.add(value == null ? null : value.toString());
+            if (variable.equals(":id")) {
+                valueStrings.add(topic.getId());                
+            } else if (variable.equals(":type")) {
+            	valueStrings.add(topic.getTypeId());                
+            } else {
+                PrestoField valueField = type.getFieldById(variable);
+                Collection<Object> values = topic.getValues(valueField);
+                for (Object value : values) {
+                    if (value instanceof PrestoTopic) {
+                        valueStrings.add((((PrestoTopic)value).getId()));
+                    } else {
+                        valueStrings.add(value == null ? null : value.toString());
+                    }
                 }
             }
             varValues.put(variable, valueStrings);
@@ -192,7 +198,7 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
         int arrayCount = varCount * arraySize;
         // A:[1,2] B[5,6,7] C[0] -> [1,5,0] [1,6,0] [1,7,0] 
         //                          [2,5,0] [2,6,0] [2,7,0]
-        
+
         // make keys from cross-product of variable values
         Map<String,String> map = new HashMap<String,String>();
         Collection<JsonNode> keys = new ArrayList<JsonNode>();
@@ -206,7 +212,7 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
         }
         return keys;
     }
-    
+
     private JsonNode replaceVariables(Map<String, String> variables, JsonNode node) {
         JsonNodeFactory nodeFactory = mapper.getNodeFactory();
         if (node.isObject()) {
@@ -268,14 +274,14 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
             }
         }
     }
-    
+
     protected String getVariable(String value) {
         if (value.startsWith("$")) {
             return value.substring(1);
         }
         return null;
     }
-    
+
     public Collection<PrestoTopic> getAvailableFieldValues(PrestoFieldUsage field) {
         Collection<PrestoType> types = field.getAvailableFieldValueTypes();
         if (types.isEmpty()) {
