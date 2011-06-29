@@ -60,7 +60,9 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
         // look up by document id
         ObjectNode doc = null;
         try {
-            doc = getCouchConnector().get(ObjectNode.class, topicId);
+        	if (topicId != null) {
+        		doc = getCouchConnector().get(ObjectNode.class, topicId);
+        	}
         } catch (DocumentNotFoundException e) {
             log.warn("Topic with id '" + topicId + "' not found.");
         }
