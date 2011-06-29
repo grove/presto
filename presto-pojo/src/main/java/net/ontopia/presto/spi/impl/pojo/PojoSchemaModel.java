@@ -215,6 +215,14 @@ public class PojoSchemaModel {
                         if (fieldConfig.has("sorted")) {
                             field.setSorted(fieldConfig.get("sorted").getBooleanValue());
                         }
+                        // isPageable
+                        if (fieldConfig.has("pageable")) {
+                            field.setPageable(fieldConfig.get("pageable").getBooleanValue());
+                        }
+                        // limit
+                        if (fieldConfig.has("limit")) {
+                            field.setLimit(fieldConfig.get("limit").getIntValue());
+                        }
                         // isCascadingDelete
                         if (fieldConfig.has("cascadingDelete")) {
                             field.setCascadingDelete(fieldConfig.get("cascadingDelete").getBooleanValue());

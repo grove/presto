@@ -16,6 +16,7 @@ public class FieldData {
     private String name;
     private Boolean readOnly;
     private Boolean embeddable;
+    private Boolean pageable;
 
     private String datatype;
     private String validation;
@@ -79,6 +80,14 @@ public class FieldData {
 
     public void setEmbeddable(Boolean embeddable) {
         this.embeddable = embeddable;
+    }
+
+    public Boolean isPageable() {
+        return pageable;
+    }
+
+    public void setPageable(Boolean pageable) {
+        this.pageable = pageable;
     }
 
     public void setDatatype(String datatype) {

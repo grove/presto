@@ -17,6 +17,7 @@ import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
+import net.ontopia.presto.spi.PrestoTopic.PagingValues;
 import net.ontopia.presto.spi.PrestoType;
 
 import org.codehaus.jackson.JsonNode;
@@ -59,7 +60,9 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
         // look up by document id
         ObjectNode doc = null;
         try {
-            doc = getCouchConnector().get(ObjectNode.class, topicId);
+        	if (topicId != null) {
+        		doc = getCouchConnector().get(ObjectNode.class, topicId);
+        	}
         } catch (DocumentNotFoundException e) {
             log.warn("Topic with id '" + topicId + "' not found.");
         }
@@ -83,7 +86,12 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
         return result;
     }
 
-    protected Collection<Object> getExternalValues(CouchTopic topic, PrestoField field) {
+    protected PagingValues getExternalValues(CouchTopic topic, PrestoField field, boolean paging, int _offset, int _limit) {
+
+    	final int DEFAULT_LIMIT = 40;
+		int offset = paging ?  Math.max(0, _offset): _offset;
+		int limit = paging ? _limit > 0 ? _limit : DEFAULT_LIMIT : _limit;
+
         ObjectNode extra = (ObjectNode)field.getExtra();
         String type = extra.get("type").getTextValue();
         if (type == null) {
@@ -96,7 +104,7 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
             if (extra.has("key")) {
                 keys = replaceKeyVariables(topic, field, extra.get("key"));
                 if (keys.isEmpty()) {
-                    return Collections.emptyList();
+                    return new CouchPagingValues(Collections.emptyList(), 0, _limit,0);
                 }
             } else {
                 keys = Collections.singleton(topic.getId());
@@ -111,6 +119,15 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
             .keys(keys)
             .includeDocs(includeDocs);
 
+            if (paging) {
+	            if (offset > 0) {
+	            	query = query.skip(offset);
+	            }
+	            if (limit > 0) {
+	            	query = query.limit(limit);
+	            }
+            }
+            
             ViewResult viewResult = getCouchConnector().queryView(query);
             for (Row row : viewResult.getRows()) {
                 if (includeDocs) {
@@ -143,23 +160,23 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
                     }
                 }
             }
-            if (field.isSorted()) {
-                Collections.sort(result, new Comparator<Object>() {
-                    public int compare(Object o1, Object o2) {
-                        String n1 = (o1 instanceof PrestoTopic) ? ((PrestoTopic)o1).getName() : (o1 == null ? null : o1.toString());
-                        String n2 = (o2 instanceof PrestoTopic) ? ((PrestoTopic)o2).getName() : (o2 == null ? null : o2.toString());
-                        return compareComparables(n1, n2);
-                    }
-                });
-            }
+//            if (field.isSorted()) {
+//                Collections.sort(result, new Comparator<Object>() {
+//                    public int compare(Object o1, Object o2) {
+//                        String n1 = (o1 instanceof PrestoTopic) ? ((PrestoTopic)o1).getName() : (o1 == null ? null : o1.toString());
+//                        String n2 = (o2 instanceof PrestoTopic) ? ((PrestoTopic)o2).getName() : (o2 == null ? null : o2.toString());
+//                        return compareComparables(n1, n2);
+//                    }
+//                });
+//            }
             if (extra.has("excludeSelf") && extra.get("excludeSelf").getBooleanValue()) {
                 result.remove(topic);
             }
-            return result;
+            return new CouchPagingValues(result, offset, limit, viewResult.getSize());
         } else {
             log.error("Unknown type specified on CouchDB field: " + field.getId());            
         }
-        return Collections.emptyList();
+        return new CouchPagingValues(Collections.emptyList(), 0, limit,0);
     }
 
     protected Collection<JsonNode> replaceKeyVariables(CouchTopic topic, PrestoField field, JsonNode key) {

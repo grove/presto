@@ -32,6 +32,8 @@ public interface PrestoField {
 
     boolean isSorted();
 
+    boolean isPageable();
+
     boolean isCascadingDelete();
 
     // reference fields

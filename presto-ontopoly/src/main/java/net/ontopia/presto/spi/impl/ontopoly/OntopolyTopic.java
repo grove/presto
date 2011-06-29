@@ -62,7 +62,7 @@ public class OntopolyTopic implements PrestoTopic {
     return result;
   }
   
-  public Collection<Object> getValues(PrestoField field) {
+  public List<Object> getValues(PrestoField field) {
     FieldDefinition fieldDefinition = FieldDefinition.getFieldDefinition(session.getTopicById(field.getId()), session.getTopicMap());
     
     Collection<? extends Object> fieldValues = fieldDefinition.getValues(topic);
@@ -78,6 +78,11 @@ public class OntopolyTopic implements PrestoTopic {
     return result;
   }
 
+	public PagingValues getValues(PrestoField field, int offset, int limit) {
+	  List<Object> result = (List<Object>)getValues(field);
+	  return new OntopolyPagingValues(result.subList(offset, offset+limit), offset, limit, result.size());
+  }
+  
   private  Object normalizeValue(Topic topic, FieldDefinition fieldDefinition, Object fieldValue) {
     switch (fieldDefinition.getFieldType()) {
     case FieldDefinition.FIELD_TYPE_NAME:

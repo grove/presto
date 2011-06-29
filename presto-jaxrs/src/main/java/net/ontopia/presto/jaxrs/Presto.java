@@ -12,9 +12,6 @@ import java.util.Map;
 
 import javax.ws.rs.core.UriInfo;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import net.ontopia.presto.jaxb.AvailableFieldValues;
 import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxb.Link;
@@ -33,6 +30,9 @@ import net.ontopia.presto.spi.PrestoSession;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoView;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Presto {
 
@@ -151,20 +151,16 @@ public class Presto {
         return result;
     }
 
-    private FieldData getFieldInfo(
-            PrestoTopic topic, PrestoFieldUsage field, boolean readOnlyMode) {
-
+    private FieldData getFieldInfo(PrestoTopic topic, PrestoFieldUsage field, boolean readOnlyMode) {
+    	return getFieldInfo(topic, field, readOnlyMode, 0, -1);
+    }
+    
+    public FieldData getFieldInfo(PrestoTopic topic, PrestoFieldUsage field, boolean readOnlyMode, int offset, int limit) {
+    	
         PrestoType type = field.getType();
         PrestoView parentView = field.getView();
 
         boolean isNewTopic = topic == null;
-
-        Collection<? extends Object> fieldValues;
-        if (isNewTopic) {
-        	fieldValues = Collections.emptyList();
-        } else {
-        	fieldValues = topic.getValues(field);
-        }
         
         String databaseId = field.getSchemaProvider().getDatabaseId();
         String topicId = isNewTopic ? "_" + type.getId() : topic.getId();
@@ -203,18 +199,22 @@ public class Presto {
             fieldData.setEmbeddable(true);
         }
 
+        if (field.isPageable()) {
+            fieldData.setPageable(true);
+        }
+
         boolean isReadOnly = readOnlyMode || field.isReadOnly();
         if (isReadOnly) {
             fieldData.setReadOnly(Boolean.TRUE);
         }
 
+        List<Link> fieldLinks = new ArrayList<Link>();      
         if (field.isReferenceField()) {
             fieldData.setDatatype("reference");
 
             boolean allowAddRemove = !isReadOnly && !field.isNewValuesOnly();
             boolean allowCreate = !isReadOnly && !field.isExistingValuesOnly();
 
-            List<Link> fieldLinks = new ArrayList<Link>();      
             if (allowCreate) {
                 if (!field.getAvailableFieldCreateTypes().isEmpty()) {
                     fieldLinks.add(new Link("available-field-types", uriInfo.getBaseUri() + "editor/available-field-types/" + fieldReference));
@@ -234,7 +234,6 @@ public class Presto {
                     }
                 }
             }      
-            fieldData.setLinks(fieldLinks);
 
         } else {
             String dataType = field.getDataType();
@@ -242,7 +241,6 @@ public class Presto {
                 fieldData.setDatatype(dataType);
             }
             if (!isReadOnly) {
-                List<Link> fieldLinks = new ArrayList<Link>();
                 if (!isNewTopic) {
                     fieldLinks.add(new Link("add-field-values", uriInfo.getBaseUri() + "editor/add-field-values/" + fieldReference));
                     fieldLinks.add(new Link("remove-field-values", uriInfo.getBaseUri() + "editor/remove-field-values/" + fieldReference));
@@ -251,8 +249,15 @@ public class Presto {
                         fieldLinks.add(new Link("move-field-values-to-index", uriInfo.getBaseUri() + "editor/move-field-values-to-index/" + fieldReference + "/{index}"));
                     }
                 }
-                fieldData.setLinks(fieldLinks);
             }
+        }
+        
+        if (field.isPageable()) {
+            fieldLinks.add(new Link("paging", uriInfo.getBaseUri() + "editor/paging-field/" + fieldReference + "/{start}/{limit}"));        	
+        }
+        
+        if (!fieldLinks.isEmpty()) {
+        	fieldData.setLinks(fieldLinks);
         }
 
         Collection<PrestoType> availableFieldValueTypes = field.getAvailableFieldValueTypes();
@@ -264,8 +269,81 @@ public class Presto {
             fieldData.setValueTypes(valueTypes);
         }
 
-        fieldData.setValues(getValues(field, fieldValues, readOnlyMode));
+    	final int DEFAULT_LIMIT = 40;
+
+    	List<? extends Object> fieldValues;
+        if (isNewTopic) {
+        	fieldValues = Collections.emptyList();
+        } else {
+        	// server-side paging (only if not sorting on client)
+//        	if (field.isPageable() && !field.isSorted()) {
+//        		int actualOffset = offset >= 0 ? offset : 0;
+//        		int actualLimit = limit > 0 ? limit : DEFAULT_LIMIT;
+//        		fieldData.setPageable(true);
+//        		PrestoTopic.PagingValues pagingValues = topic.getValues(field, actualOffset, actualLimit);
+//        		fieldData.setValuesOffset(pagingValues.getOffset());
+//        		fieldData.setValuesLimit(pagingValues.getLimit());
+//        		fieldData.setValuesTotal(pagingValues.getTotal());
+//        		fieldValues = pagingValues.getValues();
+//        	} else {
+        		fieldValues = topic.getValues(field);
+//        	}
+        }
+
+		int size = fieldValues.size();
+		int start = 0;
+		int end = size;
+//		if (field.isPageable() && field.isSorted()) {
+		if (field.isPageable()) {
+			int _limit = limit > 0 ? limit : DEFAULT_LIMIT;
+			start = Math.min(Math.max(0, offset), size);
+			end = Math.min(start+_limit, size);
+    		fieldData.setValuesOffset(start);
+    		fieldData.setValuesLimit(_limit);
+    		fieldData.setValuesTotal(size);			
+		}
+
+		if (field.isSorted()) {
+			Collections.sort(fieldValues, new Comparator<Object>() {
+				public int compare(Object o1, Object o2) {
+					String n1 = (o1 instanceof PrestoTopic) ? ((PrestoTopic)o1).getName() : (o1 == null ? null : o1.toString());
+					String n2 = (o2 instanceof PrestoTopic) ? ((PrestoTopic)o2).getName() : (o2 == null ? null : o2.toString());
+					return compareComparables(n1, n2);
+				}
+			});
+		}
+
+		List<Value> values = new ArrayList<Value>(fieldValues.size());
+		for (int i=start; i < end; i++) {
+		    values.add(getValue(field, fieldValues.get(i), readOnlyMode));
+		}
+//		if (field.isSorted()) {
+//		    Collections.sort(values, new Comparator<Value>() {
+//		        public int compare(Value v1, Value v2) {
+//		            String vx1 = v1.getName();
+//		            if (vx1 == null) {
+//		                vx1 = v1.getValue();
+//		            }
+//		            String vx2 = v2.getName();
+//		            if (vx2 == null) {
+//		                vx2 = v2.getValue();
+//		            }
+//		            return compareStatic(vx1, vx2);
+//		        }
+//		    });
+//		}
+        fieldData.setValues(values);
+        
         return fieldData;
+    }
+
+    protected int compareComparables(String o1, String o2) {
+        if (o1 == null)
+            return (o2 == null ? 0 : -1);
+        else if (o2 == null)
+            return 1;
+        else
+            return o1.compareTo(o2);
     }
 
     public List<View> getViews(
@@ -293,28 +371,28 @@ public class Presto {
         return result;
     }
 
-    protected Collection<Value> getValues(PrestoFieldUsage field, Collection<? extends Object> fieldValues, boolean readOnlyMode) {
-        List<Value> result = new ArrayList<Value>(fieldValues.size());
-        for (Object value : fieldValues) {
-            result.add(getValue(field, value, readOnlyMode));
-        }
-        if (field.isSorted()) {
-            Collections.sort(result, new Comparator<Value>() {
-                public int compare(Value v1, Value v2) {
-                    String vx1 = v1.getName();
-                    if (vx1 == null) {
-                        vx1 = v1.getValue();
-                    }
-                    String vx2 = v2.getName();
-                    if (vx2 == null) {
-                        vx2 = v2.getValue();
-                    }
-                    return compareStatic(vx1, vx2);
-                }
-            });
-        }
-        return result;
-    }
+//    protected List<Value> getValues(PrestoFieldUsage field, Collection<? extends Object> fieldValues, boolean readOnlyMode) {
+//        List<Value> result = new ArrayList<Value>(fieldValues.size());
+//        for (Object value : fieldValues) {
+//            result.add(getValue(field, value, readOnlyMode));
+//        }
+//        if (field.isSorted()) {
+//            Collections.sort(result, new Comparator<Value>() {
+//                public int compare(Value v1, Value v2) {
+//                    String vx1 = v1.getName();
+//                    if (vx1 == null) {
+//                        vx1 = v1.getValue();
+//                    }
+//                    String vx2 = v2.getName();
+//                    if (vx2 == null) {
+//                        vx2 = v2.getValue();
+//                    }
+//                    return compareStatic(vx1, vx2);
+//                }
+//            });
+//        }
+//        return result;
+//    }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     protected <T> int compareStatic(Comparable o1, Comparable o2) {
@@ -488,10 +566,10 @@ public class Presto {
             String fieldId = jsonField.getId();
 
             PrestoFieldUsage field = fields.get(fieldId);
-
             boolean isReferenceField = field.isReferenceField();
-            boolean isReadOnly = field.isReadOnly(); // ignore readOnly-fields 
-            if (!isReadOnly) {
+
+            // ignore read-only or pageable fields 
+            if (!field.isReadOnly() && !field.isPageable()) {
                 if  (fields.containsKey(fieldId)) {
                     Collection<Value> values = jsonField.getValues();
                     Collection<Object> newValues = new ArrayList<Object>(values.size());

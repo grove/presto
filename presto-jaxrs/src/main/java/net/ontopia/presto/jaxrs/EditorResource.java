@@ -147,6 +147,54 @@ public abstract class EditorResource {
 
     @GET
     @Produces(APPLICATION_JSON_UTF8)
+    @Path("paging-field/{databaseId}/{topicId}/{viewId}/{fieldId}/{start}/{limit}")
+    public Response getFieldPaging(@Context UriInfo uriInfo, 
+            @PathParam("databaseId") final String databaseId, 
+            @PathParam("topicId") final String topicId, 
+            @PathParam("viewId") final String viewId,
+            @PathParam("fieldId") final String fieldId, 
+            @PathParam("start") final int start, 
+            @PathParam("limit") final int limit) throws Exception {
+
+        PrestoSession session = createSession(databaseId);
+        PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
+        PrestoDataProvider dataProvider = session.getDataProvider();
+
+        try {
+
+            PrestoTopic topic = dataProvider.getTopicById(topicId);
+            if (topic == null) {
+                return Response.status(Status.NOT_FOUND).build();
+            }
+
+            PrestoType type = schemaProvider.getTypeById(topic.getTypeId());
+            PrestoView view = type.getViewById(viewId);
+
+            PrestoFieldUsage field = type.getFieldById(fieldId, view);
+            if (field == null) {
+                return Response.status(Status.NOT_FOUND).build();
+            }
+            
+            boolean readOnlyMode = false;
+            FieldData result = new Presto(session, uriInfo).getFieldInfo(topic, field, readOnlyMode, start, limit);
+
+            String id = topic.getId();
+
+            session.commit();
+            onTopicUpdated(id);
+
+            return Response.ok(result).build();
+
+        } catch (Exception e) {
+            session.abort();
+            throw e;
+        } finally {
+            session.close();      
+        } 
+    }
+
+    @GET
+    @Produces(APPLICATION_JSON_UTF8)
     @Path("create-field-instance/{databaseId}/{parentTopicId}/{parentFieldId}/{playerTypeId}")
     public Response createFieldInstance(
             @Context UriInfo uriInfo, 
