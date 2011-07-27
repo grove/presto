@@ -76,14 +76,14 @@ public abstract class CouchTopic implements PrestoTopic {
 		return getValues(field, false, 0, -1).getValues();
 	}
 
-	public PagingValues getValues(PrestoField field, int offset, int limit) {
+	public PagedValues getValues(PrestoField field, int offset, int limit) {
 		return getValues(field, true, offset, limit);
 	}
 
-	protected PagingValues getValues(PrestoField field, boolean paging, int _offset, int _limit) {
+	protected PagedValues getValues(PrestoField field, boolean paging, int offset, int limit) {
 		// get field values from data provider
 		if (field.getId().startsWith("external:")) {
-			return dataProvider.getExternalValues(this, field, paging, _offset, _limit);
+			return dataProvider.getExternalValues(this, field, paging, offset, limit);
 		}
 
 		// get field values from topic data
@@ -95,9 +95,9 @@ public abstract class CouchTopic implements PrestoTopic {
 		int end = size;
 		if (paging) {
 	    	final int DEFAULT_LIMIT = 40;
-			int limit = _limit > 0 ? _limit : DEFAULT_LIMIT;
-			start = Math.min(Math.max(0, _offset), size);
-			end = Math.min(limit+start, size);
+			int _limit = limit > 0 ? limit : DEFAULT_LIMIT;
+			start = Math.min(Math.max(0, offset), size);
+			end = Math.min(_limit+start, size);
 		}
 		
 		if (fieldNode != null) { 
@@ -121,7 +121,7 @@ public abstract class CouchTopic implements PrestoTopic {
 				}
 			}
 		}
-		return new CouchPagingValues(values, start, _limit, size);
+		return new CouchPagedValues(values, start, limit, size);
 	}
 
 	// methods for updating the state of a couchdb document

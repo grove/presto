@@ -12,9 +12,9 @@ public interface PrestoTopic {
 
     List<Object> getValues(PrestoField field);
 
-    PagingValues getValues(PrestoField field, int offset, int limit);
+    PagedValues getValues(PrestoField field, int offset, int limit);
 
-    public static interface PagingValues {
+    public static interface PagedValues {
     	List<Object> getValues();
     	int getOffset();
     	int getLimit();

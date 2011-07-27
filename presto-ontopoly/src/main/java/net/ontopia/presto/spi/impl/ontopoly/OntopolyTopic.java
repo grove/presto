@@ -78,9 +78,9 @@ public class OntopolyTopic implements PrestoTopic {
     return result;
   }
 
-	public PagingValues getValues(PrestoField field, int offset, int limit) {
+	public PagedValues getValues(PrestoField field, int offset, int limit) {
 	  List<Object> result = (List<Object>)getValues(field);
-	  return new OntopolyPagingValues(result.subList(offset, offset+limit), offset, limit, result.size());
+	  return new OntopolyPagedValues(result.subList(offset, offset+limit), offset, limit, result.size());
   }
   
   private  Object normalizeValue(Topic topic, FieldDefinition fieldDefinition, Object fieldValue) {

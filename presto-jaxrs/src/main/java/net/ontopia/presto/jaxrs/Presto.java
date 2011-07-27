@@ -280,10 +280,10 @@ public class Presto {
 //        		int actualOffset = offset >= 0 ? offset : 0;
 //        		int actualLimit = limit > 0 ? limit : DEFAULT_LIMIT;
 //        		fieldData.setPageable(true);
-//        		PrestoTopic.PagingValues pagingValues = topic.getValues(field, actualOffset, actualLimit);
-//        		fieldData.setValuesOffset(pagingValues.getOffset());
-//        		fieldData.setValuesLimit(pagingValues.getLimit());
-//        		fieldData.setValuesTotal(pagingValues.getTotal());
+//        		PrestoTopic.PagedValues pagedValues = topic.getValues(field, actualOffset, actualLimit);
+//        		fieldData.setValuesOffset(pagedValues.getOffset());
+//        		fieldData.setValuesLimit(pagedValues.getLimit());
+//        		fieldData.setValuesTotal(pagedValues.getTotal());
 //        		fieldValues = pagingValues.getValues();
 //        	} else {
         		fieldValues = topic.getValues(field);
@@ -317,21 +317,6 @@ public class Presto {
 		for (int i=start; i < end; i++) {
 		    values.add(getValue(field, fieldValues.get(i), readOnlyMode));
 		}
-//		if (field.isSorted()) {
-//		    Collections.sort(values, new Comparator<Value>() {
-//		        public int compare(Value v1, Value v2) {
-//		            String vx1 = v1.getName();
-//		            if (vx1 == null) {
-//		                vx1 = v1.getValue();
-//		            }
-//		            String vx2 = v2.getName();
-//		            if (vx2 == null) {
-//		                vx2 = v2.getValue();
-//		            }
-//		            return compareStatic(vx1, vx2);
-//		        }
-//		    });
-//		}
         fieldData.setValues(values);
         
         return fieldData;

@@ -2,16 +2,16 @@ package net.ontopia.presto.spi.impl.ontopoly;
 
 import java.util.List;
 
-import net.ontopia.presto.spi.PrestoTopic.PagingValues;
+import net.ontopia.presto.spi.PrestoTopic.PagedValues;
 
-public class OntopolyPagingValues implements PagingValues {
+public class OntopolyPagedValues implements PagedValues {
 
 	private final List<Object> values;
 	private final int offset;
 	private final int limit;
 	private final int total;
 
-	OntopolyPagingValues(List<Object> values, int offset, int limit, int total) {
+	OntopolyPagedValues(List<Object> values, int offset, int limit, int total) {
 		this.values = values;
 		this.offset = offset;
 		this.limit = limit;
