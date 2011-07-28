@@ -85,32 +85,51 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
         }
         return result;
     }
-
-    protected PagedValues getExternalValues(CouchTopic topic, PrestoField field, boolean paging, int _offset, int _limit) {
+    
+    @SuppressWarnings("unchecked")
+	PagedValues resolveValues(CouchTopic topic, PrestoField field, ArrayNode resolveArray, boolean paging, int offset, int limit) {
+    	PagedValues result = null;
+    	@SuppressWarnings("rawtypes")
+		Collection resultCollection = Collections.singleton(topic);
+    	int size = resolveArray.size();
+    	for (int i=0; i < size; i++) {
+    		boolean isLast = (i == size-1);
+    		boolean isReference = field.isReferenceField() || (field.isPrimitiveField() && !isLast);
+	        result = resolveValues(resultCollection, topic.getDataProvider(), field.getSchemaProvider(), isReference, (ObjectNode)resolveArray.get(i), paging, offset, limit);
+	        resultCollection = result.getValues();
+		}
+		return result;
+    }
+    
+    private PagedValues resolveValues(Collection<CouchTopic> topics, PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, 
+    		boolean isReference, ObjectNode resolveItem, boolean paging, int _offset, int _limit) {
 
     	final int DEFAULT_LIMIT = 40;
 		int offset = paging ?  Math.max(0, _offset): _offset;
 		int limit = paging ? _limit > 0 ? _limit : DEFAULT_LIMIT : _limit;
 
-        ObjectNode extra = (ObjectNode)field.getExtra();
-        String type = extra.get("type").getTextValue();
+        String type = resolveItem.get("type").getTextValue();
         if (type == null) {
-            log.error("extra.type not specified on CouchDB field: " + field.getId());
+            log.error("type not specified on resolve item: " + resolveItem);
         } else if (type.equals("query")) {
-            String designDocId = extra.get("designDocId").getTextValue();
-            String viewName = extra.get("viewName").getTextValue();
+            String designDocId = resolveItem.get("designDocId").getTextValue();
+            String viewName = resolveItem.get("viewName").getTextValue();
 
             Collection<?> keys = new ArrayList<Object>();
-            if (extra.has("key")) {
-                keys = replaceKeyVariables(topic, field, extra.get("key"));
+            if (resolveItem.has("key")) {
+                keys = replaceKeyVariables(topics, schemaProvider, resolveItem.get("key"));
                 if (keys.isEmpty()) {
                     return new CouchPagedValues(Collections.emptyList(), 0, _limit,0);
                 }
             } else {
-                keys = Collections.singleton(topic.getId());
+            	Collection<String> _keys = new ArrayList<String>(topics.size());
+            	for (CouchTopic topic : topics) {
+            		_keys.add(topic.getId());
+            	}
+            	keys = _keys;
             }
 
-            boolean includeDocs = extra.has("includeDocs") && extra.get("includeDocs").getBooleanValue();
+            boolean includeDocs = resolveItem.has("includeDocs") && resolveItem.get("includeDocs").getBooleanValue();
 
             List<Object> result = new ArrayList<Object>();
             ViewQuery query = new ViewQuery()
@@ -146,8 +165,8 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
                     } else if (valueAsNode.isTextual()) {
                         String textValue = valueAsNode.getTextValue();
                         if (textValue != null) {
-                            if (field.isReferenceField()) {
-                                PrestoTopic valueTopic = topic.getDataProvider().getTopicById(textValue);
+                            if (isReference) {
+                                PrestoTopic valueTopic = dataProvider.getTopicById(textValue);
                                 if (valueTopic != null) {
                                     result.add(valueTopic);
                                 }
@@ -160,18 +179,25 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
                     }
                 }
             }
-            if (extra.has("excludeSelf") && extra.get("excludeSelf").getBooleanValue()) {
-                result.remove(topic);
+            if (resolveItem.has("excludeSelf") && resolveItem.get("excludeSelf").getBooleanValue()) {
+                result.removeAll(topics);
             }
             return new CouchPagedValues(result, offset, limit, viewResult.getSize());
         } else {
-            log.error("Unknown type specified on CouchDB field: " + field.getId());            
+            log.error("Unknown type specified on resolve item: " + resolveItem);            
         }
-        return new CouchPagedValues(Collections.emptyList(), 0, limit,0);
+        return new CouchPagedValues(Collections.emptyList(), 0, limit, 0);
     }
 
-    protected Collection<JsonNode> replaceKeyVariables(CouchTopic topic, PrestoField field, JsonNode key) {
-        PrestoSchemaProvider schemaProvider = field.getSchemaProvider();
+    private Collection<JsonNode> replaceKeyVariables(Collection<CouchTopic> topics, PrestoSchemaProvider schemaProvider, JsonNode key) {
+    	Collection<JsonNode> result = new ArrayList<JsonNode>();
+    	for (CouchTopic topic : topics) {
+    		result.addAll(replaceKeyVariables(topic, schemaProvider, key));
+    	}
+    	return result;
+    }
+    
+    private Collection<JsonNode> replaceKeyVariables(CouchTopic topic, PrestoSchemaProvider schemaProvider, JsonNode key) {
         String typeId = topic.getTypeId();
         PrestoType type = schemaProvider.getTypeById(typeId);
 
@@ -259,7 +285,7 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
         return mapper.valueToTree(node);
     }
 
-    protected void findVariables(JsonNode node, Collection<String> variables) {
+    private void findVariables(JsonNode node, Collection<String> variables) {
         if (node.isTextual()) {
             String variable = getVariable(node.getTextValue());
             if (variable != null) {
@@ -283,7 +309,7 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
         }
     }
 
-    protected String getVariable(String value) {
+    private String getVariable(String value) {
         if (value.startsWith("$")) {
             return value.substring(1);
         }

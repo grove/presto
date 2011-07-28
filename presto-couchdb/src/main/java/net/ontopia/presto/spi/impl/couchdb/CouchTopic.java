@@ -81,47 +81,57 @@ public abstract class CouchTopic implements PrestoTopic {
 	}
 
 	protected PagedValues getValues(PrestoField field, boolean paging, int offset, int limit) {
+		PagedValues result;
 		// get field values from data provider
-		if (field.getId().startsWith("external:")) {
-			return dataProvider.getExternalValues(this, field, paging, offset, limit);
-		}
-
-		// get field values from topic data
-		List<Object> values = new ArrayList<Object>();
-		ArrayNode fieldNode = getFieldValue(field);
-
-		int size = fieldNode == null ? 0 : fieldNode.size();
-		int start = 0;
-		int end = size;
-		if (paging) {
-	    	final int DEFAULT_LIMIT = 40;
-			int _limit = limit > 0 ? limit : DEFAULT_LIMIT;
-			start = Math.min(Math.max(0, offset), size);
-			end = Math.min(_limit+start, size);
-		}
-		
-		if (fieldNode != null) { 
-			if (field.isReferenceField()) {
-				List<String> topicIds = new ArrayList<String>(fieldNode.size());
-				for (int i=start; i < end; i ++) {
-					JsonNode value = fieldNode.get(i);
-					if (value.isTextual()) {
-						topicIds.add(value.getTextValue());
-					}
-				}
-				values.addAll(dataProvider.getTopicsByIds(topicIds));
+        ObjectNode extra = (ObjectNode)field.getExtra();
+		if (extra != null && extra.has("resolve")) {
+			JsonNode resolveNode = extra.get("resolve");
+			if (resolveNode.isArray()) {
+				ArrayNode resolveArray = (ArrayNode)resolveNode; 
+				result = dataProvider.resolveValues(this, field, resolveArray, paging, offset, limit);
 			} else {
-				for (int i=start; i < end; i ++) {
-					JsonNode value = fieldNode.get(i);
-					if (value.isTextual()) {
-						values.add(value.getTextValue());
-					} else {
-						values.add(value.toString());
+				throw new RuntimeException("extra.resolve on field " + field.getId() + " is not an array: " + resolveNode);
+			}
+		} else {
+	
+			// get field values from topic data
+			List<Object> values = new ArrayList<Object>();
+			ArrayNode fieldNode = getFieldValue(field);
+	
+			int size = fieldNode == null ? 0 : fieldNode.size();
+			int start = 0;
+			int end = size;
+			if (paging) {
+		    	final int DEFAULT_LIMIT = 40;
+				int _limit = limit > 0 ? limit : DEFAULT_LIMIT;
+				start = Math.min(Math.max(0, offset), size);
+				end = Math.min(_limit+start, size);
+			}
+			
+			if (fieldNode != null) { 
+				if (field.isReferenceField()) {
+					List<String> topicIds = new ArrayList<String>(fieldNode.size());
+					for (int i=start; i < end; i ++) {
+						JsonNode value = fieldNode.get(i);
+						if (value.isTextual()) {
+							topicIds.add(value.getTextValue());
+						}
+					}
+					values.addAll(dataProvider.getTopicsByIds(topicIds));
+				} else {
+					for (int i=start; i < end; i ++) {
+						JsonNode value = fieldNode.get(i);
+						if (value.isTextual()) {
+							values.add(value.getTextValue());
+						} else {
+							values.add(value.toString());
+						}
 					}
 				}
 			}
+			result = new CouchPagedValues(values, start, limit, size);
 		}
-		return new CouchPagedValues(values, start, limit, size);
+		return result;
 	}
 
 	// methods for updating the state of a couchdb document
