@@ -646,7 +646,7 @@ public class Presto {
 
     public boolean deleteTopic(PrestoTopic topic, PrestoType type) {
         log.warn("Removing topic " + topic.getId() + " from database " + session.getSchemaProvider().getDatabaseId());
-        return session.getDataProvider().removeTopic(topic, type);
+        return session.getDataProvider().deleteTopic(topic, type);
     }
 
     public Collection<TopicTypeTree> getAvailableTypes(Collection<PrestoType> types, boolean tree) {

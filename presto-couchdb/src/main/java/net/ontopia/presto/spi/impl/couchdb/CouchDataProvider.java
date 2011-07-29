@@ -360,18 +360,18 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
         return new CouchChangeSet(this, (CouchTopic)topic);
     }
 
-    public boolean removeTopic(PrestoTopic topic, PrestoType type) {
-        return removeTopic(topic, type, true);
+    public boolean deleteTopic(PrestoTopic topic, PrestoType type) {
+        return deleteTopic(topic, type, true);
     }
 
-    private boolean removeTopic(PrestoTopic topic, PrestoType type, boolean removeDependencies) {
+    private boolean deleteTopic(PrestoTopic topic, PrestoType type, boolean removeDependencies) {
         PrestoSchemaProvider schemaProvider = type.getSchemaProvider();
         // find and remove dependencies
         if (removeDependencies) {
             for (PrestoTopic dependency : findDependencies(topic, type)) {
                 if (!dependency.equals(topic)) {
                     PrestoType dependencyType = schemaProvider.getTypeById(dependency.getTypeId());
-                    removeTopic(dependency, dependencyType, false);
+                    deleteTopic(dependency, dependencyType, false);
                 }
             }
         }
@@ -473,7 +473,7 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
                     CouchTopic valueTopic = (CouchTopic)value;
                     PrestoType valueType = field.getSchemaProvider().getTypeById(valueTopic.getTypeId());
                     if (field.isCascadingDelete() && valueType.isRemovable()) {
-                        removeTopic(valueTopic, valueType);
+                        deleteTopic(valueTopic, valueType);
                     } else {          
                         PrestoField inverseField = valueType.getFieldById(inverseFieldId);
                         valueTopic.removeValue(inverseField, Collections.singleton(topic));
