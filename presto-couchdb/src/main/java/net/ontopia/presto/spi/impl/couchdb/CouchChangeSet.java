@@ -80,34 +80,34 @@ public class CouchChangeSet implements PrestoChangeSet {
             PrestoField field = change.getField();
             Collection<?> values = change.getValues();
             switch(change.getType()) {
-                case SET: {
-                    Collection<Object> existingValues = topic.getValues(field);
-                    Collection<Object> remValues = new HashSet<Object>(existingValues);          
-                    Collection<Object> addValues = new HashSet<Object>();
+            case SET: {
+                Collection<Object> existingValues = topic.getValues(field);
+                Collection<Object> remValues = new HashSet<Object>(existingValues);          
+                Collection<Object> addValues = new HashSet<Object>();
 
-                    for (Object value : values) {
-                        remValues.remove(value);
-                        if (!existingValues.contains(value)) {
-                            addValues.add(value);
-                        }
+                for (Object value : values) {
+                    remValues.remove(value);
+                    if (!existingValues.contains(value)) {
+                        addValues.add(value);
                     }
+                }
 
-                    registerValues(field, addFieldValues, addValues);
-                    registerValues(field, remFieldValues, remValues);
+                registerValues(field, addFieldValues, addValues);
+                registerValues(field, remFieldValues, remValues);
 
-                    topic.setValue(field, values);
-                    break;
-                }
-                case ADD: {
-                    registerValues(field, addFieldValues, values);
-                    topic.addValue(field, values, change.getIndex());
-                    break;
-                }
-                case REMOVE: {
-                    registerValues(field, remFieldValues, values);
-                    topic.removeValue(field, values);
-                    break;
-                }
+                topic.setValue(field, values);
+                break;
+            }
+            case ADD: {
+                registerValues(field, addFieldValues, values);
+                topic.addValue(field, values, change.getIndex());
+                break;
+            }
+            case REMOVE: {
+                registerValues(field, remFieldValues, values);
+                topic.removeValue(field, values);
+                break;
+            }
             }
 
             // update name property
@@ -125,17 +125,17 @@ public class CouchChangeSet implements PrestoChangeSet {
             dataProvider.addInverseFieldValue(isNew, topic, entry.getKey(), entry.getValue());      
         }
         for (Map.Entry<PrestoField,Collection<Object>> entry : remFieldValues.entrySet()) {
-        	PrestoField field = entry.getKey();
-        	Collection<Object> values = entry.getValue();
+            PrestoField field = entry.getKey();
+            Collection<Object> values = entry.getValue();
             if (field.isReferenceField() && field.isCascadingDelete()) {
-            	// perform cascading delete
-            	for (Object value : values) {
-            		PrestoTopic rtopic = (PrestoTopic)value;
+                // perform cascading delete
+                for (Object value : values) {
+                    PrestoTopic rtopic = (PrestoTopic)value;
                     PrestoType rtype = getSchemaProvider().getTypeById(rtopic.getTypeId());
-            		dataProvider.deleteTopic(rtopic, rtype);
-            	}
+                    dataProvider.deleteTopic(rtopic, rtype);
+                }
             } else {
-            	dataProvider.removeInverseFieldValue(isNew, topic, field, entry.getValue());
+                dataProvider.removeInverseFieldValue(isNew, topic, field, entry.getValue());
             }
         }
 
@@ -152,9 +152,9 @@ public class CouchChangeSet implements PrestoChangeSet {
     }
 
     private PrestoSchemaProvider getSchemaProvider() {
-    	return type.getSchemaProvider();
+        return type.getSchemaProvider();
     }
-    
+
     private static class Change {
 
         static enum ChangeType { SET, ADD, REMOVE };

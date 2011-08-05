@@ -15,7 +15,7 @@ public class PojoField implements PrestoField {
 
     private String id;
     private String actualId;
-    
+
     private PrestoSchemaProvider schemaProvider;
     private String name;
     private boolean isNameField;
@@ -55,9 +55,9 @@ public class PojoField implements PrestoField {
     }
 
     public String getActualId() {
-    	return actualId;
+        return actualId;
     }
-    
+
     public PrestoSchemaProvider getSchemaProvider() {
         return schemaProvider;
     }
@@ -125,7 +125,7 @@ public class PojoField implements PrestoField {
     public int getLimit() {
         return limit;
     }
-    
+
     public boolean isCascadingDelete() {
         return isCascadingDelete;
     }
@@ -168,7 +168,7 @@ public class PojoField implements PrestoField {
     // -- helper methods
 
     boolean isInView(PrestoView view) {
-    	return definedInViews.contains(view);
+        return definedInViews.contains(view);
     }
 
     protected void addDefinedInView(PrestoView view) {
@@ -176,9 +176,9 @@ public class PojoField implements PrestoField {
     }
 
     public void setActualId(String actualId) {
-    	this.actualId = actualId;
+        this.actualId = actualId;
     }
-    
+
     public void setName(String name) {
         this.name = name;
     }

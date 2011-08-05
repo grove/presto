@@ -60,9 +60,9 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
         // look up by document id
         ObjectNode doc = null;
         try {
-        	if (topicId != null) {
-        		doc = getCouchConnector().get(ObjectNode.class, topicId);
-        	}
+            if (topicId != null) {
+                doc = getCouchConnector().get(ObjectNode.class, topicId);
+            }
         } catch (DocumentNotFoundException e) {
             log.warn("Topic with id '" + topicId + "' not found.");
         }
@@ -85,45 +85,45 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
         }
         return result;
     }
-    
-    @SuppressWarnings("unchecked")
-	PagedValues resolveValues(CouchTopic topic, PrestoField field, ArrayNode resolveArray, boolean paging, int offset, int limit) {
-    	PagedValues result = null;
-    	@SuppressWarnings("rawtypes")
-		Collection resultCollection = Collections.singleton(topic);
-    	int size = resolveArray.size();
-    	for (int i=0; i < size; i++) {
-    		boolean isLast = (i == size-1);
-    		boolean isReference = field.isReferenceField() || (field.isPrimitiveField() && !isLast);
-	        result = resolveValues(resultCollection, topic.getDataProvider(), field.getSchemaProvider(), isReference, (ObjectNode)resolveArray.get(i), paging, offset, limit);
-	        resultCollection = result.getValues();
-		}
-		return result;
-    }
-    
-    private PagedValues resolveValues(Collection<CouchTopic> topics, PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, 
-    		boolean isReference, ObjectNode resolveItem, boolean paging, int _offset, int _limit) {
 
-    	final int DEFAULT_LIMIT = 40;
-		int offset = paging ?  Math.max(0, _offset): _offset;
-		int limit = paging ? _limit > 0 ? _limit : DEFAULT_LIMIT : _limit;
+    @SuppressWarnings("unchecked")
+    PagedValues resolveValues(CouchTopic topic, PrestoField field, ArrayNode resolveArray, boolean paging, int offset, int limit) {
+        PagedValues result = null;
+        @SuppressWarnings("rawtypes")
+        Collection resultCollection = Collections.singleton(topic);
+        int size = resolveArray.size();
+        for (int i=0; i < size; i++) {
+            boolean isLast = (i == size-1);
+            boolean isReference = field.isReferenceField() || (field.isPrimitiveField() && !isLast);
+            result = resolveValues(resultCollection, topic.getDataProvider(), field.getSchemaProvider(), isReference, (ObjectNode)resolveArray.get(i), paging, offset, limit);
+            resultCollection = result.getValues();
+        }
+        return result;
+    }
+
+    private PagedValues resolveValues(Collection<CouchTopic> topics, PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, 
+            boolean isReference, ObjectNode resolveItem, boolean paging, int _offset, int _limit) {
+
+        final int DEFAULT_LIMIT = 40;
+        int offset = paging ?  Math.max(0, _offset): _offset;
+        int limit = paging ? _limit > 0 ? _limit : DEFAULT_LIMIT : _limit;
 
         String type = resolveItem.get("type").getTextValue();
         if (type == null) {
             log.error("type not specified on resolve item: " + resolveItem);
         } else if (type.equals("navigate")) {
-        	
-        	if (resolveItem.has("path")) {
-        		JsonNode pathNode = resolveItem.get("path");
-        		if (resolveItem.isArray()) {
+
+            if (resolveItem.has("path")) {
+                JsonNode pathNode = resolveItem.get("path");
+                if (resolveItem.isArray()) {
                     List<Object> result = new ArrayList<Object>(topics);
-        			for (JsonNode pathItem : pathNode) {
-        				// result = extractPathValues(result, pathItem.getTextValue());
-        			}
-        			return new CouchPagedValues(result, offset, limit, result.size());
-        		}
-        	}
-        	
+                    for (JsonNode pathItem : pathNode) {
+                        // result = extractPathValues(result, pathItem.getTextValue());
+                    }
+                    return new CouchPagedValues(result, offset, limit, result.size());
+                }
+            }
+
         } else if (type.equals("query")) {
             String designDocId = resolveItem.get("designDocId").getTextValue();
             String viewName = resolveItem.get("viewName").getTextValue();
@@ -135,11 +135,11 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
                     return new CouchPagedValues(Collections.emptyList(), 0, _limit,0);
                 }
             } else {
-            	Collection<String> _keys = new ArrayList<String>(topics.size());
-            	for (CouchTopic topic : topics) {
-            		_keys.add(topic.getId());
-            	}
-            	keys = _keys;
+                Collection<String> _keys = new ArrayList<String>(topics.size());
+                for (CouchTopic topic : topics) {
+                    _keys.add(topic.getId());
+                }
+                keys = _keys;
             }
 
             boolean includeDocs = resolveItem.has("includeDocs") && resolveItem.get("includeDocs").getBooleanValue();
@@ -152,14 +152,14 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
             .includeDocs(includeDocs);
 
             if (paging) {
-	            if (offset > 0) {
-	            	query = query.skip(offset);
-	            }
-	            if (limit > 0) {
-	            	query = query.limit(limit);
-	            }
+                if (offset > 0) {
+                    query = query.skip(offset);
+                }
+                if (limit > 0) {
+                    query = query.limit(limit);
+                }
             }
-            
+
             ViewResult viewResult = getCouchConnector().queryView(query);
             for (Row row : viewResult.getRows()) {
                 if (includeDocs) {
@@ -203,13 +203,13 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
     }
 
     private Collection<JsonNode> replaceKeyVariables(Collection<CouchTopic> topics, PrestoSchemaProvider schemaProvider, JsonNode key) {
-    	Collection<JsonNode> result = new ArrayList<JsonNode>();
-    	for (CouchTopic topic : topics) {
-    		result.addAll(replaceKeyVariables(topic, schemaProvider, key));
-    	}
-    	return result;
+        Collection<JsonNode> result = new ArrayList<JsonNode>();
+        for (CouchTopic topic : topics) {
+            result.addAll(replaceKeyVariables(topic, schemaProvider, key));
+        }
+        return result;
     }
-    
+
     private Collection<JsonNode> replaceKeyVariables(CouchTopic topic, PrestoSchemaProvider schemaProvider, JsonNode key) {
         String typeId = topic.getTypeId();
         PrestoType type = schemaProvider.getTypeById(typeId);
@@ -225,7 +225,7 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
             if (variable.equals(":id")) {
                 valueStrings.add(topic.getId());                
             } else if (variable.equals(":type")) {
-            	valueStrings.add(topic.getTypeId());                
+                valueStrings.add(topic.getTypeId());                
             } else {
                 PrestoField valueField = type.getFieldById(variable);
                 Collection<Object> values = topic.getValues(valueField);
@@ -393,15 +393,15 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
         return delete((CouchTopic)topic);    
     }
 
-	private void removeDependencies(PrestoTopic topic, PrestoType type) {
+    private void removeDependencies(PrestoTopic topic, PrestoType type) {
         PrestoSchemaProvider schemaProvider = type.getSchemaProvider();
-		for (PrestoTopic dependency : findDependencies(topic, type)) {
-		    if (!dependency.equals(topic)) {
-		        PrestoType dependencyType = schemaProvider.getTypeById(dependency.getTypeId());
-		        deleteTopic(dependency, dependencyType, false);
-		    }
-		}
-	}
+        for (PrestoTopic dependency : findDependencies(topic, type)) {
+            if (!dependency.equals(topic)) {
+                PrestoType dependencyType = schemaProvider.getTypeById(dependency.getTypeId());
+                deleteTopic(dependency, dependencyType, false);
+            }
+        }
+    }
 
     public void close() {
     }

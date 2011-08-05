@@ -15,10 +15,10 @@ public interface PrestoTopic {
     PagedValues getValues(PrestoField field, int offset, int limit);
 
     public static interface PagedValues {
-    	List<Object> getValues();
-    	int getOffset();
-    	int getLimit();
-    	int getTotal();
+        List<Object> getValues();
+        int getOffset();
+        int getLimit();
+        int getTotal();
     }
-    
+
 }
