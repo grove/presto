@@ -37,6 +37,7 @@ public class FieldData {
     private Collection<FieldData> valueFields;
 
     private Collection<TopicType> valueTypes;
+    private Collection<TopicType> createTypes;
 
     public void setId(String id) {
         this.id = id;
@@ -145,13 +146,21 @@ public class FieldData {
     public Object getExtra() {
         return extra;
     }
+    
+    public Collection<TopicType> getValueTypes() {
+        return valueTypes;
+    }
 
     public void setValueTypes(Collection<TopicType> valueTypes) {
         this.valueTypes = valueTypes;
     }
+    
+    public Collection<TopicType> getCreateTypes() {
+        return createTypes;
+    }
 
-    public Collection<TopicType> getValueTypes() {
-        return valueTypes;
+    public void setCreateTypes(Collection<TopicType> createTypes) {
+        this.createTypes = createTypes;
     }
 
     public Collection<FieldData> getValueFields() {
