@@ -214,6 +214,7 @@ public class Presto {
 
             boolean allowAddRemove = !isReadOnly && !field.isNewValuesOnly();
             boolean allowCreate = !isReadOnly && !field.isExistingValuesOnly();
+            boolean allowMove = !isReadOnly && !field.isSorted();
 
             if (allowCreate) {
                 if (!field.getAvailableFieldCreateTypes().isEmpty()) {
@@ -230,11 +231,13 @@ public class Presto {
                     fieldLinks.add(new Link("remove-field-values", uriInfo.getBaseUri() + "editor/remove-field-values/" + fieldReference));
                     if (!field.isSorted()) {
                         fieldLinks.add(new Link("add-field-values-at-index", uriInfo.getBaseUri() + "editor/add-field-values-at-index/" + fieldReference + "/{index}"));
-                        fieldLinks.add(new Link("move-field-values-to-index", uriInfo.getBaseUri() + "editor/move-field-values-to-index/" + fieldReference + "/{index}"));
                     }
                 }
             }      
 
+            if (allowMove && !isNewTopic) {
+                fieldLinks.add(new Link("move-field-values-to-index", uriInfo.getBaseUri() + "editor/move-field-values-to-index/" + fieldReference + "/{index}"));            	
+            }
         } else {
             String dataType = field.getDataType();
             if (dataType != null) {
