@@ -275,7 +275,7 @@ public class Presto {
         if (!availableFieldCreateTypes.isEmpty()) {
             List<TopicType> createTypes = new ArrayList<TopicType>(availableFieldCreateTypes.size());
             for (PrestoType createType : availableFieldCreateTypes) {
-                createTypes.add(getTypeInfo(createType));
+                createTypes.add(getCreateFieldInstance(topic, type, field, createType));
             }
             fieldData.setCreateTypes(createTypes);
         }
