@@ -111,6 +111,19 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
         String type = resolveItem.get("type").getTextValue();
         if (type == null) {
             log.error("type not specified on resolve item: " + resolveItem);
+        } else if (type.equals("navigate")) {
+        	
+        	if (resolveItem.has("path")) {
+        		JsonNode pathNode = resolveItem.get("path");
+        		if (resolveItem.isArray()) {
+                    List<Object> result = new ArrayList<Object>(topics);
+        			for (JsonNode pathItem : pathNode) {
+        				// result = extractPathValues(result, pathItem.getTextValue());
+        			}
+        			return new CouchPagedValues(result, offset, limit, result.size());
+        		}
+        	}
+        	
         } else if (type.equals("query")) {
             String designDocId = resolveItem.get("designDocId").getTextValue();
             String viewName = resolveItem.get("viewName").getTextValue();
@@ -356,8 +369,8 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
         return new CouchChangeSet(this, type);
     }
 
-    public PrestoChangeSet updateTopic(PrestoTopic topic) {
-        return new CouchChangeSet(this, (CouchTopic)topic);
+    public PrestoChangeSet updateTopic(PrestoTopic topic, PrestoType type) {
+        return new CouchChangeSet(this, (CouchTopic)topic, type);
     }
 
     public boolean deleteTopic(PrestoTopic topic, PrestoType type) {
@@ -365,15 +378,9 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
     }
 
     private boolean deleteTopic(PrestoTopic topic, PrestoType type, boolean removeDependencies) {
-        PrestoSchemaProvider schemaProvider = type.getSchemaProvider();
         // find and remove dependencies
         if (removeDependencies) {
-            for (PrestoTopic dependency : findDependencies(topic, type)) {
-                if (!dependency.equals(topic)) {
-                    PrestoType dependencyType = schemaProvider.getTypeById(dependency.getTypeId());
-                    deleteTopic(dependency, dependencyType, false);
-                }
-            }
+            removeDependencies(topic, type);
         }
         // clear incoming foreign keys
         for (PrestoField field : type.getFields()) {
@@ -385,6 +392,16 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
 
         return delete((CouchTopic)topic);    
     }
+
+	private void removeDependencies(PrestoTopic topic, PrestoType type) {
+        PrestoSchemaProvider schemaProvider = type.getSchemaProvider();
+		for (PrestoTopic dependency : findDependencies(topic, type)) {
+		    if (!dependency.equals(topic)) {
+		        PrestoType dependencyType = schemaProvider.getTypeById(dependency.getTypeId());
+		        deleteTopic(dependency, dependencyType, false);
+		    }
+		}
+	}
 
     public void close() {
     }
@@ -404,6 +421,7 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
     }
 
     boolean delete(CouchTopic topic) {
+        log.info("Removing: " + topic.getId() + " " + topic.getName());
         try {
             getCouchConnector().delete(topic.getData());
             return true;
@@ -428,7 +446,7 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
 
     private void findDependencies(PrestoTopic topic, PrestoType type, Collection<PrestoTopic> deleted) {
 
-        if (!deleted.contains(topic) && type.isRemovable()) {
+        if (!deleted.contains(topic) && type.isRemovableCascadingDelete()) {
             for (PrestoField field : type.getFields()) {
                 if (field.isReferenceField()) {
                     if (field.isCascadingDelete()) { 
@@ -472,7 +490,7 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
 
                     CouchTopic valueTopic = (CouchTopic)value;
                     PrestoType valueType = field.getSchemaProvider().getTypeById(valueTopic.getTypeId());
-                    if (field.isCascadingDelete() && valueType.isRemovable()) {
+                    if (field.isCascadingDelete() && valueType.isRemovableCascadingDelete()) {
                         deleteTopic(valueTopic, valueType);
                     } else {          
                         PrestoField inverseField = valueType.getFieldById(inverseFieldId);

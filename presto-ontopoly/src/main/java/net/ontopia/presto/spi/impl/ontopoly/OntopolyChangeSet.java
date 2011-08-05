@@ -35,10 +35,10 @@ public class OntopolyChangeSet implements PrestoChangeSet {
     this.type = type;
   }
   
-  OntopolyChangeSet(OntopolySession session, PrestoTopic topic) {
+  OntopolyChangeSet(OntopolySession session, PrestoTopic topic, PrestoType type) {
     this.session = session;
     this.topic = topic;
-    this.type = null;
+    this.type = type;
   }
   
   public void setValues(PrestoField field, Collection<?> values) {

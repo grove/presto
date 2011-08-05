@@ -65,6 +65,10 @@ public class OntopolyField implements PrestoFieldUsage {
     return session.getStableId(fieldDefinition);
   }
 
+  public String getActualId() {
+	  return getId();
+  }
+  
   public PrestoSchemaProvider getSchemaProvider() {
     return session.getSchemaProvider();
   }

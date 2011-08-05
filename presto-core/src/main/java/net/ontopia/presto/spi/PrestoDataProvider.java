@@ -12,7 +12,7 @@ public interface PrestoDataProvider {
 
     PrestoChangeSet createTopic(PrestoType type);
 
-    PrestoChangeSet updateTopic(PrestoTopic topic);
+    PrestoChangeSet updateTopic(PrestoTopic topic, PrestoType type);
 
     boolean deleteTopic(PrestoTopic topic, PrestoType type);
 

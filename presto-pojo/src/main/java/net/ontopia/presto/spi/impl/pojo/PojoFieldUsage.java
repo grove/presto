@@ -45,6 +45,10 @@ public class PojoFieldUsage implements PrestoFieldUsage {
         return field.getId();
     }
 
+    public String getActualId() {
+    	return field.getActualId();
+    }
+    
     public PrestoSchemaProvider getSchemaProvider() {
         return field.getSchemaProvider();
     }

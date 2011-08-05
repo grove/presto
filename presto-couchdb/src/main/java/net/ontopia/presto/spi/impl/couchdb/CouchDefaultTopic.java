@@ -16,13 +16,13 @@ public class CouchDefaultTopic extends CouchTopic {
 
     @Override
     protected ArrayNode getFieldValue(PrestoField field) {
-        JsonNode value = getData().get(field.getId());
+        JsonNode value = getData().get(field.getActualId());
         return (ArrayNode)(value != null && value.isArray() ? value : null); 
     }
 
     @Override
     protected void putFieldValue(PrestoField field, ArrayNode value) {
-        getData().put(field.getId(), value);
+        getData().put(field.getActualId(), value);
     }
 
 }

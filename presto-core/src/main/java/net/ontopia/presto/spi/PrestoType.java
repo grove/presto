@@ -19,6 +19,8 @@ public interface PrestoType {
 
     boolean isRemovable();
 
+    boolean isRemovableCascadingDelete();
+    
     // TODO: getSuperType();
 
     Collection<PrestoType> getDirectSubTypes();

@@ -4,6 +4,8 @@ public interface PrestoField {
 
     String getId();
 
+    String getActualId();
+    
     PrestoSchemaProvider getSchemaProvider();
 
     String getName();

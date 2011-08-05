@@ -75,8 +75,8 @@ public class OntopolyDataProvider implements PrestoDataProvider {
     return new OntopolyChangeSet(session, type);
   }
   
-  public PrestoChangeSet updateTopic(PrestoTopic topic) {
-    return new OntopolyChangeSet(session, topic);
+  public PrestoChangeSet updateTopic(PrestoTopic topic, PrestoType type) {
+    return new OntopolyChangeSet(session, topic, type);
   }
 
   public boolean deleteTopic(PrestoTopic topic, PrestoType type) {

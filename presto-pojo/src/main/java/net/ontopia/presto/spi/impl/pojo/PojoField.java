@@ -14,6 +14,8 @@ import net.ontopia.presto.spi.PrestoView;
 public class PojoField implements PrestoField {
 
     private String id;
+    private String actualId;
+    
     private PrestoSchemaProvider schemaProvider;
     private String name;
     private boolean isNameField;
@@ -44,6 +46,7 @@ public class PojoField implements PrestoField {
 
     PojoField(String id, PrestoSchemaProvider schemaProvider) {
         this.id = id;
+        this.actualId = id;
         this.schemaProvider = schemaProvider;        
     }
 
@@ -51,6 +54,10 @@ public class PojoField implements PrestoField {
         return id;
     }
 
+    public String getActualId() {
+    	return actualId;
+    }
+    
     public PrestoSchemaProvider getSchemaProvider() {
         return schemaProvider;
     }
@@ -161,18 +168,17 @@ public class PojoField implements PrestoField {
     // -- helper methods
 
     boolean isInView(PrestoView view) {
-        for (PrestoView definedInView : definedInViews) {
-            if (definedInView.equals(view)) {
-                return true;
-            }
-        }
-        return false;
+    	return definedInViews.contains(view);
     }
 
     protected void addDefinedInView(PrestoView view) {
         this.definedInViews.add(view);
     }
 
+    public void setActualId(String actualId) {
+    	this.actualId = actualId;
+    }
+    
     public void setName(String name) {
         this.name = name;
     }

@@ -278,7 +278,7 @@ public abstract class EditorResource {
                 return builder.build();        
             } else {
                 PrestoType type = schemaProvider.getTypeById(topic.getTypeId());
-                if (new Presto(session, uriInfo).deleteTopic(topic, type)) {          
+                if (type.isRemovable() && new Presto(session, uriInfo).deleteTopic(topic, type)) {          
                     // 200
                     ResponseBuilder builder = Response.ok();
                     return builder.build();
@@ -438,7 +438,7 @@ public abstract class EditorResource {
 
             PrestoFieldUsage field = type.getFieldById(fieldId, view);
 
-            FieldData result = new Presto(session, uriInfo).addFieldValues(topic, field, index, fieldData);
+            FieldData result = new Presto(session, uriInfo).addFieldValues(topic, type, field, index, fieldData);
 
             String id = topic.getId();
 
@@ -509,7 +509,7 @@ public abstract class EditorResource {
 
             PrestoFieldUsage field = type.getFieldById(fieldId, view);
 
-            FieldData result =  new Presto(session, uriInfo).removeFieldValues(topic, field, fieldData);
+            FieldData result =  new Presto(session, uriInfo).removeFieldValues(topic, type, field, fieldData);
 
             String id = topic.getId();
 

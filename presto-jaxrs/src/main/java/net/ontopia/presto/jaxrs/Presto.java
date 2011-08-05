@@ -480,12 +480,12 @@ public class Presto {
         return result;
     }
 
-    public FieldData addFieldValues(PrestoTopic topic, PrestoFieldUsage field, 
+    public FieldData addFieldValues(PrestoTopic topic, PrestoType type, PrestoFieldUsage field, 
             Integer index, FieldData fieldObject) {
 
         if  (field != null) {
             PrestoDataProvider dataProvider = session.getDataProvider();
-            PrestoChangeSet changeSet = dataProvider.updateTopic(topic);        
+            PrestoChangeSet changeSet = dataProvider.updateTopic(topic, type);        
             boolean isReferenceField = field.isReferenceField();        
             Collection<Object> addableValues = new HashSet<Object>();
 
@@ -511,11 +511,11 @@ public class Presto {
         return getFieldInfo(topic, field, false);
     }
 
-    public FieldData removeFieldValues(PrestoTopic topic, PrestoFieldUsage field, FieldData fieldObject) {
+    public FieldData removeFieldValues(PrestoTopic topic, PrestoType type, PrestoFieldUsage field, FieldData fieldObject) {
 
         if  (field != null) {
             PrestoDataProvider dataProvider = session.getDataProvider();
-            PrestoChangeSet changeSet = dataProvider.updateTopic(topic);
+            PrestoChangeSet changeSet = dataProvider.updateTopic(topic, type);
             boolean isReferenceField = field.isReferenceField();
             Collection<Object> removeableValues = new HashSet<Object>();
 
@@ -545,7 +545,7 @@ public class Presto {
         if (topic == null) {
             changeSet = dataProvider.createTopic(type);
         } else {
-            changeSet = dataProvider.updateTopic(topic);
+            changeSet = dataProvider.updateTopic(topic, type);
         }
 
         Map<String, PrestoFieldUsage> fields = getFieldInstanceMap(topic, type, view);

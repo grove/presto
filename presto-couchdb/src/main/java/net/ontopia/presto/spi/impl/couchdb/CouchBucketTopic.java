@@ -26,7 +26,7 @@ public class CouchBucketTopic extends CouchTopic {
 
     protected ArrayNode getBucketFieldValue(PrestoField field, ObjectNode bucketData) {
         if (bucketData != null) {
-            JsonNode value = bucketData.get(field.getId());
+            JsonNode value = bucketData.get(field.getActualId());
             return (ArrayNode)(value != null && value.isArray() ? value : null);
         }
         return null;
@@ -38,11 +38,11 @@ public class CouchBucketTopic extends CouchTopic {
         ObjectNode readBucket = getReadBucket(field, false);
         // remove write bucket field iff value equal to value in closest read bucket
         if (readBucket != null && equalValues(value, getBucketFieldValue(field, readBucket))) {
-            if (writeBucket.has(field.getId())) {        
-                writeBucket.remove(field.getId());
+            if (writeBucket.has(field.getActualId())) {        
+                writeBucket.remove(field.getActualId());
             }
         } else {
-            writeBucket.put(field.getId(), value);
+            writeBucket.put(field.getActualId(), value);
         }
     }
 
@@ -66,7 +66,7 @@ public class CouchBucketTopic extends CouchTopic {
             // return bucket if it exists and contains field
             if (data.has(bucketId)) {
                 ObjectNode bucket = (ObjectNode)data.get(bucketId);
-                if (bucket.has(field.getId())) {
+                if (bucket.has(field.getActualId())) {
                     return bucket;
                 }
             }

@@ -23,7 +23,8 @@ public class PojoType implements PrestoType {
     private boolean isHidden;
     private boolean isCreatable = true;
     private boolean isRemovable;
-
+    private boolean isRemovableCascadingDelete;
+    
     private Collection<PrestoType> directSubTypes = new HashSet<PrestoType>();
 
     private List<PrestoField> fields = new ArrayList<PrestoField>();
@@ -84,6 +85,10 @@ public class PojoType implements PrestoType {
 
     public boolean isRemovable() {
         return isRemovable;
+    }
+
+    public boolean isRemovableCascadingDelete() {
+        return isRemovableCascadingDelete;
     }
 
     public Collection<PrestoType> getDirectSubTypes() {
@@ -158,6 +163,10 @@ public class PojoType implements PrestoType {
     protected void setRemovable(boolean isRemovable) {
         this.isRemovable = isRemovable;
     }
+    
+    protected void setRemovableCascadingDelete(boolean isRemovableCascadingDelete) {
+    	this.isRemovableCascadingDelete = isRemovableCascadingDelete;
+    }
 
     protected void addDirectSubType(PrestoType type) {
         this.directSubTypes.add(type);
@@ -165,13 +174,21 @@ public class PojoType implements PrestoType {
     }
 
     protected void addView(PojoView view) {
-        this.viewsMap.put(view.getId(), view);
-        this.views.add(view);
+    	if (this.viewsMap.containsKey(view.getId())) {
+    		throw new RuntimeException("Duplicate view: " + view.getId() + " on type " + getId());
+    	} else {
+    		this.viewsMap.put(view.getId(), view);
+    		this.views.add(view);
+    	}
     }
 
     protected void addField(PojoField field) {
-        this.fieldsMap.put(field.getId(), field);
-        this.fields.add(field);
+    	if (this.fieldsMap.containsKey(field.getId())) {
+    		throw new RuntimeException("Duplicate field: " + field.getId() + " on type " + getId());
+    	} else {
+    		this.fieldsMap.put(field.getId(), field);
+    		this.fields.add(field);
+    	}
     }
 
     public Object getExtra() {

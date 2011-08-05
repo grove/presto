@@ -9,6 +9,7 @@ import java.util.Map;
 
 import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoField;
+import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 
@@ -22,16 +23,15 @@ public class CouchChangeSet implements PrestoChangeSet {
     private final List<Change> changes = new ArrayList<Change>();
     private boolean saved;
 
-
-    CouchChangeSet(CouchDataProvider dataProvider, CouchTopic topic) {
-        this.dataProvider = dataProvider;
-        this.topic = topic;
-        this.type = null;
-    }
-
     CouchChangeSet(CouchDataProvider dataProvider, PrestoType type) {
         this.dataProvider = dataProvider;
         this.topic = null;
+        this.type = type;
+    }
+
+    CouchChangeSet(CouchDataProvider dataProvider, CouchTopic topic, PrestoType type) {
+        this.dataProvider = dataProvider;
+        this.topic = topic;
         this.type = type;
     }
 
@@ -125,7 +125,18 @@ public class CouchChangeSet implements PrestoChangeSet {
             dataProvider.addInverseFieldValue(isNew, topic, entry.getKey(), entry.getValue());      
         }
         for (Map.Entry<PrestoField,Collection<Object>> entry : remFieldValues.entrySet()) {
-            dataProvider.removeInverseFieldValue(isNew, topic, entry.getKey(), entry.getValue());      
+        	PrestoField field = entry.getKey();
+        	Collection<Object> values = entry.getValue();
+            if (field.isReferenceField() && field.isCascadingDelete()) {
+            	// perform cascading delete
+            	for (Object value : values) {
+            		PrestoTopic rtopic = (PrestoTopic)value;
+                    PrestoType rtype = getSchemaProvider().getTypeById(rtopic.getTypeId());
+            		dataProvider.deleteTopic(rtopic, rtype);
+            	}
+            } else {
+            	dataProvider.removeInverseFieldValue(isNew, topic, field, entry.getValue());
+            }
         }
 
         return topic;
@@ -140,6 +151,10 @@ public class CouchChangeSet implements PrestoChangeSet {
         coll.addAll(values);
     }
 
+    private PrestoSchemaProvider getSchemaProvider() {
+    	return type.getSchemaProvider();
+    }
+    
     private static class Change {
 
         static enum ChangeType { SET, ADD, REMOVE };

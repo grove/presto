@@ -98,6 +98,10 @@ public class PojoSchemaModel {
             if (typeConfig.has("removable")) {
                 type.setRemovable(typeConfig.get("removable").getBooleanValue());
             }
+            // removableCascadingDelete
+            if (typeConfig.has("removableCascadingDelete")) {
+                type.setRemovableCascadingDelete(typeConfig.get("removableCascadingDelete").getBooleanValue());
+            }
 
             // extends
             if (typeConfig.has("extends")) {
@@ -149,6 +153,11 @@ public class PojoSchemaModel {
                         PojoField field = new PojoField(fieldId, schemaProvider);
                         type.addField(field);
                         field.addDefinedInView(view);
+                        
+                        // actualId
+                        if (fieldConfig.has("actualId")) {
+                            field.setActualId(fieldConfig.get("actualId").getTextValue());
+                        }
 
                         // name
                         String fieldName = fieldConfig.get("name").getTextValue();                        
