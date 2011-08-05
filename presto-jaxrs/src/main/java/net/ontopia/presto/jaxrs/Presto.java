@@ -486,21 +486,8 @@ public class Presto {
         if  (field != null) {
             PrestoDataProvider dataProvider = session.getDataProvider();
             PrestoChangeSet changeSet = dataProvider.updateTopic(topic, type);        
-            boolean isReferenceField = field.isReferenceField();        
-            Collection<Object> addableValues = new HashSet<Object>();
 
-            for (Value value : fieldObject.getValues()) {
-
-                if (isReferenceField) {
-                    String valueId = getReferenceValue(value);
-                    PrestoTopic valueTopic = dataProvider.getTopicById(valueId);
-                    if (valueTopic != null) {
-                        addableValues.add(valueTopic);
-                    }
-                } else {
-                    addableValues.add(getPrimitiveValue(value));
-                }
-            }
+            Collection<Object> addableValues = resolveValues(field, fieldObject.getValues(), true);
             if (index == null) {
                 changeSet.addValues(field, addableValues);
             } else {
@@ -516,21 +503,8 @@ public class Presto {
         if  (field != null) {
             PrestoDataProvider dataProvider = session.getDataProvider();
             PrestoChangeSet changeSet = dataProvider.updateTopic(topic, type);
-            boolean isReferenceField = field.isReferenceField();
-            Collection<Object> removeableValues = new HashSet<Object>();
 
-            for (Value value : fieldObject.getValues()) {
-
-                if (isReferenceField) {
-                    String valueId = getReferenceValue(value);
-                    PrestoTopic valueTopic = dataProvider.getTopicById(valueId);
-                    if (valueTopic != null) {
-                        removeableValues.add(valueTopic);
-                    }
-                } else {
-                    removeableValues.add(getPrimitiveValue(value));
-                }
-            }
+            Collection<Object> removeableValues = resolveValues(field, fieldObject.getValues(), false);
             changeSet.removeValues(field, removeableValues);
             topic = changeSet.save();
         }
@@ -560,51 +534,42 @@ public class Presto {
             if (!field.isReadOnly() && !field.isPageable()) {
                 if  (fields.containsKey(fieldId)) {
                     Collection<Value> values = jsonField.getValues();
-                    Collection<Object> newValues = new ArrayList<Object>(values.size());
-
-                    if (!values.isEmpty()) {
-                        if (isReferenceField) {
-                            if (field.isEmbedded()) {
-                                for (Value value : values) {
-                                    Topic embeddedReferenceValue = getEmbeddedReference(value);
-                                    if (embeddedReferenceValue != null) {
-                                        PrestoView valueView = field.getValueView();
-                                        newValues.add(updateEmbeddedReference(valueView, embeddedReferenceValue));
-                                    } else {
-                                        PrestoTopic valueTopic = dataProvider.getTopicById(getReferenceValue(value));
-                                        if (valueTopic != null) {
-                                            newValues.add(valueTopic);
-                                        }                                        
-                                    }
-                                }                
-                            } else {
-                                if (values.size() == 1) {
-                                    Value value = values.iterator().next();
-                                    PrestoTopic valueTopic = dataProvider.getTopicById(getReferenceValue(value));
-                                    if (valueTopic != null) {
-                                        newValues.add(valueTopic);
-                                    }
-                                } else {
-                                    List<String> valueIds = new ArrayList<String>(values.size());
-                                    for (Value value : values) {                
-                                        valueIds.add(getReferenceValue(value));
-                                    }
-                                    newValues.add(dataProvider.getTopicsByIds(valueIds));
-                                }
-                            }
-                        } else {
-                            for (Value value : values) {
-                                newValues.add(getPrimitiveValue(value));
-                            }
-                        }
-                    }
-                    changeSet.setValues(field, newValues);
+                    changeSet.setValues(field, resolveValues(field, values, true));
                 }
             }
         }
         return changeSet.save();
     }
 
+    private Collection<Object> resolveValues(PrestoFieldUsage field, Collection<Value> values, boolean resolveEmbedded) {
+        Collection<Object> result = new ArrayList<Object>(values.size());
+
+        if (!values.isEmpty()) {
+            
+            if (field.isReferenceField()) {
+                List<String> valueIds = new ArrayList<String>(values.size());
+                for (Value value : values) {                
+                    Topic embeddedReferenceValue = getEmbeddedReference(value);
+                    if (resolveEmbedded && embeddedReferenceValue != null) {
+                        PrestoView valueView = field.getValueView();
+                        result.add(updateEmbeddedReference(valueView, embeddedReferenceValue));
+                    } else {
+                        String valueId = getReferenceValue(value);
+                        if (valueId != null) {
+                            valueIds.add(getReferenceValue(value));
+                        }
+                    }
+                }
+                result.addAll(session.getDataProvider().getTopicsByIds(valueIds));
+            } else {
+                for (Value value : values) {
+                    result.add(getPrimitiveValue(value));
+                }
+            }
+        }
+        return result;
+    }
+    
     private PrestoTopic updateEmbeddedReference(PrestoView view, Topic embeddedTopic) {
 
         PrestoDataProvider dataProvider = session.getDataProvider();

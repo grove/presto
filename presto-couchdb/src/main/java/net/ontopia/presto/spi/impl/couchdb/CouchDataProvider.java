@@ -70,6 +70,9 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
     }
 
     public Collection<PrestoTopic> getTopicsByIds(Collection<String> topicIds) {
+        if (topicIds.isEmpty()) {
+            return Collections.emptyList();
+        }
         Collection<PrestoTopic> result = new ArrayList<PrestoTopic>(topicIds.size());
         // look up by document ids
         ViewQuery query = new ViewQuery()
