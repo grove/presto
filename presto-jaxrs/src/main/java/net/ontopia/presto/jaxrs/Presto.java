@@ -546,7 +546,6 @@ public class Presto {
             String fieldId = jsonField.getId();
 
             PrestoFieldUsage field = fields.get(fieldId);
-            boolean isReferenceField = field.isReferenceField();
 
             // ignore read-only or pageable fields 
             if (!field.isReadOnly() && !field.isPageable()) {

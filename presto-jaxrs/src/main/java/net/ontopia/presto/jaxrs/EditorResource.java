@@ -2,7 +2,6 @@ package net.ontopia.presto.jaxrs;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -439,14 +438,21 @@ public abstract class EditorResource {
 
             PrestoFieldUsage field = type.getFieldById(fieldId, view);
 
-            FieldData result = new Presto(session, uriInfo).addFieldValues(topic, type, field, index, fieldData);
-
-            String id = topic.getId();
-
-            session.commit();
-            onTopicUpdated(id);
-
-            return Response.ok(result).build();
+            if (field.isAddable() || field.isCreatable()) {
+                FieldData result = new Presto(session, uriInfo).addFieldValues(topic, type, field, index, fieldData);
+    
+                String id = topic.getId();
+    
+                session.commit();
+                onTopicUpdated(id);
+    
+                return Response.ok(result).build();
+            
+            } else {
+                // 403
+                ResponseBuilder builder = Response.status(Status.FORBIDDEN);
+                return builder.build();
+            }
 
         } catch (Exception e) {
             session.abort();
@@ -510,16 +516,21 @@ public abstract class EditorResource {
 
             PrestoFieldUsage field = type.getFieldById(fieldId, view);
 
-            // FIXME: prevent removing when removable=false
-            FieldData result =  new Presto(session, uriInfo).removeFieldValues(topic, type, field, fieldData);
+            if (field.isRemovable()) {
 
-            String id = topic.getId();
-
-            session.commit();
-            onTopicUpdated(id);
-
-            return Response.ok(result).build();
-
+                FieldData result =  new Presto(session, uriInfo).removeFieldValues(topic, type, field, fieldData);
+    
+                String id = topic.getId();    
+                session.commit();
+                onTopicUpdated(id);
+    
+                return Response.ok(result).build();
+                
+            } else {
+                // 403
+                ResponseBuilder builder = Response.status(Status.FORBIDDEN);
+                return builder.build();
+            }
         } catch (Exception e) {
             session.abort();
             throw e;

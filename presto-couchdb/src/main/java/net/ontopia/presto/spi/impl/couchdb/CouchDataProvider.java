@@ -116,11 +116,11 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
             log.error("type not specified on resolve item: " + resolveItem);
         } else if (type.equals("navigate")) {
 
-            if (resolveItem.has("path")) {
-                JsonNode pathNode = resolveItem.get("path");
+            if (resolveItem.has("traverse")) {
+                JsonNode traverseNode = resolveItem.get("traverse");
                 if (resolveItem.isArray()) {
                     List<Object> result = new ArrayList<Object>(topics);
-                    for (JsonNode pathItem : pathNode) {
+                    for (JsonNode pathItem : traverseNode) {
                         // result = extractPathValues(result, pathItem.getTextValue());
                     }
                     return new CouchPagedValues(result, offset, limit, result.size());

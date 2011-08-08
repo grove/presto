@@ -22,7 +22,7 @@ public interface PrestoField {
 
     String getDataType();
 
-    String getValidationType(); // ISSUE: or concreteType/actualType?
+    String getValidationType(); // ISSUE: or getSecondaryType()
 
     boolean isEmbedded();
 
