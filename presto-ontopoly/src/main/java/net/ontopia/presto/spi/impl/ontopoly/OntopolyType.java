@@ -58,6 +58,10 @@ public class OntopolyType implements PrestoType {
     return !topicType.isReadOnly();
   }
   
+  public boolean isRemovableCascadingDelete() {
+    return isRemovable();
+  }
+  
   public Collection<PrestoType> getDirectSubTypes() {
     return wrap(session, topicType.getDirectSubTypes());
   }

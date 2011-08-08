@@ -40,10 +40,12 @@ public interface PrestoField {
 
     // reference fields
 
-    boolean isNewValuesOnly();
-
-    boolean isExistingValuesOnly();
-
+    boolean isCreatable();
+    
+    boolean isAddable();
+    
+    boolean isRemovable();
+    
     String getInverseFieldId();
 
     String getInterfaceControl();

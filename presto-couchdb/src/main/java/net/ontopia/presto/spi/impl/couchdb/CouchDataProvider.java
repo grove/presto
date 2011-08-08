@@ -333,30 +333,34 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
     }
 
     public Collection<PrestoTopic> getAvailableFieldValues(PrestoFieldUsage field) {
-        Collection<PrestoType> types = field.getAvailableFieldValueTypes();
-        if (types.isEmpty()) {
+        if (field.isAddable()) {
+            Collection<PrestoType> types = field.getAvailableFieldValueTypes();
+            if (types.isEmpty()) {
+                return Collections.emptyList();
+            }
+            List<String> typeIds = new ArrayList<String>();
+            for (PrestoType type : types) {
+                typeIds.add(type.getId());
+            }
+            List<PrestoTopic> result = new ArrayList<PrestoTopic>(typeIds.size());
+            ViewQuery query = new ViewQuery()
+            .designDocId(designDocId)
+            .viewName("by-type").includeDocs(true).keys(typeIds);
+    
+            ViewResult viewResult = getCouchConnector().queryView(query);
+            for (Row row : viewResult.getRows()) {
+                ObjectNode doc = (ObjectNode)row.getDocAsNode();        
+                result.add(existing(doc));
+            }
+            Collections.sort(result, new Comparator<PrestoTopic>() {
+                public int compare(PrestoTopic o1, PrestoTopic o2) {
+                    return compareComparables(o1.getName(), o2.getName());
+                }
+            });
+            return result;
+        } else {
             return Collections.emptyList();
         }
-        List<String> typeIds = new ArrayList<String>();
-        for (PrestoType type : types) {
-            typeIds.add(type.getId());
-        }
-        List<PrestoTopic> result = new ArrayList<PrestoTopic>(typeIds.size());
-        ViewQuery query = new ViewQuery()
-        .designDocId(designDocId)
-        .viewName("by-type").includeDocs(true).keys(typeIds);
-
-        ViewResult viewResult = getCouchConnector().queryView(query);
-        for (Row row : viewResult.getRows()) {
-            ObjectNode doc = (ObjectNode)row.getDocAsNode();        
-            result.add(existing(doc));
-        }
-        Collections.sort(result, new Comparator<PrestoTopic>() {
-            public int compare(PrestoTopic o1, PrestoTopic o2) {
-                return compareComparables(o1.getName(), o2.getName());
-            }
-        });
-        return result;
     }
 
     protected int compareComparables(String o1, String o2) {

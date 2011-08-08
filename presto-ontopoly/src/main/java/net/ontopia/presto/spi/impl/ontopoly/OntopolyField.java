@@ -195,12 +195,16 @@ public class OntopolyField implements PrestoFieldUsage {
         return editMode.isOwnedValues();
     }
 
-    public boolean isNewValuesOnly() {
-        return getEditMode().isNewValuesOnly();
+    public boolean isAddable() {
+        return !getEditMode().isNewValuesOnly();
     }
 
-    public boolean isExistingValuesOnly() {
-        return getEditMode().isExistingValuesOnly();
+    public boolean isRemovable() {
+        return isAddable();
+    }
+
+    public boolean isCreatable() {
+        return !getEditMode().isExistingValuesOnly();
     }
 
     public String getFieldType() {

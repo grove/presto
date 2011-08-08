@@ -211,31 +211,41 @@ public class Presto {
         if (field.isReferenceField()) {
             fieldData.setDatatype("reference");
 
-            boolean allowAddRemove = !isReadOnly && !field.isNewValuesOnly();
-            boolean allowCreate = !isReadOnly && !field.isExistingValuesOnly();
-            boolean allowMove = !isReadOnly && !field.isSorted();
-
-            if (allowCreate) {
-                if (!field.getAvailableFieldCreateTypes().isEmpty()) {
-                    fieldLinks.add(new Link("available-field-types", uriInfo.getBaseUri() + "editor/available-field-types/" + fieldReference));
-                }
-            }
-            if (allowAddRemove) {
-                // ISSUE: should add-values and remove-values be links on list result instead?
-                if (!field.getAvailableFieldValueTypes().isEmpty()) {
-                    fieldLinks.add(new Link("available-field-values", uriInfo.getBaseUri() + "editor/available-field-values/" + fieldReference));
-                }
-                if (!isNewTopic) {
-                    fieldLinks.add(new Link("add-field-values", uriInfo.getBaseUri() + "editor/add-field-values/" + fieldReference));
-                    fieldLinks.add(new Link("remove-field-values", uriInfo.getBaseUri() + "editor/remove-field-values/" + fieldReference));
-                    if (!field.isSorted()) {
-                        fieldLinks.add(new Link("add-field-values-at-index", uriInfo.getBaseUri() + "editor/add-field-values-at-index/" + fieldReference + "/{index}"));
+            if (!isReadOnly) {
+                boolean allowCreate = field.isCreatable();
+                boolean allowAdd = field.isAddable();
+                boolean allowRemove = field.isRemovable();
+                
+                boolean allowMove = !field.isSorted();
+    
+                if (allowCreate) {
+                    if (!field.getAvailableFieldCreateTypes().isEmpty()) {
+                        fieldLinks.add(new Link("available-field-types", uriInfo.getBaseUri() + "editor/available-field-types/" + fieldReference));
                     }
                 }
-            }      
-
-            if (allowMove && !isNewTopic) {
-                fieldLinks.add(new Link("move-field-values-to-index", uriInfo.getBaseUri() + "editor/move-field-values-to-index/" + fieldReference + "/{index}"));
+                if (allowAdd) {
+                    // ISSUE: should add-values and remove-values be links on list result instead?
+                    if (!field.getAvailableFieldValueTypes().isEmpty()) {
+                        fieldLinks.add(new Link("available-field-values", uriInfo.getBaseUri() + "editor/available-field-values/" + fieldReference));
+                    }
+                }
+                if (allowAdd || allowCreate) {
+                    if (!isNewTopic) {
+                        fieldLinks.add(new Link("add-field-values", uriInfo.getBaseUri() + "editor/add-field-values/" + fieldReference));
+                        if (!field.isSorted()) {
+                            fieldLinks.add(new Link("add-field-values-at-index", uriInfo.getBaseUri() + "editor/add-field-values-at-index/" + fieldReference + "/{index}"));
+                        }
+                    }
+                }
+                if (allowRemove) {
+                    if (!isNewTopic) {
+                        fieldLinks.add(new Link("remove-field-values", uriInfo.getBaseUri() + "editor/remove-field-values/" + fieldReference));
+                    }
+                }      
+    
+                if (allowMove && !isNewTopic) {
+                    fieldLinks.add(new Link("move-field-values-to-index", uriInfo.getBaseUri() + "editor/move-field-values-to-index/" + fieldReference + "/{index}"));
+                }
             }
         } else {
             String dataType = field.getDataType();

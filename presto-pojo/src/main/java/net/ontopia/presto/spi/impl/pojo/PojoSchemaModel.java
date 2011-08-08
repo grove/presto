@@ -236,13 +236,17 @@ public class PojoSchemaModel {
                         if (fieldConfig.has("cascadingDelete")) {
                             field.setCascadingDelete(fieldConfig.get("cascadingDelete").getBooleanValue());
                         }
-                        // isNewValuesOnly
-                        if (fieldConfig.has("newValuesOnly")) {
-                            field.setNewValuesOnly(fieldConfig.get("newValuesOnly").getBooleanValue());
+                        // isAddable
+                        if (fieldConfig.has("addable")) {
+                            field.setAddable(fieldConfig.get("addable").getBooleanValue());
                         }
-                        // isExistingValuesOnly
-                        if (fieldConfig.has("existingValuesOnly")) {
-                            field.setExistingValuesOnly(fieldConfig.get("existingValuesOnly").getBooleanValue());
+                        // isRemovable
+                        if (fieldConfig.has("removable")) {
+                            field.setRemovable(fieldConfig.get("removable").getBooleanValue());
+                        }
+                        // isCreatable
+                        if (fieldConfig.has("creatable")) {
+                            field.setCreatable(fieldConfig.get("creatable").getBooleanValue());
                         }
                         // inverseFieldId
                         if (fieldConfig.has("inverseField")) {

@@ -32,8 +32,9 @@ public class PojoField implements PrestoField {
     private boolean isPageable;
     private int limit;
     private boolean isCascadingDelete;
-    private boolean isNewValuesOnly;
-    private boolean isExistingValuesOnly;
+    private boolean isAddable = true;
+    private boolean isRemovable = true;
+    private boolean isCreatable = true;
     private String inverseFieldId;
     private String interfaceControl;
     private Object extra;
@@ -130,12 +131,16 @@ public class PojoField implements PrestoField {
         return isCascadingDelete;
     }
 
-    public boolean isNewValuesOnly() {
-        return isNewValuesOnly;
+    public boolean isAddable() {
+        return isAddable;
     }
 
-    public boolean isExistingValuesOnly() {
-        return isExistingValuesOnly;
+    public boolean isRemovable() {
+        return isRemovable;
+    }
+
+    public boolean isCreatable() {
+        return isCreatable;
     }
 
     public String getInverseFieldId() {
@@ -239,12 +244,16 @@ public class PojoField implements PrestoField {
         this.isCascadingDelete = isCascadingDelete;
     }
 
-    public void setNewValuesOnly(boolean isNewValuesOnly) {
-        this.isNewValuesOnly = isNewValuesOnly;
+    public void setAddable(boolean isAddable) {
+        this.isAddable = isAddable;
     }
 
-    public void setExistingValuesOnly(boolean isExistingValuesOnly) {
-        this.isExistingValuesOnly = isExistingValuesOnly;
+    public void setRemovable(boolean isRemovable) {
+        this.isRemovable = isRemovable;
+    }
+
+    public void setCreatable(boolean isCreatable) {
+        this.isCreatable = isCreatable;
     }
 
     public void setInverseFieldId(String inverseFieldId) {

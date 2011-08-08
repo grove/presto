@@ -117,12 +117,16 @@ public class PojoFieldUsage implements PrestoFieldUsage {
         return field.isCascadingDelete();
     }
 
-    public boolean isNewValuesOnly() {
-        return field.isNewValuesOnly();
+    public boolean isAddable() {
+        return field.isAddable();
     }
 
-    public boolean isExistingValuesOnly() {
-        return field.isExistingValuesOnly();
+    public boolean isRemovable() {
+        return field.isRemovable();
+    }
+
+    public boolean isCreatable() {
+        return field.isCreatable();
     }
 
     public String getInverseFieldId() {

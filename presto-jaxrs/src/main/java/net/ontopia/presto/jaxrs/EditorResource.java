@@ -2,6 +2,7 @@ package net.ontopia.presto.jaxrs;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -509,6 +510,7 @@ public abstract class EditorResource {
 
             PrestoFieldUsage field = type.getFieldById(fieldId, view);
 
+            // FIXME: prevent removing when removable=false
             FieldData result =  new Presto(session, uriInfo).removeFieldValues(topic, type, field, fieldData);
 
             String id = topic.getId();
@@ -558,10 +560,10 @@ public abstract class EditorResource {
             PrestoFieldUsage field = type.getFieldById(fieldId, view);
 
             Collection<PrestoTopic> availableFieldValues = dataProvider.getAvailableFieldValues(field);
+
             AvailableFieldValues result = new Presto(session, uriInfo).createFieldInfoAllowed(field, availableFieldValues);
-
             return Response.ok(result).build();
-
+            
         } catch (Exception e) {
             session.abort();
             throw e;
@@ -605,13 +607,16 @@ public abstract class EditorResource {
             result.setId(field.getId());
             result.setName(field.getName());
 
-            Collection<PrestoType> availableFieldCreateTypes = field.getAvailableFieldCreateTypes();
-
-            List<TopicType> types = new ArrayList<TopicType>(availableFieldCreateTypes.size());
-            for (PrestoType createType : availableFieldCreateTypes) {
-                types.add(new Presto(session, uriInfo).getCreateFieldInstance(topic, type, field, createType));
+            if (field.isCreatable()) {
+                Collection<PrestoType> availableFieldCreateTypes = field.getAvailableFieldCreateTypes();
+                List<TopicType> types = new ArrayList<TopicType>(availableFieldCreateTypes.size());
+                for (PrestoType createType : availableFieldCreateTypes) {
+                    types.add(new Presto(session, uriInfo).getCreateFieldInstance(topic, type, field, createType));
+                }                
+                result.setTypes(types);
+            } else {
+                result.setTypes(new ArrayList<TopicType>());
             }
-            result.setTypes(types);
 
             return Response.ok(result).build();
 
