@@ -114,15 +114,17 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
         String type = resolveItem.get("type").getTextValue();
         if (type == null) {
             log.error("type not specified on resolve item: " + resolveItem);
-        } else if (type.equals("navigate")) {
+        } else if (type.equals("traverse")) {
 
-            if (resolveItem.has("traverse")) {
-                JsonNode traverseNode = resolveItem.get("traverse");
-                if (resolveItem.isArray()) {
-                    List<Object> result = new ArrayList<Object>(topics);
-                    for (JsonNode pathItem : traverseNode) {
-                        // result = extractPathValues(result, pathItem.getTextValue());
+            if (resolveItem.has("path")) {
+                JsonNode pathNode = resolveItem.get("path");
+                if (pathNode.isArray()) {
+                    Collection<Object> objects = new HashSet<Object>(topics);
+                    for (JsonNode fieldItem : pathNode) {
+                        // TODO: allow optional recursion
+                        objects = traverseField(objects, schemaProvider, fieldItem.getTextValue());
                     }
+                    List<Object> result = new ArrayList<Object>(objects);
                     return new CouchPagedValues(result, offset, limit, result.size());
                 }
             }
@@ -203,6 +205,27 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
             log.error("Unknown type specified on resolve item: " + resolveItem);            
         }
         return new CouchPagedValues(Collections.emptyList(), 0, limit, 0);
+    }
+
+    private Collection<Object> traverseField(Collection<Object> objects, PrestoSchemaProvider schemaProvider, String fieldId) {
+        Collection<Object> result = new HashSet<Object>();
+        for (Object object : objects) {
+            if (object instanceof PrestoTopic) {
+                PrestoTopic topic = (PrestoTopic)object;
+                String typeId = topic.getTypeId();
+                PrestoType type = schemaProvider.getTypeById(typeId);
+                try {
+                    PrestoField field = type.getFieldById(fieldId);
+                    List<Object> values = topic.getValues(field);
+                    result.addAll(values);
+                } catch (Exception e) {
+                    log.warn("Object " + topic.getId() + " does not have field '" + fieldId + "'");
+                }
+            } else {
+                log.warn("Value " + object + " does not have field '" + fieldId + "'");
+            }
+        }
+        return result;
     }
 
     private Collection<JsonNode> replaceKeyVariables(Collection<CouchTopic> topics, PrestoSchemaProvider schemaProvider, JsonNode key) {
