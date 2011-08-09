@@ -16,6 +16,8 @@ public class Topic {
     private String id;
     private String name;
     private Boolean readOnlyMode;
+    
+    private Boolean errors;
 
     private Origin origin;
 
@@ -116,5 +118,15 @@ public class Topic {
             return views;
         }
     }
+
+    public Boolean getErrors() {
+        return errors;
+    }
+
+    public void setErrors(Boolean errors) {
+        this.errors = errors;
+    }
+    
+    
 
 }
