@@ -11,7 +11,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class FieldData {
-
+    
     private String id;
     private String name;
     private Boolean readOnly;
@@ -36,6 +36,8 @@ public class FieldData {
     private Collection<FieldData> valueFields;
 
     private Collection<TopicType> valueTypes;
+    
+    private Collection<String> errors;
 
     public void setId(String id) {
         this.id = id;
@@ -176,7 +178,13 @@ public class FieldData {
     public void setValuesTotal(Integer valuesTotal) {
         this.valuesTotal = valuesTotal;
     }
-    
-    
+
+    public Collection<String> getErrors() {
+        return errors;
+    }
+
+    public void setErrors(Collection<String> errors) {
+        this.errors = errors;
+    }
     
 }
