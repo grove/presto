@@ -25,6 +25,10 @@ public class OntopolyDataProvider implements PrestoDataProvider {
     this.session = session;
   }
 
+  public String getProviderId() {
+      return "ontopoly";
+  }
+
   public PrestoTopic getTopicById(String id) {
     Topic topic = session.getTopicMap().getTopicById(id);
     if (topic == null) {

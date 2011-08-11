@@ -56,6 +56,10 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
         return mapper;
     }
 
+    public String getProviderId() {
+        return "couchdb";
+    }
+
     public PrestoTopic getTopicById(String topicId) {
         // look up by document id
         ObjectNode doc = null;
