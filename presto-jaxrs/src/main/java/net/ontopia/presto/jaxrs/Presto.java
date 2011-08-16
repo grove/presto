@@ -37,6 +37,8 @@ public class Presto {
 
     private Logger log = LoggerFactory.getLogger(Presto.class.getName());
 
+    private static final int DEFAULT_LIMIT = 100;
+
     private final PrestoSession session;
     private final UriInfo uriInfo;
 
@@ -215,9 +217,9 @@ public class Presto {
                 boolean allowCreate = field.isCreatable();
                 boolean allowAdd = field.isAddable();
                 boolean allowRemove = field.isRemovable();
-                
+
                 boolean allowMove = !field.isSorted();
-    
+
                 if (allowCreate) {
                     if (!field.getAvailableFieldCreateTypes().isEmpty()) {
                         fieldLinks.add(new Link("available-field-types", uriInfo.getBaseUri() + "editor/available-field-types/" + fieldReference));
@@ -242,7 +244,7 @@ public class Presto {
                         fieldLinks.add(new Link("remove-field-values", uriInfo.getBaseUri() + "editor/remove-field-values/" + fieldReference));
                     }
                 }      
-    
+
                 if (allowMove && !isNewTopic) {
                     fieldLinks.add(new Link("move-field-values-to-index", uriInfo.getBaseUri() + "editor/move-field-values-to-index/" + fieldReference + "/{index}"));
                 }
@@ -290,32 +292,31 @@ public class Presto {
             fieldData.setCreateTypes(createTypes);
         }
 
-        final int DEFAULT_LIMIT = 40;
-
         List<? extends Object> fieldValues;
         if (isNewTopic) {
             fieldValues = Collections.emptyList();
         } else {
-            // server-side paging (only if not sorting on client)
-            //          if (field.isPageable() && !field.isSorted()) {
-            //              int actualOffset = offset >= 0 ? offset : 0;
-            //              int actualLimit = limit > 0 ? limit : DEFAULT_LIMIT;
-            //              fieldData.setPageable(true);
-            //              PrestoTopic.PagedValues pagedValues = topic.getValues(field, actualOffset, actualLimit);
-            //              fieldData.setValuesOffset(pagedValues.getOffset());
-            //              fieldData.setValuesLimit(pagedValues.getLimit());
-            //              fieldData.setValuesTotal(pagedValues.getTotal());
-            //              fieldValues = pagingValues.getValues();
-            //          } else {
-            fieldValues = topic.getValues(field);
-            //          }
+            // server-side paging (only if not sorting)
+            if (field.isPageable() && !field.isSorted()) {
+                int actualOffset = offset >= 0 ? offset : 0;
+                int actualLimit = limit > 0 ? limit : DEFAULT_LIMIT;
+                fieldData.setPageable(true);
+                PrestoTopic.PagedValues pagedValues = topic.getValues(field, actualOffset, actualLimit);
+                fieldData.setValuesOffset(pagedValues.getOffset());
+                fieldData.setValuesLimit(pagedValues.getLimit());
+                fieldData.setValuesTotal(pagedValues.getTotal());
+                fieldValues = pagedValues.getValues();
+            } else {
+                fieldValues = topic.getValues(field);
+            }
         }
 
         int size = fieldValues.size();
         int start = 0;
         int end = size;
-        // if (field.isPageable() && field.isSorted()) {
-        if (field.isPageable()) {
+
+        // figure out how to truncate result (offset/limit)
+        if (field.isPageable() && field.isSorted()) {
             int _limit = limit > 0 ? limit : DEFAULT_LIMIT;
             start = Math.min(Math.max(0, offset), size);
             end = Math.min(start+_limit, size);
@@ -324,6 +325,7 @@ public class Presto {
             fieldData.setValuesTotal(size);
         }
 
+        // sort the result
         if (field.isSorted()) {
             Collections.sort(fieldValues, new Comparator<Object>() {
                 public int compare(Object o1, Object o2) {
@@ -334,6 +336,7 @@ public class Presto {
             });
         }
 
+        // get values (truncated if neccessary)
         List<Value> values = new ArrayList<Value>(fieldValues.size());
         for (int i=start; i < end; i++) {
             values.add(getValue(field, fieldValues.get(i), readOnlyMode));
@@ -562,7 +565,7 @@ public class Presto {
         Collection<Object> result = new ArrayList<Object>(values.size());
 
         if (!values.isEmpty()) {
-            
+
             if (field.isReferenceField()) {
                 List<String> valueIds = new ArrayList<String>(values.size());
                 for (Value value : values) {                
@@ -586,7 +589,7 @@ public class Presto {
         }
         return result;
     }
-    
+
     private PrestoTopic updateEmbeddedReference(PrestoView view, Topic embeddedTopic) {
 
         PrestoDataProvider dataProvider = session.getDataProvider();

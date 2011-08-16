@@ -17,6 +17,8 @@ import org.codehaus.jackson.node.ObjectNode;
 
 public abstract class CouchTopic implements PrestoTopic {
 
+    final static int DEFAULT_LIMIT = 100;
+
     private final CouchDataProvider dataProvider;  
     private final ObjectNode data;
 
@@ -87,8 +89,9 @@ public abstract class CouchTopic implements PrestoTopic {
         if (extra != null && extra.has("resolve")) {
             JsonNode resolveNode = extra.get("resolve");
             if (resolveNode.isArray()) {
-                ArrayNode resolveArray = (ArrayNode)resolveNode; 
-                result = dataProvider.resolveValues(this, field, resolveArray, paging, offset, limit);
+                ArrayNode resolveArray = (ArrayNode)resolveNode;
+                CouchQueryResolver resolver = new CouchQueryResolver(getDataProvider(), field.getSchemaProvider());
+                result = resolver.resolveValues(this, field, resolveArray, paging, offset, limit);
             } else {
                 throw new RuntimeException("extra.resolve on field " + field.getId() + " is not an array: " + resolveNode);
             }
@@ -102,7 +105,6 @@ public abstract class CouchTopic implements PrestoTopic {
             int start = 0;
             int end = size;
             if (paging) {
-                final int DEFAULT_LIMIT = 40;
                 int _limit = limit > 0 ? limit : DEFAULT_LIMIT;
                 start = Math.min(Math.max(0, offset), size);
                 end = Math.min(_limit+start, size);
