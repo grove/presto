@@ -45,8 +45,6 @@ public interface PrestoField {
     boolean isAddable();
     
     boolean isRemovable();
-    
-    String getInverseFieldId();
 
     String getInterfaceControl();
 

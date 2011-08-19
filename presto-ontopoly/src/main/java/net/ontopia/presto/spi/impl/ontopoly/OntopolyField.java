@@ -81,16 +81,6 @@ public class OntopolyField implements PrestoFieldUsage {
         return fieldDefinition.getFieldType() == FieldDefinition.FIELD_TYPE_NAME;
     }
 
-    public String getInverseFieldId() {
-        if (fieldDefinition.getFieldType() == FieldDefinition.FIELD_TYPE_ROLE) {
-            RoleField roleField = (RoleField)fieldDefinition;
-            for (RoleField otherRoleField : roleField.getOtherRoleFields()) {
-                return session.getStableId(otherRoleField);
-            }
-        }
-        return null;
-    }
-
     public PrestoType getType() {
         return type;
     }

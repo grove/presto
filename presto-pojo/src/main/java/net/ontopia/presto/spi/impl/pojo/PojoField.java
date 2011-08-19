@@ -35,7 +35,6 @@ public class PojoField implements PrestoField {
     private boolean isAddable = true;
     private boolean isRemovable = true;
     private boolean isCreatable = true;
-    private String inverseFieldId;
     private String interfaceControl;
     private Object extra;
 
@@ -141,10 +140,6 @@ public class PojoField implements PrestoField {
 
     public boolean isCreatable() {
         return isCreatable;
-    }
-
-    public String getInverseFieldId() {
-        return inverseFieldId;
     }
 
     public String getInterfaceControl() {
@@ -254,10 +249,6 @@ public class PojoField implements PrestoField {
 
     public void setCreatable(boolean isCreatable) {
         this.isCreatable = isCreatable;
-    }
-
-    public void setInverseFieldId(String inverseFieldId) {
-        this.inverseFieldId = inverseFieldId;
     }
 
     public void setInterfaceControl(String interfaceControl) {

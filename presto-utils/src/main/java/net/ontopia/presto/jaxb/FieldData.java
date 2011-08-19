@@ -39,8 +39,31 @@ public class FieldData {
     private Collection<TopicType> valueTypes;
     private Collection<TopicType> createTypes;
 
+    private Collection<Message> messages;
     private Collection<String> errors;
 
+    public static class Message {
+        private String type;
+        private String message;
+        public Message(String type, String message) {
+            this.type = type;
+            this.message = message;
+            
+        }
+        public String getType() {
+            return type;
+        }
+        public void setType(String type) {
+            this.type = type;
+        }
+        public String getMessage() {
+            return message;
+        }
+        public void setMessage(String message) {
+            this.message = message;
+        }
+    }
+    
     public void setId(String id) {
         this.id = id;
     }
@@ -203,6 +226,14 @@ public class FieldData {
 
     public void setErrors(Collection<String> errors) {
         this.errors = errors;
+    }
+
+    public Collection<Message> getMessages() {
+        return messages;
+    }
+
+    public void setMessages(Collection<Message> messages) {
+        this.messages = messages;
     }
     
 }

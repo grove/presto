@@ -248,11 +248,6 @@ public class PojoSchemaModel {
                         if (fieldConfig.has("creatable")) {
                             field.setCreatable(fieldConfig.get("creatable").getBooleanValue());
                         }
-                        // inverseFieldId
-                        if (fieldConfig.has("inverseField")) {
-                            String inverseField = fieldConfig.get("inverseField").getTextValue();
-                            field.setInverseFieldId(inverseField);
-                        }
                         // interfaceControl
                         if (fieldConfig.has("interfaceControl")) {
                             String interfaceControl = fieldConfig.get("interfaceControl").getTextValue();

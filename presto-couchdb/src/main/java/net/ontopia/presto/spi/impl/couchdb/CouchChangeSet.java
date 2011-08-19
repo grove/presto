@@ -121,9 +121,9 @@ public class CouchChangeSet implements PrestoChangeSet {
             dataProvider.update(topic);      
         }
 
-        for (Map.Entry<PrestoField,Collection<Object>> entry : addFieldValues.entrySet()) {
-            dataProvider.addInverseFieldValue(isNew, topic, entry.getKey(), entry.getValue());      
-        }
+//        for (Map.Entry<PrestoField,Collection<Object>> entry : addFieldValues.entrySet()) {
+//            dataProvider.addInverseFieldValue(isNew, topic, entry.getKey(), entry.getValue());      
+//        }
         for (Map.Entry<PrestoField,Collection<Object>> entry : remFieldValues.entrySet()) {
             PrestoField field = entry.getKey();
             Collection<Object> values = entry.getValue();
@@ -134,8 +134,8 @@ public class CouchChangeSet implements PrestoChangeSet {
                     PrestoType rtype = getSchemaProvider().getTypeById(rtopic.getTypeId());
                     dataProvider.deleteTopic(rtopic, rtype);
                 }
-            } else {
-                dataProvider.removeInverseFieldValue(isNew, topic, field, entry.getValue());
+//            } else {
+//                dataProvider.removeInverseFieldValue(isNew, topic, field, entry.getValue());
             }
         }
 

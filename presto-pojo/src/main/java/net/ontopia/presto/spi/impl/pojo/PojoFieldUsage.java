@@ -129,10 +129,6 @@ public class PojoFieldUsage implements PrestoFieldUsage {
         return field.isCreatable();
     }
 
-    public String getInverseFieldId() {
-        return field.getInverseFieldId();
-    }
-
     public String getInterfaceControl() {
         return field.getInterfaceControl();
     }
