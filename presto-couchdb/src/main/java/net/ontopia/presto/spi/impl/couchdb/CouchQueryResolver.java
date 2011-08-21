@@ -38,7 +38,7 @@ public class CouchQueryResolver {
         this.dataProvider = dataProvider;
         this.schemaProvider = schemaProvider;
     }
-    
+
     @SuppressWarnings("unchecked")
     public PagedValues resolveValues(CouchTopic topic, PrestoField field, ArrayNode resolveArray, boolean paging, int offset, int limit) {
         PagedValues result = null;
@@ -79,13 +79,12 @@ public class CouchQueryResolver {
     private PagedValues resolveQuery(Collection<CouchTopic> topics,
             boolean isReference, ObjectNode resolveItem, 
             boolean paging, int _limit, int offset, int limit) {
-        
+
         String designDocId = resolveItem.get("designDocId").getTextValue();
         String viewName = resolveItem.get("viewName").getTextValue();
 
         boolean includeDocs = resolveItem.has("includeDocs") && resolveItem.get("includeDocs").getBooleanValue();
 
-        List<Object> result = new ArrayList<Object>();
         ViewQuery query = new ViewQuery()
         .designDocId(designDocId)
         .viewName(viewName)
@@ -103,7 +102,7 @@ public class CouchQueryResolver {
             }
             query = query.keys(keys);
         } else if (resolveItem.has("startKey") && resolveItem.has("endKey")) {
-            
+
             Collection<?> startKeys = replaceKeyVariables(topics, resolveItem.get("startKey"));
             if (startKeys.isEmpty() || startKeys.size() > 1) {
                 log.warn("startKey not a single value: " + startKeys);
@@ -138,9 +137,11 @@ public class CouchQueryResolver {
             }
         }
 
+        List<Object> result = new ArrayList<Object>();        
         ViewResult viewResult = dataProvider.getCouchConnector().queryView(query);
-        for (Row row : viewResult.getRows()) {
-            if (includeDocs) {
+
+        if (includeDocs) {
+            for (Row row : viewResult.getRows()) {
                 JsonNode value = (JsonNode)row.getDocAsNode();
                 if (value != null) {
                     if (value.isObject()) {
@@ -149,26 +150,26 @@ public class CouchQueryResolver {
                         result.add(value.getTextValue());
                     }
                 }
-            } else {
+            }
+        } else {
+            List<String> values = new ArrayList<String>();        
+            for (Row row : viewResult.getRows()) {
                 JsonNode valueAsNode = row.getValueAsNode();
                 if (valueAsNode == null) {
                     // do nothing
                 } else if (valueAsNode.isTextual()) {
                     String textValue = valueAsNode.getTextValue();
                     if (textValue != null) {
-                        if (isReference) {
-                            // FIXME: should be able to optimize this by calling getTopicsByIds instead
-                            PrestoTopic valueTopic = dataProvider.getTopicById(textValue);
-                            if (valueTopic != null) {
-                                result.add(valueTopic);
-                            }
-                        } else {
-                            result.add(textValue);
-                        }
+                        result.add(textValue);
                     }
                 } else {
                     result.add(valueAsNode.toString());
                 }
+            }
+            if (isReference) {
+                result.addAll(dataProvider.getTopicsByIds(values));
+            } else {
+                result.addAll(values);
             }
         }
         if (resolveItem.has("excludeSelf") && resolveItem.get("excludeSelf").getBooleanValue()) {
