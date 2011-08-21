@@ -219,17 +219,6 @@ public class OntopolyField implements PrestoFieldUsage {
         }
     }
 
-    public boolean isPrimitiveField() {
-        switch (fieldDefinition.getFieldType()) {
-        case FieldDefinition.FIELD_TYPE_IDENTITY:
-        case FieldDefinition.FIELD_TYPE_NAME:
-        case FieldDefinition.FIELD_TYPE_OCCURRENCE:
-            return true;
-        default:
-            return false;
-        }
-    }
-
     public boolean isReferenceField() {
         switch (fieldDefinition.getFieldType()) {
         case FieldDefinition.FIELD_TYPE_ROLE:

@@ -70,10 +70,6 @@ public class PojoField implements PrestoField {
         return isNameField;
     }
 
-    public boolean isPrimitiveField() {
-        return !isReferenceField();
-    }
-
     public boolean isReferenceField() {
         return dataType != null && dataType.equals("reference");
     }

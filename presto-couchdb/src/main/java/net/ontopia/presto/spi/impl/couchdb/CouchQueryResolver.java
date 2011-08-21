@@ -47,7 +47,7 @@ public class CouchQueryResolver {
         int size = resolveArray.size();
         for (int i=0; i < size; i++) {
             boolean isLast = (i == size-1);
-            boolean isReference = field.isReferenceField() || (field.isPrimitiveField() && !isLast);
+            boolean isReference = field.isReferenceField() || !isLast;
             result = resolveValues(resultCollection, isReference, (ObjectNode)resolveArray.get(i), paging, offset, limit);
             resultCollection = result.getValues();
         }

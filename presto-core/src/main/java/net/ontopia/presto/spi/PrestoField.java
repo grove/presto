@@ -12,8 +12,6 @@ public interface PrestoField {
 
     boolean isNameField(); // TODO: Move into extras
 
-    boolean isPrimitiveField();
-
     boolean isReferenceField();
 
     int getMinCardinality();

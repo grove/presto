@@ -61,10 +61,6 @@ public class PojoFieldUsage implements PrestoFieldUsage {
         return field.isNameField();
     }
 
-    public boolean isPrimitiveField() {
-        return field.isPrimitiveField();
-    }
-
     public boolean isReferenceField() {
         return field.isReferenceField();
     }
