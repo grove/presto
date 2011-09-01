@@ -101,21 +101,27 @@ public class CouchQueryResolver {
                 return new CouchPagedValues(Collections.emptyList(), 0, _limit,0);
             }
             query = query.keys(keys);
+
         } else if (resolveItem.has("startKey") && resolveItem.has("endKey")) {
 
-            Collection<?> startKeys = replaceKeyVariables(topics, resolveItem.get("startKey"));
-            if (startKeys.isEmpty() || startKeys.size() > 1) {
-                log.warn("startKey not a single value: " + startKeys);
+            Collection<?> startKeys = replaceKeyVariables(topics, resolveItem.get("startKey"));            
+            Collection<?> endKeys = replaceKeyVariables(topics, resolveItem.get("endKey"));
+            
+            if (startKeys.size() != endKeys.size()) {
+                throw new RuntimeException("startKey and endKey of different sizes: " + startKeys + " and " + endKeys);
+            }
+            
+            if (startKeys.isEmpty()) {
                 return new CouchPagedValues(Collections.emptyList(), 0, _limit,0);
             }
+            
+            if (startKeys.size() > 1) {
+                throw new RuntimeException("startKey or endKey not a single value: " + startKeys + " and " + endKeys);
+            }
+
             startKey = startKeys.iterator().next();
             query = query.startKey(startKey);
-
-            Collection<?> endKeys = replaceKeyVariables(topics, resolveItem.get("endKey"));
-            if (endKeys.isEmpty() || endKeys.size() > 1) {
-                log.warn("endKey not a single value: " + endKeys);
-                return new CouchPagedValues(Collections.emptyList(), 0, _limit, 0);
-            }
+            
             endKey = endKeys.iterator().next();
             query = query.endKey(endKey);
 
