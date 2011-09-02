@@ -4,14 +4,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 
 import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoDataProvider;
-import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoFieldUsage;
-import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 
@@ -20,7 +17,6 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
 import org.ektorp.CouchDbConnector;
 import org.ektorp.DocumentNotFoundException;
-import org.ektorp.UpdateConflictException;
 import org.ektorp.ViewQuery;
 import org.ektorp.ViewResult;
 import org.ektorp.ViewResult.Row;
@@ -126,42 +122,8 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
             return o1.compareTo(o2);
     }
 
-    public PrestoChangeSet createTopic(PrestoType type) {
-        return new CouchChangeSet(this, type);
-    }
-
-    public PrestoChangeSet updateTopic(PrestoTopic topic, PrestoType type) {
-        return new CouchChangeSet(this, (CouchTopic)topic, type);
-    }
-
-    public boolean deleteTopic(PrestoTopic topic, PrestoType type) {
-        return deleteTopic(topic, type, true);
-    }
-
-    private boolean deleteTopic(PrestoTopic topic, PrestoType type, boolean removeDependencies) {
-        // find and remove dependencies
-        if (removeDependencies) {
-            removeDependencies(topic, type);
-        }
-//        // clear incoming foreign keys
-//        for (PrestoField field : type.getFields()) {
-//            if (field.getInverseFieldId() != null) {
-//                boolean isNew = false;
-//                removeInverseFieldValue(isNew, topic, field, topic.getValues(field));
-//            }
-//        }
-
-        return delete((CouchTopic)topic);    
-    }
-
-    private void removeDependencies(PrestoTopic topic, PrestoType type) {
-        PrestoSchemaProvider schemaProvider = type.getSchemaProvider();
-        for (PrestoTopic dependency : findDependencies(topic, type)) {
-            if (!dependency.equals(topic)) {
-                PrestoType dependencyType = schemaProvider.getTypeById(dependency.getTypeId());
-                deleteTopic(dependency, dependencyType, false);
-            }
-        }
+    public PrestoChangeSet newChangeSet() {
+        return new CouchChangeSet(this);
     }
 
     public void close() {
@@ -170,60 +132,6 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
     abstract CouchTopic existing(ObjectNode doc);
 
     abstract CouchTopic newInstance(PrestoType type);
-
-    // couchdb crud operations
-
-    void create(CouchTopic topic) {
-        getCouchConnector().create(topic.getData());
-    }
-
-    void update(CouchTopic topic) {
-        getCouchConnector().update(topic.getData());
-    }
-
-    boolean delete(CouchTopic topic) {
-        log.info("Removing: " + topic.getId() + " " + topic.getName());
-        try {
-            getCouchConnector().delete(topic.getData());
-            return true;
-        } catch (UpdateConflictException e) {
-            CouchTopic topic2 = (CouchTopic)getTopicById(topic.getId());
-            if (topic2 != null) {
-                getCouchConnector().delete(topic2.getData());
-                return true;
-            } else {
-                return false;
-            }
-        }
-    }
-
-    // dependent topics / cascading deletes
-
-    private Collection<PrestoTopic> findDependencies(PrestoTopic topic, PrestoType type) {
-        Collection<PrestoTopic> dependencies = new HashSet<PrestoTopic>();
-        findDependencies(topic, type, dependencies);
-        return dependencies;
-    }
-
-    private void findDependencies(PrestoTopic topic, PrestoType type, Collection<PrestoTopic> deleted) {
-
-        if (!deleted.contains(topic) && type.isRemovableCascadingDelete()) {
-            for (PrestoField field : type.getFields()) {
-                if (field.isReferenceField()) {
-                    if (field.isCascadingDelete()) { 
-                        PrestoSchemaProvider schemaProvider = type.getSchemaProvider();
-                        for (Object value : topic.getValues(field)) {
-                            PrestoTopic valueTopic = (PrestoTopic)value;
-                            String typeId = valueTopic.getTypeId();
-                            PrestoType valueType = schemaProvider.getTypeById(typeId);
-                            deleted.add(valueTopic);
-                            findDependencies(valueTopic, valueType, deleted);
-                        }
-                    }
-                }
-            }
-        }
-    }
 
 //    // inverse fields (foreign keys)
 //
