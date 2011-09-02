@@ -63,6 +63,7 @@ public class PojoSchemaModel {
         schemaProvider.setDatabaseId(databaseId);
 
         Map<String, ObjectNode> fieldsMap = createFieldsMap(json);
+        Map<String, ObjectNode> viewsMap = createViewsMap(json);
         Map<String, ObjectNode> typesMap = createTypesMap(json);
 
         Map<String,PojoType> types = new HashMap<String,PojoType>();
@@ -113,24 +114,34 @@ public class PojoSchemaModel {
             }
             if (typeConfig.has("views")) {
                 ArrayNode viewsNode = (ArrayNode)typeConfig.get("views");
-                for (JsonNode viewNode_ : viewsNode) {
+                for (JsonNode viewNode : viewsNode) {
+                    String viewId;
+                    ObjectNode viewConfig;
 
                     // view
-                    ObjectNode viewNode = (ObjectNode)viewNode_;
-                    String viewId = viewNode.get("id").getTextValue();
+                    if (viewNode.isTextual()) {
+                        viewId = viewNode.getTextValue();                        
+                        viewConfig = viewsMap.get(viewId);
+                    } else if (viewNode.isObject()) {
+                        viewConfig = (ObjectNode)viewNode;
+                        viewId = viewConfig.get("id").getTextValue();
+                    } else {
+                        throw new RuntimeException("Invalid view declaration or view reference: " + viewNode);
+                    }
+                   
                     PojoView view = new PojoView(viewId, schemaProvider);
                     type.addView(view);
                     // view name
-                    String viewName = viewNode.get("name").getTextValue();
+                    String viewName = viewConfig.get("name").getTextValue();
                     view.setName(viewName);
 
                     // extra
-                    if (viewNode.has("extra")) {
-                        view.setExtra(viewNode.get("extra"));
+                    if (viewConfig.has("extra")) {
+                        view.setExtra(viewConfig.get("extra"));
                     }
 
                     // fields
-                    ArrayNode fieldsArray = (ArrayNode)viewNode.get("fields");
+                    ArrayNode fieldsArray = (ArrayNode)viewConfig.get("fields");
                     for (JsonNode fieldNode : fieldsArray) {
                         String fieldId;
                         ObjectNode fieldConfig;
@@ -317,6 +328,20 @@ public class PojoSchemaModel {
             }
         }
         return fieldsMap;
+    }
+
+    private static Map<String, ObjectNode> createViewsMap(ObjectNode json) {
+        Map<String,ObjectNode> viewsMap = new HashMap<String,ObjectNode>();
+        if (json.has("views")) {
+            ObjectNode viewsNode = (ObjectNode)json.get("views");
+            Iterator<String> fieldNames = viewsNode.getFieldNames();
+            while (fieldNames.hasNext()) {
+                String fieldName = fieldNames.next();
+                ObjectNode viewConfig = (ObjectNode)viewsNode.get(fieldName);
+                viewsMap.put(fieldName, viewConfig);
+            }
+        }
+        return viewsMap;
     }
 
     private static void verifyDeclaredType(String typeId, Map<String, ObjectNode> typesMap, String jsonField, PojoType type) {
