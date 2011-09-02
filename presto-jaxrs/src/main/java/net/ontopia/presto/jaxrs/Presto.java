@@ -21,6 +21,7 @@ import net.ontopia.presto.jaxb.TopicTypeTree;
 import net.ontopia.presto.jaxb.Value;
 import net.ontopia.presto.jaxb.View;
 import net.ontopia.presto.spi.PrestoChangeSet;
+import net.ontopia.presto.spi.PrestoUpdate;
 import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoFieldUsage;
@@ -506,15 +507,17 @@ public class Presto {
 
         if  (field != null) {
             PrestoDataProvider dataProvider = session.getDataProvider();
-            PrestoChangeSet changeSet = dataProvider.updateTopic(topic, type);        
+            PrestoChangeSet changeSet = dataProvider.newChangeSet();
+            PrestoUpdate update = changeSet.updateTopic(topic, type);        
 
             Collection<Object> addableValues = resolveValues(field, fieldObject.getValues(), true);
             if (index == null) {
-                changeSet.addValues(field, addableValues);
+                update.addValues(field, addableValues);
             } else {
-                changeSet.addValues(field, addableValues, index);        
+                update.addValues(field, addableValues, index);        
             }
-            topic = changeSet.save();
+            changeSet.save();
+            topic = changeSet.getTopic(update);
         }
         return getFieldInfo(topic, field, false);
     }
@@ -523,11 +526,14 @@ public class Presto {
 
         if  (field != null) {
             PrestoDataProvider dataProvider = session.getDataProvider();
-            PrestoChangeSet changeSet = dataProvider.updateTopic(topic, type);
+            PrestoChangeSet changeSet = dataProvider.newChangeSet();
+            PrestoUpdate update = changeSet.updateTopic(topic, type);        
 
             Collection<Object> removeableValues = resolveValues(field, fieldObject.getValues(), false);
-            changeSet.removeValues(field, removeableValues);
-            topic = changeSet.save();
+            update.removeValues(field, removeableValues);
+
+            changeSet.save();
+            topic = changeSet.getTopic(update);
         }
         return getFieldInfo(topic, field, false);
     }
@@ -535,12 +541,13 @@ public class Presto {
     public PrestoTopic updateTopic(PrestoTopic topic, PrestoType type, PrestoView view, Topic data) {
 
         PrestoDataProvider dataProvider = session.getDataProvider();
+        PrestoChangeSet changeSet = dataProvider.newChangeSet();
 
-        PrestoChangeSet changeSet;
+        PrestoUpdate update;
         if (topic == null) {
-            changeSet = dataProvider.createTopic(type);
+            update = changeSet.createTopic(type);
         } else {
-            changeSet = dataProvider.updateTopic(topic, type);
+            update = changeSet.updateTopic(topic, type);
         }
 
         Map<String, PrestoFieldUsage> fields = getFieldInstanceMap(topic, type, view);
@@ -554,11 +561,12 @@ public class Presto {
             if (!field.isReadOnly() && !field.isPageable()) {
                 if  (fields.containsKey(fieldId)) {
                     Collection<Value> values = jsonField.getValues();
-                    changeSet.setValues(field, resolveValues(field, values, true));
+                    update.setValues(field, resolveValues(field, values, true));
                 }
             }
         }
-        return changeSet.save();
+        changeSet.save();
+        return changeSet.getTopic(update);
     }
 
     private Collection<Object> resolveValues(PrestoFieldUsage field, Collection<Value> values, boolean resolveEmbedded) {
@@ -634,7 +642,10 @@ public class Presto {
 
     public boolean deleteTopic(PrestoTopic topic, PrestoType type) {
         log.warn("Removing topic " + topic.getId() + " from database " + session.getSchemaProvider().getDatabaseId());
-        return session.getDataProvider().deleteTopic(topic, type);
+        PrestoChangeSet changeSet = session.getDataProvider().newChangeSet();
+        changeSet.deleteTopic(topic, type);
+        changeSet.save();
+        return true;
     }
 
     public Collection<TopicTypeTree> getAvailableTypes(Collection<PrestoType> types, boolean tree) {

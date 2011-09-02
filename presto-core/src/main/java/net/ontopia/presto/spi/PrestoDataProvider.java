@@ -12,12 +12,8 @@ public interface PrestoDataProvider {
 
     Collection<PrestoTopic> getAvailableFieldValues(PrestoFieldUsage field);
 
-    PrestoChangeSet createTopic(PrestoType type);
-
-    PrestoChangeSet updateTopic(PrestoTopic topic, PrestoType type);
-
-    boolean deleteTopic(PrestoTopic topic, PrestoType type);
-
+    PrestoChangeSet newChangeSet();
+    
     void close();
 
 }
