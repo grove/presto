@@ -1,5 +1,7 @@
 package net.ontopia.presto.spi;
 
+import java.util.Collection;
+
 public interface PrestoField {
 
     String getId();
@@ -46,6 +48,10 @@ public interface PrestoField {
 
     String getInterfaceControl();
 
+    String getValuesAssignmentType();
+
+    Collection<String> getValues();
+    
     Object getExtra();
 
 }

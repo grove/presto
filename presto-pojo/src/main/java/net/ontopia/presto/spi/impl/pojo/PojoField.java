@@ -2,6 +2,7 @@ package net.ontopia.presto.spi.impl.pojo;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -37,6 +38,9 @@ public class PojoField implements PrestoField {
     private boolean isCreatable = true;
     private String interfaceControl;
     private Object extra;
+
+    private String valuesAssignmentType = "default";
+    private Collection<String> values = Collections.emptyList();
 
     private Collection<PrestoType> availableFieldCreateTypes;
     private Collection<PrestoType> availableFieldValueTypes = new HashSet<PrestoType>();
@@ -267,4 +271,20 @@ public class PojoField implements PrestoField {
         return extra;
     }
 
+    public String getValuesAssignmentType() {
+        return valuesAssignmentType;
+    }
+
+    protected void setValuesAssignmentType(String valuesAssignmentType) {
+        this.valuesAssignmentType = valuesAssignmentType;
+    }
+    
+    public Collection<String> getValues() {
+        return values;
+    }
+
+    protected void setValues(Collection<String> values) {
+        this.values = values;
+    }
+    
 }

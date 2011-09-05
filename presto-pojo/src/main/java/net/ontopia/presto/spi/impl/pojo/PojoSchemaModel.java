@@ -6,9 +6,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -292,6 +294,21 @@ public class PojoSchemaModel {
                                 createTypes.add(createType);
                             }
                             field.setAvailableFieldCreateType(createTypes);
+                        }
+                        
+                        // valueAssignmentType
+                        if (fieldConfig.has("valueAssignmentType")) {
+                            String valueAssignmentType = fieldConfig.get("valueAssignmentType").getTextValue();
+                            field.setValuesAssignmentType(valueAssignmentType);
+                            
+                            // values
+                            if (fieldConfig.has("values")) {
+                                List<String> values = new ArrayList<String>();
+                                for (JsonNode value : fieldConfig.get("values")) {
+                                    values.add(value.getTextValue());
+                                }
+                                field.setValues(values);
+                            }
                         }
 
                     }

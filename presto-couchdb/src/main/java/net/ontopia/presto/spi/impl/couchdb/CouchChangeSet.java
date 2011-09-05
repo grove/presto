@@ -133,6 +133,7 @@ public class CouchChangeSet implements PrestoChangeSet {
     
     public void save() {
         if (saved) {
+            log.warn("PrestoChangeSet.save() method called multiple times.");
             return; // idempotent
         }
         this.saved = true;
