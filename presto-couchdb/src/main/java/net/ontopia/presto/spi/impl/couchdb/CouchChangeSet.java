@@ -163,10 +163,6 @@ public class CouchChangeSet implements PrestoChangeSet {
         }       
     }
 
-    public PrestoTopic getTopic(PrestoUpdate update) {
-        return dataProvider.getTopicById(((CouchUpdate)update).getTopic().getId());
-    }
-
     // CouchDB single document CRUD operations
 
     void create(CouchTopic topic) {

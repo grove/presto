@@ -9,7 +9,5 @@ public interface PrestoChangeSet {
     void deleteTopic(PrestoTopic topic, PrestoType type);
 
     void save();
-
-    PrestoTopic getTopic(PrestoUpdate update);
     
 }

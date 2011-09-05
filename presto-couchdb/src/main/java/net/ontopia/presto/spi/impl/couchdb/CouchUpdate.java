@@ -46,6 +46,10 @@ public class CouchUpdate implements PrestoUpdate, CouchChangeSet.CouchChange {
         return topic;
     }
     
+    public PrestoTopic getTopicAfterUpdate() {
+        return topic.getDataProvider().getTopicById(topic.getId());
+    }
+    
     public void setValues(PrestoField field, Collection<?> values) {
         if (saved) {
             throw new RuntimeException("Can only save a changeset once.");

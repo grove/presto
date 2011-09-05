@@ -12,4 +12,6 @@ public interface PrestoUpdate {
 
     void removeValues(PrestoField field, Collection<?> values);
 
+    PrestoTopic getTopicAfterUpdate();
+    
 }

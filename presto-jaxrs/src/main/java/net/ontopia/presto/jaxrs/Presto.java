@@ -517,7 +517,7 @@ public class Presto {
                 update.addValues(field, addableValues, index);        
             }
             changeSet.save();
-            topic = changeSet.getTopic(update);
+            topic = update.getTopicAfterUpdate();
         }
         return getFieldInfo(topic, field, false);
     }
@@ -533,7 +533,7 @@ public class Presto {
             update.removeValues(field, removeableValues);
 
             changeSet.save();
-            topic = changeSet.getTopic(update);
+            topic = update.getTopicAfterUpdate();
         }
         return getFieldInfo(topic, field, false);
     }
@@ -566,7 +566,7 @@ public class Presto {
             }
         }
         changeSet.save();
-        return changeSet.getTopic(update);
+        return update.getTopicAfterUpdate();
     }
 
     private Collection<Object> resolveValues(PrestoFieldUsage field, Collection<Value> values, boolean resolveEmbedded) {
