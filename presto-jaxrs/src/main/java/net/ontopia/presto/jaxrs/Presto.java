@@ -240,10 +240,8 @@ public class Presto {
                         }
                     }
                 }
-                if (allowRemove) {
-                    if (!isNewTopic) {
-                        fieldLinks.add(new Link("remove-field-values", uriInfo.getBaseUri() + "editor/remove-field-values/" + fieldReference));
-                    }
+                if (allowRemove && !isNewTopic) {
+                    fieldLinks.add(new Link("remove-field-values", uriInfo.getBaseUri() + "editor/remove-field-values/" + fieldReference));
                 }      
 
                 if (allowMove && !isNewTopic) {
@@ -348,16 +346,16 @@ public class Presto {
     }
 
     protected int compareComparables(String o1, String o2) {
-        if (o1 == null)
+        if (o1 == null) {
             return (o2 == null ? 0 : -1);
-        else if (o2 == null)
+        } else if (o2 == null){ 
             return 1;
-        else
+        } else {
             return o1.compareTo(o2);
+        }
     }
 
-    public List<View> getViews(
-            PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnlyMode) {
+    public List<View> getViews(PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnlyMode) {
 
         Collection<PrestoView> otherViews = type.getViews(view);
 
