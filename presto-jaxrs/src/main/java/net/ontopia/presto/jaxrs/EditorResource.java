@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -47,9 +48,12 @@ public abstract class EditorResource {
 
     public final static String APPLICATION_JSON_UTF8 = "application/json;charset=UTF-8";
 
+    @Context HttpServletRequest req;
+    @Context UriInfo uriInfo;
+    
     @GET
     @Produces(APPLICATION_JSON_UTF8)
-    public Response getRootInfo(@Context UriInfo uriInfo) throws Exception {
+    public Response getRootInfo() throws Exception {
 
         RootInfo result = new RootInfo();
 
@@ -66,7 +70,7 @@ public abstract class EditorResource {
     @GET
     @Produces(APPLICATION_JSON_UTF8)
     @Path("available-databases")
-    public Response getDatabases(@Context UriInfo uriInfo) throws Exception {
+    public Response getDatabases() throws Exception {
 
         AvailableDatabases result = new AvailableDatabases();
 
@@ -93,7 +97,6 @@ public abstract class EditorResource {
     @Produces(APPLICATION_JSON_UTF8)
     @Path("database-info/{databaseId}")
     public Response getDatabaseInfo(
-            @Context UriInfo uriInfo, 
             @PathParam("databaseId") final String databaseId) throws Exception {
 
         PrestoSession session = createSession(databaseId);
@@ -122,7 +125,6 @@ public abstract class EditorResource {
     @Produces(APPLICATION_JSON_UTF8)
     @Path("create-instance/{databaseId}/{typeId}")
     public Response createInstance(
-            @Context UriInfo uriInfo, 
             @PathParam("databaseId") final String databaseId, 
             @PathParam("typeId") final String typeId) throws Exception {
 
@@ -151,7 +153,7 @@ public abstract class EditorResource {
     @GET
     @Produces(APPLICATION_JSON_UTF8)
     @Path("paging-field/{databaseId}/{topicId}/{viewId}/{fieldId}/{start}/{limit}")
-    public Response getFieldPaging(@Context UriInfo uriInfo, 
+    public Response getFieldPaging(
             @PathParam("databaseId") final String databaseId, 
             @PathParam("topicId") final String topicId, 
             @PathParam("viewId") final String viewId,
@@ -200,7 +202,6 @@ public abstract class EditorResource {
     @Produces(APPLICATION_JSON_UTF8)
     @Path("create-field-instance/{databaseId}/{parentTopicId}/{parentFieldId}/{playerTypeId}")
     public Response createFieldInstance(
-            @Context UriInfo uriInfo, 
             @PathParam("databaseId") final String databaseId,
             @PathParam("parentTopicId") final String parentTopicId,
             @PathParam("parentFieldId") final String parentFieldId, 
@@ -232,7 +233,6 @@ public abstract class EditorResource {
     @Produces(APPLICATION_JSON_UTF8)
     @Path("topic-data/{databaseId}/{topicId}")
     public Response getTopicData(
-            @Context UriInfo uriInfo, 
             @PathParam("databaseId") final String databaseId, 
             @PathParam("topicId") final String topicId) throws Exception {
 
@@ -263,7 +263,6 @@ public abstract class EditorResource {
     @Produces(APPLICATION_JSON_UTF8)
     @Path("topic/{databaseId}/{topicId}")
     public Response deleteTopic(
-            @Context UriInfo uriInfo, 
             @PathParam("databaseId") final String databaseId, 
             @PathParam("topicId") final String topicId) throws Exception {
 
@@ -304,7 +303,6 @@ public abstract class EditorResource {
     @Produces(APPLICATION_JSON_UTF8)
     @Path("topic/{databaseId}/{topicId}")
     public Response getTopicInDefaultView(
-            @Context UriInfo uriInfo, 
             @PathParam("databaseId") final String databaseId, 
             @PathParam("topicId") final String topicId,
             @QueryParam("readOnly") final boolean readOnly) throws Exception {
@@ -337,7 +335,6 @@ public abstract class EditorResource {
     @Produces(APPLICATION_JSON_UTF8)
     @Path("topic/{databaseId}/{topicId}/{viewId}")
     public Response getTopicInView(
-            @Context UriInfo uriInfo, 
             @PathParam("databaseId") final String databaseId, 
             @PathParam("topicId") final String topicId,
             @PathParam("viewId") final String viewId,
@@ -371,7 +368,7 @@ public abstract class EditorResource {
     @Produces(APPLICATION_JSON_UTF8)
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("topic/{databaseId}/{topicId}/{viewId}")
-    public Response updateTopic(@Context UriInfo uriInfo, 
+    public Response updateTopic(
             @PathParam("databaseId") final String databaseId, 
             @PathParam("topicId") final String topicId, 
             @PathParam("viewId") final String viewId, Topic topicData) throws Exception {
@@ -418,7 +415,7 @@ public abstract class EditorResource {
     @Produces(APPLICATION_JSON_UTF8)
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("add-field-values-at-index/{databaseId}/{topicId}/{viewId}/{fieldId}/{index}")
-    public Response addFieldValuesAtIndex(@Context UriInfo uriInfo, 
+    public Response addFieldValuesAtIndex( 
             @PathParam("databaseId") final String databaseId, 
             @PathParam("topicId") final String topicId, 
             @PathParam("viewId") final String viewId,
@@ -469,35 +466,35 @@ public abstract class EditorResource {
     @Produces(APPLICATION_JSON_UTF8)
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("move-field-values-to-index/{databaseId}/{topicId}/{viewId}/{fieldId}/{index}")
-    public Response moveFieldValuesToIndex(@Context UriInfo uriInfo, 
+    public Response moveFieldValuesToIndex( 
             @PathParam("databaseId") final String databaseId, 
             @PathParam("topicId") final String topicId, 
             @PathParam("viewId") final String viewId,
             @PathParam("fieldId") final String fieldId, 
             @PathParam("index") final Integer index, FieldData fieldData) throws Exception {
 
-        return addFieldValuesAtIndex(uriInfo, databaseId, topicId, viewId, fieldId, index, fieldData);
+        return addFieldValuesAtIndex(databaseId, topicId, viewId, fieldId, index, fieldData);
     }
 
     @POST
     @Produces(APPLICATION_JSON_UTF8)
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("add-field-values/{databaseId}/{topicId}/{viewId}/{fieldId}")
-    public Response addFieldValues(@Context UriInfo uriInfo, 
+    public Response addFieldValues(
             @PathParam("databaseId") final String databaseId, 
             @PathParam("topicId") final String topicId, 
             @PathParam("viewId") final String viewId,
             @PathParam("fieldId") final String fieldId, FieldData fieldData) throws Exception {
 
         Integer index = null;
-        return addFieldValuesAtIndex(uriInfo, databaseId, topicId, viewId, fieldId, index, fieldData);
+        return addFieldValuesAtIndex(databaseId, topicId, viewId, fieldId, index, fieldData);
     }
 
     @POST
     @Produces(APPLICATION_JSON_UTF8)
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("remove-field-values/{databaseId}/{topicId}/{viewId}/{fieldId}")
-    public Response removeFieldValues(@Context UriInfo uriInfo, 
+    public Response removeFieldValues(
             @PathParam("databaseId") final String databaseId, 
             @PathParam("topicId") final String topicId, 
             @PathParam("viewId") final String viewId,
@@ -545,7 +542,7 @@ public abstract class EditorResource {
     @GET
     @Produces(APPLICATION_JSON_UTF8)
     @Path("available-field-values/{databaseId}/{topicId}/{viewId}/{fieldId}")
-    public Response getAvailableFieldValues(@Context UriInfo uriInfo, 
+    public Response getAvailableFieldValues(
             @PathParam("databaseId") final String databaseId, 
             @PathParam("topicId") final String topicId, 
             @PathParam("viewId") final String viewId,
@@ -589,7 +586,7 @@ public abstract class EditorResource {
     @GET
     @Produces(APPLICATION_JSON_UTF8)
     @Path("available-field-types/{databaseId}/{topicId}/{viewId}/{fieldId}")
-    public Response getAvailableFieldTypes(@Context UriInfo uriInfo, 
+    public Response getAvailableFieldTypes(
             @PathParam("databaseId") final String databaseId, 
             @PathParam("topicId") final String topicId, 
             @PathParam("viewId") final String viewId,
@@ -645,8 +642,7 @@ public abstract class EditorResource {
     @GET
     @Produces(APPLICATION_JSON_UTF8)
     @Path("available-types-tree/{databaseId}")
-    public Response getAvailableTypesTree(@Context UriInfo uriInfo, 
-            @PathParam("databaseId") final String databaseId) throws Exception {
+    public Response getAvailableTypesTree(@PathParam("databaseId") final String databaseId) throws Exception {
 
         PrestoSession session = createSession(databaseId);
         PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
