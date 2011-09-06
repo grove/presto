@@ -295,7 +295,7 @@ public class Presto {
         if (isNewTopic) {
             String valuesAssignmentType = field.getValuesAssignmentType();
             if (valuesAssignmentType.equals("initial")) {
-                fieldValues = getValuesAssignments(topic, type, field);                    
+                fieldValues = getDefaultValues(topic, type, field);                    
             } else {
                 fieldValues = Collections.emptyList();
             }
@@ -582,25 +582,26 @@ public class Presto {
             String valuesAssignmentType = field.getValuesAssignmentType();
             if (valuesAssignmentType.equals("initial")) {
                 if (isNewTopic) {
-                    update.setValues(field, getValuesAssignments(topic, type, field));                    
+                    update.setValues(field, getDefaultValues(topic, type, field));                    
                 }
             } else if (valuesAssignmentType.equals("always")) {
-                update.setValues(field, getValuesAssignments(topic, type, field));
+                update.setValues(field, getDefaultValues(topic, type, field));
             }
         }        
     }
     
-    protected List<Object> getValuesAssignments(PrestoTopic topic, PrestoType type, PrestoField field) {
+    protected List<Object> getDefaultValues(PrestoTopic topic, PrestoType type, PrestoField field) {
         List<Object> result = new ArrayList<Object>();
         for (String value : field.getValues()) {
-            // get values from: topic field, session properties
+            // TODO: get values from: topic field, session properties
             
             if (value != null) {
                 if (value.charAt(0) == '$') {
                     String variable = value.substring(1);
-                    String varValue = getVariableValue(variable);
-                    if (varValue != null) {
-                        result.add(varValue);
+                    for (String varValue : getVariableValues(variable)) {
+                        if (varValue != null) {
+                            result.add(varValue);
+                        }
                     }
                 } else {
                     result.add(value);
@@ -610,8 +611,8 @@ public class Presto {
         return result;
     }
     
-    protected String getVariableValue(String variable) {
-        return null; // should be overridden
+    protected Collection<String> getVariableValues(String variable) {
+        return Collections.emptyList(); // should be overridden
     }
     
     private Collection<Object> resolveValues(PrestoFieldUsage field, Collection<Value> values, boolean resolveEmbedded) {

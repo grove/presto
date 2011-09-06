@@ -3,6 +3,7 @@ package net.ontopia.presto.jaxrs;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -698,19 +699,19 @@ public abstract class EditorResource {
                 return fieldData;
             }
             @Override
-            protected String getVariableValue(String variable) {
-                return EditorResource.this.getVariableValue(variable);
+            protected Collection<String> getVariableValues(String variable) {
+                return EditorResource.this.getVariableValues(variable);
             }
         };
     }
     
-    protected String getVariableValue(String variable) {
+    protected Collection<String> getVariableValues(String variable) {
         if (variable.equals("now")) {
-            return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new Date());
+            return Collections.singletonList(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new Date()));
         } else if (variable.equals("username")) {
-            return request.getRemoteUser();
+            return Collections.singletonList(request.getRemoteUser());
         }
-        return null;
+        return Collections.emptyList();
     }
     
     protected abstract Collection<String> getDatabaseIds();

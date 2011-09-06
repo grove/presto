@@ -297,9 +297,9 @@ public class PojoSchemaModel {
                         }
                         
                         // valueAssignmentType
-                        if (fieldConfig.has("valueAssignmentType")) {
-                            String valueAssignmentType = fieldConfig.get("valueAssignmentType").getTextValue();
-                            field.setValuesAssignmentType(valueAssignmentType);
+                        if (fieldConfig.has("valuesAssignmentType")) {
+                            String valuesAssignmentType = fieldConfig.get("valuesAssignmentType").getTextValue();
+                            field.setValuesAssignmentType(valuesAssignmentType);
                             
                             // values
                             if (fieldConfig.has("values")) {

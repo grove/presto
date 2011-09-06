@@ -131,16 +131,11 @@ public class CouchUpdate implements PrestoUpdate, CouchChangeSet.CouchChange {
                 topic.updateNameProperty(values);
             }
         }
-//        
-//        if (isNew) {
-//            dataProvider.create(topic);
-//        } else {
-//            dataProvider.update(topic);      
-//        }
 
 //        for (Map.Entry<PrestoField,Collection<Object>> entry : addFieldValues.entrySet()) {
-//            dataProvider.addInverseFieldValue(isNew, topic, entry.getKey(), entry.getValue());      
+//            changeSet.addInverseFieldValue(isNew, topic, entry.getKey(), entry.getValue());      
 //        }
+        
         for (Map.Entry<PrestoField,Collection<Object>> entry : remFieldValues.entrySet()) {
             PrestoField field = entry.getKey();
             Collection<Object> values = entry.getValue();
@@ -154,7 +149,7 @@ public class CouchUpdate implements PrestoUpdate, CouchChangeSet.CouchChange {
                     }
                 }
 //            } else {
-//                dataProvider.removeInverseFieldValue(isNew, topic, field, entry.getValue());
+//                changeSet.removeInverseFieldValue(isNew, topic, field, entry.getValue());
             }
         }
     }
