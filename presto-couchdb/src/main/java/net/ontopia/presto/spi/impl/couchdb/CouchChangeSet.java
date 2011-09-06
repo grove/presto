@@ -2,8 +2,11 @@ package net.ontopia.presto.spi.impl.couchdb;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoField;
@@ -26,7 +29,6 @@ public class CouchChangeSet implements PrestoChangeSet {
     static interface CouchChange {
         enum Type {CREATE, UPDATE, DELETE};
         Type getType();
-        void applyUpdate();
         CouchTopic getTopic();
     }
 
@@ -38,10 +40,6 @@ public class CouchChangeSet implements PrestoChangeSet {
         public Type getType() {
             return Type.DELETE;
         }
-        public void applyUpdate() {
-            ObjectNode data = topic.getData();
-            data.put("_deleted", true);
-        }
         public CouchTopic getTopic() {
             return topic;
         }
@@ -49,6 +47,8 @@ public class CouchChangeSet implements PrestoChangeSet {
 
     private final CouchDataProvider dataProvider;
 
+    private final Set<PrestoTopic> deleted = new HashSet<PrestoTopic>();
+    private final Map<PrestoTopic,CouchUpdate> updates = new HashMap<PrestoTopic,CouchUpdate>();
     private final List<CouchChange> changes = new ArrayList<CouchChange>();
 
     private boolean saved;
@@ -68,8 +68,12 @@ public class CouchChangeSet implements PrestoChangeSet {
     }
 
     public PrestoUpdate updateTopic(PrestoTopic topic, PrestoType type) {
-        CouchUpdate update = new CouchUpdate(this, (CouchTopic)topic, type);
-        changes.add(update);
+        CouchUpdate update = updates.get(topic);
+        if (update == null) {
+            update = new CouchUpdate(this, (CouchTopic)topic, type);
+            changes.add(update);
+            updates.put(topic, update);
+        }
         return update;
     }
 
@@ -78,6 +82,13 @@ public class CouchChangeSet implements PrestoChangeSet {
     }
 
     private void deleteTopic(PrestoTopic topic, PrestoType type, boolean removeDependencies) {
+        if (deleted.contains(topic)) {
+            return;
+        }
+
+        changes.add(new CouchDelete((CouchTopic)topic));
+        deleted.add(topic);
+        
         // find and remove dependencies
         if (removeDependencies) {
             removeDependencies(topic, type);
@@ -89,8 +100,6 @@ public class CouchChangeSet implements PrestoChangeSet {
         //                removeInverseFieldValue(isNew, topic, field, topic.getValues(field));
         //            }
         //        }
-
-        changes.add(new CouchDelete((CouchTopic)topic));
     }
 
     private void removeDependencies(PrestoTopic topic, PrestoType type) {
@@ -130,31 +139,37 @@ public class CouchChangeSet implements PrestoChangeSet {
             }
         }
     }
-    
+
     public void save() {
         if (saved) {
             log.warn("PrestoChangeSet.save() method called multiple times.");
             return; // idempotent
         }
         this.saved = true;
-        CouchChange[] changesArray = changes.toArray(new CouchChange[changes.size()]);
-        for (CouchChange change : changesArray) {
-            change.applyUpdate();
-        }
+
         if (changes.size() == 1) {
             CouchChange change = changes.get(0);
+            CouchTopic topic = change.getTopic();
             if (change.getType().equals(CouchChange.Type.CREATE)) {
-                create(change.getTopic());                
+                create(topic);                
             } else if (change.getType().equals(CouchChange.Type.UPDATE)) {
-                update(change.getTopic());                
+                if (!deleted.contains(topic)) {
+                    update(topic);
+                }
             } else if (change.getType().equals(CouchChange.Type.DELETE)) {
-                delete(change.getTopic());                
+                delete(topic);                
             }
         } else if (changes.size() > 1) {
             CouchDbConnector couchConnector = dataProvider.getCouchConnector();
             List<ObjectNode> bulkDocuments = new ArrayList<ObjectNode>();
             for (CouchChange change : changes) {
                 CouchTopic topic = change.getTopic();
+
+                if (change.getType().equals(CouchChange.Type.DELETE)) {
+                    ObjectNode data = topic.getData();
+                    data.put("_deleted", true);
+                }
+
                 log.info("Bulk update document: " + change.getType() + " " + topic.getId());
                 bulkDocuments.add(topic.getData());
             }
@@ -192,42 +207,42 @@ public class CouchChangeSet implements PrestoChangeSet {
         }
     }
 
-//  // inverse fields (foreign keys)
+//    // inverse fields (foreign keys)
 //
-//  void addInverseFieldValue(boolean isNew, PrestoTopic topic, PrestoField field, Collection<?> values) {
-//      String inverseFieldId = field.getInverseFieldId();
-//      if (inverseFieldId != null) {
-//          for (Object value : values) {
+//    void addInverseFieldValue(boolean isNew, PrestoTopic topic, PrestoField field, Collection<?> values) {
+//        String inverseFieldId = field.getInverseFieldId();
+//        if (inverseFieldId != null) {
+//            for (Object value : values) {
 //
-//              CouchTopic valueTopic = (CouchTopic)value;
-//              PrestoType type = field.getSchemaProvider().getTypeById(valueTopic.getTypeId());
-//              PrestoField inverseField = type.getFieldById(inverseFieldId);
+//                CouchTopic valueTopic = (CouchTopic)value;
+//                PrestoType valueType = field.getSchemaProvider().getTypeById(valueTopic.getTypeId());
+//                PrestoField inverseField = valueType.getFieldById(inverseFieldId);
 //
-//              int index = -1;
-//              valueTopic.addValue(inverseField, Collections.singleton(topic), index);
-//              update(valueTopic);      
-//          }
-//      }
-//  }
+//                PrestoUpdate inverseUpdate = updateTopic(valueTopic, valueType);
+//                int index = -1;
+//                inverseUpdate.addValues(inverseField, Collections.singleton(topic), index);
+//            }
+//        }
+//    }
 //
-//  void removeInverseFieldValue(boolean isNew, PrestoTopic topic, PrestoField field, Collection<?> values) {
-//      if (!isNew) {
-//          String inverseFieldId = field.getInverseFieldId();
-//          if (inverseFieldId != null) {
-//              for (Object value : values) {
+//    void removeInverseFieldValue(boolean isNew, PrestoTopic topic, PrestoField field, Collection<?> values) {
+//        if (!isNew) {
+//            String inverseFieldId = field.getInverseFieldId();
+//            if (inverseFieldId != null) {
+//                for (Object value : values) {
 //
-//                  CouchTopic valueTopic = (CouchTopic)value;
-//                  PrestoType valueType = field.getSchemaProvider().getTypeById(valueTopic.getTypeId());
-//                  if (field.isCascadingDelete() && valueType.isRemovableCascadingDelete()) {
-//                      deleteTopic(valueTopic, valueType);
-//                  } else {          
-//                      PrestoField inverseField = valueType.getFieldById(inverseFieldId);
-//                      valueTopic.removeValue(inverseField, Collections.singleton(topic));
-//                      update(valueTopic);
-//                  }
-//              }
-//          }
-//      }
-//  }
+//                    CouchTopic valueTopic = (CouchTopic)value;
+//                    PrestoType valueType = field.getSchemaProvider().getTypeById(valueTopic.getTypeId());
+//                    if (field.isCascadingDelete() && valueType.isRemovableCascadingDelete()) {
+//                        deleteTopic(valueTopic, valueType);
+//                    } else {          
+//                        PrestoField inverseField = valueType.getFieldById(inverseFieldId);
+//                        PrestoUpdate inverseUpdate = updateTopic(valueTopic, valueType);
+//                        inverseUpdate.removeValues(inverseField, Collections.singleton(topic));
+//                    }
+//                }
+//            }
+//        }
+//    }
 
 }

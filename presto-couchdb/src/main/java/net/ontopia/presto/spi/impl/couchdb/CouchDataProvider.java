@@ -25,8 +25,10 @@ import org.slf4j.LoggerFactory;
 
 public abstract class CouchDataProvider implements PrestoDataProvider {
 
-    private Logger log = LoggerFactory.getLogger(CouchDataProvider.class.getName());
+    private static Logger log = LoggerFactory.getLogger(CouchDataProvider.class.getName());
 
+    static final int INDEX_DEFAULT = -1;
+    
     private final ObjectMapper mapper = new ObjectMapper();
 
     protected CouchDbConnector db;
