@@ -149,4 +149,8 @@ public class PojoFieldUsage implements PrestoFieldUsage {
         return field.getValues();
     }
 
+    public String getInverseFieldId() {
+        return field.getInverseFieldId();
+    }
+
 }

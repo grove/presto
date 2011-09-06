@@ -249,6 +249,10 @@ public class PojoSchemaModel {
                         if (fieldConfig.has("cascadingDelete")) {
                             field.setCascadingDelete(fieldConfig.get("cascadingDelete").getBooleanValue());
                         }
+                        // inverseFieldId
+                        if (fieldConfig.has("inverseFieldId")) {
+                            field.setInverseFieldId(fieldConfig.get("inverseFieldId").getTextValue());
+                        }
                         // isAddable
                         if (fieldConfig.has("addable")) {
                             field.setAddable(fieldConfig.get("addable").getBooleanValue());

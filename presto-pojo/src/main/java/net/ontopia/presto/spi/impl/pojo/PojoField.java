@@ -33,6 +33,7 @@ public class PojoField implements PrestoField {
     private boolean isPageable;
     private int limit;
     private boolean isCascadingDelete;
+    private String inverseFieldId;
     private boolean isAddable = true;
     private boolean isRemovable = true;
     private boolean isCreatable = true;
@@ -285,6 +286,14 @@ public class PojoField implements PrestoField {
 
     protected void setValues(Collection<String> values) {
         this.values = values;
+    }
+
+    public String getInverseFieldId() {
+        return inverseFieldId;
+    }
+    
+    void setInverseFieldId(String inverseFieldId) {
+        this.inverseFieldId = inverseFieldId;
     }
     
 }

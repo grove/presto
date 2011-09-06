@@ -38,6 +38,8 @@ public interface PrestoField {
 
     boolean isCascadingDelete();
 
+    String getInverseFieldId();
+    
     // reference fields
 
     boolean isCreatable();

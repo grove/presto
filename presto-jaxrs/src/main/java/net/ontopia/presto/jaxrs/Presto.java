@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 
 public class Presto {
 
-    private Logger log = LoggerFactory.getLogger(Presto.class.getName());
+    private static Logger log = LoggerFactory.getLogger(Presto.class.getName());
 
     private static final int DEFAULT_LIMIT = 100;
 

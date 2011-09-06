@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 
 public class CouchQueryResolver {
 
-    private Logger log = LoggerFactory.getLogger(CouchQueryResolver.class.getName());
+    private static Logger log = LoggerFactory.getLogger(CouchQueryResolver.class.getName());
 
     private final PrestoSchemaProvider schemaProvider;
     private final CouchDataProvider dataProvider;
