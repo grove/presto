@@ -88,4 +88,8 @@ public class CouchBucketTopic extends CouchTopic {
         return bucket;
     }
 
+    public String toString() {
+        return "CouchBucketTopic[" + getId() + "]";
+    }
+    
 }

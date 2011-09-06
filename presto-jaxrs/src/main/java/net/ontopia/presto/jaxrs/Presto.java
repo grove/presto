@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 
 public class Presto {
 
-    private Logger log = LoggerFactory.getLogger(Presto.class.getName());
+    private static Logger log = LoggerFactory.getLogger(Presto.class.getName());
 
     private static final int DEFAULT_LIMIT = 100;
 
@@ -293,7 +293,12 @@ public class Presto {
 
         List<? extends Object> fieldValues;
         if (isNewTopic) {
-            fieldValues = Collections.emptyList();
+            String valuesAssignmentType = field.getValuesAssignmentType();
+            if (valuesAssignmentType.equals("initial")) {
+                fieldValues = getDefaultValues(topic, type, field);                    
+            } else {
+                fieldValues = Collections.emptyList();
+            }
         } else {
             // server-side paging (only if not sorting)
             if (field.isPageable() && !field.isSorted()) {
@@ -460,7 +465,7 @@ public class Presto {
 
         List<Value> values = new ArrayList<Value>(availableFieldValues.size());
         for (PrestoTopic value : availableFieldValues) {
-            values.add(new Presto(session, uriInfo).getAllowedTopicFieldValue(field, value));
+            values.add(getAllowedTopicFieldValue(field, value));
         }
         result.setValues(values);
 
@@ -563,10 +568,53 @@ public class Presto {
                 }
             }
         }
+        
+        assignDefaultValues(topic, type, update);
+        
         changeSet.save();
         return update.getTopicAfterUpdate();
     }
 
+    protected void assignDefaultValues(PrestoTopic topic, PrestoType type, PrestoUpdate update) {
+        boolean isNewTopic = (topic == null);
+        // assign [initial] values
+        for (PrestoField field : type.getFields()) {
+            String valuesAssignmentType = field.getValuesAssignmentType();
+            if (valuesAssignmentType.equals("initial")) {
+                if (isNewTopic) {
+                    update.setValues(field, getDefaultValues(topic, type, field));                    
+                }
+            } else if (valuesAssignmentType.equals("always")) {
+                update.setValues(field, getDefaultValues(topic, type, field));
+            }
+        }        
+    }
+    
+    protected List<Object> getDefaultValues(PrestoTopic topic, PrestoType type, PrestoField field) {
+        List<Object> result = new ArrayList<Object>();
+        for (String value : field.getValues()) {
+            // TODO: get values from: topic field, session properties
+            
+            if (value != null) {
+                if (value.charAt(0) == '$') {
+                    String variable = value.substring(1);
+                    for (String varValue : getVariableValues(variable)) {
+                        if (varValue != null) {
+                            result.add(varValue);
+                        }
+                    }
+                } else {
+                    result.add(value);
+                }
+            }
+        }
+        return result;
+    }
+    
+    protected Collection<String> getVariableValues(String variable) {
+        return Collections.emptyList(); // should be overridden
+    }
+    
     private Collection<Object> resolveValues(PrestoFieldUsage field, Collection<Value> values, boolean resolveEmbedded) {
         Collection<Object> result = new ArrayList<Object>(values.size());
 

@@ -25,4 +25,8 @@ public class CouchDefaultTopic extends CouchTopic {
         getData().put(field.getActualId(), value);
     }
 
+    public String toString() {
+        return "CouchDefaultTopic[" + getId() + "]";
+    }
+
 }

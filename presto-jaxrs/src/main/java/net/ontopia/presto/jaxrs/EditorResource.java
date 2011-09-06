@@ -1,7 +1,10 @@
 package net.ontopia.presto.jaxrs;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -48,8 +51,8 @@ public abstract class EditorResource {
 
     public final static String APPLICATION_JSON_UTF8 = "application/json;charset=UTF-8";
 
-    @Context HttpServletRequest req;
-    @Context UriInfo uriInfo;
+    private @Context HttpServletRequest request;
+    private @Context UriInfo uriInfo;
     
     @GET
     @Produces(APPLICATION_JSON_UTF8)
@@ -542,7 +545,7 @@ public abstract class EditorResource {
     @GET
     @Produces(APPLICATION_JSON_UTF8)
     @Path("available-field-values/{databaseId}/{topicId}/{viewId}/{fieldId}")
-    public Response getAvailableFieldValues(
+    public Response getAvailableFieldValues( 
             @PathParam("databaseId") final String databaseId, 
             @PathParam("topicId") final String topicId, 
             @PathParam("viewId") final String viewId,
@@ -586,7 +589,7 @@ public abstract class EditorResource {
     @GET
     @Produces(APPLICATION_JSON_UTF8)
     @Path("available-field-types/{databaseId}/{topicId}/{viewId}/{fieldId}")
-    public Response getAvailableFieldTypes(
+    public Response getAvailableFieldTypes( 
             @PathParam("databaseId") final String databaseId, 
             @PathParam("topicId") final String topicId, 
             @PathParam("viewId") final String viewId,
@@ -694,7 +697,20 @@ public abstract class EditorResource {
                 }
                 return fieldData;
             }
+            @Override
+            protected Collection<String> getVariableValues(String variable) {
+                return EditorResource.this.getVariableValues(variable);
+            }
         };
+    }
+    
+    protected Collection<String> getVariableValues(String variable) {
+        if (variable.equals("now")) {
+            return Collections.singletonList(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new Date()));
+        } else if (variable.equals("username")) {
+            return Collections.singletonList(request.getRemoteUser());
+        }
+        return Collections.emptyList();
     }
     
     protected abstract Collection<String> getDatabaseIds();

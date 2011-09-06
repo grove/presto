@@ -25,8 +25,10 @@ import org.slf4j.LoggerFactory;
 
 public abstract class CouchDataProvider implements PrestoDataProvider {
 
-    private Logger log = LoggerFactory.getLogger(CouchDataProvider.class.getName());
+    private static Logger log = LoggerFactory.getLogger(CouchDataProvider.class.getName());
 
+    static final int INDEX_DEFAULT = -1;
+    
     private final ObjectMapper mapper = new ObjectMapper();
 
     protected CouchDbConnector db;
@@ -132,43 +134,5 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
     abstract CouchTopic existing(ObjectNode doc);
 
     abstract CouchTopic newInstance(PrestoType type);
-
-//    // inverse fields (foreign keys)
-//
-//    void addInverseFieldValue(boolean isNew, PrestoTopic topic, PrestoField field, Collection<?> values) {
-//        String inverseFieldId = field.getInverseFieldId();
-//        if (inverseFieldId != null) {
-//            for (Object value : values) {
-//
-//                CouchTopic valueTopic = (CouchTopic)value;
-//                PrestoType type = field.getSchemaProvider().getTypeById(valueTopic.getTypeId());
-//                PrestoField inverseField = type.getFieldById(inverseFieldId);
-//
-//                int index = -1;
-//                valueTopic.addValue(inverseField, Collections.singleton(topic), index);
-//                update(valueTopic);      
-//            }
-//        }
-//    }
-//
-//    void removeInverseFieldValue(boolean isNew, PrestoTopic topic, PrestoField field, Collection<?> values) {
-//        if (!isNew) {
-//            String inverseFieldId = field.getInverseFieldId();
-//            if (inverseFieldId != null) {
-//                for (Object value : values) {
-//
-//                    CouchTopic valueTopic = (CouchTopic)value;
-//                    PrestoType valueType = field.getSchemaProvider().getTypeById(valueTopic.getTypeId());
-//                    if (field.isCascadingDelete() && valueType.isRemovableCascadingDelete()) {
-//                        deleteTopic(valueTopic, valueType);
-//                    } else {          
-//                        PrestoField inverseField = valueType.getFieldById(inverseFieldId);
-//                        valueTopic.removeValue(inverseField, Collections.singleton(topic));
-//                        update(valueTopic);
-//                    }
-//                }
-//            }
-//        }
-//    }
 
 }
