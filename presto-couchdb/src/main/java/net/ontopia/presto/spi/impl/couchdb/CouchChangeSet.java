@@ -229,8 +229,7 @@ public class CouchChangeSet implements PrestoChangeSet {
                     PrestoField inverseField = valueType.getFieldById(inverseFieldId);
     
                     PrestoUpdate inverseUpdate = updateTopic(valueTopic, valueType);
-                    int index = -1;
-                    inverseUpdate.addValues(inverseField, Collections.singleton(topic), index);
+                    inverseUpdate.addValues(inverseField, Collections.singleton(topic), CouchDataProvider.INDEX_DEFAULT);
                 }
             }
         }
