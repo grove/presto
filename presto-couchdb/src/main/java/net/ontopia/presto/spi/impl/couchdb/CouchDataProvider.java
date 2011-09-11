@@ -76,9 +76,9 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
 
         ViewResult viewResult = getCouchConnector().queryView(query);
         for (Row row : viewResult.getRows()) {
-            JsonNode jsonNode = row.getDocAsNode();
-            if (jsonNode.isObject()) {
-                result.add(existing((ObjectNode)jsonNode));
+            JsonNode docNode = row.getDocAsNode();
+            if (docNode.isObject()) {
+                result.add(existing((ObjectNode)docNode));
             }
         }
         return result;
@@ -97,12 +97,15 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
             List<PrestoTopic> result = new ArrayList<PrestoTopic>(typeIds.size());
             ViewQuery query = new ViewQuery()
             .designDocId(designDocId)
-            .viewName("by-type").includeDocs(true).keys(typeIds);
+            .viewName("by-type")
+            .includeDocs(true).keys(typeIds);
     
             ViewResult viewResult = getCouchConnector().queryView(query);
             for (Row row : viewResult.getRows()) {
-                ObjectNode doc = (ObjectNode)row.getDocAsNode();        
-                result.add(existing(doc));
+                ObjectNode docNode = (ObjectNode)row.getDocAsNode();
+                if (docNode.isObject()) {
+                    result.add(existing(docNode));
+                }
             }
             Collections.sort(result, new Comparator<PrestoTopic>() {
                 public int compare(PrestoTopic o1, PrestoTopic o2) {

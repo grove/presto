@@ -148,28 +148,28 @@ public class CouchQueryResolver {
 
         if (includeDocs) {
             for (Row row : viewResult.getRows()) {
-                JsonNode value = (JsonNode)row.getDocAsNode();
-                if (value != null) {
-                    if (value.isObject()) {
-                        result.add(dataProvider.existing((ObjectNode)value));
+                JsonNode docNode = (JsonNode)row.getDocAsNode();
+                if (docNode != null) {
+                    if (docNode.isObject()) {
+                        result.add(dataProvider.existing((ObjectNode)docNode));
                     } else {
-                        result.add(value.getTextValue());
+                        result.add(docNode.getTextValue());
                     }
                 }
             }
         } else {
             List<String> values = new ArrayList<String>();        
             for (Row row : viewResult.getRows()) {
-                JsonNode valueAsNode = row.getValueAsNode();
-                if (valueAsNode == null) {
-                    // do nothing
-                } else if (valueAsNode.isTextual()) {
-                    String textValue = valueAsNode.getTextValue();
-                    if (textValue != null) {
-                        result.add(textValue);
+                JsonNode valueNode = row.getValueAsNode();
+                if (valueNode != null) {
+                    if (valueNode.isTextual()) {
+                        String textValue = valueNode.getTextValue();
+                        if (textValue != null) {
+                            result.add(textValue);
+                        }
+                    } else {
+                        result.add(valueNode.toString());
                     }
-                } else {
-                    result.add(valueAsNode.toString());
                 }
             }
             if (isReference) {
