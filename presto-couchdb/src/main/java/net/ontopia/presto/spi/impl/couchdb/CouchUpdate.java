@@ -108,12 +108,12 @@ public class CouchUpdate implements PrestoUpdate, CouchChangeSet.CouchChange {
         }
         
         if (addValues != null && !addValues.isEmpty()) {
-            log.info("+" + topic.getId() + " " + field.getId() + " " + addValues);
+            log.info("+" + (isNew ? null : topic.getId()) + " " + field.getId() + " " + addValues);
             changeSet.addInverseFieldValue(isNew, topic, field, addValues);              
         }
         
         if (remValues != null && !remValues.isEmpty()) {
-            log.info("-" + topic.getId() + " " + field.getId() + " " + remValues);
+            log.info("-" + (isNew ? null : topic.getId()) + " " + field.getId() + " " + remValues);
             if (field.isReferenceField() && field.isCascadingDelete()) {
                 // perform cascading delete
                 for (Object value : remValues) {
