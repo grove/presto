@@ -7,7 +7,7 @@
     <version>0.3-SNAPSHOT</version>
   </parent>
 
-  <name>Presto - Pojo implementation</name>
+  <name>Presto - POJO schema provider implementation</name>
   <groupId>net.ontopia.presto</groupId>
   <artifactId>presto-pojo</artifactId>
   <packaging>jar</packaging>

@@ -98,6 +98,7 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
             ViewQuery query = new ViewQuery()
             .designDocId(designDocId)
             .viewName("by-type")
+            .staleOk(true)
             .includeDocs(true).keys(typeIds);
     
             ViewResult viewResult = getCouchConnector().queryView(query);

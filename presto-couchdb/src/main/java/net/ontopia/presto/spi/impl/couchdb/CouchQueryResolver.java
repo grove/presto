@@ -88,6 +88,7 @@ public class CouchQueryResolver {
         ViewQuery query = new ViewQuery()
         .designDocId(designDocId)
         .viewName(viewName)
+        .staleOk(true)
         .reduce(false)
         .includeDocs(includeDocs);
 
@@ -189,6 +190,7 @@ public class CouchQueryResolver {
                 .viewName(viewName)                
                 .startKey(startKey)
                 .endKey(endKey)
+                .staleOk(true)
                 .reduce(true);
                 ViewResult countViewResult = dataProvider.getCouchConnector().queryView(countQuery);
                 for (Row row : countViewResult.getRows()) {
