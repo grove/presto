@@ -253,6 +253,14 @@ public class PojoSchemaModel {
                         if (fieldConfig.has("inverseFieldId")) {
                             field.setInverseFieldId(fieldConfig.get("inverseFieldId").getTextValue());
                         }
+                        // isEdittable
+                        if (fieldConfig.has("editable")) {
+                            field.setEditable(fieldConfig.get("editable").getBooleanValue());
+                        }
+                        // isCreatable
+                        if (fieldConfig.has("creatable")) {
+                            field.setCreatable(fieldConfig.get("creatable").getBooleanValue());
+                        }
                         // isAddable
                         if (fieldConfig.has("addable")) {
                             field.setAddable(fieldConfig.get("addable").getBooleanValue());
@@ -260,10 +268,6 @@ public class PojoSchemaModel {
                         // isRemovable
                         if (fieldConfig.has("removable")) {
                             field.setRemovable(fieldConfig.get("removable").getBooleanValue());
-                        }
-                        // isCreatable
-                        if (fieldConfig.has("creatable")) {
-                            field.setCreatable(fieldConfig.get("creatable").getBooleanValue());
                         }
                         // interfaceControl
                         if (fieldConfig.has("interfaceControl")) {

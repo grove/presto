@@ -14,7 +14,11 @@ public class FieldData {
     
     private String id;
     private String name;
+    
     private Boolean readOnly;
+    private Boolean creatable;
+    private Boolean editable;
+
     private Boolean embeddable;
     private Boolean pageable;
 
@@ -102,6 +106,22 @@ public class FieldData {
 
     public Boolean isReadOnly() {
         return readOnly;
+    }
+
+    public void setCreatable(Boolean creatable) {
+        this.creatable = creatable;
+    }
+
+    public Boolean isCreatable() {
+        return creatable;
+    }
+
+    public void setEditable(Boolean editable) {
+        this.editable = editable;
+    }
+
+    public Boolean isEditable() {
+        return editable;
     }
 
     public Boolean isEmbeddable() {

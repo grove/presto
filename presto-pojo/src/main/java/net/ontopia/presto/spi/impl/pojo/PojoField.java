@@ -34,9 +34,10 @@ public class PojoField implements PrestoField {
     private int limit;
     private boolean isCascadingDelete;
     private String inverseFieldId;
+    private boolean isEditable = true;
+    private boolean isCreatable = true;
     private boolean isAddable = true;
     private boolean isRemovable = true;
-    private boolean isCreatable = true;
     private String interfaceControl;
     private Object extra;
 
@@ -130,6 +131,14 @@ public class PojoField implements PrestoField {
     public boolean isCascadingDelete() {
         return isCascadingDelete;
     }
+    
+    public boolean isEditable() {
+        return isEditable;
+    }
+    
+    public boolean isCreatable() {
+        return isCreatable;
+    }
 
     public boolean isAddable() {
         return isAddable;
@@ -137,10 +146,6 @@ public class PojoField implements PrestoField {
 
     public boolean isRemovable() {
         return isRemovable;
-    }
-
-    public boolean isCreatable() {
-        return isCreatable;
     }
 
     public String getInterfaceControl() {
@@ -239,6 +244,14 @@ public class PojoField implements PrestoField {
     public void setCascadingDelete(boolean isCascadingDelete) {
         this.isCascadingDelete = isCascadingDelete;
     }
+    
+    public void setEditable(boolean isEditable) {
+        this.isEditable = isEditable;
+    }
+    
+    public void setCreatable(boolean isCreatable) {
+        this.isCreatable = isCreatable;
+    }
 
     public void setAddable(boolean isAddable) {
         this.isAddable = isAddable;
@@ -246,10 +259,6 @@ public class PojoField implements PrestoField {
 
     public void setRemovable(boolean isRemovable) {
         this.isRemovable = isRemovable;
-    }
-
-    public void setCreatable(boolean isCreatable) {
-        this.isCreatable = isCreatable;
     }
 
     public void setInterfaceControl(String interfaceControl) {

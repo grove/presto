@@ -9,6 +9,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class Value {
 
+    private Boolean editable;
     private Boolean removable;
 
     // primitive
@@ -20,15 +21,26 @@ public class Value {
     private Topic embedded;
     private Collection<Value> values;
 
+    public void setEditable(Boolean editable) {
+        this.editable = editable;
+    }
+
+    public Boolean isEditable() {
+        return editable;
+    }
+
     public void setRemovable(Boolean removable) {
         this.removable = removable;
     }
+
     public Boolean isRemovable() {
         return removable;
     }
+    
     public void setValue(String value) {
         this.value = value;
     }
+    
     public String getValue() {
         return value;
     }

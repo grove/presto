@@ -112,6 +112,14 @@ public class PojoFieldUsage implements PrestoFieldUsage {
     public boolean isCascadingDelete() {
         return field.isCascadingDelete();
     }
+    
+    public boolean isEditable() {
+        return field.isEditable();
+    }
+    
+    public boolean isCreatable() {
+        return field.isCreatable();
+    }
 
     public boolean isAddable() {
         return field.isAddable();
@@ -119,10 +127,6 @@ public class PojoFieldUsage implements PrestoFieldUsage {
 
     public boolean isRemovable() {
         return field.isRemovable();
-    }
-
-    public boolean isCreatable() {
-        return field.isCreatable();
     }
 
     public String getInterfaceControl() {

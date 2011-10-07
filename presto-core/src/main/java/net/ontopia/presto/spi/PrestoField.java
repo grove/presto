@@ -42,6 +42,8 @@ public interface PrestoField {
     
     // reference fields
 
+    boolean isEditable();
+    
     boolean isCreatable();
     
     boolean isAddable();
