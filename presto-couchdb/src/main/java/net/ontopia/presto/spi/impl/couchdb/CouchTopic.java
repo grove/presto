@@ -15,7 +15,7 @@ import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
 
-public abstract class CouchTopic implements PrestoTopic {
+public class CouchTopic implements PrestoTopic {
 
     final static int DEFAULT_LIMIT = 100;
 
@@ -68,10 +68,14 @@ public abstract class CouchTopic implements PrestoTopic {
 
     // json data access strategy
 
-    protected abstract ArrayNode getFieldValue(PrestoField field);
+    protected ArrayNode getFieldValue(PrestoField field) {
+        return getDataProvider().getFieldStrategy().getFieldValue(getData(), field);
+    }
 
-    protected abstract void putFieldValue(PrestoField field, ArrayNode value);
-
+    protected void putFieldValue(PrestoField field, ArrayNode value) {
+        getDataProvider().getFieldStrategy().putFieldValue(getData(), field, value);
+    }
+    
     // methods for retrieving the state of a couchdb document
 
     public List<Object> getValues(PrestoField field) {

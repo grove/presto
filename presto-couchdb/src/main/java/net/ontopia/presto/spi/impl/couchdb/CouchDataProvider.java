@@ -28,15 +28,35 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
     private static Logger log = LoggerFactory.getLogger(CouchDataProvider.class.getName());
 
     static final int INDEX_DEFAULT = -1;
+
+    private final CouchDbConnector db;
+    private final ObjectMapper mapper;
+    private CouchFieldStrategy fieldStrategy;
     
-    private final ObjectMapper mapper = new ObjectMapper();
-
-    protected CouchDbConnector db;
-
     protected String designDocId = "_design/presto";
 
     public CouchDataProvider(CouchDbConnector db) {
         this.db = db;
+        this.mapper = createObjectMapper();
+        this.fieldStrategy = createFieldStrategy();
+    }
+
+    protected ObjectMapper createObjectMapper() {
+        return new ObjectMapper();
+    }
+    
+    abstract protected CouchFieldStrategy createFieldStrategy();
+
+    CouchFieldStrategy getFieldStrategy() {
+        return fieldStrategy;
+    }
+    
+    protected CouchTopic existing(ObjectNode doc) {
+        return doc == null ? null : new CouchTopic(this, doc);
+    }
+
+    protected CouchTopic newInstance(PrestoType type) {
+        return new CouchTopic(this, CouchTopic.newInstanceObjectNode(this, type));
     }
 
     protected CouchDbConnector getCouchConnector() {
@@ -135,8 +155,11 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
     public void close() {
     }
 
-    abstract CouchTopic existing(ObjectNode doc);
+    // builder pattern
 
-    abstract CouchTopic newInstance(PrestoType type);
+    public CouchDataProvider designDocId(String designDocId) {    
+        this.designDocId = designDocId;
+        return this;
+    }
 
 }
