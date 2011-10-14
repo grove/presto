@@ -10,6 +10,9 @@ import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
+import net.ontopia.presto.spi.utils.PrestoPagedValues;
+import net.ontopia.presto.spi.utils.PrestoContext;
+import net.ontopia.presto.spi.utils.PrestoFieldResolver;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;
@@ -50,7 +53,7 @@ public class CouchQueryResolver implements PrestoFieldResolver {
         if (resolveItem.has("key")) {
             keys = context.replaceKeyVariables(objects, resolveItem.get("key"));
             if (keys.isEmpty()) {
-                return new CouchPagedValues(Collections.emptyList(), 0, _limit,0);
+                return new PrestoPagedValues(Collections.emptyList(), 0, _limit,0);
             }
             query = query.keys(keys);
 
@@ -64,7 +67,7 @@ public class CouchQueryResolver implements PrestoFieldResolver {
             }
             
             if (startKeys.isEmpty()) {
-                return new CouchPagedValues(Collections.emptyList(), 0, _limit,0);
+                return new PrestoPagedValues(Collections.emptyList(), 0, _limit,0);
             }
             
             if (startKeys.size() > 1) {
@@ -151,7 +154,7 @@ public class CouchQueryResolver implements PrestoFieldResolver {
                 }
             }
         }
-        return new CouchPagedValues(result, offset, limit, totalSize);
+        return new PrestoPagedValues(result, offset, limit, totalSize);
     }
 
 }

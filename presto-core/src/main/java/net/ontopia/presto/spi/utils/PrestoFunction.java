@@ -1,4 +1,4 @@
-package net.ontopia.presto.spi.impl.couchdb;
+package net.ontopia.presto.spi.utils;
 
 import java.util.Collection;
 import java.util.List;

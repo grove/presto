@@ -1,17 +1,17 @@
-package net.ontopia.presto.spi.impl.couchdb;
+package net.ontopia.presto.spi.utils;
 
 import java.util.List;
 
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
 
-public class CouchPagedValues implements PagedValues {
+public class PrestoPagedValues implements PagedValues {
 
     private final List<Object> values;
     private final int offset;
     private final int limit;
     private final int total;
 
-    CouchPagedValues(List<Object> values, int offset, int limit, int total) {
+    public PrestoPagedValues(List<Object> values, int offset, int limit, int total) {
         this.values = values;
         this.offset = offset;
         this.limit = limit;

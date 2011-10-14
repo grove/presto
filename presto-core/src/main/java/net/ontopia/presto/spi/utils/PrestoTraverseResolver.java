@@ -1,4 +1,4 @@
-package net.ontopia.presto.spi.impl.couchdb;
+package net.ontopia.presto.spi.utils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
+import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
@@ -24,7 +25,7 @@ public class PrestoTraverseResolver implements PrestoFieldResolver {
 
     private final PrestoContext context;
 
-    PrestoTraverseResolver(CouchDataProvider dataProvider, PrestoSchemaProvider schemaProvider, ObjectMapper objectMapper) {
+    public PrestoTraverseResolver(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, ObjectMapper objectMapper) {
         this.context = new PrestoContext(dataProvider, schemaProvider, objectMapper);
     }
 
@@ -42,10 +43,10 @@ public class PrestoTraverseResolver implements PrestoFieldResolver {
                     rs = traverseField(rs, fieldId);
                 }
                 List<Object> result = new ArrayList<Object>(rs);
-                return new CouchPagedValues(result, offset, limit, result.size());
+                return new PrestoPagedValues(result, offset, limit, result.size());
             }
         }
-        return new CouchPagedValues(Collections.emptyList(), 0, limit, 0);        
+        return new PrestoPagedValues(Collections.emptyList(), 0, limit, 0);        
     }
 
     private Collection<Object> traverseField(Collection<Object> objects, String fieldId) {

@@ -11,6 +11,8 @@ import java.util.Set;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
+import net.ontopia.presto.spi.utils.PrestoPagedValues;
+import net.ontopia.presto.spi.utils.PrestoFieldResolver;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
@@ -129,7 +131,7 @@ public class CouchTopic implements PrestoTopic {
                     }
                 }
             }
-            return new CouchPagedValues(values, start, limit, size);
+            return new PrestoPagedValues(values, start, limit, size);
         }
     }
 
@@ -168,7 +170,7 @@ public class CouchTopic implements PrestoTopic {
         
         PrestoFieldResolver resolver = getDataProvider().createFieldResolver(field.getSchemaProvider(), resolveConfig);
         if (resolver == null) {
-            return new CouchPagedValues(Collections.emptyList(), 0, limit, 0);            
+            return new PrestoPagedValues(Collections.emptyList(), 0, limit, 0);            
         } else {
             return resolver.resolve(topics, type, field, isReference, resolveConfig, paging, _limit, offset, limit);
         }

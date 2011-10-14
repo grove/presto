@@ -1,4 +1,4 @@
-package net.ontopia.presto.spi.impl.couchdb;
+package net.ontopia.presto.spi.utils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -27,7 +27,7 @@ public class PrestoContext {
     private final PrestoSchemaProvider schemaProvider;
     private final ObjectMapper mapper;
 
-    PrestoContext(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, ObjectMapper mapper) {
+    public PrestoContext(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, ObjectMapper mapper) {
         this.dataProvider = dataProvider;
         this.schemaProvider = schemaProvider;
         this.mapper = mapper;

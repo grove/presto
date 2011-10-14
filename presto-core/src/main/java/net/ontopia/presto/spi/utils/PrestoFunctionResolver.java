@@ -1,13 +1,14 @@
-package net.ontopia.presto.spi.impl.couchdb;
+package net.ontopia.presto.spi.utils;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
-import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
+import net.ontopia.presto.spi.PrestoType;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -21,7 +22,7 @@ public class PrestoFunctionResolver implements PrestoFieldResolver {
 
     private final PrestoContext context;
 
-    PrestoFunctionResolver(CouchDataProvider dataProvider, PrestoSchemaProvider schemaProvider, ObjectMapper objectMapper) {
+    public PrestoFunctionResolver(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, ObjectMapper objectMapper) {
         this.context = new PrestoContext(dataProvider, schemaProvider, objectMapper);
     }
 
@@ -33,9 +34,9 @@ public class PrestoFunctionResolver implements PrestoFieldResolver {
         PrestoFunction func = getFunction(context, resolveConfig);
         if (func != null) {
             List<Object> result = func.execute(context, objects, type, field, paging, _limit, offset, limit);
-            return new CouchPagedValues(result, offset, limit, result.size());            
+            return new PrestoPagedValues(result, offset, limit, result.size());            
         } else {
-            return new CouchPagedValues(Collections.emptyList(), 0, limit, 0);        
+            return new PrestoPagedValues(Collections.emptyList(), 0, limit, 0);        
         }
     }
     
