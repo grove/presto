@@ -17,7 +17,7 @@ import org.ektorp.ViewQuery;
 import org.ektorp.ViewResult;
 import org.ektorp.ViewResult.Row;
 
-public class CouchQueryResolver implements CouchFieldResolver {
+public class CouchQueryResolver implements PrestoFieldResolver {
 
     private final CouchDataProvider dataProvider;
     private final PrestoContext context;

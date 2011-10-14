@@ -48,7 +48,7 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
     
     abstract protected CouchFieldStrategy createFieldStrategy();
     
-    protected CouchFieldResolver createFieldResolver(PrestoSchemaProvider schemaProvider, ObjectNode resolveConfig) {
+    protected PrestoFieldResolver createFieldResolver(PrestoSchemaProvider schemaProvider, ObjectNode resolveConfig) {
         String type = resolveConfig.get("type").getTextValue();
         if (type == null) {
             log.error("type not specified on resolve item: " + resolveConfig);

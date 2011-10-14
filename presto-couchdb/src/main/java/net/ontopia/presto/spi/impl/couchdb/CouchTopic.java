@@ -166,7 +166,7 @@ public class CouchTopic implements PrestoTopic {
         int offset = paging ?  Math.max(0, _offset): _offset;
         int limit = paging ? _limit > 0 ? _limit : CouchTopic.DEFAULT_LIMIT : _limit;
         
-        CouchFieldResolver resolver = getDataProvider().createFieldResolver(field.getSchemaProvider(), resolveConfig);
+        PrestoFieldResolver resolver = getDataProvider().createFieldResolver(field.getSchemaProvider(), resolveConfig);
         if (resolver == null) {
             return new CouchPagedValues(Collections.emptyList(), 0, limit, 0);            
         } else {

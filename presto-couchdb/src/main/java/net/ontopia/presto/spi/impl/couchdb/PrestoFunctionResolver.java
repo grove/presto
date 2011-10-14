@@ -15,7 +15,7 @@ import org.codehaus.jackson.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PrestoFunctionResolver implements CouchFieldResolver {
+public class PrestoFunctionResolver implements PrestoFieldResolver {
 
     private static Logger log = LoggerFactory.getLogger(PrestoFunctionResolver.class.getName());
 

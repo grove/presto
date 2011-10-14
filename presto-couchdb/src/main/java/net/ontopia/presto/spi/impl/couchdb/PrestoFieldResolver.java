@@ -8,7 +8,7 @@ import net.ontopia.presto.spi.PrestoType;
 
 import org.codehaus.jackson.node.ObjectNode;
 
-public interface CouchFieldResolver {
+public interface PrestoFieldResolver {
 
     PagedValues resolve(Collection<? extends Object> objects,
             PrestoType type, PrestoField field, boolean isReference, ObjectNode resolveConfig, 
