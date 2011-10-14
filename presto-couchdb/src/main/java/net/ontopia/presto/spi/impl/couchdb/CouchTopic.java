@@ -2,6 +2,7 @@ package net.ontopia.presto.spi.impl.couchdb;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -87,18 +88,11 @@ public class CouchTopic implements PrestoTopic {
     }
 
     protected PagedValues getValues(PrestoField field, boolean paging, int offset, int limit) {
-        PagedValues result;
         // get field values from data provider
         ObjectNode extra = (ObjectNode)field.getExtra();
         if (extra != null && extra.has("resolve")) {
-            JsonNode resolveNode = extra.get("resolve");
-            if (resolveNode.isArray()) {
-                ArrayNode resolveArray = (ArrayNode)resolveNode;
-                CouchQueryResolver resolver = new CouchQueryResolver(getDataProvider(), field.getSchemaProvider());
-                result = resolver.resolveValues(this, field, resolveArray, paging, offset, limit);
-            } else {
-                throw new RuntimeException("extra.resolve on field " + field.getId() + " is not an array: " + resolveNode);
-            }
+            return resolveValues(field, paging, offset, limit, extra);
+            
         } else {
 
             // get field values from topic data
@@ -135,9 +129,49 @@ public class CouchTopic implements PrestoTopic {
                     }
                 }
             }
-            result = new CouchPagedValues(values, start, limit, size);
+            return new CouchPagedValues(values, start, limit, size);
+        }
+    }
+
+    private PagedValues resolveValues(PrestoField field, boolean paging,
+            int offset, int limit, ObjectNode extra) {
+        JsonNode resolveNode = extra.get("resolve");
+        if (resolveNode.isArray()) {
+            ArrayNode resolveArray = (ArrayNode)resolveNode;
+            return resolveValues(this, field, resolveArray, paging, offset, limit);
+        } else {
+            throw new RuntimeException("extra.resolve on field " + field.getId() + " is not an array: " + resolveNode);
+        }
+    }
+
+    private PagedValues resolveValues(CouchTopic topic, PrestoField field, ArrayNode resolveArray, boolean paging, int offset, int limit) {
+        PagedValues result = null;
+        PrestoType type = field.getSchemaProvider().getTypeById(topic.getTypeId());
+        Collection<? extends Object> resultCollection = Collections.singleton(topic);
+        int size = resolveArray.size();
+        for (int i=0; i < size; i++) {
+            boolean isLast = (i == size-1);
+            boolean isReference = field.isReferenceField() || !isLast;
+            ObjectNode resolveConfig = (ObjectNode)resolveArray.get(i);
+            result = resolveValues(resultCollection, type, field, isReference, resolveConfig, paging, offset, limit);
+            resultCollection = result.getValues();
         }
         return result;
+    }
+
+    private PagedValues resolveValues(Collection<? extends Object> topics,
+            PrestoType type, PrestoField field, boolean isReference, ObjectNode resolveConfig, 
+            boolean paging, int _offset, int _limit) {
+
+        int offset = paging ?  Math.max(0, _offset): _offset;
+        int limit = paging ? _limit > 0 ? _limit : CouchTopic.DEFAULT_LIMIT : _limit;
+        
+        CouchFieldResolver resolver = getDataProvider().createFieldResolver(field.getSchemaProvider(), resolveConfig);
+        if (resolver == null) {
+            return new CouchPagedValues(Collections.emptyList(), 0, limit, 0);            
+        } else {
+            return resolver.resolve(topics, type, field, isReference, resolveConfig, paging, _limit, offset, limit);
+        }
     }
 
     // methods for updating the state of a couchdb document

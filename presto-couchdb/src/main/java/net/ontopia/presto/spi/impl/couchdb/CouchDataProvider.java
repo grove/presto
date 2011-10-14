@@ -9,6 +9,7 @@ import java.util.List;
 import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoFieldUsage;
+import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 
@@ -32,7 +33,7 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
     private final CouchDbConnector db;
     private final ObjectMapper mapper;
     private CouchFieldStrategy fieldStrategy;
-    
+
     protected String designDocId = "_design/presto";
 
     public CouchDataProvider(CouchDbConnector db) {
@@ -46,7 +47,23 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
     }
     
     abstract protected CouchFieldStrategy createFieldStrategy();
-
+    
+    protected CouchFieldResolver createFieldResolver(PrestoSchemaProvider schemaProvider, ObjectNode resolveConfig) {
+        String type = resolveConfig.get("type").getTextValue();
+        if (type == null) {
+            log.error("type not specified on resolve item: " + resolveConfig);
+        } else if (type.equals("traverse")) {
+            return new PrestoTraverseResolver(this, schemaProvider, getObjectMapper());
+        } else if (type.equals("query")) {
+            return new CouchQueryResolver(this, schemaProvider);
+        } else if (type.equals("function")) {
+            return new PrestoFunctionResolver(this, schemaProvider, getObjectMapper());
+        } else {
+            log.error("Unknown type specified on resolve item: " + resolveConfig);            
+        }
+        return null;
+    }
+    
     CouchFieldStrategy getFieldStrategy() {
         return fieldStrategy;
     }
