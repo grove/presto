@@ -170,7 +170,7 @@ public class CouchTopic implements PrestoTopic {
         if (resolver == null) {
             return new PrestoPagedValues(Collections.emptyList(), 0, limit, 0);            
         } else {
-            return resolver.resolve(topics, type, field, isReference, resolveConfig, paging, _limit, offset, limit);
+            return resolver.resolve(topics, type, field, isReference, paging, _limit, offset, limit);
         }
     }
 

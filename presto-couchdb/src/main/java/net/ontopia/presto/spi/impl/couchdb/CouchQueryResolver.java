@@ -23,20 +23,22 @@ public class CouchQueryResolver implements PrestoFieldResolver {
 
     private final CouchDataProvider dataProvider;
     private final PrestoContext context;
+    private final ObjectNode config;
 
-    CouchQueryResolver(CouchDataProvider dataProvider, PrestoContext context) {
+    CouchQueryResolver(CouchDataProvider dataProvider, PrestoContext context, ObjectNode config) {
         this.dataProvider = dataProvider;
         this.context = context;
+        this.config = config;
     }
 
     @Override
     public PagedValues resolve(Collection<? extends Object> objects,
-            PrestoType type, PrestoField field, boolean isReference, ObjectNode resolveItem, 
+            PrestoType type, PrestoField field, boolean isReference,
             boolean paging, int _limit, int offset, int limit) {
-        String designDocId = resolveItem.get("designDocId").getTextValue();
-        String viewName = resolveItem.get("viewName").getTextValue();
+        String designDocId = config.get("designDocId").getTextValue();
+        String viewName = config.get("viewName").getTextValue();
 
-        boolean includeDocs = resolveItem.has("includeDocs") && resolveItem.get("includeDocs").getBooleanValue();
+        boolean includeDocs = config.has("includeDocs") && config.get("includeDocs").getBooleanValue();
 
         ViewQuery query = new ViewQuery()
         .designDocId(designDocId)
@@ -49,17 +51,17 @@ public class CouchQueryResolver implements PrestoFieldResolver {
         Object startKey = null;
         Object endKey = null;
 
-        if (resolveItem.has("key")) {
-            keys = context.replaceKeyVariables(objects, resolveItem.get("key"));
+        if (config.has("key")) {
+            keys = context.replaceKeyVariables(objects, config.get("key"));
             if (keys.isEmpty()) {
                 return new PrestoPagedValues(Collections.emptyList(), 0, _limit,0);
             }
             query = query.keys(keys);
 
-        } else if (resolveItem.has("startKey") && resolveItem.has("endKey")) {
+        } else if (config.has("startKey") && config.has("endKey")) {
 
-            Collection<?> startKeys = context.replaceKeyVariables(objects, resolveItem.get("startKey"));            
-            Collection<?> endKeys = context.replaceKeyVariables(objects, resolveItem.get("endKey"));
+            Collection<?> startKeys = context.replaceKeyVariables(objects, config.get("startKey"));            
+            Collection<?> endKeys = context.replaceKeyVariables(objects, config.get("endKey"));
             
             if (startKeys.size() != endKeys.size()) {
                 throw new RuntimeException("startKey and endKey of different sizes: " + startKeys + " and " + endKeys);
@@ -134,12 +136,12 @@ public class CouchQueryResolver implements PrestoFieldResolver {
                 result.addAll(values);
             }
         }
-        if (resolveItem.has("excludeSelf") && resolveItem.get("excludeSelf").getBooleanValue()) {
+        if (config.has("excludeSelf") && config.get("excludeSelf").getBooleanValue()) {
             result.removeAll(objects);
         }
         int totalSize = viewResult.getSize();
         if (paging && !(totalSize < limit)) {
-            if (resolveItem.has("count") && resolveItem.get("count").getTextValue().equals("reduce-value")) {
+            if (config.has("count") && config.get("count").getTextValue().equals("reduce-value")) {
                 ViewQuery countQuery = new ViewQuery()
                 .designDocId(designDocId)
                 .viewName(viewName)                

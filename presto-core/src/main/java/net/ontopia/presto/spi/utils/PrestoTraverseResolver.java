@@ -21,17 +21,19 @@ public class PrestoTraverseResolver implements PrestoFieldResolver {
     private static Logger log = LoggerFactory.getLogger(PrestoTraverseResolver.class.getName());
 
     private final PrestoContext context;
+    private final ObjectNode config;
 
-    public PrestoTraverseResolver(PrestoContext context) {
+    public PrestoTraverseResolver(PrestoContext context, ObjectNode config) {
         this.context = context;
+        this.config = config;
     }
 
     @Override
     public PagedValues resolve(Collection<? extends Object> objects,
-            PrestoType type, PrestoField field, boolean isReference, ObjectNode resolveItem, 
+            PrestoType type, PrestoField field, boolean isReference,
             boolean paging, int _limit, int offset, int limit) {
-        if (resolveItem.has("path")) {
-            JsonNode pathNode = resolveItem.get("path");
+        if (config.has("path")) {
+            JsonNode pathNode = config.get("path");
             if (pathNode.isArray()) {
                 Collection<Object> rs = new HashSet<Object>(objects);
                 for (JsonNode fieldItem : pathNode) {

@@ -18,17 +18,19 @@ public class PrestoFunctionResolver implements PrestoFieldResolver {
     private static Logger log = LoggerFactory.getLogger(PrestoFunctionResolver.class.getName());
 
     private final PrestoContext context;
+    private final ObjectNode config;
 
-    public PrestoFunctionResolver(PrestoContext context) {
+    public PrestoFunctionResolver(PrestoContext context, ObjectNode config) {
         this.context = context;
+        this.config = config;
     }
 
     @Override
     public PagedValues resolve(Collection<? extends Object> objects,
-            PrestoType type, PrestoField field, boolean isReference, ObjectNode resolveConfig, 
+            PrestoType type, PrestoField field, boolean isReference,
             boolean paging, int _limit, int offset, int limit) {
         
-        PrestoFunction func = getFunction(context, resolveConfig);
+        PrestoFunction func = getFunction(context, config);
         if (func != null) {
             List<Object> result = func.execute(context, objects, type, field, paging, _limit, offset, limit);
             return new PrestoPagedValues(result, offset, limit, result.size());            
