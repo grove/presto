@@ -6,13 +6,12 @@ import java.util.Collections;
 import java.util.List;
 
 import net.ontopia.presto.spi.PrestoField;
-import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
-import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
-import net.ontopia.presto.spi.utils.PrestoPagedValues;
+import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoFieldResolver;
+import net.ontopia.presto.spi.utils.PrestoPagedValues;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;
@@ -25,9 +24,9 @@ public class CouchQueryResolver implements PrestoFieldResolver {
     private final CouchDataProvider dataProvider;
     private final PrestoContext context;
 
-    CouchQueryResolver(CouchDataProvider dataProvider, PrestoSchemaProvider schemaProvider) {
+    CouchQueryResolver(CouchDataProvider dataProvider, PrestoContext context) {
         this.dataProvider = dataProvider;
-        this.context = new PrestoContext(dataProvider, schemaProvider, dataProvider.getObjectMapper());
+        this.context = context;
     }
 
     @Override

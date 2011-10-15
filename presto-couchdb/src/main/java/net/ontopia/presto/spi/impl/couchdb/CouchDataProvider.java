@@ -12,6 +12,7 @@ import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
+import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoFieldResolver;
 import net.ontopia.presto.spi.utils.PrestoFunctionResolver;
 import net.ontopia.presto.spi.utils.PrestoTraverseResolver;
@@ -43,25 +44,26 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
     public CouchDataProvider(CouchDbConnector db) {
         this.db = db;
         this.mapper = createObjectMapper();
-        this.fieldStrategy = createFieldStrategy();
+        this.fieldStrategy = createFieldStrategy(mapper);
     }
 
     protected ObjectMapper createObjectMapper() {
         return new ObjectMapper();
     }
     
-    abstract protected CouchFieldStrategy createFieldStrategy();
+    abstract protected CouchFieldStrategy createFieldStrategy(ObjectMapper mapper);
     
     protected PrestoFieldResolver createFieldResolver(PrestoSchemaProvider schemaProvider, ObjectNode resolveConfig) {
+        PrestoContext context = new PrestoContext(this, schemaProvider, getObjectMapper());
         String type = resolveConfig.get("type").getTextValue();
         if (type == null) {
             log.error("type not specified on resolve item: " + resolveConfig);
-        } else if (type.equals("traverse")) {
-            return new PrestoTraverseResolver(this, schemaProvider, getObjectMapper());
         } else if (type.equals("query")) {
-            return new CouchQueryResolver(this, schemaProvider);
+            return new CouchQueryResolver(this, context);
+        } else if (type.equals("traverse")) {
+            return new PrestoTraverseResolver(context);
         } else if (type.equals("function")) {
-            return new PrestoFunctionResolver(this, schemaProvider, getObjectMapper());
+            return new PrestoFunctionResolver(context);
         } else {
             log.error("Unknown type specified on resolve item: " + resolveConfig);            
         }

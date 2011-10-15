@@ -4,14 +4,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoField;
-import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
 import net.ontopia.presto.spi.PrestoType;
 
 import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,8 +19,8 @@ public class PrestoFunctionResolver implements PrestoFieldResolver {
 
     private final PrestoContext context;
 
-    public PrestoFunctionResolver(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, ObjectMapper objectMapper) {
-        this.context = new PrestoContext(dataProvider, schemaProvider, objectMapper);
+    public PrestoFunctionResolver(PrestoContext context) {
+        this.context = context;
     }
 
     @Override

@@ -11,7 +11,15 @@ import org.codehaus.jackson.node.ObjectNode;
 
 public abstract class CouchBucketFieldStrategy implements CouchFieldStrategy {
 
-    protected abstract ObjectMapper getObjectMapper();
+    private final ObjectMapper mapper;
+
+    public CouchBucketFieldStrategy(ObjectMapper mapper) {
+        this.mapper = mapper;
+    }
+    
+    protected ObjectMapper getObjectMapper() {
+        return mapper;
+    }
     
     protected abstract List<String> getReadBuckets(ObjectNode doc);
 
