@@ -31,11 +31,12 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
 
     private static Logger log = LoggerFactory.getLogger(CouchDataProvider.class.getName());
 
-    static final int INDEX_DEFAULT = -1;
+    static final int DEFAULT_INDEX = -1;
+    static final int DEFAULT_LIMIT = 100;
 
     private final CouchDbConnector db;
     private final ObjectMapper mapper;
-    private CouchFieldStrategy fieldStrategy;
+    private final CouchFieldStrategy fieldStrategy;
 
     protected String designDocId = "_design/presto";
 

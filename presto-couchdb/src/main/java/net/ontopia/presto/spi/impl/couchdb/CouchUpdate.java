@@ -18,7 +18,7 @@ public class CouchUpdate implements PrestoUpdate, CouchChangeSet.CouchChange {
 
     private final CouchChangeSet changeSet;
 
-    private CouchTopic topic;
+    private final CouchTopic topic;
     private final PrestoType type;
     private final boolean isNew;
 
@@ -82,7 +82,7 @@ public class CouchUpdate implements PrestoUpdate, CouchChangeSet.CouchChange {
     }
 
     public void addValues(PrestoField field, Collection<?> values) {
-        addValues(field, values, CouchDataProvider.INDEX_DEFAULT);
+        addValues(field, values, CouchDataProvider.DEFAULT_INDEX);
     }
 
     public void addValues(PrestoField field, Collection<?> values, int index) {

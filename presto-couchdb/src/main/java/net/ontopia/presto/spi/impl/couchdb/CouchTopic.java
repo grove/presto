@@ -20,8 +20,6 @@ import org.codehaus.jackson.node.ObjectNode;
 
 public class CouchTopic implements PrestoTopic {
 
-    final static int DEFAULT_LIMIT = 100;
-
     private final CouchDataProvider dataProvider;  
     private final ObjectNode data;
 
@@ -105,7 +103,7 @@ public class CouchTopic implements PrestoTopic {
             int start = 0;
             int end = size;
             if (paging) {
-                int _limit = limit > 0 ? limit : DEFAULT_LIMIT;
+                int _limit = limit > 0 ? limit : CouchDataProvider.DEFAULT_LIMIT;
                 start = Math.min(Math.max(0, offset), size);
                 end = Math.min(_limit+start, size);
             }
@@ -166,7 +164,7 @@ public class CouchTopic implements PrestoTopic {
             boolean paging, int _offset, int _limit) {
 
         int offset = paging ?  Math.max(0, _offset): _offset;
-        int limit = paging ? _limit > 0 ? _limit : CouchTopic.DEFAULT_LIMIT : _limit;
+        int limit = paging ? _limit > 0 ? _limit : CouchDataProvider.DEFAULT_LIMIT : _limit;
         
         PrestoFieldResolver resolver = getDataProvider().createFieldResolver(field.getSchemaProvider(), resolveConfig);
         if (resolver == null) {
