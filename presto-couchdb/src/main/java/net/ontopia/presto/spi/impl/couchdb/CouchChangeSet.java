@@ -167,40 +167,44 @@ public class CouchChangeSet implements PrestoChangeSet {
                 }
             }
         } else if (changes.size() > 1) {
-            CouchDbConnector couchConnector = dataProvider.getCouchConnector();
-            List<ObjectNode> bulkDocuments = new ArrayList<ObjectNode>();
-            for (CouchChange change : changes) {
-                if (change.hasUpdate()) {
-                    CouchTopic topic = change.getTopic();
-    
-                    if (change.getType().equals(CouchChange.Type.DELETE)) {
-                        ObjectNode data = topic.getData();
-                        data.put("_deleted", true);
-                    }
-    
-                    log.info("Bulk update document: " + change.getType() + " " + topic.getId());
-                    bulkDocuments.add(topic.getData());
-                }
-            }
-            for (DocumentOperationResult dor : couchConnector.executeAllOrNothing(bulkDocuments)) {
-                log.warn("Bulk update error (probably caused conflict): " + dor);
-            }
+            updateBulk(changes);
         }       
     }
 
-    // CouchDB single document CRUD operations
+    // CouchDB document CRUD operations
 
-    void create(CouchTopic topic) {
+    private void create(CouchTopic topic) {
         dataProvider.getCouchConnector().create(topic.getData());
         log.info("Created: " + topic.getId() + " " + topic.getName());
     }
 
-    void update(CouchTopic topic) {
+    private void update(CouchTopic topic) {
         dataProvider.getCouchConnector().update(topic.getData());        
         log.info("Updated: " + topic.getId() + " " + topic.getName());
     }
 
-    boolean delete(CouchTopic topic) {
+    private void updateBulk(List<CouchChange> changes) {
+        List<ObjectNode> bulkDocuments = new ArrayList<ObjectNode>();
+        for (CouchChange change : changes) {
+            if (change.hasUpdate()) {
+                CouchTopic topic = change.getTopic();
+
+                if (change.getType().equals(CouchChange.Type.DELETE)) {
+                    ObjectNode data = topic.getData();
+                    data.put("_deleted", true);
+                }
+
+                log.info("Bulk update document: " + change.getType() + " " + topic.getId());
+                bulkDocuments.add(topic.getData());
+            }
+        }
+        CouchDbConnector couchConnector = dataProvider.getCouchConnector();
+        for (DocumentOperationResult dor : couchConnector.executeAllOrNothing(bulkDocuments)) {
+            log.warn("Bulk update error (probably caused conflict): " + dor);
+        }
+    }
+
+    private boolean delete(CouchTopic topic) {
         log.info("Removing: " + topic.getId() + " " + topic.getName());
         try {
             dataProvider.getCouchConnector().delete(topic.getData());
