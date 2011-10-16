@@ -9,6 +9,7 @@ import java.util.List;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
+import net.ontopia.presto.spi.PrestoTopic.Paging;
 import net.ontopia.presto.spi.PrestoType;
 
 import org.codehaus.jackson.JsonNode;
@@ -30,8 +31,7 @@ public class PrestoTraverseResolver implements PrestoFieldResolver {
 
     @Override
     public PagedValues resolve(Collection<? extends Object> objects,
-            PrestoType type, PrestoField field, boolean isReference,
-            boolean paging, int _limit, int offset, int limit) {
+            PrestoType type, PrestoField field, boolean isReference, Paging paging) {
         if (config.has("path")) {
             JsonNode pathNode = config.get("path");
             if (pathNode.isArray()) {
@@ -42,10 +42,10 @@ public class PrestoTraverseResolver implements PrestoFieldResolver {
                     rs = traverseField(rs, fieldId);
                 }
                 List<Object> result = new ArrayList<Object>(rs);
-                return new PrestoPagedValues(result, offset, limit, result.size());
+                return new PrestoPagedValues(result, paging, result.size());
             }
         }
-        return new PrestoPagedValues(Collections.emptyList(), 0, limit, 0);        
+        return new PrestoPagedValues(Collections.emptyList(), paging, 0);        
     }
 
     private Collection<Object> traverseField(Collection<Object> objects, String fieldId) {

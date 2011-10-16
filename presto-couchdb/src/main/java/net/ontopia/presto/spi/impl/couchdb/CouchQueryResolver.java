@@ -8,6 +8,7 @@ import java.util.List;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
+import net.ontopia.presto.spi.PrestoTopic.Paging;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoFieldResolver;
@@ -33,8 +34,7 @@ public class CouchQueryResolver implements PrestoFieldResolver {
 
     @Override
     public PagedValues resolve(Collection<? extends Object> objects,
-            PrestoType type, PrestoField field, boolean isReference,
-            boolean paging, int _limit, int offset, int limit) {
+            PrestoType type, PrestoField field, boolean isReference, Paging paging) {
         String designDocId = config.get("designDocId").getTextValue();
         String viewName = config.get("viewName").getTextValue();
 
@@ -54,7 +54,7 @@ public class CouchQueryResolver implements PrestoFieldResolver {
         if (config.has("key")) {
             keys = context.replaceKeyVariables(objects, config.get("key"));
             if (keys.isEmpty()) {
-                return new PrestoPagedValues(Collections.emptyList(), 0, _limit,0);
+                return new PrestoPagedValues(Collections.emptyList(), paging, 0);
             }
             query = query.keys(keys);
 
@@ -68,7 +68,7 @@ public class CouchQueryResolver implements PrestoFieldResolver {
             }
             
             if (startKeys.isEmpty()) {
-                return new PrestoPagedValues(Collections.emptyList(), 0, _limit,0);
+                return new PrestoPagedValues(Collections.emptyList(), paging, 0);
             }
             
             if (startKeys.size() > 1) {
@@ -92,10 +92,12 @@ public class CouchQueryResolver implements PrestoFieldResolver {
             query = query.keys(keys);
         }
 
-        if (paging) {
+        if (paging != null) {
+            int offset = paging.getOffset();
             if (offset > 0) {
                 query = query.skip(offset);
             }
+            int limit = paging.getLimit();
             if (limit > 0) {
                 query = query.limit(limit);
             }
@@ -140,22 +142,26 @@ public class CouchQueryResolver implements PrestoFieldResolver {
             result.removeAll(objects);
         }
         int totalSize = viewResult.getSize();
-        if (paging && !(totalSize < limit)) {
-            if (config.has("count") && config.get("count").getTextValue().equals("reduce-value")) {
-                ViewQuery countQuery = new ViewQuery()
-                .designDocId(designDocId)
-                .viewName(viewName)                
-                .startKey(startKey)
-                .endKey(endKey)
-                .staleOk(true)
-                .reduce(true);
-                ViewResult countViewResult = dataProvider.getCouchConnector().queryView(countQuery);
-                for (Row row : countViewResult.getRows()) {
-                    totalSize = row.getValueAsInt();
+        if (paging != null) {
+            if (totalSize >= paging.getLimit()) {
+                if (config.has("count") && config.get("count").getTextValue().equals("reduce-value")) {
+                    ViewQuery countQuery = new ViewQuery()
+                    .designDocId(designDocId)
+                    .viewName(viewName)                
+                    .startKey(startKey)
+                    .endKey(endKey)
+                    .staleOk(true)
+                    .reduce(true);
+                    ViewResult countViewResult = dataProvider.getCouchConnector().queryView(countQuery);
+                    for (Row row : countViewResult.getRows()) {
+                        totalSize = row.getValueAsInt();
+                    }
                 }
+            } else {
+                totalSize += paging.getOffset();
             }
         }
-        return new PrestoPagedValues(result, offset, limit, totalSize);
+        return new PrestoPagedValues(result, paging, totalSize);
     }
 
 }

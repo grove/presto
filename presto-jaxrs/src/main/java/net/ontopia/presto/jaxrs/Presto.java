@@ -306,8 +306,8 @@ public class Presto {
                 int actualLimit = limit > 0 ? limit : DEFAULT_LIMIT;
                 fieldData.setPageable(true);
                 PrestoTopic.PagedValues pagedValues = topic.getValues(field, actualOffset, actualLimit);
-                fieldData.setValuesOffset(pagedValues.getOffset());
-                fieldData.setValuesLimit(pagedValues.getLimit());
+                fieldData.setValuesOffset(pagedValues.getPaging().getOffset());
+                fieldData.setValuesLimit(pagedValues.getPaging().getLimit());
                 fieldData.setValuesTotal(pagedValues.getTotal());
                 fieldValues = pagedValues.getValues();
             } else {

@@ -16,9 +16,13 @@ public interface PrestoTopic {
 
     public static interface PagedValues {
         List<Object> getValues();
+        Paging getPaging();
+        int getTotal();
+    }
+
+    public static interface Paging {
         int getOffset();
         int getLimit();
-        int getTotal();
     }
 
 }

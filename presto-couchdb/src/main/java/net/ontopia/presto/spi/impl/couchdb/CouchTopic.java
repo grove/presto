@@ -13,6 +13,7 @@ import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.utils.PrestoPagedValues;
 import net.ontopia.presto.spi.utils.PrestoFieldResolver;
+import net.ontopia.presto.spi.utils.PrestoPaging;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
@@ -80,18 +81,18 @@ public class CouchTopic implements PrestoTopic {
     // methods for retrieving the state of a couchdb document
 
     public List<Object> getValues(PrestoField field) {
-        return getValues(field, false, 0, -1).getValues();
+        return getValues(field, null).getValues();
     }
 
     public PagedValues getValues(PrestoField field, int offset, int limit) {
-        return getValues(field, true, offset, limit);
+        return getValues(field, new PrestoPaging(offset, limit));
     }
 
-    protected PagedValues getValues(PrestoField field, boolean paging, int offset, int limit) {
+    protected PagedValues getValues(PrestoField field, Paging paging) {
         // get field values from data provider
         ObjectNode extra = (ObjectNode)field.getExtra();
         if (extra != null && extra.has("resolve")) {
-            return resolveValues(field, paging, offset, limit, extra);
+            return resolveValues(field, paging, extra);
             
         } else {
 
@@ -102,10 +103,9 @@ public class CouchTopic implements PrestoTopic {
             int size = fieldNode == null ? 0 : fieldNode.size();
             int start = 0;
             int end = size;
-            if (paging) {
-                int _limit = limit > 0 ? limit : CouchDataProvider.DEFAULT_LIMIT;
-                start = Math.min(Math.max(0, offset), size);
-                end = Math.min(_limit+start, size);
+            if (paging != null) {
+                start = Math.min(Math.max(0, paging.getOffset()), size);
+                end = Math.min(paging.getLimit()+start, size);
             }
 
             if (fieldNode != null) { 
@@ -129,22 +129,21 @@ public class CouchTopic implements PrestoTopic {
                     }
                 }
             }
-            return new PrestoPagedValues(values, start, limit, size);
+            return new PrestoPagedValues(values, paging, size);
         }
     }
 
-    private PagedValues resolveValues(PrestoField field, boolean paging,
-            int offset, int limit, ObjectNode extra) {
+    private PagedValues resolveValues(PrestoField field, Paging paging, ObjectNode extra) {
         JsonNode resolveNode = extra.get("resolve");
         if (resolveNode.isArray()) {
             ArrayNode resolveArray = (ArrayNode)resolveNode;
-            return resolveValues(this, field, resolveArray, paging, offset, limit);
+            return resolveValues(this, field, resolveArray, paging);
         } else {
             throw new RuntimeException("extra.resolve on field " + field.getId() + " is not an array: " + resolveNode);
         }
     }
 
-    private PagedValues resolveValues(CouchTopic topic, PrestoField field, ArrayNode resolveArray, boolean paging, int offset, int limit) {
+    private PagedValues resolveValues(CouchTopic topic, PrestoField field, ArrayNode resolveArray, Paging paging) {
         PagedValues result = null;
         PrestoType type = field.getSchemaProvider().getTypeById(topic.getTypeId());
         Collection<? extends Object> resultCollection = Collections.singleton(topic);
@@ -153,7 +152,7 @@ public class CouchTopic implements PrestoTopic {
             boolean isLast = (i == size-1);
             boolean isReference = field.isReferenceField() || !isLast;
             ObjectNode resolveConfig = (ObjectNode)resolveArray.get(i);
-            result = resolveValues(resultCollection, type, field, isReference, resolveConfig, paging, offset, limit);
+            result = resolveValues(resultCollection, type, field, isReference, resolveConfig, paging);
             resultCollection = result.getValues();
         }
         return result;
@@ -161,16 +160,13 @@ public class CouchTopic implements PrestoTopic {
 
     private PagedValues resolveValues(Collection<? extends Object> topics,
             PrestoType type, PrestoField field, boolean isReference, ObjectNode resolveConfig, 
-            boolean paging, int _offset, int _limit) {
-
-        int offset = paging ?  Math.max(0, _offset): _offset;
-        int limit = paging ? _limit > 0 ? _limit : CouchDataProvider.DEFAULT_LIMIT : _limit;
+            Paging paging) {
         
         PrestoFieldResolver resolver = getDataProvider().createFieldResolver(field.getSchemaProvider(), resolveConfig);
         if (resolver == null) {
-            return new PrestoPagedValues(Collections.emptyList(), 0, limit, 0);            
+            return new PrestoPagedValues(Collections.emptyList(), paging, 0);            
         } else {
-            return resolver.resolve(topics, type, field, isReference, paging, _limit, offset, limit);
+            return resolver.resolve(topics, type, field, isReference, paging);
         }
     }
 
