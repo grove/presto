@@ -384,29 +384,6 @@ public class Presto {
         return result;
     }
 
-    //    protected List<Value> getValues(PrestoFieldUsage field, Collection<? extends Object> fieldValues, boolean readOnlyMode) {
-    //        List<Value> result = new ArrayList<Value>(fieldValues.size());
-    //        for (Object value : fieldValues) {
-    //            result.add(getValue(field, value, readOnlyMode));
-    //        }
-    //        if (field.isSorted()) {
-    //            Collections.sort(result, new Comparator<Value>() {
-    //                public int compare(Value v1, Value v2) {
-    //                    String vx1 = v1.getName();
-    //                    if (vx1 == null) {
-    //                        vx1 = v1.getValue();
-    //                    }
-    //                    String vx2 = v2.getName();
-    //                    if (vx2 == null) {
-    //                        vx2 = v2.getValue();
-    //                    }
-    //                    return compareStatic(vx1, vx2);
-    //                }
-    //            });
-    //        }
-    //        return result;
-    //    }
-
     @SuppressWarnings({"rawtypes", "unchecked"})
     protected <T> int compareStatic(Comparable o1, Comparable o2) {
         if (o1 == null)

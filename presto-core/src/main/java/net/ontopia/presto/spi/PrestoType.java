@@ -11,9 +11,9 @@ public interface PrestoType {
 
     PrestoSchemaProvider getSchemaProvider();
 
-    boolean isReadOnly(); // can you edit it?
-
     boolean isHidden(); // will it show up? instances will show up if exposed as field values though.
+
+    boolean isReadOnly(); // can you edit it?
 
     boolean isCreatable(); // standalone creatable. default is yes. can still be created through a field if in createTypes.
 

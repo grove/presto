@@ -16,32 +16,38 @@ public interface PrestoField {
 
     boolean isReferenceField();
 
-    int getMinCardinality();
-
-    int getMaxCardinality();
-
     String getDataType();
 
     String getValidationType(); // ISSUE: or getSecondaryType()
 
+    String getInterfaceControl();
+    
+    int getMinCardinality();
+    
+    int getMaxCardinality();
+
+    Object getExtra();
+    
+    String getInverseFieldId();
+    
+    String getValuesAssignmentType();
+
+    // characteristics
+    
     boolean isEmbedded();
 
     boolean isHidden();
 
     boolean isTraversable();
 
-    boolean isReadOnly();
-
     boolean isSorted();
 
     boolean isPageable();
 
-    boolean isCascadingDelete();
+    // mutability
 
-    String getInverseFieldId();
+    boolean isReadOnly();
     
-    // reference fields
-
     boolean isEditable();
     
     boolean isCreatable();
@@ -50,12 +56,10 @@ public interface PrestoField {
     
     boolean isRemovable();
 
-    String getInterfaceControl();
-
-    String getValuesAssignmentType();
-
-    Collection<String> getValues();
+    boolean isCascadingDelete();
     
-    Object getExtra();
+    // values
+    
+    Collection<String> getValues();
 
 }
