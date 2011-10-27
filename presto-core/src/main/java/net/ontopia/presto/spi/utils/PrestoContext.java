@@ -33,17 +33,17 @@ public class PrestoContext {
         this.mapper = mapper;
     }
     
-    public Collection<JsonNode> replaceKeyVariables(Collection<? extends Object> topics, JsonNode key) {
+    public Collection<JsonNode> replaceVariables(Collection<? extends Object> topics, JsonNode key) {
         Collection<JsonNode> result = new ArrayList<JsonNode>();
         for (Object topic : topics) {
             if (topic instanceof PrestoTopic) {
-                result.addAll(replaceKeyVariables((PrestoTopic)topic, key));
+                result.addAll(replaceVariables((PrestoTopic)topic, key));
             }
         }
         return result;
     }
 
-    private Collection<JsonNode> replaceKeyVariables(PrestoTopic topic, JsonNode key) {
+    private Collection<JsonNode> replaceVariables(PrestoTopic topic, JsonNode key) {
         String typeId = topic.getTypeId();
         PrestoType type = getSchemaProvider().getTypeById(typeId);
 

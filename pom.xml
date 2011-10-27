@@ -67,6 +67,7 @@
     <module>presto-multi</module>
     <module>presto-jaxrs</module>
     <module>presto-utils</module>
+    <module>presto-solr</module>
   </modules>
 
   <distributionManagement>

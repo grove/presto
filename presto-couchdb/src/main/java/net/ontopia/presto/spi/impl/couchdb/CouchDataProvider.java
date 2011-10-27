@@ -58,8 +58,8 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
         String type = config.get("type").getTextValue();
         if (type == null) {
             log.error("type not specified on resolve item: " + config);
-        } else if (type.equals("query")) {
-            return new CouchQueryResolver(this, context, config);
+        } else if (type.equals("couchdb-view")) {
+            return new CouchViewResolver(this, context, config);
         } else if (type.equals("traverse")) {
             return new PrestoTraverseResolver(context, config);
         } else if (type.equals("function")) {

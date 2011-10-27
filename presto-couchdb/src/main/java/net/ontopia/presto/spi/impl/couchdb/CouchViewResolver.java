@@ -20,13 +20,13 @@ import org.ektorp.ViewQuery;
 import org.ektorp.ViewResult;
 import org.ektorp.ViewResult.Row;
 
-public class CouchQueryResolver implements PrestoFieldResolver {
+public class CouchViewResolver implements PrestoFieldResolver {
 
     private final CouchDataProvider dataProvider;
     private final PrestoContext context;
     private final ObjectNode config;
 
-    CouchQueryResolver(CouchDataProvider dataProvider, PrestoContext context, ObjectNode config) {
+    CouchViewResolver(CouchDataProvider dataProvider, PrestoContext context, ObjectNode config) {
         this.dataProvider = dataProvider;
         this.context = context;
         this.config = config;
@@ -52,7 +52,7 @@ public class CouchQueryResolver implements PrestoFieldResolver {
         Object endKey = null;
 
         if (config.has("key")) {
-            keys = context.replaceKeyVariables(objects, config.get("key"));
+            keys = context.replaceVariables(objects, config.get("key"));
             if (keys.isEmpty()) {
                 return new PrestoPagedValues(Collections.emptyList(), paging, 0);
             }
@@ -60,8 +60,8 @@ public class CouchQueryResolver implements PrestoFieldResolver {
 
         } else if (config.has("startKey") && config.has("endKey")) {
 
-            Collection<?> startKeys = context.replaceKeyVariables(objects, config.get("startKey"));            
-            Collection<?> endKeys = context.replaceKeyVariables(objects, config.get("endKey"));
+            Collection<?> startKeys = context.replaceVariables(objects, config.get("startKey"));            
+            Collection<?> endKeys = context.replaceVariables(objects, config.get("endKey"));
             
             if (startKeys.size() != endKeys.size()) {
                 throw new RuntimeException("startKey and endKey of different sizes: " + startKeys + " and " + endKeys);
