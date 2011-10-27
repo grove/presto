@@ -81,7 +81,7 @@ public class CouchTopic implements PrestoTopic {
     // methods for retrieving the state of a couchdb document
 
     public List<Object> getValues(PrestoField field) {
-        return getValues(field, null).getValues();
+        return getValues(field, null).getValues();            
     }
 
     public PagedValues getValues(PrestoField field, int offset, int limit) {

@@ -33,6 +33,8 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
     private static Logger log = LoggerFactory.getLogger(CouchDataProvider.class.getName());
 
     static final int DEFAULT_INDEX = -1;
+
+    static final int DEFAULT_OFFSET = 0;
     static final int DEFAULT_LIMIT = 100;
 
     private final CouchDbConnector db;
