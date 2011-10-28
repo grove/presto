@@ -18,8 +18,12 @@ import net.ontopia.presto.spi.utils.PrestoPaging;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CouchTopic implements PrestoTopic {
+
+    private static Logger log = LoggerFactory.getLogger(CouchTopic.class.getName());
 
     private final CouchDataProvider dataProvider;  
     private final ObjectNode data;
@@ -173,6 +177,9 @@ public class CouchTopic implements PrestoTopic {
         if (resolver == null) {
             return new PrestoPagedValues(Collections.emptyList(), paging, 0);            
         } else {
+            if (!field.isReadOnly()) {
+                log.warn("Type " + type.getId() + " field " + field.getId() + " not read-only.");
+            }
             return resolver.resolve(topics, type, field, isReference, paging);
         }
     }
