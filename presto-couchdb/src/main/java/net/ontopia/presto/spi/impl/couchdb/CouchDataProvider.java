@@ -92,10 +92,12 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
         return mapper;
     }
 
+    @Override
     public String getProviderId() {
         return "couchdb";
     }
 
+    @Override
     public PrestoTopic getTopicById(String topicId) {
         // look up by document id
         ObjectNode doc = null;
@@ -109,6 +111,7 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
         return existing(doc);
     }
 
+    @Override
     public Collection<PrestoTopic> getTopicsByIds(Collection<String> topicIds) {
         if (topicIds.isEmpty()) {
             return Collections.emptyList();
@@ -129,6 +132,7 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
         return result;
     }
 
+    @Override
     public Collection<PrestoTopic> getAvailableFieldValues(PrestoFieldUsage field) {
         if (field.isAddable()) {
             Collection<PrestoType> types = field.getAvailableFieldValueTypes();
@@ -154,6 +158,7 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
                 }
             }
             Collections.sort(result, new Comparator<PrestoTopic>() {
+                @Override
                 public int compare(PrestoTopic o1, PrestoTopic o2) {
                     return compareComparables(o1.getName(), o2.getName());
                 }
@@ -173,10 +178,12 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
             return o1.compareTo(o2);
     }
 
+    @Override
     public PrestoChangeSet newChangeSet() {
         return new CouchChangeSet(this);
     }
 
+    @Override
     public void close() {
     }
 

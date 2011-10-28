@@ -39,12 +39,15 @@ public class CouchChangeSet implements PrestoChangeSet {
         private CouchDelete(CouchTopic topic) {
             this.topic = topic;
         }
+        @Override
         public Type getType() {
             return Type.DELETE;
         }
+        @Override
         public CouchTopic getTopic() {
             return topic;
         }
+        @Override
         public boolean hasUpdate() {
             return true;
         }
@@ -66,12 +69,14 @@ public class CouchChangeSet implements PrestoChangeSet {
         return dataProvider.newInstance(type);
     }
 
+    @Override
     public PrestoUpdate createTopic(PrestoType type) {
         CouchUpdate update = new CouchUpdate(this, type);
         changes.add(update);
         return update;
     }
 
+    @Override
     public PrestoUpdate updateTopic(PrestoTopic topic, PrestoType type) {
         CouchUpdate update = updates.get(topic);
         if (update == null) {
@@ -82,6 +87,7 @@ public class CouchChangeSet implements PrestoChangeSet {
         return update;
     }
 
+    @Override
     public void deleteTopic(PrestoTopic topic, PrestoType type) {
         deleteTopic(topic, type, true);
     }
@@ -145,6 +151,7 @@ public class CouchChangeSet implements PrestoChangeSet {
         }
     }
 
+    @Override
     public void save() {
         if (saved) {
             log.warn("PrestoChangeSet.save() method called multiple times.");

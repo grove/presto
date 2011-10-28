@@ -33,6 +33,7 @@ public class CouchTopic implements PrestoTopic {
         return dataProvider;
     }
 
+    @Override
     public boolean equals(Object o) {
         if (o instanceof CouchTopic) {
             CouchTopic other = (CouchTopic)o;
@@ -41,6 +42,7 @@ public class CouchTopic implements PrestoTopic {
         return false;
     }
 
+    @Override
     public int hashCode() {
         return getId().hashCode();
     }
@@ -55,15 +57,18 @@ public class CouchTopic implements PrestoTopic {
         return data;
     }
 
+    @Override
     public String getId() {
         return data.get("_id").getTextValue();
     }
 
+    @Override
     public String getName() {
         JsonNode name = data.get(":name");
         return name == null ? null : name.getTextValue();
     }
 
+    @Override
     public String getTypeId() {
         return data.get(":type").getTextValue();
     }
@@ -80,10 +85,12 @@ public class CouchTopic implements PrestoTopic {
     
     // methods for retrieving the state of a couchdb document
 
+    @Override
     public List<Object> getValues(PrestoField field) {
         return getValues(field, null).getValues();            
     }
 
+    @Override
     public PagedValues getValues(PrestoField field, int offset, int limit) {
         return getValues(field, new PrestoPaging(offset, limit));
     }

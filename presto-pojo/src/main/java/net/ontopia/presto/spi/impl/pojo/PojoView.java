@@ -35,14 +35,17 @@ public class PojoView implements PrestoView {
         return id.hashCode();
     }
 
+    @Override
     public String getId() {
         return id;
     }
 
+    @Override
     public String getName() {
         return name;
     }
 
+    @Override
     public PrestoSchemaProvider getSchemaProvider() {
         return schemaProvider;
     }
@@ -51,6 +54,7 @@ public class PojoView implements PrestoView {
         this.name = name;
     }
 
+    @Override
     public Object getExtra() {
         return extra;
     }

@@ -56,26 +56,32 @@ public class PojoField implements PrestoField {
         this.schemaProvider = schemaProvider;        
     }
 
+    @Override
     public String getId() {
         return id;
     }
 
+    @Override
     public String getActualId() {
         return actualId;
     }
 
+    @Override
     public PrestoSchemaProvider getSchemaProvider() {
         return schemaProvider;
     }
 
+    @Override
     public String getName() {
         return name;
     }
 
+    @Override
     public boolean isNameField() {
         return isNameField;
     }
 
+    @Override
     public boolean isReferenceField() {
         return dataType != null && dataType.equals("reference");
     }
@@ -84,70 +90,87 @@ public class PojoField implements PrestoField {
         return valueView;
     }
 
+    @Override
     public int getMinCardinality() {
         return minCardinality;
     }
 
+    @Override
     public int getMaxCardinality() {
         return maxCardinality;
     }
 
+    @Override
     public String getDataType() {
         return dataType;
     }
 
+    @Override
     public String getValidationType() {
         return validationType;
     }
 
+    @Override
     public boolean isEmbedded() {
         return isEmbedded;
     }
 
+    @Override
     public boolean isHidden() {
         return isHidden;
     }
 
+    @Override
     public boolean isTraversable() {
         return isTraversable;
     }
 
+    @Override
     public boolean isReadOnly() {
         return isReadOnly;
     }
 
+    @Override
     public boolean isSorted() {
         return isSorted;
     }
 
+    @Override
     public boolean isPageable() {
         return isPageable;
     }
 
+    // TODO: rename to pageSize?
     public int getLimit() {
         return limit;
     }
 
+    @Override
     public boolean isCascadingDelete() {
         return isCascadingDelete;
     }
     
+    @Override
     public boolean isEditable() {
         return isEditable;
     }
     
+    @Override
     public boolean isCreatable() {
         return isCreatable;
     }
 
+    @Override
     public boolean isAddable() {
         return isAddable;
     }
 
+    @Override
     public boolean isRemovable() {
         return isRemovable;
     }
 
+    @Override
     public String getInterfaceControl() {
         return interfaceControl;
     }
@@ -277,10 +300,12 @@ public class PojoField implements PrestoField {
         this.extra = extra;
     }
 
+    @Override
     public Object getExtra() {
         return extra;
     }
 
+    @Override
     public String getValuesAssignmentType() {
         return valuesAssignmentType;
     }
@@ -289,6 +314,7 @@ public class PojoField implements PrestoField {
         this.valuesAssignmentType = valuesAssignmentType;
     }
     
+    @Override
     public Collection<String> getValues() {
         return values;
     }
@@ -297,6 +323,7 @@ public class PojoField implements PrestoField {
         this.values = values;
     }
 
+    @Override
     public String getInverseFieldId() {
         return inverseFieldId;
     }

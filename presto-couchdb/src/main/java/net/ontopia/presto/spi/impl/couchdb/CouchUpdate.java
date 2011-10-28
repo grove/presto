@@ -47,22 +47,27 @@ public class CouchUpdate implements PrestoUpdate, CouchChangeSet.CouchChange {
         }
     }
     
+    @Override
     public Type getType() {
         return isNew ? Type.CREATE : Type.UPDATE;
     }
     
+    @Override
     public CouchTopic getTopic() {
         return topic;
     }
     
+    @Override
     public PrestoTopic getTopicAfterUpdate() {
         return topic.getDataProvider().getTopicById(topic.getId());
     }
 
+    @Override
     public boolean hasUpdate() {
         return isNew || updateCount > 0;
     }
 
+    @Override
     public void setValues(PrestoField field, Collection<?> values) {
         Collection<Object> existingValues = topic.getValues(field);
         Collection<Object> remValues = new HashSet<Object>(existingValues);          
@@ -81,10 +86,12 @@ public class CouchUpdate implements PrestoUpdate, CouchChangeSet.CouchChange {
         }
     }
 
+    @Override
     public void addValues(PrestoField field, Collection<?> values) {
         addValues(field, values, CouchDataProvider.DEFAULT_INDEX);
     }
 
+    @Override
     public void addValues(PrestoField field, Collection<?> values, int index) {
         if (!values.isEmpty()) {
             topic.addValue(field, values, index);
@@ -92,6 +99,7 @@ public class CouchUpdate implements PrestoUpdate, CouchChangeSet.CouchChange {
         }
     }
 
+    @Override
     public void removeValues(PrestoField field, Collection<?> values) {
         if (!values.isEmpty()) {
             topic.removeValue(field, values);
