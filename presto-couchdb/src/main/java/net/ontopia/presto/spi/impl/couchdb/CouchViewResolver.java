@@ -19,8 +19,13 @@ import org.codehaus.jackson.node.ObjectNode;
 import org.ektorp.ViewQuery;
 import org.ektorp.ViewResult;
 import org.ektorp.ViewResult.Row;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CouchViewResolver implements PrestoFieldResolver {
+
+    @SuppressWarnings("unused")
+    private static Logger log = LoggerFactory.getLogger(CouchViewResolver.class.getName());
 
     private final CouchDataProvider dataProvider;
     private final PrestoContext context;

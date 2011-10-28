@@ -88,11 +88,11 @@ public class Presto {
 
         TopicType typeInfo = getTypeInfo(type);    
 
-        boolean readOnly = readOnlyMode || type.isReadOnly(); // ISSUE: do we really need this?
-        typeInfo.setReadOnly(readOnly);
+        boolean isTypeReadOnly = readOnlyMode || type.isReadOnly(); // ISSUE: do we really need this?
+        typeInfo.setReadOnly(isTypeReadOnly);
 
         List<Link> typeLinks = new ArrayList<Link>();
-        if (!readOnlyMode && type.isCreatable()) {
+        if (!isTypeReadOnly && type.isCreatable()) {
             typeLinks.add(new Link("create-instance", uriInfo.getBaseUri() + "editor/create-instance/" + type.getSchemaProvider().getDatabaseId() + "/" + type.getId()));
         }
         typeInfo.setLinks(typeLinks);
@@ -319,16 +319,6 @@ public class Presto {
         int start = 0;
         int end = size;
 
-        // figure out how to truncate result (offset/limit)
-        if (field.isPageable() && field.isSorted()) {
-            int _limit = limit > 0 ? limit : DEFAULT_LIMIT;
-            start = Math.min(Math.max(0, offset), size);
-            end = Math.min(start+_limit, size);
-            fieldData.setValuesOffset(start);
-            fieldData.setValuesLimit(_limit);
-            fieldData.setValuesTotal(size);
-        }
-
         // sort the result
         if (field.isSorted()) {
             Collections.sort(fieldValues, new Comparator<Object>() {
@@ -343,11 +333,41 @@ public class Presto {
         // get values (truncated if neccessary)
         List<Value> values = new ArrayList<Value>(fieldValues.size());
         for (int i=start; i < end; i++) {
-            values.add(getValue(field, fieldValues.get(i), readOnlyMode));
+            Object value = fieldValues.get(i);
+            if (value != null) {
+                values.add(getValue(field, value, readOnlyMode));
+            } else {
+                size--;
+            }
         }
         fieldData.setValues(values);
 
+        // figure out how to truncate result (offset/limit)
+        if (field.isPageable() && field.isSorted()) {
+            int _limit = limit > 0 ? limit : DEFAULT_LIMIT;
+            start = Math.min(Math.max(0, offset), size);
+            end = Math.min(start+_limit, size);
+            fieldData.setValuesOffset(start);
+            fieldData.setValuesLimit(_limit);
+            fieldData.setValuesTotal(size);
+        }
+
         return fieldData;
+    }
+
+    protected Value getValue(PrestoFieldUsage field, Object fieldValue, boolean readOnlyMode) {
+        if (fieldValue instanceof PrestoTopic) {
+            PrestoTopic valueTopic = (PrestoTopic)fieldValue;
+            return getExistingTopicFieldValue(field, valueTopic, readOnlyMode);
+        } else {
+            Value result = new Value();
+            result.setValue(fieldValue.toString());
+            boolean removable = !field.isReadOnly();
+            if (!readOnlyMode && removable) {
+                result.setRemovable(Boolean.TRUE);
+            }
+            return result;
+        }
     }
 
     protected int compareComparables(String o1, String o2) {
@@ -394,23 +414,7 @@ public class Presto {
             return o1.compareTo(o2);
     }
 
-    protected Value getValue(PrestoFieldUsage field, Object fieldValue, boolean readOnlyMode) {
-        if (fieldValue instanceof PrestoTopic) {
-            PrestoTopic valueTopic = (PrestoTopic)fieldValue;
-            return getExistingTopicFieldValue(field, valueTopic, readOnlyMode);
-        } else {
-            Value result = new Value();
-            result.setValue(fieldValue.toString());
-            boolean removable = !field.isReadOnly();
-            if (!readOnlyMode && removable) {
-                result.setRemovable(Boolean.TRUE);
-            }
-            return result;
-        }
-    }
-
-    public Value getExistingTopicFieldValue(
-            PrestoFieldUsage field, PrestoTopic value, boolean readOnlyMode) {
+    public Value getExistingTopicFieldValue(PrestoFieldUsage field, PrestoTopic value, boolean readOnlyMode) {
 
         Value result = new Value();
         result.setValue(value.getId());
