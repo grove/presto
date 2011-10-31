@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import net.ontopia.presto.jaxb.AvailableFieldValues;
@@ -21,7 +22,6 @@ import net.ontopia.presto.jaxb.TopicTypeTree;
 import net.ontopia.presto.jaxb.Value;
 import net.ontopia.presto.jaxb.View;
 import net.ontopia.presto.spi.PrestoChangeSet;
-import net.ontopia.presto.spi.PrestoUpdate;
 import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoFieldUsage;
@@ -29,6 +29,7 @@ import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoSession;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
+import net.ontopia.presto.spi.PrestoUpdate;
 import net.ontopia.presto.spi.PrestoView;
 
 import org.slf4j.Logger;
@@ -93,7 +94,8 @@ public class Presto {
 
         List<Link> typeLinks = new ArrayList<Link>();
         if (!isTypeReadOnly && type.isCreatable()) {
-            typeLinks.add(new Link("create-instance", uriInfo.getBaseUri() + "editor/create-instance/" + type.getSchemaProvider().getDatabaseId() + "/" + type.getId()));
+            UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/create-instance/").path(type.getSchemaProvider().getDatabaseId()).path(type.getId());
+            typeLinks.add(new Link("create-instance", builder.build().toString()));
         }
         typeInfo.setLinks(typeLinks);
 
@@ -102,10 +104,13 @@ public class Presto {
         result.setView(view.getId());
 
         List<Link> topicLinks = new ArrayList<Link>();
-        topicLinks.add(new Link("edit", uriInfo.getBaseUri() + "editor/topic/" + view.getSchemaProvider().getDatabaseId() + "/" + topic.getId() + "/" + view.getId()));
-        topicLinks.add(new Link("update", uriInfo.getBaseUri() + "editor/topic/" + view.getSchemaProvider().getDatabaseId() + "/" + topic.getId() + "/" + view.getId()));
+        UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(type.getSchemaProvider().getDatabaseId()).path(topic.getId()).path(view.getId());
+        topicLinks.add(new Link("edit", builder.build().toString()));
+        builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(type.getSchemaProvider().getDatabaseId()).path(topic.getId()).path(view.getId());
+        topicLinks.add(new Link("update", builder.build().toString()));
         if (type.isRemovable()) {
-            topicLinks.add(new Link("delete", uriInfo.getBaseUri() + "editor/topic/" + type.getSchemaProvider().getDatabaseId() + "/" + topic.getId()));
+            builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(type.getSchemaProvider().getDatabaseId()).path(topic.getId());
+            topicLinks.add(new Link("delete", builder.build().toString()));
         }
         result.setLinks(topicLinks);
 
@@ -137,7 +142,8 @@ public class Presto {
         result.setView(view.getId());
 
         List<Link> topicLinks = new ArrayList<Link>();
-        topicLinks.add(new Link("create", uriInfo.getBaseUri() + "editor/topic/" + type.getSchemaProvider().getDatabaseId() + "/_" + type.getId() + "/" + view.getId()));    
+        UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(type.getSchemaProvider().getDatabaseId()).path("_" + type.getId()).path(view.getId());
+        topicLinks.add(new Link("create", builder.build().toString()));    
         result.setLinks(topicLinks);
 
         List<FieldData> fields = new ArrayList<FieldData>(); 
@@ -156,7 +162,7 @@ public class Presto {
     private FieldData getFieldInfo(PrestoTopic topic, PrestoFieldUsage field, boolean readOnlyMode) {
         return getFieldInfo(topic, field, readOnlyMode, 0, -1);
     }
-
+    
     public FieldData getFieldInfo(PrestoTopic topic, PrestoFieldUsage field, boolean readOnlyMode, int offset, int limit) {
 
         PrestoType type = field.getType();
@@ -168,8 +174,6 @@ public class Presto {
         String topicId = isNewTopic ? "_" + type.getId() : topic.getId();
         String parentViewId = parentView.getId();
         String fieldId = field.getId();
-
-        String fieldReference = databaseId + "/" + topicId + "/" + parentViewId + "/" + fieldId;
 
         FieldData fieldData = new FieldData();
         fieldData.setId(fieldId);
@@ -223,29 +227,35 @@ public class Presto {
 
                 if (allowCreate) {
                     if (!field.getAvailableFieldCreateTypes().isEmpty()) {
-                        fieldLinks.add(new Link("available-field-types", uriInfo.getBaseUri() + "editor/available-field-types/" + fieldReference));
+                        UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/available-field-types/").path(databaseId).path(topicId).path(parentViewId).path(fieldId);
+                        fieldLinks.add(new Link("available-field-types", builder.build().toString()));
                     }
                 }
                 if (allowAdd) {
                     // ISSUE: should add-values and remove-values be links on list result instead?
                     if (!field.getAvailableFieldValueTypes().isEmpty()) {
-                        fieldLinks.add(new Link("available-field-values", uriInfo.getBaseUri() + "editor/available-field-values/" + fieldReference));
+                        UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/available-field-values/").path(databaseId).path(topicId).path(parentViewId).path(fieldId);
+                        fieldLinks.add(new Link("available-field-values", builder.build().toString()));
                     }
                 }
                 if (allowAdd || allowCreate) {
                     if (!isNewTopic) {
-                        fieldLinks.add(new Link("add-field-values", uriInfo.getBaseUri() + "editor/add-field-values/" + fieldReference));
+                        UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/add-field-values/").path(databaseId).path(topicId).path(parentViewId).path(fieldId);
+                        fieldLinks.add(new Link("add-field-values", builder.build().toString()));
                         if (!field.isSorted()) {
-                            fieldLinks.add(new Link("add-field-values-at-index", uriInfo.getBaseUri() + "editor/add-field-values-at-index/" + fieldReference + "/{index}"));
+                            builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/add-field-values-at-index/").path(databaseId).path(topicId).path(parentViewId).path(fieldId);
+                            fieldLinks.add(new Link("add-field-values-at-index", builder.build().toString() + "/{index}"));
                         }
                     }
                 }
                 if (allowRemove && !isNewTopic) {
-                    fieldLinks.add(new Link("remove-field-values", uriInfo.getBaseUri() + "editor/remove-field-values/" + fieldReference));
+                    UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/remove-field-values/").path(databaseId).path(topicId).path(parentViewId).path(fieldId);
+                    fieldLinks.add(new Link("remove-field-values", builder.build().toString()));
                 }      
 
                 if (allowMove && !isNewTopic) {
-                    fieldLinks.add(new Link("move-field-values-to-index", uriInfo.getBaseUri() + "editor/move-field-values-to-index/" + fieldReference + "/{index}"));
+                    UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/move-field-values-to-index/").path(databaseId).path(topicId).path(parentViewId).path(fieldId);
+                    fieldLinks.add(new Link("move-field-values-to-index", builder.build().toString() + "/{index}"));
                 }
             }
         } else {
@@ -255,18 +265,23 @@ public class Presto {
             }
             if (!isReadOnly) {
                 if (!isNewTopic) {
-                    fieldLinks.add(new Link("add-field-values", uriInfo.getBaseUri() + "editor/add-field-values/" + fieldReference));
-                    fieldLinks.add(new Link("remove-field-values", uriInfo.getBaseUri() + "editor/remove-field-values/" + fieldReference));
+                    UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/add-field-values/").path(databaseId).path(topicId).path(parentViewId).path(fieldId);
+                    fieldLinks.add(new Link("add-field-values", builder.build().toString()));
+                    builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/remove-field-values/").path(databaseId).path(topicId).path(parentViewId).path(fieldId);
+                    fieldLinks.add(new Link("remove-field-values", builder.build().toString()));
                     if (!field.isSorted()) {
-                        fieldLinks.add(new Link("add-field-values-at-index", uriInfo.getBaseUri() + "editor/add-field-values-at-index/" + fieldReference + "/{index}"));
-                        fieldLinks.add(new Link("move-field-values-to-index", uriInfo.getBaseUri() + "editor/move-field-values-to-index/" + fieldReference + "/{index}"));
+                        builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/add-field-values-at-index/").path(databaseId).path(topicId).path(parentViewId).path(fieldId);
+                        fieldLinks.add(new Link("add-field-values-at-index", builder.build().toString() + "/{index}"));
+                        builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/move-field-values-to-index/").path(databaseId).path(topicId).path(parentViewId).path(fieldId);
+                        fieldLinks.add(new Link("move-field-values-to-index", builder.build().toString() + "/{index}"));
                     }
                 }
             }
         }
 
         if (field.isPageable()) {
-            fieldLinks.add(new Link("paging", uriInfo.getBaseUri() + "editor/paging-field/" + fieldReference + "/{start}/{limit}"));    
+            UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/paging-field/").path(databaseId).path(topicId).path(parentViewId).path(fieldId);
+            fieldLinks.add(new Link("paging", builder.build().toString() + "/{start}/{limit}"));    
         }
 
         if (!fieldLinks.isEmpty()) {
@@ -398,7 +413,11 @@ public class Presto {
 
         List<Link> links = new ArrayList<Link>();
         if (topic != null) {
-            links.add(new Link("edit-in-view", uriInfo.getBaseUri() + "editor/topic/" + view.getSchemaProvider().getDatabaseId() + "/" + topic.getId() + "/" + view.getId() + (readOnlyMode ? "?readOnly=true" : "")));
+            UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(view.getSchemaProvider().getDatabaseId()).path(topic.getId()).path(view.getId());
+            if (readOnlyMode) {
+                builder = builder.queryParam("readOnly", "true");
+            }
+            links.add(new Link("edit-in-view", builder.build().toString()));
         }
         result.setLinks(links);
         return result;
@@ -431,7 +450,11 @@ public class Presto {
         List<Link> links = new ArrayList<Link>();
         if (field.isTraversable()) {
             PrestoView fieldsView = field.getValueView();
-            links.add(new Link("edit", uriInfo.getBaseUri() + "editor/topic/" + fieldsView.getSchemaProvider().getDatabaseId() + "/" + value.getId() + "/" + fieldsView.getId() + (readOnlyMode ? "?readOnly=true" : "")));
+            UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(fieldsView.getSchemaProvider().getDatabaseId()).path(value.getId()).path(fieldsView.getId());
+            if (readOnlyMode) {
+                builder = builder.queryParam("readOnly", "true");
+            }
+            links.add(new Link("edit", builder.build().toString()));
         }
         result.setLinks(links);
 
@@ -462,7 +485,8 @@ public class Presto {
         List<Link> links = new ArrayList<Link>();
         if (field.isTraversable()) {
             PrestoView fieldsView = field.getValueView();
-            links.add(new Link("edit", uriInfo.getBaseUri() + "editor/topic/" + fieldsView.getSchemaProvider().getDatabaseId() + "/" + value.getId() + "/" + fieldsView.getId()));
+            UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(fieldsView.getSchemaProvider().getDatabaseId()).path(value.getId()).path(fieldsView.getId());
+            links.add(new Link("edit", builder.build().toString()));
         }
         result.setLinks(links);
 
@@ -480,7 +504,8 @@ public class Presto {
         String topicId = isNewTopic ? "_" + type.getId() : topic.getId();
 
         List<Link> links = new ArrayList<Link>();
-        links.add(new Link("create-field-instance", uriInfo.getBaseUri() + "editor/create-field-instance/" + field.getSchemaProvider().getDatabaseId() + "/" + topicId + "/" + field.getId() + "/" + createType.getId()));
+        UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/create-field-instance/").path(field.getSchemaProvider().getDatabaseId()).path(topicId).path(field.getId()).path(createType.getId());
+        links.add(new Link("create-field-instance", builder.build().toString()));
         result.setLinks(links);
 
         return result;
@@ -693,7 +718,8 @@ public class Presto {
 
             List<Link> links = new ArrayList<Link>();
             if (type.isCreatable()) {
-                links.add(new Link("create-instance", uriInfo.getBaseUri() + "editor/create-instance/" + type.getSchemaProvider().getDatabaseId() + "/" + type.getId()));
+                UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/create-instance/").path(type.getSchemaProvider().getDatabaseId()).path(type.getId());
+                links.add(new Link("create-instance", builder.build().toString()));
             }
 
             if (tree) {
@@ -703,12 +729,13 @@ public class Presto {
                 }
             } else {
                 if (!type.getDirectSubTypes().isEmpty()) {
-                    links.add(new Link("available-types-tree-lazy", uriInfo.getBaseUri() + "editor/available-types-tree-lazy/" + type.getSchemaProvider().getDatabaseId() + "/" + type.getId()));
+                    UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/available-types-tree-lazy/").path(type.getSchemaProvider().getDatabaseId()).path(type.getId());
+                    links.add(new Link("available-types-tree-lazy", builder.build().toString()));
                 }
             }
             typeMap.setLinks(links);
             return Collections.singleton(typeMap);
         }
     }
-
+    
 }
