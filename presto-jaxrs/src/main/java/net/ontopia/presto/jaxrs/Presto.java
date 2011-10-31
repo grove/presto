@@ -514,36 +514,35 @@ public class Presto {
     public FieldData addFieldValues(PrestoTopic topic, PrestoType type, PrestoFieldUsage field, 
             Integer index, FieldData fieldObject) {
 
-        if  (field != null) {
-            PrestoDataProvider dataProvider = session.getDataProvider();
-            PrestoChangeSet changeSet = dataProvider.newChangeSet();
-            PrestoUpdate update = changeSet.updateTopic(topic, type);        
+        Collection<Object> addableValues = resolveValues(field, fieldObject.getValues(), true);
 
-            Collection<Object> addableValues = resolveValues(field, fieldObject.getValues(), true);
-            if (index == null) {
-                update.addValues(field, addableValues);
-            } else {
-                update.addValues(field, addableValues, index);        
-            }
-            changeSet.save();
-            topic = update.getTopicAfterUpdate();
+        PrestoDataProvider dataProvider = session.getDataProvider();
+        PrestoChangeSet changeSet = dataProvider.newChangeSet();
+        PrestoUpdate update = changeSet.updateTopic(topic, type);        
+
+        if (index == null) {
+            update.addValues(field, addableValues);
+        } else {
+            update.addValues(field, addableValues, index);        
         }
+        changeSet.save();
+        topic = update.getTopicAfterUpdate();
         return getFieldInfo(topic, field, false);
     }
 
     public FieldData removeFieldValues(PrestoTopic topic, PrestoType type, PrestoFieldUsage field, FieldData fieldObject) {
 
-        if  (field != null) {
-            PrestoDataProvider dataProvider = session.getDataProvider();
-            PrestoChangeSet changeSet = dataProvider.newChangeSet();
-            PrestoUpdate update = changeSet.updateTopic(topic, type);        
+        Collection<Object> removeableValues = resolveValues(field, fieldObject.getValues(), false);
 
-            Collection<Object> removeableValues = resolveValues(field, fieldObject.getValues(), false);
-            update.removeValues(field, removeableValues);
+        PrestoDataProvider dataProvider = session.getDataProvider();
+        PrestoChangeSet changeSet = dataProvider.newChangeSet();
+        PrestoUpdate update = changeSet.updateTopic(topic, type);        
 
-            changeSet.save();
-            topic = update.getTopicAfterUpdate();
-        }
+        update.removeValues(field, removeableValues);
+
+        changeSet.save();
+        topic = update.getTopicAfterUpdate();
+
         return getFieldInfo(topic, field, false);
     }
 
