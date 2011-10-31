@@ -131,7 +131,7 @@ public class PojoSchemaModel {
                         throw new RuntimeException("Invalid view declaration or view reference: " + viewNode);
                     }
                    
-                    PojoView view = new PojoView(viewId, schemaProvider);
+                    PojoView view = new PojoView(viewId);
                     type.addView(view);
                     // view name
                     String viewName = viewConfig.get("name").getTextValue();
@@ -196,7 +196,7 @@ public class PojoSchemaModel {
                         // valueView (using current view for now)
                         if (fieldConfig.has("valueView")) {
                             String valueViewId = fieldConfig.get("valueView").getTextValue();
-                            PojoView valueView = new PojoView(valueViewId, schemaProvider);
+                            PojoView valueView = new PojoView(valueViewId);
                             field.setValueView(valueView);
                         } else {
                             field.setValueView(type.getDefaultView());

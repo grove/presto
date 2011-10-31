@@ -155,7 +155,7 @@ public class Presto {
             }
         }
         result.setFields(fields);
-        result.setViews(Collections.singleton(getView(null, view, readOnlyMode)));
+        result.setViews(Collections.singleton(getView(null, type, view, readOnlyMode)));
         return result;
     }
 
@@ -401,19 +401,19 @@ public class Presto {
 
         List<View> views = new ArrayList<View>(otherViews.size()); 
         for (PrestoView otherView : otherViews) {
-            views.add(getView(topic, otherView, readOnlyMode));
+            views.add(getView(topic, type, otherView, readOnlyMode));
         }
         return views;
     }
 
-    public View getView(PrestoTopic topic, PrestoView view, boolean readOnlyMode) {
+    protected View getView(PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnlyMode) {
         View result = new View();
         result.setId(view.getId());
         result.setName(view.getName());
 
         List<Link> links = new ArrayList<Link>();
         if (topic != null) {
-            UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(view.getSchemaProvider().getDatabaseId()).path(topic.getId()).path(view.getId());
+            UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(type.getSchemaProvider().getDatabaseId()).path(topic.getId()).path(view.getId());
             if (readOnlyMode) {
                 builder = builder.queryParam("readOnly", "true");
             }
@@ -450,7 +450,7 @@ public class Presto {
         List<Link> links = new ArrayList<Link>();
         if (field.isTraversable()) {
             PrestoView fieldsView = field.getValueView();
-            UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(fieldsView.getSchemaProvider().getDatabaseId()).path(value.getId()).path(fieldsView.getId());
+            UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(field.getSchemaProvider().getDatabaseId()).path(value.getId()).path(fieldsView.getId());
             if (readOnlyMode) {
                 builder = builder.queryParam("readOnly", "true");
             }
@@ -485,7 +485,7 @@ public class Presto {
         List<Link> links = new ArrayList<Link>();
         if (field.isTraversable()) {
             PrestoView fieldsView = field.getValueView();
-            UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(fieldsView.getSchemaProvider().getDatabaseId()).path(value.getId()).path(fieldsView.getId());
+            UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(field.getSchemaProvider().getDatabaseId()).path(value.getId()).path(fieldsView.getId());
             links.add(new Link("edit", builder.build().toString()));
         }
         result.setLinks(links);
