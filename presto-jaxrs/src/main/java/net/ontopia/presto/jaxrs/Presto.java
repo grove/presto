@@ -94,7 +94,7 @@ public class Presto {
 
         List<Link> typeLinks = new ArrayList<Link>();
         if (!isTypeReadOnly && type.isCreatable()) {
-            UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/create-instance/").path(type.getSchemaProvider().getDatabaseId()).path(type.getId());
+            UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/create-instance/").path(session.getDatabaseId()).path(type.getId());
             typeLinks.add(new Link("create-instance", builder.build().toString()));
         }
         typeInfo.setLinks(typeLinks);
@@ -104,12 +104,12 @@ public class Presto {
         result.setView(view.getId());
 
         List<Link> topicLinks = new ArrayList<Link>();
-        UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(type.getSchemaProvider().getDatabaseId()).path(topic.getId()).path(view.getId());
+        UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(session.getDatabaseId()).path(topic.getId()).path(view.getId());
         topicLinks.add(new Link("edit", builder.build().toString()));
-        builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(type.getSchemaProvider().getDatabaseId()).path(topic.getId()).path(view.getId());
+        builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(session.getDatabaseId()).path(topic.getId()).path(view.getId());
         topicLinks.add(new Link("update", builder.build().toString()));
         if (type.isRemovable()) {
-            builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(type.getSchemaProvider().getDatabaseId()).path(topic.getId());
+            builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(session.getDatabaseId()).path(topic.getId());
             topicLinks.add(new Link("delete", builder.build().toString()));
         }
         result.setLinks(topicLinks);
@@ -142,7 +142,7 @@ public class Presto {
         result.setView(view.getId());
 
         List<Link> topicLinks = new ArrayList<Link>();
-        UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(type.getSchemaProvider().getDatabaseId()).path("_" + type.getId()).path(view.getId());
+        UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(session.getDatabaseId()).path("_" + type.getId()).path(view.getId());
         topicLinks.add(new Link("create", builder.build().toString()));    
         result.setLinks(topicLinks);
 
@@ -170,7 +170,7 @@ public class Presto {
 
         boolean isNewTopic = topic == null;
 
-        String databaseId = field.getSchemaProvider().getDatabaseId();
+        String databaseId = session.getDatabaseId();
         String topicId = isNewTopic ? "_" + type.getId() : topic.getId();
         String parentViewId = parentView.getId();
         String fieldId = field.getId();
@@ -413,7 +413,7 @@ public class Presto {
 
         List<Link> links = new ArrayList<Link>();
         if (topic != null) {
-            UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(type.getSchemaProvider().getDatabaseId()).path(topic.getId()).path(view.getId());
+            UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(session.getDatabaseId()).path(topic.getId()).path(view.getId());
             if (readOnlyMode) {
                 builder = builder.queryParam("readOnly", "true");
             }
@@ -439,7 +439,7 @@ public class Presto {
         result.setValue(value.getId());
         result.setName(value.getName());
         if (field.isEmbedded()) {
-            PrestoType valueType = field.getSchemaProvider().getTypeById(value.getTypeId());
+            PrestoType valueType = session.getSchemaProvider().getTypeById(value.getTypeId());
             result.setEmbedded(getTopicInfo(value, valueType, field.getValueView(), readOnlyMode));
         }
 
@@ -450,7 +450,7 @@ public class Presto {
         List<Link> links = new ArrayList<Link>();
         if (field.isTraversable()) {
             PrestoView fieldsView = field.getValueView();
-            UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(field.getSchemaProvider().getDatabaseId()).path(value.getId()).path(fieldsView.getId());
+            UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(session.getDatabaseId()).path(value.getId()).path(fieldsView.getId());
             if (readOnlyMode) {
                 builder = builder.queryParam("readOnly", "true");
             }
@@ -485,7 +485,7 @@ public class Presto {
         List<Link> links = new ArrayList<Link>();
         if (field.isTraversable()) {
             PrestoView fieldsView = field.getValueView();
-            UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(field.getSchemaProvider().getDatabaseId()).path(value.getId()).path(fieldsView.getId());
+            UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(session.getDatabaseId()).path(value.getId()).path(fieldsView.getId());
             links.add(new Link("edit", builder.build().toString()));
         }
         result.setLinks(links);
@@ -504,7 +504,7 @@ public class Presto {
         String topicId = isNewTopic ? "_" + type.getId() : topic.getId();
 
         List<Link> links = new ArrayList<Link>();
-        UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/create-field-instance/").path(field.getSchemaProvider().getDatabaseId()).path(topicId).path(field.getId()).path(createType.getId());
+        UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/create-field-instance/").path(session.getDatabaseId()).path(topicId).path(field.getId()).path(createType.getId());
         links.add(new Link("create-field-instance", builder.build().toString()));
         result.setLinks(links);
 
@@ -692,7 +692,7 @@ public class Presto {
     }
 
     public boolean deleteTopic(PrestoTopic topic, PrestoType type) {
-        log.warn("Removing topic " + topic.getId() + " from database " + session.getSchemaProvider().getDatabaseId());
+        log.warn("Removing topic " + topic.getId() + " from database " + session.getDatabaseId());
         PrestoChangeSet changeSet = session.getDataProvider().newChangeSet();
         changeSet.deleteTopic(topic, type);
         changeSet.save();
@@ -717,7 +717,7 @@ public class Presto {
 
             List<Link> links = new ArrayList<Link>();
             if (type.isCreatable()) {
-                UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/create-instance/").path(type.getSchemaProvider().getDatabaseId()).path(type.getId());
+                UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/create-instance/").path(session.getDatabaseId()).path(type.getId());
                 links.add(new Link("create-instance", builder.build().toString()));
             }
 
@@ -728,7 +728,7 @@ public class Presto {
                 }
             } else {
                 if (!type.getDirectSubTypes().isEmpty()) {
-                    UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/available-types-tree-lazy/").path(type.getSchemaProvider().getDatabaseId()).path(type.getId());
+                    UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/available-types-tree-lazy/").path(session.getDatabaseId()).path(type.getId());
                     links.add(new Link("available-types-tree-lazy", builder.build().toString()));
                 }
             }

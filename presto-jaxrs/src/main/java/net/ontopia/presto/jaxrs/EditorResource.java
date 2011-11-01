@@ -186,11 +186,6 @@ public abstract class EditorResource {
             boolean readOnlyMode = false;
             FieldData result = createPresto(session, uriInfo).getFieldInfo(topic, field, readOnlyMode, start, limit);
 
-            String id = topic.getId();
-
-            session.commit();
-            onTopicUpdated(id);
-
             return Response.ok(result).build();
 
         } catch (Exception e) {

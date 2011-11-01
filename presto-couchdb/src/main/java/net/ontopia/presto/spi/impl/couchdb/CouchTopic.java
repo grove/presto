@@ -173,7 +173,7 @@ public class CouchTopic implements PrestoTopic {
             PrestoType type, PrestoField field, boolean isReference, ObjectNode resolveConfig, 
             Paging paging) {
         
-        PrestoFieldResolver resolver = getDataProvider().createFieldResolver(field.getSchemaProvider(), resolveConfig);
+        PrestoFieldResolver resolver = getDataProvider().createFieldResolver(type.getSchemaProvider(), resolveConfig);
         if (resolver == null) {
             return new PrestoPagedValues(Collections.emptyList(), paging, 0);            
         } else {
