@@ -19,27 +19,34 @@ public class PojoSession implements PrestoSession {
         this.dataProvider = dataProvider;        
     }
 
+    @Override
     public String getDatabaseId() {
         return databaseId;
     }
 
+    @Override
     public String getDatabaseName() {
         return databaseName;
     }
 
+    @Override
     public void abort() {
     }
 
+    @Override
     public void commit() {
     }
 
+    @Override
     public void close() {
     }
 
+    @Override
     public PrestoDataProvider getDataProvider() {
         return dataProvider;
     }
 
+    @Override
     public PrestoSchemaProvider getSchemaProvider() {
         return schemaProvider;
     }

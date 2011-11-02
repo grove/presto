@@ -19,10 +19,12 @@ public class PojoSchemaProvider implements PrestoSchemaProvider {
         return PojoSchemaModel.parse(databaseId, schemaFile);
     }
 
+    @Override
     public String getDatabaseId() {
         return databaseId;
     }
 
+    @Override
     public PrestoType getTypeById(String typeId) {
         PrestoType type = typesMap.get(typeId);
         if (type == null) {
@@ -31,6 +33,7 @@ public class PojoSchemaProvider implements PrestoSchemaProvider {
         return type;
     }
 
+    @Override
     public Collection<PrestoType> getRootTypes() {
         Collection<PrestoType> result = new HashSet<PrestoType>(typesMap.values());
         Set<PrestoType> notSuperTypes = new HashSet<PrestoType>();

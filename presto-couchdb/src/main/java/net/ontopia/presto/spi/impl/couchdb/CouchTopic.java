@@ -2,6 +2,7 @@ package net.ontopia.presto.spi.impl.couchdb;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -10,12 +11,19 @@ import java.util.Set;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
+import net.ontopia.presto.spi.utils.PrestoPagedValues;
+import net.ontopia.presto.spi.utils.PrestoFieldResolver;
+import net.ontopia.presto.spi.utils.PrestoPaging;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public abstract class CouchTopic implements PrestoTopic {
+public class CouchTopic implements PrestoTopic {
+
+    private static Logger log = LoggerFactory.getLogger(CouchTopic.class.getName());
 
     private final CouchDataProvider dataProvider;  
     private final ObjectNode data;
@@ -29,6 +37,7 @@ public abstract class CouchTopic implements PrestoTopic {
         return dataProvider;
     }
 
+    @Override
     public boolean equals(Object o) {
         if (o instanceof CouchTopic) {
             CouchTopic other = (CouchTopic)o;
@@ -37,6 +46,7 @@ public abstract class CouchTopic implements PrestoTopic {
         return false;
     }
 
+    @Override
     public int hashCode() {
         return getId().hashCode();
     }
@@ -51,56 +61,127 @@ public abstract class CouchTopic implements PrestoTopic {
         return data;
     }
 
+    @Override
     public String getId() {
         return data.get("_id").getTextValue();
     }
 
+    @Override
     public String getName() {
         JsonNode name = data.get(":name");
         return name == null ? null : name.getTextValue();
     }
 
+    @Override
     public String getTypeId() {
         return data.get(":type").getTextValue();
     }
 
     // json data access strategy
 
-    protected abstract ArrayNode getFieldValue(PrestoField field);
+    protected ArrayNode getFieldValue(PrestoField field) {
+        return getDataProvider().getFieldStrategy().getFieldValue(getData(), field);
+    }
 
-    protected abstract void putFieldValue(PrestoField field, ArrayNode value);
-
+    protected void putFieldValue(PrestoField field, ArrayNode value) {
+        getDataProvider().getFieldStrategy().putFieldValue(getData(), field, value);
+    }
+    
     // methods for retrieving the state of a couchdb document
 
-    public Collection<Object> getValues(PrestoField field) {
+    @Override
+    public List<Object> getValues(PrestoField field) {
+        return getValues(field, null).getValues();            
+    }
+
+    @Override
+    public PagedValues getValues(PrestoField field, int offset, int limit) {
+        return getValues(field, new PrestoPaging(offset, limit));
+    }
+
+    protected PagedValues getValues(PrestoField field, Paging paging) {
         // get field values from data provider
-        if (field.getId().startsWith("external:")) {
-            return dataProvider.getExternalValues(this, field);
-        }
-        
-        // get field values from topic data
-        List<Object> values = new ArrayList<Object>();
-        ArrayNode fieldNode = getFieldValue(field);
-        if (fieldNode != null) { 
-            if (field.isReferenceField()) {
-                List<String> topicIds = new ArrayList<String>(fieldNode.size());
-                for (JsonNode value : fieldNode) {
-                    if (value.isTextual()) {
-                        topicIds.add(value.getTextValue());
+        ObjectNode extra = (ObjectNode)field.getExtra();
+        if (extra != null && extra.has("resolve")) {
+            return resolveValues(field, paging, extra);
+            
+        } else {
+
+            // get field values from topic data
+            List<Object> values = new ArrayList<Object>();
+            ArrayNode fieldNode = getFieldValue(field);
+
+            int size = fieldNode == null ? 0 : fieldNode.size();
+            int start = 0;
+            int end = size;
+            if (paging != null) {
+                start = Math.min(Math.max(0, paging.getOffset()), size);
+                end = Math.min(paging.getLimit()+start, size);
+            }
+
+            if (fieldNode != null) { 
+                if (field.isReferenceField()) {
+                    List<String> topicIds = new ArrayList<String>(fieldNode.size());
+                    for (int i=start; i < end; i ++) {
+                        JsonNode value = fieldNode.get(i);
+                        if (value.isTextual()) {
+                            topicIds.add(value.getTextValue());
+                        }
                     }
-                }
-                values.addAll(dataProvider.getTopicsByIds(topicIds));
-            } else {
-                for (JsonNode value : fieldNode) {
-                    if (value.isTextual()) {
-                        values.add(value.getTextValue());
-                    } else {
-                        values.add(value.toString());
+                    values.addAll(dataProvider.getTopicsByIds(topicIds));
+                } else {
+                    for (int i=start; i < end; i ++) {
+                        JsonNode value = fieldNode.get(i);
+                        if (value.isTextual()) {
+                            values.add(value.getTextValue());
+                        } else {
+                            values.add(value.toString());
+                        }
                     }
                 }
             }
+            return new PrestoPagedValues(values, paging, size);
         }
-        return values;
+    }
+
+    private PagedValues resolveValues(PrestoField field, Paging paging, ObjectNode extra) {
+        JsonNode resolveNode = extra.get("resolve");
+        if (resolveNode.isArray()) {
+            ArrayNode resolveArray = (ArrayNode)resolveNode;
+            return resolveValues(this, field, resolveArray, paging);
+        } else {
+            throw new RuntimeException("extra.resolve on field " + field.getId() + " is not an array: " + resolveNode);
+        }
+    }
+
+    private PagedValues resolveValues(CouchTopic topic, PrestoField field, ArrayNode resolveArray, Paging paging) {
+        PagedValues result = null;
+        PrestoType type = field.getSchemaProvider().getTypeById(topic.getTypeId());
+        Collection<? extends Object> resultCollection = Collections.singleton(topic);
+        int size = resolveArray.size();
+        for (int i=0; i < size; i++) {
+            boolean isLast = (i == size-1);
+            boolean isReference = field.isReferenceField() || !isLast;
+            ObjectNode resolveConfig = (ObjectNode)resolveArray.get(i);
+            result = resolveValues(resultCollection, type, field, isReference, resolveConfig, paging);
+            resultCollection = result.getValues();
+        }
+        return result;
+    }
+
+    private PagedValues resolveValues(Collection<? extends Object> topics,
+            PrestoType type, PrestoField field, boolean isReference, ObjectNode resolveConfig, 
+            Paging paging) {
+        
+        PrestoFieldResolver resolver = getDataProvider().createFieldResolver(type.getSchemaProvider(), resolveConfig);
+        if (resolver == null) {
+            return new PrestoPagedValues(Collections.emptyList(), paging, 0);            
+        } else {
+            if (!field.isReadOnly()) {
+                log.warn("Type " + type.getId() + " field " + field.getId() + " not read-only.");
+            }
+            return resolver.resolve(topics, type, field, isReference, paging);
+        }
     }
 
     // methods for updating the state of a couchdb document

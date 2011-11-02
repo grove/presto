@@ -4,14 +4,14 @@
   <parent>
     <groupId>net.ontopia.presto</groupId>
     <artifactId>presto</artifactId>
-    <version>0.2-SNAPSHOT</version>
+    <version>0.4-SNAPSHOT</version>
   </parent>
 
-  <name>Presto - Pojo implementation</name>
+  <name>Presto - POJO schema provider implementation</name>
   <groupId>net.ontopia.presto</groupId>
   <artifactId>presto-pojo</artifactId>
   <packaging>jar</packaging>
-  <version>0.2-SNAPSHOT</version>
+  <version>0.4-SNAPSHOT</version>
 
   <dependencies>
     <dependency>
@@ -22,22 +22,18 @@
     <dependency>
       <groupId>org.codehaus.jackson</groupId>
       <artifactId>jackson-core-asl</artifactId>
-      <version>1.7.1</version>
     </dependency>
     <dependency>
       <groupId>org.codehaus.jackson</groupId>
       <artifactId>jackson-jaxrs</artifactId>
-      <version>1.7.1</version>
     </dependency>
     <dependency>
       <groupId>org.codehaus.jackson</groupId>
       <artifactId>jackson-mapper-asl</artifactId>
-      <version>1.7.1</version>
     </dependency>
     <dependency>
       <groupId>org.codehaus.jackson</groupId>
       <artifactId>jackson-xc</artifactId>
-      <version>1.7.1</version>
     </dependency>
   </dependencies>
 

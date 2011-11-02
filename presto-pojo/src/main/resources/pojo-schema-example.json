@@ -23,7 +23,6 @@
       "name" : "Publisher",
       "datatype": "reference",
       "valueTypes": ["publisher"],
-      "inverseField" : "publisherof",
       "minCardinality" : 1,
       "maxCardinality" : 1
     }

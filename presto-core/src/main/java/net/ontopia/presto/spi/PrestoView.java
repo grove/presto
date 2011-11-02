@@ -6,8 +6,6 @@ public interface PrestoView {
 
     String getName();
 
-    PrestoSchemaProvider getSchemaProvider();
-
     Object getExtra();
 
 }

@@ -23,6 +23,7 @@ public class PojoType implements PrestoType {
     private boolean isHidden;
     private boolean isCreatable = true;
     private boolean isRemovable;
+    private boolean isRemovableCascadingDelete;
 
     private Collection<PrestoType> directSubTypes = new HashSet<PrestoType>();
 
@@ -58,42 +59,57 @@ public class PojoType implements PrestoType {
         return id.hashCode();
     }
 
+    @Override
     public String getId() {
         return id;
     }
 
+    @Override
     public String getName() {
         return name;
     }
 
+    @Override
     public PrestoSchemaProvider getSchemaProvider() {
         return schemaProvider;
     }
 
+    @Override
     public boolean isReadOnly() {
         return isReadOnly;
     }
 
+    @Override
     public boolean isHidden() {
         return isHidden;
     }
 
+    @Override
     public boolean isCreatable() {
         return isCreatable;
     }
 
+    @Override
     public boolean isRemovable() {
         return isRemovable;
     }
 
+    @Override
+    public boolean isRemovableCascadingDelete() {
+        return isRemovableCascadingDelete;
+    }
+
+    @Override
     public Collection<PrestoType> getDirectSubTypes() {
         return directSubTypes;
     }
 
+    @Override
     public List<PrestoField> getFields() {
         return fields;
     }
 
+    @Override
     public List<PrestoFieldUsage> getFields(PrestoView fieldsView) {
         List<PrestoFieldUsage> result = new ArrayList<PrestoFieldUsage>();
         for (PrestoField field : fields) {
@@ -105,6 +121,7 @@ public class PojoType implements PrestoType {
         return result;
     }
 
+    @Override
     public PrestoField getFieldById(String fieldId) {
         PojoField field = fieldsMap.get(fieldId);
         if (field == null) {
@@ -113,6 +130,7 @@ public class PojoType implements PrestoType {
         return field;
     }
 
+    @Override
     public PrestoFieldUsage getFieldById(String fieldId, PrestoView view) {
         PojoField field = fieldsMap.get(fieldId);
         if (field == null) {
@@ -123,10 +141,12 @@ public class PojoType implements PrestoType {
         return new PojoFieldUsage(field, this, view);
     }
 
+    @Override
     public PrestoView getDefaultView() {
         return getViewById("info");
     }
 
+    @Override
     public PrestoView getViewById(String viewId) {
         PrestoView view = viewsMap.get(viewId);
         if (view == null) {
@@ -135,6 +155,7 @@ public class PojoType implements PrestoType {
         return view;
     }
 
+    @Override
     public Collection<PrestoView> getViews(PrestoView fieldsView) {
         return views;
     }
@@ -159,21 +180,34 @@ public class PojoType implements PrestoType {
         this.isRemovable = isRemovable;
     }
 
+    protected void setRemovableCascadingDelete(boolean isRemovableCascadingDelete) {
+        this.isRemovableCascadingDelete = isRemovableCascadingDelete;
+    }
+
     protected void addDirectSubType(PrestoType type) {
         this.directSubTypes.add(type);
 
     }
 
     protected void addView(PojoView view) {
-        this.viewsMap.put(view.getId(), view);
-        this.views.add(view);
+        if (this.viewsMap.containsKey(view.getId())) {
+            throw new RuntimeException("Duplicate view: " + view.getId() + " on type " + getId());
+        } else {
+            this.viewsMap.put(view.getId(), view);
+            this.views.add(view);
+        }
     }
 
     protected void addField(PojoField field) {
-        this.fieldsMap.put(field.getId(), field);
-        this.fields.add(field);
+        if (this.fieldsMap.containsKey(field.getId())) {
+            throw new RuntimeException("Duplicate field: " + field.getId() + " on type " + getId());
+        } else {
+            this.fieldsMap.put(field.getId(), field);
+            this.fields.add(field);
+        }
     }
 
+    @Override
     public Object getExtra() {
         return extra;
     }

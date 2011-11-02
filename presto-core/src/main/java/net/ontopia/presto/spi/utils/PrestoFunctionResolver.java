@@ -1,0 +1,65 @@
+package net.ontopia.presto.spi.utils;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
+import net.ontopia.presto.spi.PrestoField;
+import net.ontopia.presto.spi.PrestoTopic.PagedValues;
+import net.ontopia.presto.spi.PrestoTopic.Paging;
+import net.ontopia.presto.spi.PrestoType;
+
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.node.ObjectNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class PrestoFunctionResolver implements PrestoFieldResolver {
+
+    private static Logger log = LoggerFactory.getLogger(PrestoFunctionResolver.class.getName());
+
+    private final PrestoContext context;
+    private final ObjectNode config;
+
+    public PrestoFunctionResolver(PrestoContext context, ObjectNode config) {
+        this.context = context;
+        this.config = config;
+    }
+
+    @Override
+    public PagedValues resolve(Collection<? extends Object> objects,
+            PrestoType type, PrestoField field, boolean isReference, Paging paging) {
+        
+        PrestoFunction func = getFunction(context, config);
+        if (func != null) {
+            List<Object> result = func.execute(context, objects, type, field, paging);
+            return new PrestoPagedValues(result, paging, result.size());            
+        } else {
+            return new PrestoPagedValues(Collections.emptyList(), paging, 0);        
+        }
+    }
+    
+    private PrestoFunction getFunction(PrestoContext context, ObjectNode resolveConfig) {
+        JsonNode nameNode = resolveConfig.path("class");
+        if (nameNode.isTextual()) {
+            String className = nameNode.getTextValue();
+            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            try {
+                Class<?> klass = Class.forName(className, true, classLoader);
+                if (PrestoFunction.class.isAssignableFrom(klass)) {
+                    return (PrestoFunction) klass.newInstance();
+                } else {
+                    log.warn("Function class " + className + " not a PrestoFunction.");                    
+                }
+            } catch (ClassNotFoundException e) {
+                log.warn("Function class " + className + " not found.");
+            } catch (InstantiationException e) {
+                log.warn("Not able to instatiate function class " + className + ".");
+            } catch (IllegalAccessException e) {
+                log.warn("Not able to instatiate function class " + className + " (illegal access).");
+            }
+        }
+        return null;
+    }
+
+}

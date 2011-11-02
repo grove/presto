@@ -11,15 +11,25 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class FieldData {
-
+    
     private String id;
     private String name;
+    
     private Boolean readOnly;
+    private Boolean creatable;
+    private Boolean editable;
+
     private Boolean embeddable;
+    private Boolean pageable;
 
     private String datatype;
     private String validation;
     private String interfaceControl;
+    
+    private Integer valuesLimit;
+    private Integer valuesOffset;
+    private Integer valuesTotal;
+    
     private Object extra;
 
     private Integer minCardinality;
@@ -27,9 +37,41 @@ public class FieldData {
 
     private Collection<Link> links;
     private Collection<Value> values;
+    
+    private Collection<FieldData> valueFields;
 
     private Collection<TopicType> valueTypes;
+    private Collection<TopicType> createTypes;
 
+    private Collection<Message> messages;
+    private Collection<String> errors;
+
+    public static class Message {
+        private String type;
+        private String message;
+
+        public Message() {
+        }
+        
+        public Message(String type, String message) {
+            this.type = type;
+            this.message = message;
+            
+        }
+        public String getType() {
+            return type;
+        }
+        public void setType(String type) {
+            this.type = type;
+        }
+        public String getMessage() {
+            return message;
+        }
+        public void setMessage(String message) {
+            this.message = message;
+        }
+    }
+    
     public void setId(String id) {
         this.id = id;
     }
@@ -66,12 +108,36 @@ public class FieldData {
         return readOnly;
     }
 
+    public void setCreatable(Boolean creatable) {
+        this.creatable = creatable;
+    }
+
+    public Boolean isCreatable() {
+        return creatable;
+    }
+
+    public void setEditable(Boolean editable) {
+        this.editable = editable;
+    }
+
+    public Boolean isEditable() {
+        return editable;
+    }
+
     public Boolean isEmbeddable() {
         return embeddable;
     }
 
     public void setEmbeddable(Boolean embeddable) {
         this.embeddable = embeddable;
+    }
+
+    public Boolean isPageable() {
+        return pageable;
+    }
+
+    public void setPageable(Boolean pageable) {
+        this.pageable = pageable;
     }
 
     public void setDatatype(String datatype) {
@@ -129,13 +195,69 @@ public class FieldData {
     public Object getExtra() {
         return extra;
     }
-
-    public void setValueTypes(Collection<TopicType> valueTypes) {
-        this.valueTypes = valueTypes;
-    }
-
+    
     public Collection<TopicType> getValueTypes() {
         return valueTypes;
     }
 
+    public void setValueTypes(Collection<TopicType> valueTypes) {
+        this.valueTypes = valueTypes;
+    }
+    
+    public Collection<TopicType> getCreateTypes() {
+        return createTypes;
+    }
+
+    public void setCreateTypes(Collection<TopicType> createTypes) {
+        this.createTypes = createTypes;
+    }
+
+    public Collection<FieldData> getValueFields() {
+        return valueFields;
+    }
+
+    public void setValueFields(Collection<FieldData> fields) {
+        this.valueFields = fields;
+    }
+
+    public Integer getValuesLimit() {
+        return valuesLimit;
+    }
+
+    public void setValuesLimit(Integer valuesLimit) {
+        this.valuesLimit = valuesLimit;
+    }
+
+    public Integer getValuesOffset() {
+        return valuesOffset;
+    }
+
+    public void setValuesOffset(Integer valuesOffset) {
+        this.valuesOffset = valuesOffset;
+    }
+
+    public Integer getValuesTotal() {
+        return valuesTotal;
+    }
+
+    public void setValuesTotal(Integer valuesTotal) {
+        this.valuesTotal = valuesTotal;
+    }
+
+    public Collection<String> getErrors() {
+        return errors;
+    }
+
+    public void setErrors(Collection<String> errors) {
+        this.errors = errors;
+    }
+
+    public Collection<Message> getMessages() {
+        return messages;
+    }
+
+    public void setMessages(Collection<Message> messages) {
+        this.messages = messages;
+    }
+    
 }

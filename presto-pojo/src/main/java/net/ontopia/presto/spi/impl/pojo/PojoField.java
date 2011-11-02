@@ -2,6 +2,7 @@ package net.ontopia.presto.spi.impl.pojo;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -14,6 +15,8 @@ import net.ontopia.presto.spi.PrestoView;
 public class PojoField implements PrestoField {
 
     private String id;
+    private String actualId;
+
     private PrestoSchemaProvider schemaProvider;
     private String name;
     private boolean isNameField;
@@ -27,12 +30,19 @@ public class PojoField implements PrestoField {
     private boolean isTraversable = true;
     private boolean isReadOnly;
     private boolean isSorted;
+    private boolean isPageable;
+    private int limit;
     private boolean isCascadingDelete;
-    private boolean isNewValuesOnly;
-    private boolean isExistingValuesOnly;
     private String inverseFieldId;
+    private boolean isEditable = true;
+    private boolean isCreatable = true;
+    private boolean isAddable = true;
+    private boolean isRemovable = true;
     private String interfaceControl;
     private Object extra;
+
+    private String valuesAssignmentType = "default";
+    private Collection<String> values = Collections.emptyList();
 
     private Collection<PrestoType> availableFieldCreateTypes;
     private Collection<PrestoType> availableFieldValueTypes = new HashSet<PrestoType>();
@@ -42,29 +52,36 @@ public class PojoField implements PrestoField {
 
     PojoField(String id, PrestoSchemaProvider schemaProvider) {
         this.id = id;
+        this.actualId = id;
         this.schemaProvider = schemaProvider;        
     }
 
+    @Override
     public String getId() {
         return id;
     }
 
+    @Override
+    public String getActualId() {
+        return actualId;
+    }
+
+    @Override
     public PrestoSchemaProvider getSchemaProvider() {
         return schemaProvider;
     }
 
+    @Override
     public String getName() {
         return name;
     }
 
+    @Override
     public boolean isNameField() {
         return isNameField;
     }
 
-    public boolean isPrimitiveField() {
-        return !isReferenceField();
-    }
-
+    @Override
     public boolean isReferenceField() {
         return dataType != null && dataType.equals("reference");
     }
@@ -73,58 +90,87 @@ public class PojoField implements PrestoField {
         return valueView;
     }
 
+    @Override
     public int getMinCardinality() {
         return minCardinality;
     }
 
+    @Override
     public int getMaxCardinality() {
         return maxCardinality;
     }
 
+    @Override
     public String getDataType() {
         return dataType;
     }
 
+    @Override
     public String getValidationType() {
         return validationType;
     }
 
+    @Override
     public boolean isEmbedded() {
         return isEmbedded;
     }
 
+    @Override
     public boolean isHidden() {
         return isHidden;
     }
 
+    @Override
     public boolean isTraversable() {
         return isTraversable;
     }
 
+    @Override
     public boolean isReadOnly() {
         return isReadOnly;
     }
 
+    @Override
     public boolean isSorted() {
         return isSorted;
     }
 
+    @Override
+    public boolean isPageable() {
+        return isPageable;
+    }
+
+    // TODO: rename to pageSize?
+    public int getLimit() {
+        return limit;
+    }
+
+    @Override
     public boolean isCascadingDelete() {
         return isCascadingDelete;
     }
-
-    public boolean isNewValuesOnly() {
-        return isNewValuesOnly;
+    
+    @Override
+    public boolean isEditable() {
+        return isEditable;
+    }
+    
+    @Override
+    public boolean isCreatable() {
+        return isCreatable;
     }
 
-    public boolean isExistingValuesOnly() {
-        return isExistingValuesOnly;
+    @Override
+    public boolean isAddable() {
+        return isAddable;
     }
 
-    public String getInverseFieldId() {
-        return inverseFieldId;
+    @Override
+    public boolean isRemovable() {
+        return isRemovable;
     }
 
+    @Override
     public String getInterfaceControl() {
         return interfaceControl;
     }
@@ -151,16 +197,15 @@ public class PojoField implements PrestoField {
     // -- helper methods
 
     boolean isInView(PrestoView view) {
-        for (PrestoView definedInView : definedInViews) {
-            if (definedInView.equals(view)) {
-                return true;
-            }
-        }
-        return false;
+        return definedInViews.contains(view);
     }
 
     protected void addDefinedInView(PrestoView view) {
         this.definedInViews.add(view);
+    }
+
+    public void setActualId(String actualId) {
+        this.actualId = actualId;
     }
 
     public void setName(String name) {
@@ -211,20 +256,32 @@ public class PojoField implements PrestoField {
         this.isSorted = isSorted;
     }
 
+    public void setPageable(boolean isPageable) {
+        this.isPageable = isPageable;
+    }
+
+    public void setLimit(int limit) {
+        this.limit = limit;
+    }
+
     public void setCascadingDelete(boolean isCascadingDelete) {
         this.isCascadingDelete = isCascadingDelete;
     }
-
-    public void setNewValuesOnly(boolean isNewValuesOnly) {
-        this.isNewValuesOnly = isNewValuesOnly;
+    
+    public void setEditable(boolean isEditable) {
+        this.isEditable = isEditable;
+    }
+    
+    public void setCreatable(boolean isCreatable) {
+        this.isCreatable = isCreatable;
     }
 
-    public void setExistingValuesOnly(boolean isExistingValuesOnly) {
-        this.isExistingValuesOnly = isExistingValuesOnly;
+    public void setAddable(boolean isAddable) {
+        this.isAddable = isAddable;
     }
 
-    public void setInverseFieldId(String inverseFieldId) {
-        this.inverseFieldId = inverseFieldId;
+    public void setRemovable(boolean isRemovable) {
+        this.isRemovable = isRemovable;
     }
 
     public void setInterfaceControl(String interfaceControl) {
@@ -243,8 +300,36 @@ public class PojoField implements PrestoField {
         this.extra = extra;
     }
 
+    @Override
     public Object getExtra() {
         return extra;
     }
 
+    @Override
+    public String getValuesAssignmentType() {
+        return valuesAssignmentType;
+    }
+
+    protected void setValuesAssignmentType(String valuesAssignmentType) {
+        this.valuesAssignmentType = valuesAssignmentType;
+    }
+    
+    @Override
+    public Collection<String> getValues() {
+        return values;
+    }
+
+    protected void setValues(Collection<String> values) {
+        this.values = values;
+    }
+
+    @Override
+    public String getInverseFieldId() {
+        return inverseFieldId;
+    }
+    
+    void setInverseFieldId(String inverseFieldId) {
+        this.inverseFieldId = inverseFieldId;
+    }
+    
 }

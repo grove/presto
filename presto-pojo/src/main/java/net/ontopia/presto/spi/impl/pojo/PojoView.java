@@ -1,19 +1,16 @@
 package net.ontopia.presto.spi.impl.pojo;
 
-import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoView;
 
 public class PojoView implements PrestoView {
 
     private String id;
     private String name;
-    private PrestoSchemaProvider schemaProvider;
 
     private Object extra;
 
-    PojoView(String id, PrestoSchemaProvider schemaProvider) {
+    PojoView(String id) {
         this.id = id;
-        this.schemaProvider = schemaProvider;        
     }
 
     @Override
@@ -35,22 +32,21 @@ public class PojoView implements PrestoView {
         return id.hashCode();
     }
 
+    @Override
     public String getId() {
         return id;
     }
 
+    @Override
     public String getName() {
         return name;
-    }
-
-    public PrestoSchemaProvider getSchemaProvider() {
-        return schemaProvider;
     }
 
     protected void setName(String name) {
         this.name = name;
     }
 
+    @Override
     public Object getExtra() {
         return extra;
     }

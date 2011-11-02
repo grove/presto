@@ -5,7 +5,42 @@
   <groupId>net.ontopia.presto</groupId>
   <artifactId>presto</artifactId>
   <packaging>pom</packaging>
-  <version>0.2-SNAPSHOT</version>
+  <version>0.4-SNAPSHOT</version>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.codehaus.jackson</groupId>
+        <artifactId>jackson-core-asl</artifactId>
+        <version>1.7.9</version>
+      </dependency>
+      <dependency>
+        <groupId>org.codehaus.jackson</groupId>
+        <artifactId>jackson-jaxrs</artifactId>
+        <version>1.7.9</version>
+      </dependency>
+      <dependency>
+        <groupId>org.codehaus.jackson</groupId>
+        <artifactId>jackson-mapper-asl</artifactId>
+        <version>1.7.9</version>
+      </dependency>
+      <dependency>
+        <groupId>org.codehaus.jackson</groupId>
+        <artifactId>jackson-xc</artifactId>
+        <version>1.7.9</version>
+      </dependency>  
+      <dependency>
+        <groupId>org.ektorp</groupId>
+        <artifactId>org.ektorp</artifactId>
+        <version>1.2.1</version>
+      </dependency>
+      <dependency>
+	<groupId>org.slf4j</groupId>
+	<artifactId>slf4j-api</artifactId>
+	<version>1.5.11</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <build>
 
@@ -15,8 +50,8 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
           <configuration>
-            <source>1.5</source>
-            <target>1.5</target>
+            <source>1.6</source>
+            <target>1.6</target>
           </configuration>
         </plugin>
       </plugins>
@@ -29,8 +64,10 @@
     <module>presto-pojo</module>
     <!--module>presto-ontopoly</module-->
     <module>presto-couchdb</module>
+    <module>presto-multi</module>
     <module>presto-jaxrs</module>
     <module>presto-utils</module>
+    <module>presto-solr</module>
   </modules>
 
   <distributionManagement>

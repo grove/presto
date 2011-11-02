@@ -1,17 +1,13 @@
 package net.ontopia.presto.spi;
 
-import java.util.Collection;
-
 public interface PrestoChangeSet {
 
-    void setValues(PrestoField field, Collection<?> values);
+    PrestoUpdate createTopic(PrestoType type);
 
-    void addValues(PrestoField field, Collection<?> values);
+    PrestoUpdate updateTopic(PrestoTopic topic, PrestoType type);
 
-    void addValues(PrestoField field, Collection<?> values, int index);
+    void deleteTopic(PrestoTopic topic, PrestoType type);
 
-    void removeValues(PrestoField field, Collection<?> values);
-
-    PrestoTopic save();
-
+    void save();
+    
 }

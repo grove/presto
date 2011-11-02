@@ -25,6 +25,10 @@ public class OntopolyDataProvider implements PrestoDataProvider {
     this.session = session;
   }
 
+  public String getProviderId() {
+      return "ontopoly";
+  }
+
   public PrestoTopic getTopicById(String id) {
     Topic topic = session.getTopicMap().getTopicById(id);
     if (topic == null) {
@@ -75,11 +79,11 @@ public class OntopolyDataProvider implements PrestoDataProvider {
     return new OntopolyChangeSet(session, type);
   }
   
-  public PrestoChangeSet updateTopic(PrestoTopic topic) {
-    return new OntopolyChangeSet(session, topic);
+  public PrestoChangeSet updateTopic(PrestoTopic topic, PrestoType type) {
+    return new OntopolyChangeSet(session, topic, type);
   }
 
-  public boolean removeTopic(PrestoTopic topic, PrestoType type) {
+  public boolean deleteTopic(PrestoTopic topic, PrestoType type) {
     OntopolyTopic.getWrapped(topic).remove(null);
     return true;
   }
