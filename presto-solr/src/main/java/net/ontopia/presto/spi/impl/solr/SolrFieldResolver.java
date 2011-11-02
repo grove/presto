@@ -98,7 +98,8 @@ public class SolrFieldResolver implements PrestoFieldResolver {
             solrQuery.setFilterQueries(fq_query.toString());
         }
 
-        String idField = getStringValue("idField", config);
+        String idField = getStringValue("idField", config, "id");
+        solrQuery.setFields(idField);
 
         String orderBy = getStringValue("orderBy", config, null);
         if (orderBy != null) {
@@ -221,6 +222,7 @@ public class SolrFieldResolver implements PrestoFieldResolver {
         return sb;
     }
 
+    @SuppressWarnings("unused")
     private String getStringValue(String field, ObjectNode config) {
         JsonNode fieldNode = config.path(field);
         if (fieldNode.isTextual()) {
