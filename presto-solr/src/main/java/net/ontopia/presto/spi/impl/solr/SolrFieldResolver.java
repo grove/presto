@@ -170,7 +170,7 @@ public class SolrFieldResolver implements PrestoFieldResolver {
                 appendIfNotNull(sb, expandQuery(variableResolver, " AND ", objects, qo.path("NOT")));
 
             } else {
-                Collection<JsonNode> qvalues = context.replaceVariables(variableResolver, objects, q);
+                Collection<JsonNode> qvalues = context.replaceVariables(variableResolver, objects, qo);
                 if (qvalues.isEmpty()) {
                     return null;
                 }
