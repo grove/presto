@@ -30,7 +30,7 @@ public class PrestoTopicFieldVariableResolver implements PrestoVariableResolver 
                 result.add(topic.getTypeId());                
             } else {
                 PrestoField valueField = type.getFieldById(variable);
-                Collection<Object> values = topic.getValues(valueField);
+                Collection<? extends Object> values = topic.getValues(valueField);
                 for (Object v : values) {
                     if (v instanceof PrestoTopic) {
                         result.add((((PrestoTopic)v).getId()));

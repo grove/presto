@@ -10,12 +10,12 @@ public interface PrestoTopic {
 
     String getTypeId();
 
-    List<Object> getValues(PrestoField field);
+    List<? extends Object> getValues(PrestoField field);
 
     PagedValues getValues(PrestoField field, int offset, int limit);
 
     public static interface PagedValues {
-        List<Object> getValues();
+        List<? extends Object> getValues();
         Paging getPaging();
         int getTotal();
     }

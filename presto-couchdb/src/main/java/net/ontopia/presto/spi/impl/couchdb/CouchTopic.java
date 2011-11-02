@@ -90,7 +90,7 @@ public class CouchTopic implements PrestoTopic {
     // methods for retrieving the state of a couchdb document
 
     @Override
-    public List<Object> getValues(PrestoField field) {
+    public List<? extends Object> getValues(PrestoField field) {
         return getValues(field, null).getValues();            
     }
 

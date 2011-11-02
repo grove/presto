@@ -47,6 +47,9 @@ public class PrestoContext {
         // find set of variables
         Collection<String> varNames = new HashSet<String>();
         findVariables(key, varNames);
+        if (varNames.isEmpty()) {
+            return Collections.singletonList(key);
+        }
 
         int totalSize = 1;
         Map<String,List<String>> varValues = new HashMap<String,List<String>>();

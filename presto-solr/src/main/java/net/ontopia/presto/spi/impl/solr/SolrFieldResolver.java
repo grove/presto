@@ -9,7 +9,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import net.ontopia.presto.spi.PrestoField;
-import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
 import net.ontopia.presto.spi.PrestoTopic.Paging;
 import net.ontopia.presto.spi.PrestoType;
@@ -61,7 +60,7 @@ public class SolrFieldResolver implements PrestoFieldResolver {
         this.solrServerUrl = solrServerUrl;
         this.solrServer = solrServer;
     }
-    
+
     protected URL createSolrServerUrl(ObjectNode config) {
         JsonNode urlNode = config.path("url");
         if (urlNode.isTextual()) {
@@ -74,7 +73,7 @@ public class SolrFieldResolver implements PrestoFieldResolver {
             throw new RuntimeException("Url is missing: " + config);
         }
     }
-    
+
     protected SolrServer createSolrServer(URL solrServerUrl, HttpClient client) {
         return new CommonsHttpSolrServer(solrServerUrl, client);
     }
@@ -85,14 +84,19 @@ public class SolrFieldResolver implements PrestoFieldResolver {
             Paging paging) {
 
         SolrQuery solrQuery = new SolrQuery();
-        
+
         PrestoVariableResolver variableResolver = new PrestoTopicFieldVariableResolver(context);
 
-        CharSequence query = expandQuery(variableResolver, " AND ", objects, config.path("q"));
-        if (query == null) {
+        CharSequence q_query = expandQuery(variableResolver, " AND ", objects, config.path("q"));
+        if (q_query == null || q_query.length() == 0) {
             return new PrestoPagedValues(Collections.emptyList(), paging, 0);
         }
-        solrQuery.setQuery(query.toString());
+        solrQuery.setQuery(q_query.toString());
+
+        CharSequence fq_query = expandQuery(variableResolver, " AND ", objects, config.path("fq"));
+        if (fq_query != null && fq_query.length() > 0) {
+            solrQuery.setFilterQueries(fq_query.toString());
+        }
 
         String idField = getStringValue("idField", config);
 
@@ -115,31 +119,32 @@ public class SolrFieldResolver implements PrestoFieldResolver {
             } else {
                 response = solrServer.query(solrQuery);
             }
-            
+
             SolrDocumentList results = response.getResults();
-            List<Object> values = new ArrayList<Object>(results.size());
+            List<String> values = new ArrayList<String>(results.size());
             for (SolrDocument doc : results) {
                 Object value = doc.getFirstValue(idField);
                 if (value != null && value instanceof String) {
-                    if (field.isReferenceField()) {
-                        PrestoTopic topic = context.getDataProvider().getTopicById((String)value);
-                        if (topic != null) {
-                            values.add(topic);
-                        }
-                    } else {
-                        values.add(value);
-                    }
+                    values.add((String)value);
                 }
             }
+
+            List<Object> result = new ArrayList<Object>(results.size());
+            if (field.isReferenceField()) {
+                result.addAll(context.getDataProvider().getTopicsByIds(values));
+            } else {
+                result.addAll(values);
+            }
+
             int total = (int)results.getNumFound();
-            return new PrestoPagedValues(values, paging, total);
+            return new PrestoPagedValues(result, paging, total);
 
         } catch (SolrServerException e) {
             log.error("QE: " + solrServerUrl + "/select?" + solrQuery, e);
             return new PrestoPagedValues(Collections.emptyList(), paging, 0);
         }
     }
-    
+
     private boolean appendIfNotNull(StringBuilder sb, CharSequence c) {
         if (c != null && c.length() > 0) {
             sb.append(c);
@@ -147,22 +152,22 @@ public class SolrFieldResolver implements PrestoFieldResolver {
         }
         return false;
     }
-    
+
     private CharSequence expandQuery(PrestoVariableResolver variableResolver, String sep, Collection<? extends Object> objects, JsonNode q) {
         StringBuilder sb  = new StringBuilder();
         if (q.isObject()) {
             ObjectNode qo = (ObjectNode)q;
-            
+
             if (qo.size() == 1 && qo.has("AND")) {
                 appendIfNotNull(sb, expandQuery(variableResolver, " AND ", objects, qo.path("AND")));
-                
+
             } else if (qo.size() == 1 && qo.has("OR")) {                
                 appendIfNotNull(sb, expandQuery(variableResolver, " OR ", objects, qo.path("OR")));
-                
+
             } else if (qo.size() == 1 && qo.has("NOT")) {                
                 sb.append("NOT ");
-                appendIfNotNull(sb, expandQuery(variableResolver, sep, objects, qo.path("NOT")));
-                
+                appendIfNotNull(sb, expandQuery(variableResolver, " AND ", objects, qo.path("NOT")));
+
             } else {
                 Collection<JsonNode> qvalues = context.replaceVariables(variableResolver, objects, q);
                 if (qvalues.isEmpty()) {

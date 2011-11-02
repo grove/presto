@@ -69,7 +69,7 @@ public class CouchUpdate implements PrestoUpdate, CouchChangeSet.CouchChange {
 
     @Override
     public void setValues(PrestoField field, Collection<?> values) {
-        Collection<Object> existingValues = topic.getValues(field);
+        Collection<? extends Object> existingValues = topic.getValues(field);
         Collection<Object> remValues = new HashSet<Object>(existingValues);          
         Collection<Object> addValues = new HashSet<Object>();
 
