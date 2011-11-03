@@ -211,7 +211,7 @@ public class SolrFieldResolver implements PrestoFieldResolver {
             boolean foundItems = false;
             for (int i=0; i < size; i++) {
                 CharSequence cs = expandQuery(variableResolver, " AND ", objects, ao.get(i));
-                if (isEmpty(cs)) {
+                if (isEmpty(cs) && sep.equals(" AND ")) {
                     return null;
                 } else {
                     if (i > 0 && foundItems) {
