@@ -51,6 +51,11 @@ public class CouchTopic implements PrestoTopic {
         return getId().hashCode();
     }
 
+    @Override
+    public String toString() {
+        return "CouchTopic[" + getId() + "]";
+    }
+    
     protected static ObjectNode newInstanceObjectNode(CouchDataProvider dataProvider, PrestoType type) {
         ObjectNode data = dataProvider.getObjectMapper().createObjectNode();
         data.put(":type", type.getId());
