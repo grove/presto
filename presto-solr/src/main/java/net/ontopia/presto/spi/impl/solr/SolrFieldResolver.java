@@ -88,13 +88,13 @@ public class SolrFieldResolver implements PrestoFieldResolver {
         PrestoVariableResolver variableResolver = new PrestoTopicFieldVariableResolver(context);
 
         CharSequence q_query = expandQuery(variableResolver, " AND ", objects, config.path("q"));
-        if (q_query == null || q_query.length() == 0) {
+        if (isEmpty(q_query)) {
             return new PrestoPagedValues(Collections.emptyList(), paging, 0);
         }
         solrQuery.setQuery(q_query.toString());
 
         CharSequence fq_query = expandQuery(variableResolver, " AND ", objects, config.path("fq"));
-        if (fq_query != null && fq_query.length() > 0) {
+        if (!isEmpty(fq_query)) {
             solrQuery.setFilterQueries(fq_query.toString());
         }
 
@@ -146,28 +146,33 @@ public class SolrFieldResolver implements PrestoFieldResolver {
         }
     }
 
-    private boolean appendIfNotNull(StringBuilder sb, CharSequence c) {
-        if (c != null && c.length() > 0) {
-            sb.append(c);
-            return true;
-        }
-        return false;
+    private boolean isEmpty(CharSequence c) {
+        return c == null || c.length() == 0;
     }
-
+    
     private CharSequence expandQuery(PrestoVariableResolver variableResolver, String sep, Collection<? extends Object> objects, JsonNode q) {
         StringBuilder sb  = new StringBuilder();
         if (q.isObject()) {
             ObjectNode qo = (ObjectNode)q;
 
             if (qo.size() == 1 && qo.has("AND")) {
-                appendIfNotNull(sb, expandQuery(variableResolver, " AND ", objects, qo.path("AND")));
+                CharSequence cs = expandQuery(variableResolver, " AND ", objects, qo.path("AND"));
+                if (!isEmpty(cs)) {
+                    sb.append(cs);
+                }
 
-            } else if (qo.size() == 1 && qo.has("OR")) {                
-                appendIfNotNull(sb, expandQuery(variableResolver, " OR ", objects, qo.path("OR")));
+            } else if (qo.size() == 1 && qo.has("OR")) {
+                CharSequence cs = expandQuery(variableResolver, " OR ", objects, qo.path("OR"));
+                if (!isEmpty(cs)) {
+                    sb.append(cs);
+                }
 
             } else if (qo.size() == 1 && qo.has("NOT")) {                
                 sb.append("NOT ");
-                appendIfNotNull(sb, expandQuery(variableResolver, " AND ", objects, qo.path("NOT")));
+                CharSequence cs = expandQuery(variableResolver, " AND ", objects, qo.path("NOT"));
+                if (!isEmpty(cs)) {
+                    sb.append(cs);
+                }
 
             } else {
                 Collection<JsonNode> qvalues = context.replaceVariables(variableResolver, objects, qo);
@@ -206,7 +211,9 @@ public class SolrFieldResolver implements PrestoFieldResolver {
             boolean foundItems = false;
             for (int i=0; i < size; i++) {
                 CharSequence cs = expandQuery(variableResolver, sep, objects, ao.get(i));
-                if (cs != null && cs.length() > 0) {                    
+                if (isEmpty(cs)) {
+                    return null;
+                } else {
                     if (i > 0 && foundItems) {
                         sb.append(" AND ");
                     }
