@@ -180,17 +180,17 @@ public class CouchChangeSet implements PrestoChangeSet {
 
     // CouchDB document CRUD operations
 
-    private void create(CouchTopic topic) {
+    protected void create(CouchTopic topic) {
         dataProvider.getCouchConnector().create(topic.getData());
         log.info("Created: " + topic.getId() + " " + topic.getName());
     }
 
-    private void update(CouchTopic topic) {
+    protected void update(CouchTopic topic) {
         dataProvider.getCouchConnector().update(topic.getData());        
         log.info("Updated: " + topic.getId() + " " + topic.getName());
     }
 
-    private void updateBulk(List<CouchChange> changes) {
+    protected void updateBulk(List<CouchChange> changes) {
         List<ObjectNode> bulkDocuments = new ArrayList<ObjectNode>();
         for (CouchChange change : changes) {
             if (change.hasUpdate()) {
@@ -211,7 +211,7 @@ public class CouchChangeSet implements PrestoChangeSet {
         }
     }
 
-    private boolean delete(CouchTopic topic) {
+    protected boolean delete(CouchTopic topic) {
         log.info("Removing: " + topic.getId() + " " + topic.getName());
         try {
             dataProvider.getCouchConnector().delete(topic.getData());
