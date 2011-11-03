@@ -1,6 +1,5 @@
 package net.ontopia.presto.spi.impl.solr;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -18,13 +17,11 @@ import net.ontopia.presto.spi.utils.PrestoPagedValues;
 import net.ontopia.presto.spi.utils.PrestoTopicFieldVariableResolver;
 import net.ontopia.presto.spi.utils.PrestoVariableResolver;
 
-import org.apache.commons.httpclient.HttpClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrQuery.ORDER;
 import org.apache.solr.client.solrj.SolrRequest.METHOD;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrDocument;
@@ -35,54 +32,30 @@ import org.codehaus.jackson.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SolrFieldResolver implements PrestoFieldResolver {
+public abstract class SolrFieldResolver implements PrestoFieldResolver {
 
     private static Logger log = LoggerFactory.getLogger(SolrFieldResolver.class.getName());
 
+    private final PrestoContext context;
     private final ObjectNode config;
 
-    private final SolrServer solrServer;
-
-    private final PrestoContext context;
-
-    private URL solrServerUrl;
-
-    public SolrFieldResolver(PrestoContext context, ObjectNode config, HttpClient client) {
+    public SolrFieldResolver(PrestoContext context, ObjectNode config) {
         this.context = context;
         this.config = config;
-        this.solrServerUrl = createSolrServerUrl(config);
-        this.solrServer = createSolrServer(solrServerUrl, client);
     }
 
-    public SolrFieldResolver(PrestoContext context, ObjectNode config, URL solrServerUrl, SolrServer solrServer) {
-        this.context = context;
-        this.config = config;
-        this.solrServerUrl = solrServerUrl;
-        this.solrServer = solrServer;
-    }
+    public abstract URL getSolrServerUrl();
 
-    protected URL createSolrServerUrl(ObjectNode config) {
-        JsonNode urlNode = config.path("url");
-        if (urlNode.isTextual()) {
-            try {
-                return new URL(urlNode.getTextValue());
-            } catch (MalformedURLException e) {
-                throw new RuntimeException("Invalid url: " + config);
-            }
-        } else {
-            throw new RuntimeException("Url is missing: " + config);
-        }
-    }
-
-    protected SolrServer createSolrServer(URL solrServerUrl, HttpClient client) {
-        return new CommonsHttpSolrServer(solrServerUrl, client);
-    }
+    public abstract SolrServer getSolrServer();
 
     @Override
     public PagedValues resolve(Collection<? extends Object> objects,
             PrestoType type, PrestoField field, boolean isReference,
             Paging paging) {
 
+        SolrServer solrServer = getSolrServer();
+        URL solrServerUrl = getSolrServerUrl();
+        
         SolrQuery solrQuery = new SolrQuery();
 
         PrestoVariableResolver variableResolver = new PrestoTopicFieldVariableResolver(context);
