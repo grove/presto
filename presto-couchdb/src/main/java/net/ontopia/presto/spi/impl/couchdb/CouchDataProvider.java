@@ -48,11 +48,23 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
         this.mapper = createObjectMapper();
         this.fieldStrategy = createFieldStrategy(mapper);
     }
+    
+    protected ObjectMapper getObjectMapper() {
+        return mapper;
+    }
 
     protected ObjectMapper createObjectMapper() {
         return new ObjectMapper();
     }
     
+    protected CouchDbConnector getCouchConnector() {
+        return db;
+    }
+    
+    CouchFieldStrategy getFieldStrategy() {
+        return fieldStrategy;
+    }
+
     abstract protected CouchFieldStrategy createFieldStrategy(ObjectMapper mapper);
     
     protected PrestoFieldResolver createFieldResolver(PrestoSchemaProvider schemaProvider, ObjectNode config) {
@@ -72,24 +84,12 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
         return null;
     }
     
-    CouchFieldStrategy getFieldStrategy() {
-        return fieldStrategy;
-    }
-    
     protected CouchTopic existing(ObjectNode doc) {
         return doc == null ? null : new CouchTopic(this, doc);
     }
 
     protected CouchTopic newInstance(PrestoType type) {
         return new CouchTopic(this, CouchTopic.newInstanceObjectNode(this, type));
-    }
-
-    protected CouchDbConnector getCouchConnector() {
-        return db;
-    }
-
-    protected ObjectMapper getObjectMapper() {
-        return mapper;
     }
 
     @Override
