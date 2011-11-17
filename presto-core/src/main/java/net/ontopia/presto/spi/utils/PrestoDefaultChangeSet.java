@@ -1,4 +1,4 @@
-package net.ontopia.presto.spi.impl.couchdb;
+package net.ontopia.presto.spi.utils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -20,9 +20,9 @@ import net.ontopia.presto.spi.PrestoUpdate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DefaultChangeSet implements PrestoChangeSet {
+public class PrestoDefaultChangeSet implements PrestoChangeSet {
 
-    private static Logger log = LoggerFactory.getLogger(DefaultChangeSet.class.getName());
+    private static Logger log = LoggerFactory.getLogger(PrestoDefaultChangeSet.class.getName());
     
     public static interface DefaultDataProvider extends PrestoDataProvider {
 
@@ -40,7 +40,7 @@ public class DefaultChangeSet implements PrestoChangeSet {
     
     public static interface DefaultTopic extends PrestoTopic {
 
-        PrestoDataProvider getDataProvider();
+        DefaultDataProvider getDataProvider();
         
         void updateNameProperty(Collection<? extends Object> values);
 
@@ -53,7 +53,7 @@ public class DefaultChangeSet implements PrestoChangeSet {
     }
     static final int DEFAULT_INDEX = -1;
 
-    static interface Change {
+    public static interface Change {
         enum Type {CREATE, UPDATE, DELETE};
         Type getType();
         PrestoTopic getTopic();
@@ -82,31 +82,31 @@ public class DefaultChangeSet implements PrestoChangeSet {
     private final DefaultDataProvider dataProvider;
 
     private final Set<PrestoTopic> deleted = new HashSet<PrestoTopic>();
-    private final Map<PrestoTopic,DefaultUpdate> updates = new HashMap<PrestoTopic,DefaultUpdate>();
+    private final Map<PrestoTopic,PrestoDefaultUpdate> updates = new HashMap<PrestoTopic,PrestoDefaultUpdate>();
     private final List<Change> changes = new ArrayList<Change>();
 
     private boolean saved;
 
-    DefaultChangeSet(DefaultDataProvider dataProvider) {
+    public PrestoDefaultChangeSet(DefaultDataProvider dataProvider) {
         this.dataProvider = dataProvider;
     }
 
-    DefaultTopic newInstance(PrestoType type) {
+    public DefaultTopic newInstance(PrestoType type) {
         return dataProvider.newInstance(type);
     }
 
     @Override
     public PrestoUpdate createTopic(PrestoType type) {
-        DefaultUpdate update = new DefaultUpdate(this, type);
+        PrestoDefaultUpdate update = new PrestoDefaultUpdate(this, type);
         changes.add(update);
         return update;
     }
 
     @Override
     public PrestoUpdate updateTopic(PrestoTopic topic, PrestoType type) {
-        DefaultUpdate update = updates.get(topic);
+        PrestoDefaultUpdate update = updates.get(topic);
         if (update == null) {
-            update = new DefaultUpdate(this, (DefaultTopic)topic, type);
+            update = new PrestoDefaultUpdate(this, (DefaultTopic)topic, type);
             changes.add(update);
             updates.put(topic, update);
         }
@@ -217,7 +217,7 @@ public class DefaultChangeSet implements PrestoChangeSet {
                     PrestoField inverseField = valueType.getFieldById(inverseFieldId);
     
                     PrestoUpdate inverseUpdate = updateTopic(valueTopic, valueType);
-                    inverseUpdate.addValues(inverseField, Collections.singleton(topic), DefaultChangeSet.DEFAULT_INDEX);
+                    inverseUpdate.addValues(inverseField, Collections.singleton(topic), PrestoDefaultChangeSet.DEFAULT_INDEX);
                 }
             }
         }

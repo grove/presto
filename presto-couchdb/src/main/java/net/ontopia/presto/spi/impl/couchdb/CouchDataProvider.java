@@ -11,13 +11,14 @@ import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
-import net.ontopia.presto.spi.impl.couchdb.DefaultChangeSet.Change;
-import net.ontopia.presto.spi.impl.couchdb.DefaultChangeSet.DefaultDataProvider;
-import net.ontopia.presto.spi.impl.couchdb.DefaultChangeSet.DefaultTopic;
+import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoFieldResolver;
 import net.ontopia.presto.spi.utils.PrestoFunctionResolver;
 import net.ontopia.presto.spi.utils.PrestoTraverseResolver;
+import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.Change;
+import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.DefaultDataProvider;
+import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.DefaultTopic;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -176,7 +177,7 @@ public abstract class CouchDataProvider implements DefaultDataProvider {
 
     @Override
     public PrestoChangeSet newChangeSet() {
-        return new DefaultChangeSet(this);
+        return new PrestoDefaultChangeSet(this);
     }
 
     @Override

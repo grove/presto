@@ -8,14 +8,14 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
-import net.ontopia.presto.spi.impl.couchdb.DefaultChangeSet.DefaultTopic;
 import net.ontopia.presto.spi.utils.PrestoFieldResolver;
 import net.ontopia.presto.spi.utils.PrestoPagedValues;
 import net.ontopia.presto.spi.utils.PrestoPaging;
+import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.DefaultDataProvider;
+import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.DefaultTopic;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
@@ -195,7 +195,7 @@ public class CouchTopic implements DefaultTopic {
     // --- DefaultTopic implementation
     
     @Override
-    public PrestoDataProvider getDataProvider() {
+    public DefaultDataProvider getDataProvider() {
         return dataProvider;
     }
     
