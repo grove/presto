@@ -51,6 +51,7 @@ public class PrestoDefaultChangeSet implements PrestoChangeSet {
         void removeValue(PrestoField field, Collection<? extends Object> values);
 
     }
+    
     static final int DEFAULT_INDEX = -1;
 
     public static interface Change {

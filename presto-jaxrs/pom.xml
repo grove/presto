@@ -21,7 +21,7 @@
     </dependency>
     <dependency>
       <groupId>net.ontopia.presto</groupId>
-      <artifactId>presto-utils</artifactId>
+      <artifactId>presto-jaxb</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
