@@ -7,11 +7,13 @@ import java.util.Comparator;
 import java.util.List;
 
 import net.ontopia.presto.spi.PrestoChangeSet;
-import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
+import net.ontopia.presto.spi.impl.couchdb.DefaultChangeSet.Change;
+import net.ontopia.presto.spi.impl.couchdb.DefaultChangeSet.DefaultDataProvider;
+import net.ontopia.presto.spi.impl.couchdb.DefaultChangeSet.DefaultTopic;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoFieldResolver;
 import net.ontopia.presto.spi.utils.PrestoFunctionResolver;
@@ -22,17 +24,17 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
 import org.ektorp.CouchDbConnector;
 import org.ektorp.DocumentNotFoundException;
+import org.ektorp.DocumentOperationResult;
+import org.ektorp.UpdateConflictException;
 import org.ektorp.ViewQuery;
 import org.ektorp.ViewResult;
 import org.ektorp.ViewResult.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class CouchDataProvider implements PrestoDataProvider {
+public abstract class CouchDataProvider implements DefaultDataProvider {
 
     private static Logger log = LoggerFactory.getLogger(CouchDataProvider.class.getName());
-
-    static final int DEFAULT_INDEX = -1;
 
     static final int DEFAULT_OFFSET = 0;
     static final int DEFAULT_LIMIT = 100;
@@ -43,22 +45,24 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
 
     protected String designDocId = "_design/presto";
 
-    public CouchDataProvider(CouchDbConnector db) {
-        this.db = db;
+    public CouchDataProvider() {
+        this.db = createCouchDbConnector();
         this.mapper = createObjectMapper();
         this.fieldStrategy = createFieldStrategy(mapper);
     }
     
+    protected abstract CouchDbConnector createCouchDbConnector();
+    
+    protected CouchDbConnector getCouchConnector() {
+        return db;
+    }
+
     protected ObjectMapper getObjectMapper() {
         return mapper;
     }
 
     protected ObjectMapper createObjectMapper() {
         return new ObjectMapper();
-    }
-    
-    protected CouchDbConnector getCouchConnector() {
-        return db;
     }
     
     CouchFieldStrategy getFieldStrategy() {
@@ -82,14 +86,6 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
             log.error("Unknown type specified on resolve item: " + config);            
         }
         return null;
-    }
-    
-    protected CouchTopic existing(ObjectNode doc) {
-        return doc == null ? null : new CouchTopic(this, doc);
-    }
-
-    protected CouchTopic newInstance(PrestoType type) {
-        return new CouchTopic(this, CouchTopic.newInstanceObjectNode(this, type));
     }
 
     @Override
@@ -169,7 +165,7 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
         }
     }
 
-    protected int compareComparables(String o1, String o2) {
+    private final int compareComparables(String o1, String o2) {
         if (o1 == null)
             return (o2 == null ? 0 : -1);
         else if (o2 == null)
@@ -180,7 +176,7 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
 
     @Override
     public PrestoChangeSet newChangeSet() {
-        return new CouchChangeSet(this);
+        return new DefaultChangeSet(this);
     }
 
     @Override
@@ -192,6 +188,69 @@ public abstract class CouchDataProvider implements PrestoDataProvider {
     public CouchDataProvider designDocId(String designDocId) {    
         this.designDocId = designDocId;
         return this;
+    }
+
+    // default data provider
+    
+    protected CouchTopic existing(ObjectNode doc) {
+        return doc == null ? null : new CouchTopic(this, doc);
+    }
+
+    @Override
+    public DefaultTopic newInstance(PrestoType type) {
+        ObjectNode doc = getObjectMapper().createObjectNode();
+        doc.put(":type", type.getId());
+        return new CouchTopic(this, doc);
+    }
+    
+    @Override
+    public void create(PrestoTopic topic) {
+        getCouchConnector().create(((CouchTopic)topic).getData());
+        log.info("Created: " + topic.getId() + " " + topic.getName());
+    }
+
+    @Override
+    public void update(PrestoTopic topic) {
+        getCouchConnector().update(((CouchTopic)topic).getData());        
+        log.info("Updated: " + topic.getId() + " " + topic.getName());
+    }
+
+    @Override
+    public void updateBulk(List<Change> changes) {
+        List<ObjectNode> bulkDocuments = new ArrayList<ObjectNode>();
+        for (Change change : changes) {
+            if (change.hasUpdate()) {
+                CouchTopic topic = (CouchTopic)change.getTopic();
+
+                if (change.getType().equals(Change.Type.DELETE)) {
+                    ObjectNode data = topic.getData();
+                    data.put("_deleted", true);
+                }
+
+                log.info("Bulk update document: " + change.getType() + " " + topic.getId());
+                bulkDocuments.add(topic.getData());
+            }
+        }
+        for (DocumentOperationResult dor : getCouchConnector().executeAllOrNothing(bulkDocuments)) {
+            log.warn("Bulk update error (probably caused conflict): " + dor);
+        }
+    }
+
+    @Override
+    public boolean delete(PrestoTopic topic) {
+        log.info("Removing: " + topic.getId() + " " + topic.getName());
+        try {
+            getCouchConnector().delete(((CouchTopic)topic).getData());
+            return true;
+        } catch (UpdateConflictException e) {
+            CouchTopic topic2 = (CouchTopic)getTopicById(topic.getId());
+            if (topic2 != null) {
+                getCouchConnector().delete(topic2.getData());
+                return true;
+            } else {
+                return false;
+            }
+        }
     }
 
 }

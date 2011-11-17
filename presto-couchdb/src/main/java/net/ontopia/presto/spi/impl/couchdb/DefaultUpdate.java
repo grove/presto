@@ -11,24 +11,25 @@ import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
+import net.ontopia.presto.spi.impl.couchdb.DefaultChangeSet.DefaultTopic;
 
-public class CouchUpdate implements PrestoUpdate, CouchChangeSet.CouchChange {
+public class DefaultUpdate implements PrestoUpdate, DefaultChangeSet.Change {
 
-    private static Logger log = LoggerFactory.getLogger(CouchUpdate.class.getName());
+    private static Logger log = LoggerFactory.getLogger(DefaultUpdate.class.getName());
 
-    private final CouchChangeSet changeSet;
+    private final DefaultChangeSet changeSet;
 
-    private final CouchTopic topic;
+    private final DefaultTopic topic;
     private final PrestoType type;
     private final boolean isNew;
 
     private int updateCount = 0;
 
-    CouchUpdate(CouchChangeSet changeSet, PrestoType type) {
+    DefaultUpdate(DefaultChangeSet changeSet, PrestoType type) {
         this(changeSet, null, type);
     }
 
-    CouchUpdate(CouchChangeSet changeSet, CouchTopic topic, PrestoType type) {
+    DefaultUpdate(DefaultChangeSet changeSet, DefaultTopic topic, PrestoType type) {
         if (topic == null && type == null) {
             throw new IllegalArgumentException("At least one of topic or type must be specified.");
         }
@@ -53,7 +54,7 @@ public class CouchUpdate implements PrestoUpdate, CouchChangeSet.CouchChange {
     }
     
     @Override
-    public CouchTopic getTopic() {
+    public PrestoTopic getTopic() {
         return topic;
     }
     
@@ -88,7 +89,7 @@ public class CouchUpdate implements PrestoUpdate, CouchChangeSet.CouchChange {
 
     @Override
     public void addValues(PrestoField field, Collection<?> values) {
-        addValues(field, values, CouchDataProvider.DEFAULT_INDEX);
+        addValues(field, values, DefaultChangeSet.DEFAULT_INDEX);
     }
 
     @Override
