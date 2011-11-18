@@ -1,4 +1,4 @@
-package net.ontopia.presto.spi.impl.couchdb;
+package net.ontopia.presto.spi.utils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -10,33 +10,60 @@ import java.util.Map;
 import java.util.Set;
 
 import net.ontopia.presto.spi.PrestoChangeSet;
+import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
 
-import org.codehaus.jackson.node.ObjectNode;
-import org.ektorp.CouchDbConnector;
-import org.ektorp.DocumentOperationResult;
-import org.ektorp.UpdateConflictException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CouchChangeSet implements PrestoChangeSet {
+public class PrestoDefaultChangeSet implements PrestoChangeSet {
 
-    private static Logger log = LoggerFactory.getLogger(CouchChangeSet.class.getName());
+    private static Logger log = LoggerFactory.getLogger(PrestoDefaultChangeSet.class.getName());
+    
+    public static interface DefaultDataProvider extends PrestoDataProvider {
 
-    static interface CouchChange {
+        DefaultTopic newInstance(PrestoType type);
+
+        void create(PrestoTopic topic);
+
+        void update(PrestoTopic topic);
+
+        boolean delete(PrestoTopic topic);
+
+        void updateBulk(List<Change> changes);
+
+    }
+    
+    public static interface DefaultTopic extends PrestoTopic {
+
+        DefaultDataProvider getDataProvider();
+        
+        void updateNameProperty(Collection<? extends Object> values);
+
+        void setValue(PrestoField field, Collection<? extends Object> values);
+
+        void addValue(PrestoField field, Collection<? extends Object> values, int index);
+
+        void removeValue(PrestoField field, Collection<? extends Object> values);
+
+    }
+    
+    static final int DEFAULT_INDEX = -1;
+
+    public static interface Change {
         enum Type {CREATE, UPDATE, DELETE};
         Type getType();
-        CouchTopic getTopic();
+        PrestoTopic getTopic();
         boolean hasUpdate();
     }
 
-    class CouchDelete implements CouchChange {
-        private final CouchTopic topic;
-        private CouchDelete(CouchTopic topic) {
+    class ChangeDelete implements Change {
+        private final PrestoTopic topic;
+        private ChangeDelete(PrestoTopic topic) {
             this.topic = topic;
         }
         @Override
@@ -44,7 +71,7 @@ public class CouchChangeSet implements PrestoChangeSet {
             return Type.DELETE;
         }
         @Override
-        public CouchTopic getTopic() {
+        public PrestoTopic getTopic() {
             return topic;
         }
         @Override
@@ -53,34 +80,34 @@ public class CouchChangeSet implements PrestoChangeSet {
         }
     }
 
-    private final CouchDataProvider dataProvider;
+    private final DefaultDataProvider dataProvider;
 
     private final Set<PrestoTopic> deleted = new HashSet<PrestoTopic>();
-    private final Map<PrestoTopic,CouchUpdate> updates = new HashMap<PrestoTopic,CouchUpdate>();
-    private final List<CouchChange> changes = new ArrayList<CouchChange>();
+    private final Map<PrestoTopic,PrestoDefaultUpdate> updates = new HashMap<PrestoTopic,PrestoDefaultUpdate>();
+    private final List<Change> changes = new ArrayList<Change>();
 
     private boolean saved;
 
-    CouchChangeSet(CouchDataProvider dataProvider) {
+    public PrestoDefaultChangeSet(DefaultDataProvider dataProvider) {
         this.dataProvider = dataProvider;
     }
 
-    CouchTopic newInstance(PrestoType type) {
+    public DefaultTopic newInstance(PrestoType type) {
         return dataProvider.newInstance(type);
     }
 
     @Override
     public PrestoUpdate createTopic(PrestoType type) {
-        CouchUpdate update = new CouchUpdate(this, type);
+        PrestoDefaultUpdate update = new PrestoDefaultUpdate(this, type);
         changes.add(update);
         return update;
     }
 
     @Override
     public PrestoUpdate updateTopic(PrestoTopic topic, PrestoType type) {
-        CouchUpdate update = updates.get(topic);
+        PrestoDefaultUpdate update = updates.get(topic);
         if (update == null) {
-            update = new CouchUpdate(this, (CouchTopic)topic, type);
+            update = new PrestoDefaultUpdate(this, (DefaultTopic)topic, type);
             changes.add(update);
             updates.put(topic, update);
         }
@@ -97,7 +124,7 @@ public class CouchChangeSet implements PrestoChangeSet {
             return;
         }
 
-        changes.add(new CouchDelete((CouchTopic)topic));
+        changes.add(new ChangeDelete(topic));
         deleted.add(topic);
         
         // find and remove dependencies
@@ -160,71 +187,22 @@ public class CouchChangeSet implements PrestoChangeSet {
         this.saved = true;
         
         if (changes.size() == 1) {
-            CouchChange change = changes.get(0);
+            Change change = changes.get(0);
             if (change.hasUpdate()) {
-                CouchTopic topic = change.getTopic();
-                if (change.getType().equals(CouchChange.Type.CREATE)) {
-                    create(topic);                
-                } else if (change.getType().equals(CouchChange.Type.UPDATE)) {
+                PrestoTopic topic = change.getTopic();
+                if (change.getType().equals(Change.Type.CREATE)) {
+                    dataProvider.create(topic);                
+                } else if (change.getType().equals(Change.Type.UPDATE)) {
                     if (!deleted.contains(topic)) {
-                        update(topic);
+                        dataProvider.update(topic);
                     }
-                } else if (change.getType().equals(CouchChange.Type.DELETE)) {
-                    delete(topic);                
+                } else if (change.getType().equals(Change.Type.DELETE)) {
+                    dataProvider.delete(topic);                
                 }
             }
         } else if (changes.size() > 1) {
-            updateBulk(changes);
+            dataProvider.updateBulk(changes);
         }       
-    }
-
-    // CouchDB document CRUD operations
-
-    protected void create(CouchTopic topic) {
-        dataProvider.getCouchConnector().create(topic.getData());
-        log.info("Created: " + topic.getId() + " " + topic.getName());
-    }
-
-    protected void update(CouchTopic topic) {
-        dataProvider.getCouchConnector().update(topic.getData());        
-        log.info("Updated: " + topic.getId() + " " + topic.getName());
-    }
-
-    protected void updateBulk(List<CouchChange> changes) {
-        List<ObjectNode> bulkDocuments = new ArrayList<ObjectNode>();
-        for (CouchChange change : changes) {
-            if (change.hasUpdate()) {
-                CouchTopic topic = change.getTopic();
-
-                if (change.getType().equals(CouchChange.Type.DELETE)) {
-                    ObjectNode data = topic.getData();
-                    data.put("_deleted", true);
-                }
-
-                log.info("Bulk update document: " + change.getType() + " " + topic.getId());
-                bulkDocuments.add(topic.getData());
-            }
-        }
-        CouchDbConnector couchConnector = dataProvider.getCouchConnector();
-        for (DocumentOperationResult dor : couchConnector.executeAllOrNothing(bulkDocuments)) {
-            log.warn("Bulk update error (probably caused conflict): " + dor);
-        }
-    }
-
-    protected boolean delete(CouchTopic topic) {
-        log.info("Removing: " + topic.getId() + " " + topic.getName());
-        try {
-            dataProvider.getCouchConnector().delete(topic.getData());
-            return true;
-        } catch (UpdateConflictException e) {
-            CouchTopic topic2 = (CouchTopic)dataProvider.getTopicById(topic.getId());
-            if (topic2 != null) {
-                dataProvider.getCouchConnector().delete(topic2.getData());
-                return true;
-            } else {
-                return false;
-            }
-        }
     }
 
     // inverse fields (foreign keys)
@@ -234,13 +212,13 @@ public class CouchChangeSet implements PrestoChangeSet {
         if (inverseFieldId != null) {
             for (Object value : values) {
 
-                CouchTopic valueTopic = (CouchTopic)value;
+                PrestoTopic valueTopic = (PrestoTopic)value;
                 if (!topic.equals(valueTopic)) {
                     PrestoType valueType = field.getSchemaProvider().getTypeById(valueTopic.getTypeId());
                     PrestoField inverseField = valueType.getFieldById(inverseFieldId);
     
                     PrestoUpdate inverseUpdate = updateTopic(valueTopic, valueType);
-                    inverseUpdate.addValues(inverseField, Collections.singleton(topic), CouchDataProvider.DEFAULT_INDEX);
+                    inverseUpdate.addValues(inverseField, Collections.singleton(topic), PrestoDefaultChangeSet.DEFAULT_INDEX);
                 }
             }
         }
@@ -252,7 +230,7 @@ public class CouchChangeSet implements PrestoChangeSet {
             if (inverseFieldId != null) {
                 for (Object value : values) {
 
-                    CouchTopic valueTopic = (CouchTopic)value;
+                    PrestoTopic valueTopic = (PrestoTopic)value;
                     if (!topic.equals(valueTopic)) {
                         PrestoType valueType = field.getSchemaProvider().getTypeById(valueTopic.getTypeId());
                         if (field.isCascadingDelete() && valueType.isRemovableCascadingDelete()) {

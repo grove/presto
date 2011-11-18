@@ -11,9 +11,11 @@ import java.util.Set;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
-import net.ontopia.presto.spi.utils.PrestoPagedValues;
 import net.ontopia.presto.spi.utils.PrestoFieldResolver;
+import net.ontopia.presto.spi.utils.PrestoPagedValues;
 import net.ontopia.presto.spi.utils.PrestoPaging;
+import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.DefaultDataProvider;
+import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.DefaultTopic;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
@@ -21,7 +23,7 @@ import org.codehaus.jackson.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CouchTopic implements PrestoTopic {
+public class CouchTopic implements DefaultTopic {
 
     private static Logger log = LoggerFactory.getLogger(CouchTopic.class.getName());
 
@@ -31,10 +33,6 @@ public class CouchTopic implements PrestoTopic {
     protected CouchTopic(CouchDataProvider dataProvider, ObjectNode data) {
         this.dataProvider = dataProvider;
         this.data = data;    
-    }
-
-    protected CouchDataProvider getDataProvider() {
-        return dataProvider;
     }
 
     @Override
@@ -54,12 +52,6 @@ public class CouchTopic implements PrestoTopic {
     @Override
     public String toString() {
         return "CouchTopic[" + getId() + "]";
-    }
-    
-    protected static ObjectNode newInstanceObjectNode(CouchDataProvider dataProvider, PrestoType type) {
-        ObjectNode data = dataProvider.getObjectMapper().createObjectNode();
-        data.put(":type", type.getId());
-        return data;
     }
 
     ObjectNode getData() {
@@ -85,11 +77,11 @@ public class CouchTopic implements PrestoTopic {
     // json data access strategy
 
     protected ArrayNode getFieldValue(PrestoField field) {
-        return getDataProvider().getFieldStrategy().getFieldValue(getData(), field);
+        return dataProvider.getFieldStrategy().getFieldValue(getData(), field);
     }
 
     protected void putFieldValue(PrestoField field, ArrayNode value) {
-        getDataProvider().getFieldStrategy().putFieldValue(getData(), field, value);
+        dataProvider.getFieldStrategy().putFieldValue(getData(), field, value);
     }
     
     // methods for retrieving the state of a couchdb document
@@ -159,7 +151,7 @@ public class CouchTopic implements PrestoTopic {
         }
     }
 
-    private PagedValues resolveValues(CouchTopic topic, PrestoField field, ArrayNode resolveArray, Paging paging) {
+    private PagedValues resolveValues(PrestoTopic topic, PrestoField field, ArrayNode resolveArray, Paging paging) {
         PagedValues result = null;
         PrestoType type = field.getSchemaProvider().getTypeById(topic.getTypeId());
         Collection<? extends Object> resultCollection = Collections.singleton(topic);
@@ -178,7 +170,7 @@ public class CouchTopic implements PrestoTopic {
             PrestoType type, PrestoField field, boolean isReference, ObjectNode resolveConfig, 
             Paging paging) {
         
-        PrestoFieldResolver resolver = getDataProvider().createFieldResolver(type.getSchemaProvider(), resolveConfig);
+        PrestoFieldResolver resolver = dataProvider.createFieldResolver(type.getSchemaProvider(), resolveConfig);
         if (resolver == null) {
             return new PrestoPagedValues(Collections.emptyList(), paging, 0);            
         } else {
@@ -192,15 +184,37 @@ public class CouchTopic implements PrestoTopic {
     // methods for updating the state of a couchdb document
 
     private String getValue(Object value) {
-        if (value instanceof CouchTopic) {
-            CouchTopic valueTopic = (CouchTopic)value;
+        if (value instanceof PrestoTopic) {
+            PrestoTopic valueTopic = (PrestoTopic)value;
             return valueTopic.getId();
         } else {
             return(String)value;
         }
     }
 
-    void setValue(PrestoField field, Collection<? extends Object> values) {
+    // --- DefaultTopic implementation
+    
+    @Override
+    public DefaultDataProvider getDataProvider() {
+        return dataProvider;
+    }
+    
+    @Override
+    public void updateNameProperty(Collection<? extends Object> values) {
+        String name;
+        Object value = values.isEmpty() ? null : values.iterator().next();
+        if (value == null) {
+            name = "No name";
+        } else if (value instanceof PrestoTopic) {
+            name = ((PrestoTopic)value).getName();
+        } else {
+            name = value.toString();
+        }
+        getData().put(":name", name);
+    }
+
+    @Override
+    public void setValue(PrestoField field, Collection<? extends Object> values) {
         ArrayNode arrayNode = dataProvider.getObjectMapper().createArrayNode();
         for (Object value : values) {
             arrayNode.add(getValue(value));
@@ -208,7 +222,8 @@ public class CouchTopic implements PrestoTopic {
         putFieldValue(field, arrayNode);
     }
 
-    void addValue(PrestoField field, Collection<? extends Object> values, int index) {
+    @Override
+    public void addValue(PrestoField field, Collection<? extends Object> values, int index) {
         if (!values.isEmpty()) {
 
             // remove duplicates (new)
@@ -259,7 +274,8 @@ public class CouchTopic implements PrestoTopic {
         }
     }
 
-    void removeValue(PrestoField field, Collection<? extends Object> values) {
+    @Override
+    public void removeValue(PrestoField field, Collection<? extends Object> values) {
         if (!values.isEmpty()) {
             ArrayNode jsonNode = getFieldValue(field);
             if (jsonNode != null) {
@@ -277,19 +293,6 @@ public class CouchTopic implements PrestoTopic {
                 putFieldValue(field, arrayNode);
             }
         }
-    }
-
-    void updateNameProperty(Collection<? extends Object> values) {
-        String name;
-        Object value = values.isEmpty() ? null : values.iterator().next();
-        if (value == null) {
-            name = "No name";
-        } else if (value instanceof CouchTopic) {
-            name = ((CouchTopic)value).getName();
-        } else {
-            name = value.toString();
-        }
-        getData().put(":name", name);
     }
 
 }
