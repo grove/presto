@@ -11,14 +11,16 @@ import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
-import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet;
+import net.ontopia.presto.spi.jackson.JacksonDataProvider;
+import net.ontopia.presto.spi.jackson.JacksonFieldStrategy;
+import net.ontopia.presto.spi.jackson.JacksonTopic;
 import net.ontopia.presto.spi.utils.PrestoContext;
+import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet;
+import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.Change;
+import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.DefaultTopic;
 import net.ontopia.presto.spi.utils.PrestoFieldResolver;
 import net.ontopia.presto.spi.utils.PrestoFunctionResolver;
 import net.ontopia.presto.spi.utils.PrestoTraverseResolver;
-import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.Change;
-import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.DefaultDataProvider;
-import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.DefaultTopic;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -33,7 +35,7 @@ import org.ektorp.ViewResult.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class CouchDataProvider implements DefaultDataProvider {
+public abstract class CouchDataProvider implements JacksonDataProvider {
 
     private static Logger log = LoggerFactory.getLogger(CouchDataProvider.class.getName());
 
@@ -42,7 +44,7 @@ public abstract class CouchDataProvider implements DefaultDataProvider {
 
     private final CouchDbConnector db;
     private final ObjectMapper mapper;
-    private final CouchFieldStrategy fieldStrategy;
+    private final JacksonFieldStrategy fieldStrategy;
 
     protected String designDocId = "_design/presto";
 
@@ -57,37 +59,12 @@ public abstract class CouchDataProvider implements DefaultDataProvider {
     protected CouchDbConnector getCouchConnector() {
         return db;
     }
-
-    protected ObjectMapper getObjectMapper() {
-        return mapper;
-    }
-
+    
     protected ObjectMapper createObjectMapper() {
         return new ObjectMapper();
     }
-    
-    CouchFieldStrategy getFieldStrategy() {
-        return fieldStrategy;
-    }
 
-    abstract protected CouchFieldStrategy createFieldStrategy(ObjectMapper mapper);
-    
-    protected PrestoFieldResolver createFieldResolver(PrestoSchemaProvider schemaProvider, ObjectNode config) {
-        PrestoContext context = new PrestoContext(this, schemaProvider, getObjectMapper());
-        String type = config.get("type").getTextValue();
-        if (type == null) {
-            log.error("type not specified on resolve item: " + config);
-        } else if (type.equals("couchdb-view")) {
-            return new CouchViewResolver(this, context, config);
-        } else if (type.equals("traverse")) {
-            return new PrestoTraverseResolver(context, config);
-        } else if (type.equals("function")) {
-            return new PrestoFunctionResolver(context, config);
-        } else {
-            log.error("Unknown type specified on resolve item: " + config);            
-        }
-        return null;
-    }
+    abstract protected JacksonFieldStrategy createFieldStrategy(ObjectMapper mapper);
 
     @Override
     public String getProviderId() {
@@ -113,12 +90,12 @@ public abstract class CouchDataProvider implements DefaultDataProvider {
         if (topicIds.isEmpty()) {
             return Collections.emptyList();
         }
-        Collection<PrestoTopic> result = new ArrayList<PrestoTopic>(topicIds.size());
         // look up by document ids
         ViewQuery query = new ViewQuery()
         .allDocs()
         .includeDocs(true).keys(topicIds);
 
+        Collection<PrestoTopic> result = new ArrayList<PrestoTopic>(topicIds.size());
         ViewResult viewResult = getCouchConnector().queryView(query);
         for (Row row : viewResult.getRows()) {
             JsonNode docNode = row.getDocAsNode();
@@ -140,13 +117,13 @@ public abstract class CouchDataProvider implements DefaultDataProvider {
             for (PrestoType type : types) {
                 typeIds.add(type.getId());
             }
-            List<PrestoTopic> result = new ArrayList<PrestoTopic>(typeIds.size());
             ViewQuery query = new ViewQuery()
             .designDocId(designDocId)
             .viewName("by-type")
             .staleOk(true)
             .includeDocs(true).keys(typeIds);
     
+            List<PrestoTopic> result = new ArrayList<PrestoTopic>(typeIds.size());
             ViewResult viewResult = getCouchConnector().queryView(query);
             for (Row row : viewResult.getRows()) {
                 ObjectNode docNode = (ObjectNode)row.getDocAsNode();
@@ -191,28 +168,58 @@ public abstract class CouchDataProvider implements DefaultDataProvider {
         return this;
     }
 
-    // default data provider
+    // -- JacksonDataProvider
     
-    protected CouchTopic existing(ObjectNode doc) {
-        return doc == null ? null : new CouchTopic(this, doc);
+    @Override
+    public ObjectMapper getObjectMapper() {
+        return mapper;
+    }
+    
+    @Override
+    public JacksonFieldStrategy getFieldStrategy() {
+        return fieldStrategy;
+    }
+    
+    @Override
+    public PrestoFieldResolver createFieldResolver(PrestoSchemaProvider schemaProvider, ObjectNode config) {
+        PrestoContext context = new PrestoContext(this, schemaProvider, getObjectMapper());
+        String type = config.get("type").getTextValue();
+        if (type == null) {
+            log.error("type not specified on resolve item: " + config);
+        } else if (type.equals("couchdb-view")) {
+            return new CouchViewResolver(this, context, config);
+        } else if (type.equals("traverse")) {
+            return new PrestoTraverseResolver(context, config);
+        } else if (type.equals("function")) {
+            return new PrestoFunctionResolver(context, config);
+        } else {
+            log.error("Unknown type specified on resolve item: " + config);            
+        }
+        return null;
+    }
+
+    // -- DefaultDataProvider
+    
+    protected JacksonTopic existing(ObjectNode doc) {
+        return doc == null ? null : new JacksonTopic(this, doc);
     }
 
     @Override
     public DefaultTopic newInstance(PrestoType type) {
         ObjectNode doc = getObjectMapper().createObjectNode();
         doc.put(":type", type.getId());
-        return new CouchTopic(this, doc);
+        return new JacksonTopic(this, doc);
     }
     
     @Override
     public void create(PrestoTopic topic) {
-        getCouchConnector().create(((CouchTopic)topic).getData());
+        getCouchConnector().create(((JacksonTopic)topic).getData());
         log.info("Created: " + topic.getId() + " " + topic.getName());
     }
 
     @Override
     public void update(PrestoTopic topic) {
-        getCouchConnector().update(((CouchTopic)topic).getData());        
+        getCouchConnector().update(((JacksonTopic)topic).getData());        
         log.info("Updated: " + topic.getId() + " " + topic.getName());
     }
 
@@ -221,7 +228,7 @@ public abstract class CouchDataProvider implements DefaultDataProvider {
         List<ObjectNode> bulkDocuments = new ArrayList<ObjectNode>();
         for (Change change : changes) {
             if (change.hasUpdate()) {
-                CouchTopic topic = (CouchTopic)change.getTopic();
+                JacksonTopic topic = (JacksonTopic)change.getTopic();
 
                 if (change.getType().equals(Change.Type.DELETE)) {
                     ObjectNode data = topic.getData();
@@ -241,10 +248,10 @@ public abstract class CouchDataProvider implements DefaultDataProvider {
     public boolean delete(PrestoTopic topic) {
         log.info("Removing: " + topic.getId() + " " + topic.getName());
         try {
-            getCouchConnector().delete(((CouchTopic)topic).getData());
+            getCouchConnector().delete(((JacksonTopic)topic).getData());
             return true;
         } catch (UpdateConflictException e) {
-            CouchTopic topic2 = (CouchTopic)getTopicById(topic.getId());
+            JacksonTopic topic2 = (JacksonTopic)getTopicById(topic.getId());
             if (topic2 != null) {
                 getCouchConnector().delete(topic2.getData());
                 return true;

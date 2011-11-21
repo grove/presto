@@ -1,11 +1,11 @@
-package net.ontopia.presto.spi.impl.couchdb;
+package net.ontopia.presto.spi.jackson;
 
 import net.ontopia.presto.spi.PrestoField;
 
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
 
-public interface CouchFieldStrategy {
+public interface JacksonFieldStrategy {
 
     ArrayNode getFieldValue(ObjectNode doc, PrestoField field);
 

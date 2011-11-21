@@ -1,4 +1,4 @@
-package net.ontopia.presto.spi.impl.couchdb;
+package net.ontopia.presto.spi.jackson;
 
 import java.util.List;
 
@@ -9,11 +9,11 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
 
-public abstract class CouchBucketFieldStrategy implements CouchFieldStrategy {
+public abstract class JacksonBucketFieldStrategy implements JacksonFieldStrategy {
 
     private final ObjectMapper mapper;
 
-    public CouchBucketFieldStrategy(ObjectMapper mapper) {
+    public JacksonBucketFieldStrategy(ObjectMapper mapper) {
         this.mapper = mapper;
     }
     

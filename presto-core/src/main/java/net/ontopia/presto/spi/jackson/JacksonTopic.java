@@ -1,4 +1,4 @@
-package net.ontopia.presto.spi.impl.couchdb;
+package net.ontopia.presto.spi.jackson;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -23,22 +23,22 @@ import org.codehaus.jackson.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CouchTopic implements DefaultTopic {
+public class JacksonTopic implements DefaultTopic {
 
-    private static Logger log = LoggerFactory.getLogger(CouchTopic.class.getName());
+    private static Logger log = LoggerFactory.getLogger(JacksonTopic.class.getName());
 
-    private final CouchDataProvider dataProvider;  
+    private final JacksonDataProvider dataProvider;  
     private final ObjectNode data;
 
-    protected CouchTopic(CouchDataProvider dataProvider, ObjectNode data) {
+    public JacksonTopic(JacksonDataProvider dataProvider, ObjectNode data) {
         this.dataProvider = dataProvider;
         this.data = data;    
     }
 
     @Override
     public boolean equals(Object o) {
-        if (o instanceof CouchTopic) {
-            CouchTopic other = (CouchTopic)o;
+        if (o instanceof JacksonTopic) {
+            JacksonTopic other = (JacksonTopic)o;
             return other.getId().equals(getId());
         }
         return false;
@@ -51,10 +51,10 @@ public class CouchTopic implements DefaultTopic {
 
     @Override
     public String toString() {
-        return "CouchTopic[" + getId() + "]";
+        return "Topic[" + getId() + "]";
     }
 
-    ObjectNode getData() {
+    public ObjectNode getData() {
         return data;
     }
 
@@ -84,7 +84,7 @@ public class CouchTopic implements DefaultTopic {
         dataProvider.getFieldStrategy().putFieldValue(getData(), field, value);
     }
     
-    // methods for retrieving the state of a couchdb document
+    // methods for retrieving the state of a topic
 
     @Override
     public List<? extends Object> getValues(PrestoField field) {
@@ -181,17 +181,6 @@ public class CouchTopic implements DefaultTopic {
         }
     }
 
-    // methods for updating the state of a couchdb document
-
-    private String getValue(Object value) {
-        if (value instanceof PrestoTopic) {
-            PrestoTopic valueTopic = (PrestoTopic)value;
-            return valueTopic.getId();
-        } else {
-            return(String)value;
-        }
-    }
-
     // --- DefaultTopic implementation
     
     @Override
@@ -211,6 +200,15 @@ public class CouchTopic implements DefaultTopic {
             name = value.toString();
         }
         getData().put(":name", name);
+    }
+
+    private String getValue(Object value) {
+        if (value instanceof PrestoTopic) {
+            PrestoTopic valueTopic = (PrestoTopic)value;
+            return valueTopic.getId();
+        } else {
+            return(String)value;
+        }
     }
 
     @Override
