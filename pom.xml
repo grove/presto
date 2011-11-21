@@ -69,6 +69,7 @@
     <module>presto-jaxrs</module>
     <module>presto-jaxb</module>
     <module>presto-solr</module>
+    <module>presto-webdemo</module>
   </modules>
 
   <distributionManagement>
