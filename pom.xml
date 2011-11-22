@@ -32,7 +32,7 @@
       <dependency>
         <groupId>org.ektorp</groupId>
         <artifactId>org.ektorp</artifactId>
-        <version>1.2.1</version>
+        <version>1.2.2</version>
       </dependency>
       <dependency>
 	<groupId>org.slf4j</groupId>
@@ -64,10 +64,12 @@
     <module>presto-pojo</module>
     <!--module>presto-ontopoly</module-->
     <module>presto-couchdb</module>
+    <module>presto-riak</module>
     <!--module>presto-multi</module-->
     <module>presto-jaxrs</module>
     <module>presto-jaxb</module>
     <module>presto-solr</module>
+    <module>presto-webdemo</module>
   </modules>
 
   <distributionManagement>
