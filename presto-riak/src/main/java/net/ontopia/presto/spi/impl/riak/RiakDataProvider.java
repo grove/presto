@@ -1,6 +1,8 @@
 package net.ontopia.presto.spi.impl.riak;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import net.ontopia.presto.spi.PrestoChangeSet;
@@ -24,16 +26,32 @@ import org.codehaus.jackson.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.basho.riak.client.IRiakClient;
+import com.basho.riak.client.RiakException;
+import com.basho.riak.client.RiakFactory;
+import com.basho.riak.client.RiakRetryFailedException;
+import com.basho.riak.client.bucket.Bucket;
+
 public abstract class RiakDataProvider implements JacksonDataProvider {
 
     private static Logger log = LoggerFactory.getLogger(RiakDataProvider.class.getName());
 
+    private final IRiakClient riakClient;
     private final ObjectMapper mapper;
     private final JacksonFieldStrategy fieldStrategy;
 
     public RiakDataProvider() {
+        this.riakClient = createRiakClient();
         this.mapper = createObjectMapper();
         this.fieldStrategy = createFieldStrategy(mapper);  
+    }
+
+    protected IRiakClient createRiakClient() {
+        try {
+            return RiakFactory.pbcClient();
+        } catch (RiakException e) {
+            throw new RuntimeException(e);
+        }
     }
     
     protected ObjectMapper createObjectMapper() {
@@ -51,20 +69,29 @@ public abstract class RiakDataProvider implements JacksonDataProvider {
 
     @Override
     public PrestoTopic getTopicById(String id) {
-        // TODO Auto-generated method stub
-        return null;
+        try {
+            Bucket bucket = riakClient.fetchBucket("presto").execute();
+            return existing(bucket.fetch(id, ObjectNode.class).execute());
+        } catch (RiakRetryFailedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
-    public Collection<PrestoTopic> getTopicsByIds(Collection<String> id) {
-        // TODO Auto-generated method stub
+    public Collection<PrestoTopic> getTopicsByIds(Collection<String> ids) {
+        Collection<PrestoTopic> result = new ArrayList<PrestoTopic>();
+        for (String id : ids) {
+            PrestoTopic topic = getTopicById(id);
+            if (topic != null) {
+                result.add(topic);
+            }
+        }
         return null;
     }
 
     @Override
     public Collection<PrestoTopic> getAvailableFieldValues(PrestoFieldUsage field) {
-        // TODO Auto-generated method stub
-        return null;
+        return Collections.emptyList();
     }
 
     @Override
@@ -91,23 +118,53 @@ public abstract class RiakDataProvider implements JacksonDataProvider {
 
     @Override
     public void create(PrestoTopic topic) {
-        // TODO Auto-generated method stub
+        try {
+            Bucket bucket = riakClient.createBucket("presto").execute();
+            ObjectNode data = ((JacksonTopic)topic).getData();
+            bucket.store(data).execute();
+        } catch (RiakRetryFailedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public void update(PrestoTopic topic) {
-        // TODO Auto-generated method stub
+        try {
+            Bucket bucket = riakClient.fetchBucket("presto").execute();
+            ObjectNode data = ((JacksonTopic)topic).getData();
+            bucket.store(data).execute();
+        } catch (RiakRetryFailedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public boolean delete(PrestoTopic topic) {
-        // TODO Auto-generated method stub
-        return false;
+        try {
+            Bucket bucket = riakClient.fetchBucket("presto").execute();
+            ObjectNode data = ((JacksonTopic)topic).getData();
+            bucket.delete(data).execute();
+            return true;
+        } catch (RiakException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public void updateBulk(List<Change> changes) {
-        // TODO Auto-generated method stub
+        for (Change c : changes) {
+            switch (c.getType()) {
+            case CREATE:
+                create(c.getTopic());
+                break;
+            case UPDATE:
+                update(c.getTopic());
+                break;
+            case DELETE:
+                delete(c.getTopic());
+                break;
+            }
+        }
     }
 
     // -- JacksonDataProvider
