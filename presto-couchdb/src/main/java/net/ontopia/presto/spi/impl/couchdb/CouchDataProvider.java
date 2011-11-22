@@ -66,6 +66,8 @@ public abstract class CouchDataProvider implements JacksonDataProvider {
 
     abstract protected JacksonFieldStrategy createFieldStrategy(ObjectMapper mapper);
 
+    // -- PrestoDataProvider
+
     @Override
     public String getProviderId() {
         return "couchdb";
@@ -168,36 +170,6 @@ public abstract class CouchDataProvider implements JacksonDataProvider {
         return this;
     }
 
-    // -- JacksonDataProvider
-    
-    @Override
-    public ObjectMapper getObjectMapper() {
-        return mapper;
-    }
-    
-    @Override
-    public JacksonFieldStrategy getFieldStrategy() {
-        return fieldStrategy;
-    }
-    
-    @Override
-    public PrestoFieldResolver createFieldResolver(PrestoSchemaProvider schemaProvider, ObjectNode config) {
-        PrestoContext context = new PrestoContext(this, schemaProvider, getObjectMapper());
-        String type = config.get("type").getTextValue();
-        if (type == null) {
-            log.error("type not specified on resolve item: " + config);
-        } else if (type.equals("couchdb-view")) {
-            return new CouchViewResolver(this, context, config);
-        } else if (type.equals("traverse")) {
-            return new PrestoTraverseResolver(context, config);
-        } else if (type.equals("function")) {
-            return new PrestoFunctionResolver(context, config);
-        } else {
-            log.error("Unknown type specified on resolve item: " + config);            
-        }
-        return null;
-    }
-
     // -- DefaultDataProvider
     
     protected JacksonTopic existing(ObjectNode doc) {
@@ -259,6 +231,36 @@ public abstract class CouchDataProvider implements JacksonDataProvider {
                 return false;
             }
         }
+    }
+
+    // -- JacksonDataProvider
+    
+    @Override
+    public ObjectMapper getObjectMapper() {
+        return mapper;
+    }
+    
+    @Override
+    public JacksonFieldStrategy getFieldStrategy() {
+        return fieldStrategy;
+    }
+    
+    @Override
+    public PrestoFieldResolver createFieldResolver(PrestoSchemaProvider schemaProvider, ObjectNode config) {
+        PrestoContext context = new PrestoContext(this, schemaProvider, getObjectMapper());
+        String type = config.get("type").getTextValue();
+        if (type == null) {
+            log.error("type not specified on resolve item: " + config);
+        } else if (type.equals("couchdb-view")) {
+            return new CouchViewResolver(this, context, config);
+        } else if (type.equals("traverse")) {
+            return new PrestoTraverseResolver(context, config);
+        } else if (type.equals("function")) {
+            return new PrestoFunctionResolver(context, config);
+        } else {
+            log.error("Unknown type specified on resolve item: " + config);            
+        }
+        return null;
     }
 
 }
