@@ -9,8 +9,6 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 @XmlRootElement
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
 public class AvailableFieldValues {
-    
-    public static final String MEDIA_TYPE = "application/vnd.presto-available-field-values+json;charset=UTF-8";
 
     private String id;
     private String name;

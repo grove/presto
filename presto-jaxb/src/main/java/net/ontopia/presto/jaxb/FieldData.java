@@ -12,8 +12,6 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class FieldData {
     
-    public static final String MEDIA_TYPE = "application/vnd.presto-field-data+json;charset=UTF-8";
-    
     private String id;
     private String name;
     

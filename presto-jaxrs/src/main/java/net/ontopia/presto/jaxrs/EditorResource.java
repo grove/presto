@@ -54,7 +54,7 @@ public abstract class EditorResource {
     private @Context UriInfo uriInfo;
     
     @GET
-    @Produces(RootInfo.MEDIA_TYPE)
+    @Produces(APPLICATION_JSON_UTF8)
     public Response getRootInfo() throws Exception {
 
         RootInfo result = new RootInfo();
@@ -70,7 +70,7 @@ public abstract class EditorResource {
     }
 
     @GET
-    @Produces(AvailableDatabases.MEDIA_TYPE)
+    @Produces(APPLICATION_JSON_UTF8)
     @Path("available-databases")
     public Response getDatabases() throws Exception {
 
@@ -96,7 +96,7 @@ public abstract class EditorResource {
     }
 
     @GET
-    @Produces(Database.MEDIA_TYPE)
+    @Produces(APPLICATION_JSON_UTF8)
     @Path("database-info/{databaseId}")
     public Response getDatabaseInfo(
             @PathParam("databaseId") final String databaseId) throws Exception {
@@ -124,7 +124,7 @@ public abstract class EditorResource {
     }
 
     @GET
-    @Produces(Topic.MEDIA_TYPE)
+    @Produces(APPLICATION_JSON_UTF8)
     @Path("create-instance/{databaseId}/{typeId}")
     public Response createInstance(
             @PathParam("databaseId") final String databaseId, 
@@ -153,7 +153,7 @@ public abstract class EditorResource {
     }
 
     @GET
-    @Produces(FieldData.MEDIA_TYPE)
+    @Produces(APPLICATION_JSON_UTF8)
     @Path("paging-field/{databaseId}/{topicId}/{viewId}/{fieldId}/{start}/{limit}")
     public Response getFieldPaging(
             @PathParam("databaseId") final String databaseId, 
@@ -196,7 +196,7 @@ public abstract class EditorResource {
     }
 
     @GET
-    @Produces(Topic.MEDIA_TYPE)
+    @Produces(APPLICATION_JSON_UTF8)
     @Path("create-field-instance/{databaseId}/{parentTopicId}/{parentFieldId}/{playerTypeId}")
     public Response createFieldInstance(
             @PathParam("databaseId") final String databaseId,
@@ -297,7 +297,7 @@ public abstract class EditorResource {
     }
 
     @GET
-    @Produces(Topic.MEDIA_TYPE)
+    @Produces(APPLICATION_JSON_UTF8)
     @Path("topic/{databaseId}/{topicId}")
     public Response getTopicInDefaultView(
             @PathParam("databaseId") final String databaseId, 
@@ -329,7 +329,7 @@ public abstract class EditorResource {
     }
 
     @GET
-    @Produces(Topic.MEDIA_TYPE)
+    @Produces(APPLICATION_JSON_UTF8)
     @Path("topic/{databaseId}/{topicId}/{viewId}")
     public Response getTopicInView(
             @PathParam("databaseId") final String databaseId, 
@@ -362,8 +362,8 @@ public abstract class EditorResource {
     }
 
     @PUT
-    @Produces(Topic.MEDIA_TYPE)
-    @Consumes(Topic.MEDIA_TYPE)
+    @Produces(APPLICATION_JSON_UTF8)
+    @Consumes(APPLICATION_JSON_UTF8)
     @Path("topic/{databaseId}/{topicId}/{viewId}")
     public Response updateTopic(
             @PathParam("databaseId") final String databaseId, 
@@ -409,8 +409,8 @@ public abstract class EditorResource {
     }
 
     @POST
-    @Produces(FieldData.MEDIA_TYPE)
-    @Consumes(FieldData.MEDIA_TYPE)
+    @Produces(APPLICATION_JSON_UTF8)
+    @Consumes(APPLICATION_JSON_UTF8)
     @Path("add-field-values-at-index/{databaseId}/{topicId}/{viewId}/{fieldId}/{index}")
     public Response addFieldValuesAtIndex( 
             @PathParam("databaseId") final String databaseId, 
@@ -460,8 +460,8 @@ public abstract class EditorResource {
     }
 
     @POST
-    @Produces(FieldData.MEDIA_TYPE)
-    @Consumes(FieldData.MEDIA_TYPE)
+    @Produces(APPLICATION_JSON_UTF8)
+    @Consumes(APPLICATION_JSON_UTF8)
     @Path("move-field-values-to-index/{databaseId}/{topicId}/{viewId}/{fieldId}/{index}")
     public Response moveFieldValuesToIndex( 
             @PathParam("databaseId") final String databaseId, 
@@ -474,8 +474,8 @@ public abstract class EditorResource {
     }
 
     @POST
-    @Produces(FieldData.MEDIA_TYPE)
-    @Consumes(FieldData.MEDIA_TYPE)
+    @Produces(APPLICATION_JSON_UTF8)
+    @Consumes(APPLICATION_JSON_UTF8)
     @Path("add-field-values/{databaseId}/{topicId}/{viewId}/{fieldId}")
     public Response addFieldValues(
             @PathParam("databaseId") final String databaseId, 
@@ -488,8 +488,8 @@ public abstract class EditorResource {
     }
 
     @POST
-    @Produces(FieldData.MEDIA_TYPE)
-    @Consumes(FieldData.MEDIA_TYPE)
+    @Produces(APPLICATION_JSON_UTF8)
+    @Consumes(APPLICATION_JSON_UTF8)
     @Path("remove-field-values/{databaseId}/{topicId}/{viewId}/{fieldId}")
     public Response removeFieldValues(
             @PathParam("databaseId") final String databaseId, 
@@ -537,7 +537,7 @@ public abstract class EditorResource {
     }
 
     @GET
-    @Produces(AvailableFieldValues.MEDIA_TYPE)
+    @Produces(APPLICATION_JSON_UTF8)
     @Path("available-field-values/{databaseId}/{topicId}/{viewId}/{fieldId}")
     public Response getAvailableFieldValues( 
             @PathParam("databaseId") final String databaseId, 
@@ -581,7 +581,7 @@ public abstract class EditorResource {
     }
 
     @GET
-    @Produces(AvailableFieldTypes.MEDIA_TYPE)
+    @Produces(APPLICATION_JSON_UTF8)
     @Path("available-field-types/{databaseId}/{topicId}/{viewId}/{fieldId}")
     public Response getAvailableFieldTypes( 
             @PathParam("databaseId") final String databaseId, 
@@ -637,7 +637,7 @@ public abstract class EditorResource {
     }
 
     @GET
-    @Produces(AvailableTopicTypes.MEDIA_TYPE)
+    @Produces(APPLICATION_JSON_UTF8)
     @Path("available-types-tree/{databaseId}")
     public Response getAvailableTypesTree(@PathParam("databaseId") final String databaseId) throws Exception {
 

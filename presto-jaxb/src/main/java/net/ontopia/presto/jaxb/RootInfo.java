@@ -6,8 +6,6 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
 public class RootInfo {
-    
-    public static final String MEDIA_TYPE = "application/vnd.presto-root-info+json;charset=UTF-8";
 
     private String name;
     private int version;

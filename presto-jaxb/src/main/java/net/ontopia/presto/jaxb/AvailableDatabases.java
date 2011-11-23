@@ -7,8 +7,6 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
 public class AvailableDatabases {
-    
-    public static final String MEDIA_TYPE = "application/vnd.presto-available-databases+json;charset=UTF-8";
 
     private String name;
 
