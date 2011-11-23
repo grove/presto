@@ -19,14 +19,10 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
-
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ObjectNode;
 
 import net.ontopia.presto.jaxb.AvailableDatabases;
 import net.ontopia.presto.jaxb.AvailableFieldTypes;
@@ -46,6 +42,9 @@ import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoView;
 
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.node.ObjectNode;
+
 @Path("/editor")
 public abstract class EditorResource {
 
@@ -55,7 +54,7 @@ public abstract class EditorResource {
     private @Context UriInfo uriInfo;
     
     @GET
-    @Produces(APPLICATION_JSON_UTF8)
+    @Produces(RootInfo.MEDIA_TYPE)
     public Response getRootInfo() throws Exception {
 
         RootInfo result = new RootInfo();
@@ -71,7 +70,7 @@ public abstract class EditorResource {
     }
 
     @GET
-    @Produces(APPLICATION_JSON_UTF8)
+    @Produces(AvailableDatabases.MEDIA_TYPE)
     @Path("available-databases")
     public Response getDatabases() throws Exception {
 
@@ -97,7 +96,7 @@ public abstract class EditorResource {
     }
 
     @GET
-    @Produces(APPLICATION_JSON_UTF8)
+    @Produces(Database.MEDIA_TYPE)
     @Path("database-info/{databaseId}")
     public Response getDatabaseInfo(
             @PathParam("databaseId") final String databaseId) throws Exception {
@@ -125,7 +124,7 @@ public abstract class EditorResource {
     }
 
     @GET
-    @Produces(APPLICATION_JSON_UTF8)
+    @Produces(Topic.MEDIA_TYPE)
     @Path("create-instance/{databaseId}/{typeId}")
     public Response createInstance(
             @PathParam("databaseId") final String databaseId, 
@@ -154,7 +153,7 @@ public abstract class EditorResource {
     }
 
     @GET
-    @Produces(APPLICATION_JSON_UTF8)
+    @Produces(FieldData.MEDIA_TYPE)
     @Path("paging-field/{databaseId}/{topicId}/{viewId}/{fieldId}/{start}/{limit}")
     public Response getFieldPaging(
             @PathParam("databaseId") final String databaseId, 
@@ -197,7 +196,7 @@ public abstract class EditorResource {
     }
 
     @GET
-    @Produces(APPLICATION_JSON_UTF8)
+    @Produces(Topic.MEDIA_TYPE)
     @Path("create-field-instance/{databaseId}/{parentTopicId}/{parentFieldId}/{playerTypeId}")
     public Response createFieldInstance(
             @PathParam("databaseId") final String databaseId,
@@ -298,7 +297,7 @@ public abstract class EditorResource {
     }
 
     @GET
-    @Produces(APPLICATION_JSON_UTF8)
+    @Produces(Topic.MEDIA_TYPE)
     @Path("topic/{databaseId}/{topicId}")
     public Response getTopicInDefaultView(
             @PathParam("databaseId") final String databaseId, 
@@ -330,7 +329,7 @@ public abstract class EditorResource {
     }
 
     @GET
-    @Produces(APPLICATION_JSON_UTF8)
+    @Produces(Topic.MEDIA_TYPE)
     @Path("topic/{databaseId}/{topicId}/{viewId}")
     public Response getTopicInView(
             @PathParam("databaseId") final String databaseId, 
@@ -363,8 +362,8 @@ public abstract class EditorResource {
     }
 
     @PUT
-    @Produces(APPLICATION_JSON_UTF8)
-    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(Topic.MEDIA_TYPE)
+    @Consumes(Topic.MEDIA_TYPE)
     @Path("topic/{databaseId}/{topicId}/{viewId}")
     public Response updateTopic(
             @PathParam("databaseId") final String databaseId, 
@@ -410,8 +409,8 @@ public abstract class EditorResource {
     }
 
     @POST
-    @Produces(APPLICATION_JSON_UTF8)
-    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(FieldData.MEDIA_TYPE)
+    @Consumes(FieldData.MEDIA_TYPE)
     @Path("add-field-values-at-index/{databaseId}/{topicId}/{viewId}/{fieldId}/{index}")
     public Response addFieldValuesAtIndex( 
             @PathParam("databaseId") final String databaseId, 
@@ -461,8 +460,8 @@ public abstract class EditorResource {
     }
 
     @POST
-    @Produces(APPLICATION_JSON_UTF8)
-    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(FieldData.MEDIA_TYPE)
+    @Consumes(FieldData.MEDIA_TYPE)
     @Path("move-field-values-to-index/{databaseId}/{topicId}/{viewId}/{fieldId}/{index}")
     public Response moveFieldValuesToIndex( 
             @PathParam("databaseId") final String databaseId, 
@@ -475,8 +474,8 @@ public abstract class EditorResource {
     }
 
     @POST
-    @Produces(APPLICATION_JSON_UTF8)
-    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(FieldData.MEDIA_TYPE)
+    @Consumes(FieldData.MEDIA_TYPE)
     @Path("add-field-values/{databaseId}/{topicId}/{viewId}/{fieldId}")
     public Response addFieldValues(
             @PathParam("databaseId") final String databaseId, 
@@ -489,8 +488,8 @@ public abstract class EditorResource {
     }
 
     @POST
-    @Produces(APPLICATION_JSON_UTF8)
-    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(FieldData.MEDIA_TYPE)
+    @Consumes(FieldData.MEDIA_TYPE)
     @Path("remove-field-values/{databaseId}/{topicId}/{viewId}/{fieldId}")
     public Response removeFieldValues(
             @PathParam("databaseId") final String databaseId, 
@@ -538,7 +537,7 @@ public abstract class EditorResource {
     }
 
     @GET
-    @Produces(APPLICATION_JSON_UTF8)
+    @Produces(AvailableFieldValues.MEDIA_TYPE)
     @Path("available-field-values/{databaseId}/{topicId}/{viewId}/{fieldId}")
     public Response getAvailableFieldValues( 
             @PathParam("databaseId") final String databaseId, 
@@ -582,7 +581,7 @@ public abstract class EditorResource {
     }
 
     @GET
-    @Produces(APPLICATION_JSON_UTF8)
+    @Produces(AvailableFieldTypes.MEDIA_TYPE)
     @Path("available-field-types/{databaseId}/{topicId}/{viewId}/{fieldId}")
     public Response getAvailableFieldTypes( 
             @PathParam("databaseId") final String databaseId, 
@@ -638,7 +637,7 @@ public abstract class EditorResource {
     }
 
     @GET
-    @Produces(APPLICATION_JSON_UTF8)
+    @Produces(AvailableTopicTypes.MEDIA_TYPE)
     @Path("available-types-tree/{databaseId}")
     public Response getAvailableTypesTree(@PathParam("databaseId") final String databaseId) throws Exception {
 
