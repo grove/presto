@@ -74,7 +74,7 @@ public class FieldData extends Document {
 
     @Override
     public String getFormat() {
-        return "field-data";
+        return "field";
     }
     
     public void setId(String id) {
