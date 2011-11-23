@@ -13,6 +13,8 @@ import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoFieldResolver;
 import net.ontopia.presto.spi.utils.PrestoPagedValues;
+import net.ontopia.presto.spi.utils.PrestoTopicFieldVariableResolver;
+import net.ontopia.presto.spi.utils.PrestoVariableResolver;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;
@@ -57,16 +59,18 @@ public class CouchViewResolver implements PrestoFieldResolver {
         Object endKey = null;
 
         if (config.has("key")) {
-            keys = context.replaceVariables(objects, config.get("key"));
+            PrestoVariableResolver variableResolver = new PrestoTopicFieldVariableResolver(context);
+            keys = context.replaceVariables(variableResolver, objects, config.get("key"));
             if (keys.isEmpty()) {
                 return new PrestoPagedValues(Collections.emptyList(), paging, 0);
             }
             query = query.keys(keys);
 
         } else if (config.has("startKey") && config.has("endKey")) {
+            PrestoVariableResolver variableResolver = new PrestoTopicFieldVariableResolver(context);
 
-            Collection<?> startKeys = context.replaceVariables(objects, config.get("startKey"));            
-            Collection<?> endKeys = context.replaceVariables(objects, config.get("endKey"));
+            Collection<?> startKeys = context.replaceVariables(variableResolver, objects, config.get("startKey"));            
+            Collection<?> endKeys = context.replaceVariables(variableResolver, objects, config.get("endKey"));
             
             if (startKeys.size() != endKeys.size()) {
                 throw new RuntimeException("startKey and endKey of different sizes: " + startKeys + " and " + endKeys);

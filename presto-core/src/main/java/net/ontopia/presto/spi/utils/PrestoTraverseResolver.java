@@ -57,7 +57,7 @@ public class PrestoTraverseResolver implements PrestoFieldResolver {
                 PrestoType type = context.getSchemaProvider().getTypeById(typeId);
                 try {
                     PrestoField field = type.getFieldById(fieldId);
-                    List<Object> values = topic.getValues(field);
+                    List<? extends Object> values = topic.getValues(field);
                     result.addAll(values);
                 } catch (Exception e) {
                     log.warn("Object " + topic.getId() + " does not have field '" + fieldId + "'");

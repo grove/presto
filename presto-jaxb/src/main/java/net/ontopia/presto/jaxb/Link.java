@@ -12,6 +12,7 @@ public class Link {
     
     private String rel;
     private String href;
+    private String mode;
 
     public Link() {        
     }
@@ -51,6 +52,14 @@ public class Link {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public String getMode() {
+        return mode;
+    }
+
+    public void setMode(String mode) {
+        this.mode = mode;
     }
 
 }

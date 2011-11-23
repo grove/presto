@@ -27,11 +27,6 @@ public class PojoSchemaModel {
 
     private static Logger log = LoggerFactory.getLogger(PojoSchemaModel.class.getName());
 
-    public static void main(String[] args) throws Exception {
-        PojoSchemaProvider schemaProvider = parse("pojo-schema-example", "pojo-schema-example.json");
-        System.out.println("SP: " + schemaProvider + " " + schemaProvider.getDatabaseId());
-    }
-
     public static PojoSchemaProvider parse(String databaseId, String schemaFilename) {
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         InputStream istream = null;

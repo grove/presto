@@ -1,0 +1,71 @@
+{ "id": "example",
+  "name": "Example schema",
+
+  "types": {
+      "b:brewery" : { 
+        "name" : "Brewery",
+        "creatable" : true,
+        "views": [
+          { "id" : "info",
+            "name": "Info",
+            "fields" : [
+              { "id" : "name",
+                "name" : "Name",
+                "nameField": true,
+                "minCardinality": 1,
+                "maxCardinality": 1
+              },
+              { "id" : "description",
+                "name" : "Description",
+                "datatype" : "http://psi.ontopia.net/ontology/datatype-html",
+                "maxCardinality": 1
+              }
+            ]
+          },
+          { "id" : "products",
+            "name": "Products",
+            "fields" : [
+              { "id" : "external:beers",
+                "name" : "Beers",
+                "datatype" : "reference",
+                "readOnly" : true,
+                "extra" : { "type" : "query", 
+                            "designDocId" : "_design/beer", 
+                            "viewName" : "by-inverse-field",
+                            "key: ["brewery", "$:id"] 
+                          }
+              }
+            ]
+          }
+        ]
+      },
+      "b:beer" : { 
+        "name" : "Beer",
+        "creatable" : true,
+        "views": [
+          { "id" : "info",
+            "name": "Info",
+            "fields" : [
+              { "id" : "name",
+                "name" : "Name",
+                "nameField": true,
+                "minCardinality": 1,
+                "maxCardinality": 1
+              },
+              { "id" : "description",
+                "name" : "Description",
+                "datatype": "http://psi.ontopia.net/ontology/datatype-html",
+                "maxCardinality": 1
+              },
+              { "id" : "brewed-by",
+                "name" : "Brewed by",
+                "datatype": "reference",
+                "valueTypes" : ["b:brewery"],
+                "maxCardinality": 1
+              }            
+            ]
+          }
+        ]
+      }
+   }
+}

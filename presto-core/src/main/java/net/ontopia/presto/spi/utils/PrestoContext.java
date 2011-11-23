@@ -2,6 +2,7 @@ package net.ontopia.presto.spi.utils;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -10,10 +11,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import net.ontopia.presto.spi.PrestoDataProvider;
-import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
-import net.ontopia.presto.spi.PrestoType;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -33,43 +32,29 @@ public class PrestoContext {
         this.mapper = mapper;
     }
     
-    public Collection<JsonNode> replaceVariables(Collection<? extends Object> topics, JsonNode key) {
+    public Collection<JsonNode> replaceVariables(PrestoVariableResolver variableResolver, Collection<? extends Object> values, JsonNode key) {
+        if (key.isMissingNode()) {
+            return Collections.emptyList();
+        }
         Collection<JsonNode> result = new ArrayList<JsonNode>();
-        for (Object topic : topics) {
-            if (topic instanceof PrestoTopic) {
-                result.addAll(replaceVariables((PrestoTopic)topic, key));
-            }
+        for (Object value : values) {
+            result.addAll(replaceVariables(variableResolver, (PrestoTopic)value, key));
         }
         return result;
     }
 
-    private Collection<JsonNode> replaceVariables(PrestoTopic topic, JsonNode key) {
-        String typeId = topic.getTypeId();
-        PrestoType type = getSchemaProvider().getTypeById(typeId);
-
+    private Collection<JsonNode> replaceVariables(PrestoVariableResolver variableResolver, PrestoTopic topic, JsonNode key) {
         // find set of variables
         Collection<String> varNames = new HashSet<String>();
         findVariables(key, varNames);
+        if (varNames.isEmpty()) {
+            return Collections.singletonList(key);
+        }
 
         int totalSize = 1;
         Map<String,List<String>> varValues = new HashMap<String,List<String>>();
         for (String variable : varNames) {
-            List<String> valueStrings = new ArrayList<String>();
-            if (variable.equals(":id")) {
-                valueStrings.add(topic.getId());                
-            } else if (variable.equals(":type")) {
-                valueStrings.add(topic.getTypeId());                
-            } else {
-                PrestoField valueField = type.getFieldById(variable);
-                Collection<Object> values = topic.getValues(valueField);
-                for (Object value : values) {
-                    if (value instanceof PrestoTopic) {
-                        valueStrings.add((((PrestoTopic)value).getId()));
-                    } else {
-                        valueStrings.add(value == null ? null : value.toString());
-                    }
-                }
-            }
+            List<String> valueStrings = variableResolver.getValues(topic, variable);
             varValues.put(variable, valueStrings);
             totalSize = totalSize * valueStrings.size();
         }

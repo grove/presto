@@ -1,4 +1,4 @@
-package net.ontopia.presto.spi.impl.couchdb;
+package net.ontopia.presto.spi.utils;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -11,24 +11,25 @@ import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
+import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.DefaultTopic;
 
-public class CouchUpdate implements PrestoUpdate, CouchChangeSet.CouchChange {
+public class PrestoDefaultUpdate implements PrestoUpdate, PrestoDefaultChangeSet.Change {
 
-    private static Logger log = LoggerFactory.getLogger(CouchUpdate.class.getName());
+    private static Logger log = LoggerFactory.getLogger(PrestoDefaultUpdate.class.getName());
 
-    private final CouchChangeSet changeSet;
+    private final PrestoDefaultChangeSet changeSet;
 
-    private final CouchTopic topic;
+    private final DefaultTopic topic;
     private final PrestoType type;
     private final boolean isNew;
 
     private int updateCount = 0;
 
-    CouchUpdate(CouchChangeSet changeSet, PrestoType type) {
+    PrestoDefaultUpdate(PrestoDefaultChangeSet changeSet, PrestoType type) {
         this(changeSet, null, type);
     }
 
-    CouchUpdate(CouchChangeSet changeSet, CouchTopic topic, PrestoType type) {
+    PrestoDefaultUpdate(PrestoDefaultChangeSet changeSet, DefaultTopic topic, PrestoType type) {
         if (topic == null && type == null) {
             throw new IllegalArgumentException("At least one of topic or type must be specified.");
         }
@@ -53,7 +54,7 @@ public class CouchUpdate implements PrestoUpdate, CouchChangeSet.CouchChange {
     }
     
     @Override
-    public CouchTopic getTopic() {
+    public PrestoTopic getTopic() {
         return topic;
     }
     
@@ -69,7 +70,7 @@ public class CouchUpdate implements PrestoUpdate, CouchChangeSet.CouchChange {
 
     @Override
     public void setValues(PrestoField field, Collection<?> values) {
-        Collection<Object> existingValues = topic.getValues(field);
+        Collection<? extends Object> existingValues = topic.getValues(field);
         Collection<Object> remValues = new HashSet<Object>(existingValues);          
         Collection<Object> addValues = new HashSet<Object>();
 
@@ -88,7 +89,7 @@ public class CouchUpdate implements PrestoUpdate, CouchChangeSet.CouchChange {
 
     @Override
     public void addValues(PrestoField field, Collection<?> values) {
-        addValues(field, values, CouchDataProvider.DEFAULT_INDEX);
+        addValues(field, values, PrestoDefaultChangeSet.DEFAULT_INDEX);
     }
 
     @Override

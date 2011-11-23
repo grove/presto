@@ -15,6 +15,7 @@ public class Topic {
 
     private String id;
     private String name;
+    private String interfaceControl;
     private Boolean readOnlyMode;
     
     private Boolean errors;
@@ -126,7 +127,13 @@ public class Topic {
     public void setErrors(Boolean errors) {
         this.errors = errors;
     }
-    
-    
+
+    public String getInterfaceControl() {
+        return interfaceControl;
+    }
+
+    public void setInterfaceControl(String interfaceControl) {
+        this.interfaceControl = interfaceControl;
+    }
 
 }
