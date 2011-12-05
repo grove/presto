@@ -32,7 +32,7 @@
                 "extra" : { "type" : "query", 
                             "designDocId" : "_design/beer", 
                             "viewName" : "by-inverse-field",
-                            "key: ["brewery", "$:id"] 
+                            "key": ["brewery", "$:id"] 
                           }
               }
             ]
