@@ -29,7 +29,7 @@
                 "name" : "Beers",
                 "datatype" : "reference",
                 "readOnly" : true,
-                "extra" : { "type" : "query", 
+                "extra" : { "type" : "couchdb-view", 
                             "designDocId" : "_design/beer", 
                             "viewName" : "by-inverse-field",
                             "key": ["brewery", "$:id"] 
