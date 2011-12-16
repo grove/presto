@@ -85,16 +85,17 @@ public abstract class SolrFieldResolver implements PrestoFieldResolver {
             solrQuery.setRows(100);
         }
         try {
-            QueryResponse response;
+            QueryResponse qr;
             if (log.isDebugEnabled()) {
                 long start = System.currentTimeMillis();
-                response = solrServer.query(solrQuery, METHOD.POST);
-                log.debug("Q: {}ms {}/select?{}", new Object[] { System.currentTimeMillis()-start, solrServerUrl, solrQuery});
+                qr = solrServer.query(solrQuery, METHOD.POST);
+                long numFound = qr.getResults().getNumFound();
+                log.debug("Q: {}ms {} {}/select?{}", new Object[] { System.currentTimeMillis()-start, numFound, solrServerUrl, solrQuery });
             } else {
-                response = solrServer.query(solrQuery);
+                qr = solrServer.query(solrQuery);
             }
 
-            SolrDocumentList results = response.getResults();
+            SolrDocumentList results = qr.getResults();
             List<String> values = new ArrayList<String>(results.size());
             for (SolrDocument doc : results) {
                 Object value = doc.getFirstValue(idField);
@@ -156,8 +157,12 @@ public abstract class SolrFieldResolver implements PrestoFieldResolver {
                 if (qvalues.size() > 1) {
                     sb.append('(');
                 }
+                boolean foundItems = false;
                 while (qviter.hasNext()) {
                     ObjectNode qv = (ObjectNode)qviter.next();
+                    if (foundItems) {
+                        sb.append(sep);
+                    }
                     Iterator<String> fieldNames = qv.getFieldNames();
                     if (qv.size() > 1) {
                         sb.append('(');
@@ -166,8 +171,9 @@ public abstract class SolrFieldResolver implements PrestoFieldResolver {
                         String fieldName = fieldNames.next();
                         String fieldValue = qv.get(fieldName).getTextValue();
                         sb.append(fieldName).append(':').append(ClientUtils.escapeQueryChars(fieldValue));
+                        foundItems = true;
                         if (fieldNames.hasNext()) {
-                            sb.append(sep);
+                            sb.append(" AND ");
                         }
                     }
                     if (qv.size() > 1) {
@@ -183,9 +189,13 @@ public abstract class SolrFieldResolver implements PrestoFieldResolver {
             int size = ao.size();
             boolean foundItems = false;
             for (int i=0; i < size; i++) {
-                CharSequence cs = expandQuery(variableResolver, " AND ", objects, ao.get(i));
-                if (isEmpty(cs) && sep.equals(" AND ")) {
-                    return null;
+                CharSequence cs = expandQuery(variableResolver, " OR ", objects, ao.get(i));
+                if (isEmpty(cs)) {
+                    if (sep.equals(" AND ")) {
+                        return null;
+                    } else {
+                        continue;
+                    }
                 } else {
                     if (i > 0 && foundItems) {
                         sb.append(sep);

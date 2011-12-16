@@ -22,6 +22,7 @@ The framework consists of an SPI for schema providers, data providers and field 
 
 Feel free to take on any of these, or any other, if you want:
 
+* A GUI built on top of the REST API
 * Data providers: SPARQL, Cassandra, MongoDb, OrientDB, Solr, elasticsearch, JDBC, JPA
 * Field resolvers: elasticsearch query, Riak secondary indexes
 * Schema providers: a schema provider that stores its state in a data provider

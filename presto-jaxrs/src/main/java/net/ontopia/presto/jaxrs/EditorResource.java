@@ -390,9 +390,10 @@ public abstract class EditorResource {
 
             PrestoView view = type.getViewById(viewId);
 
-            topic = createPresto(session, uriInfo).updateTopic(topic, type, view, preProcess(topicData));
+            Presto presto = createPresto(session, uriInfo);
+            topic = presto.updateTopic(topic, type, view, preProcess(topicData));
 
-            Topic result = createPresto(session, uriInfo).getTopicInfo(topic, type, view, false);
+            Topic result = presto.getTopicInfo(topic, type, view, false);
             String id = result.getId();
             session.commit();
             onTopicUpdated(id);
@@ -616,10 +617,11 @@ public abstract class EditorResource {
             result.setName(field.getName());
 
             if (field.isCreatable()) {
+                Presto presto = createPresto(session, uriInfo);
                 Collection<PrestoType> availableFieldCreateTypes = field.getAvailableFieldCreateTypes();
                 List<TopicType> types = new ArrayList<TopicType>(availableFieldCreateTypes.size());
                 for (PrestoType createType : availableFieldCreateTypes) {
-                    types.add(createPresto(session, uriInfo).getCreateFieldInstance(topic, type, field, createType));
+                    types.add(presto.getCreateFieldInstance(topic, type, field, createType));
                 }                
                 result.setTypes(types);
             } else {
