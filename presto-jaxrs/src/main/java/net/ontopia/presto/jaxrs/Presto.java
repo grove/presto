@@ -109,7 +109,7 @@ public class Presto {
             if (!field.isHidden()) {
                 fields.add(getFieldInfo(topic, field, readOnlyMode));
             }
-            if (!field.isReadOnly()) {
+            if (!readOnlyMode && !field.isReadOnly()) {
                 allowUpdates = true;
             }
         }
