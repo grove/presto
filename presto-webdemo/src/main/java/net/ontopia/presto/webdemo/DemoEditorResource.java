@@ -13,8 +13,8 @@ import net.ontopia.presto.spi.PrestoSession;
 import net.ontopia.presto.spi.impl.couchdb.CouchDataProvider;
 import net.ontopia.presto.spi.impl.pojo.PojoSchemaProvider;
 import net.ontopia.presto.spi.impl.pojo.PojoSession;
-import net.ontopia.presto.spi.jackson.JacksonBucketFieldStrategy;
-import net.ontopia.presto.spi.jackson.JacksonFieldStrategy;
+import net.ontopia.presto.spi.jackson.JacksonBucketDataStrategy;
+import net.ontopia.presto.spi.jackson.JacksonDataStrategy;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
@@ -27,16 +27,16 @@ import org.ektorp.impl.StdCouchDbInstance;
 @Path("/editor")
 public class DemoEditorResource extends EditorResource {
 	
-    public static final String DB_NAME = "pesto";
-    public static final String DESIGN_DOCUMENT = "_design/pesto";
+    public static final String DB_NAME = "presto-demo";
+    public static final String DESIGN_DOCUMENT = "_design/presto-demo";
 
-    public static final String BUCKET_PESTO = "pesto";
-    public static final String BUCKET_BOKDB = "bokdb";
+    public static final String BUCKET_WRITE = "write";
+    public static final String BUCKET_READ = "read";
     public static final String BUCKET_INITIAL = "initial";
 
-    public static final String WRITE_BUCKET = BUCKET_PESTO;
+    public static final String WRITE_BUCKET = BUCKET_WRITE;
 	
-    public static final List<String> READ_BUCKETS = Arrays.asList(new String[] { BUCKET_PESTO, BUCKET_BOKDB, BUCKET_INITIAL });
+    public static final List<String> READ_BUCKETS = Arrays.asList(new String[] { BUCKET_WRITE, BUCKET_READ, BUCKET_INITIAL });
 	
     private Map<String,String> databases = new HashMap<String,String>();
 	
@@ -60,8 +60,8 @@ public class DemoEditorResource extends EditorResource {
             }
 
             @Override
-            protected JacksonFieldStrategy createFieldStrategy(ObjectMapper mapper) {
-                return new JacksonBucketFieldStrategy(mapper) {
+            protected JacksonDataStrategy createDataStrategy(ObjectMapper mapper) {
+                return new JacksonBucketDataStrategy(mapper) {
                     @Override
                     protected List<String> getReadBuckets(ObjectNode doc) {
                         return READ_BUCKETS;

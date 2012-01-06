@@ -12,7 +12,7 @@ import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.jackson.JacksonDataProvider;
-import net.ontopia.presto.spi.jackson.JacksonFieldStrategy;
+import net.ontopia.presto.spi.jackson.JacksonDataStrategy;
 import net.ontopia.presto.spi.jackson.JacksonTopic;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet;
@@ -44,14 +44,14 @@ public abstract class CouchDataProvider implements JacksonDataProvider {
 
     private final CouchDbConnector db;
     private final ObjectMapper mapper;
-    private final JacksonFieldStrategy fieldStrategy;
+    private final JacksonDataStrategy dataStrategy;
 
     protected String designDocId = "_design/presto";
 
     public CouchDataProvider() {
         this.db = createCouchDbConnector();
         this.mapper = createObjectMapper();
-        this.fieldStrategy = createFieldStrategy(mapper);
+        this.dataStrategy = createDataStrategy(mapper);
     }
     
     protected abstract CouchDbConnector createCouchDbConnector();
@@ -64,7 +64,7 @@ public abstract class CouchDataProvider implements JacksonDataProvider {
         return new ObjectMapper();
     }
 
-    abstract protected JacksonFieldStrategy createFieldStrategy(ObjectMapper mapper);
+    abstract protected JacksonDataStrategy createDataStrategy(ObjectMapper mapper);
 
     // -- PrestoDataProvider
 
@@ -241,8 +241,8 @@ public abstract class CouchDataProvider implements JacksonDataProvider {
     }
     
     @Override
-    public JacksonFieldStrategy getFieldStrategy() {
-        return fieldStrategy;
+    public JacksonDataStrategy getDataStrategy() {
+        return dataStrategy;
     }
     
     @Override
