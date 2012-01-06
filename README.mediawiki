@@ -1,14 +1,48 @@
-Presto is a Hypermedia-driven generic editing framework. It consists of an SPI for data providers and a HTTP interface for retrieving and updating information. The APIs are quite stable, but will need maturing before considered final.
+Presto is an editing framework. 
+
+Presto is a framework made for data integrators, with the goal of making it easy to tie together data from multiple data sources into one coherent whole without having to centralize data storage.
+
+The idea behind Presto is that you can declare the rules for an editable object model in a schema, and then create and update data conforming to this schema using a data provider implementation. Or, to be more precise, there might be multiple schema providers and multiple data providers connected into a larger whole. A schema provider is responsible for the definition of a specific type, but its data may be stored in many locations. Well, that's not really accurate as a schema definition may be a composite of schema definitions from multiple schema providers.
+
+A schema is exposed through a schema provider and the data is accessed through a data provider. By default the values of an object field is stored with the object itself, but there is a field resolver API that lets you pull in data from anywhere.
+
+The framework consists of an SPI for schema providers, data providers and field resolvers. There is also a JAX/RS application that provides a REST interface for accessing and updating data.
 
 == Features ==
 
-* Hypermedia driven generic editing.
-* Multiple data providers available (CouchDB and Ontopia).
+* Hypermedia-driven editing framework
 * JSON over HTTP using Hypermedia implemented in Java/JAX-RS.
+* Data providers: CouchDB, Riak, Ontopoly
+* Schema providers: In-memory/JSON, Ontopoly
+* Field resolvers: CouchDB views, Solr queries, Java functions
 
+== Ideas for the future ==
+
+* Search API (TBD)
+
+Feel free to take on any of these, or any other, if you want:
+
+* A GUI built on top of the REST API
+* Data providers: SPARQL, Cassandra, MongoDb, OrientDB, Solr, elasticsearch, JDBC, JPA
+* Field resolvers: elasticsearch query, Riak secondary indexes
+* Schema providers: a schema provider that stores its state in a data provider
+
+== Trying it out ==
+
+To start the REST interface, run the following commands:
+
+ cd presto-webdemo
+ mvn -Djetty.port=9999 jetty:run
+
+Then open http://localhost:9999/presto/editor in your web browser.
+ 
 == News ==
 
-* 2011-05-16: Presto added to github.
+* 2011-11-23: Version 0.4
+* 2011-11-02: Version 0.3
+* 2011-09-11: Version 0.2
+* 2011-06-14: Version 0.1
+* 2011-05-15: Presto added to github.
 
 == License ==
 Apache License, Version 2.0

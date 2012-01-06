@@ -8,11 +8,16 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 @XmlRootElement
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
-public class AvailableFieldTypes {
+public class AvailableFieldTypes extends Document {
 
     private String id;
     private String name;
     private Collection<TopicType> types;
+
+    @Override
+    public String getFormat() {
+        return "available-field-types";
+    }
 
     public void setId(String id) {
         this.id = id;

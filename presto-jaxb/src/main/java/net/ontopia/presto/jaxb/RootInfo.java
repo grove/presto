@@ -5,7 +5,7 @@ import java.util.Collection;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
-public class RootInfo {
+public class RootInfo extends Document {
 
     private String name;
     private int version;
@@ -13,6 +13,11 @@ public class RootInfo {
     private Collection<Link> links;
 
     public RootInfo() {        
+    }
+
+    @Override
+    public String getFormat() {
+        return "root-info";
     }
 
     public void setName(String name) {

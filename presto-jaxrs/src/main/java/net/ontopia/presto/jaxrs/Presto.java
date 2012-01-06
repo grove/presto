@@ -100,29 +100,38 @@ public class Presto {
         typeInfo.setLinks(typeLinks);
 
         result.setType(typeInfo);
-
         result.setView(view.getId());
 
+        List<FieldData> fields = new ArrayList<FieldData>(); 
+
+        boolean allowUpdates = !isTypeReadOnly;
+        for (PrestoFieldUsage field : type.getFields(view)) {
+            if (!field.isHidden()) {
+                fields.add(getFieldInfo(topic, field, readOnlyMode));
+            }
+            if (!readOnlyMode && !field.isReadOnly()) {
+                allowUpdates = true;
+            }
+        }
+        result.setFields(fields);
+        
         List<Link> topicLinks = new ArrayList<Link>();
         UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(session.getDatabaseId()).path(topic.getId()).path(view.getId());
         topicLinks.add(new Link("edit", builder.build().toString()));
-        builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(session.getDatabaseId()).path(topic.getId()).path(view.getId());
-        topicLinks.add(new Link("update", builder.build().toString()));
-        if (type.isRemovable()) {
+        
+        if (allowUpdates) {
+            builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(session.getDatabaseId()).path(topic.getId()).path(view.getId());
+            topicLinks.add(new Link("update", builder.build().toString()));
+        }
+        
+        if (!readOnlyMode && type.isRemovable()) {
             builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(session.getDatabaseId()).path(topic.getId());
             topicLinks.add(new Link("delete", builder.build().toString()));
         }
         result.setLinks(topicLinks);
 
-        List<FieldData> fields = new ArrayList<FieldData>(); 
-
-        for (PrestoFieldUsage field : type.getFields(view)) {
-            if (!field.isHidden()) {
-                fields.add(getFieldInfo(topic, field, readOnlyMode));
-            }
-        }
-        result.setFields(fields);
         result.setViews(getViews(topic, type, view, readOnlyMode));
+        
         return result;
     }
 

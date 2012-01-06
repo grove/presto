@@ -19,14 +19,10 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
-
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ObjectNode;
 
 import net.ontopia.presto.jaxb.AvailableDatabases;
 import net.ontopia.presto.jaxb.AvailableFieldTypes;
@@ -45,6 +41,9 @@ import net.ontopia.presto.spi.PrestoSession;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoView;
+
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.node.ObjectNode;
 
 @Path("/editor")
 public abstract class EditorResource {
@@ -364,7 +363,7 @@ public abstract class EditorResource {
 
     @PUT
     @Produces(APPLICATION_JSON_UTF8)
-    @Consumes(MediaType.APPLICATION_JSON)
+    @Consumes(APPLICATION_JSON_UTF8)
     @Path("topic/{databaseId}/{topicId}/{viewId}")
     public Response updateTopic(
             @PathParam("databaseId") final String databaseId, 
@@ -391,9 +390,10 @@ public abstract class EditorResource {
 
             PrestoView view = type.getViewById(viewId);
 
-            topic = createPresto(session, uriInfo).updateTopic(topic, type, view, preProcess(topicData));
+            Presto presto = createPresto(session, uriInfo);
+            topic = presto.updateTopic(topic, type, view, preProcess(topicData));
 
-            Topic result = createPresto(session, uriInfo).getTopicInfo(topic, type, view, false);
+            Topic result = presto.getTopicInfo(topic, type, view, false);
             String id = result.getId();
             session.commit();
             onTopicUpdated(id);
@@ -411,7 +411,7 @@ public abstract class EditorResource {
 
     @POST
     @Produces(APPLICATION_JSON_UTF8)
-    @Consumes(MediaType.APPLICATION_JSON)
+    @Consumes(APPLICATION_JSON_UTF8)
     @Path("add-field-values-at-index/{databaseId}/{topicId}/{viewId}/{fieldId}/{index}")
     public Response addFieldValuesAtIndex( 
             @PathParam("databaseId") final String databaseId, 
@@ -462,7 +462,7 @@ public abstract class EditorResource {
 
     @POST
     @Produces(APPLICATION_JSON_UTF8)
-    @Consumes(MediaType.APPLICATION_JSON)
+    @Consumes(APPLICATION_JSON_UTF8)
     @Path("move-field-values-to-index/{databaseId}/{topicId}/{viewId}/{fieldId}/{index}")
     public Response moveFieldValuesToIndex( 
             @PathParam("databaseId") final String databaseId, 
@@ -476,7 +476,7 @@ public abstract class EditorResource {
 
     @POST
     @Produces(APPLICATION_JSON_UTF8)
-    @Consumes(MediaType.APPLICATION_JSON)
+    @Consumes(APPLICATION_JSON_UTF8)
     @Path("add-field-values/{databaseId}/{topicId}/{viewId}/{fieldId}")
     public Response addFieldValues(
             @PathParam("databaseId") final String databaseId, 
@@ -490,7 +490,7 @@ public abstract class EditorResource {
 
     @POST
     @Produces(APPLICATION_JSON_UTF8)
-    @Consumes(MediaType.APPLICATION_JSON)
+    @Consumes(APPLICATION_JSON_UTF8)
     @Path("remove-field-values/{databaseId}/{topicId}/{viewId}/{fieldId}")
     public Response removeFieldValues(
             @PathParam("databaseId") final String databaseId, 
@@ -617,10 +617,11 @@ public abstract class EditorResource {
             result.setName(field.getName());
 
             if (field.isCreatable()) {
+                Presto presto = createPresto(session, uriInfo);
                 Collection<PrestoType> availableFieldCreateTypes = field.getAvailableFieldCreateTypes();
                 List<TopicType> types = new ArrayList<TopicType>(availableFieldCreateTypes.size());
                 for (PrestoType createType : availableFieldCreateTypes) {
-                    types.add(createPresto(session, uriInfo).getCreateFieldInstance(topic, type, field, createType));
+                    types.add(presto.getCreateFieldInstance(topic, type, field, createType));
                 }                
                 result.setTypes(types);
             } else {

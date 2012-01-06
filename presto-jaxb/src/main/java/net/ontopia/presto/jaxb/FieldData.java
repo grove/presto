@@ -10,7 +10,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 @XmlRootElement
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown=true)
-public class FieldData {
+public class FieldData extends Document {
     
     private String id;
     private String name;
@@ -70,6 +70,11 @@ public class FieldData {
         public void setMessage(String message) {
             this.message = message;
         }
+    }
+
+    @Override
+    public String getFormat() {
+        return "field";
     }
     
     public void setId(String id) {

@@ -11,7 +11,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 @XmlRootElement
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown=true)
-public class Topic {
+public class Topic extends Document {
 
     private String id;
     private String name;
@@ -30,6 +30,11 @@ public class Topic {
     private Collection<View> views = Collections.emptySet();
 
     private Collection<FieldData> fields;
+
+    @Override
+    public String getFormat() {
+        return "topic";
+    }
 
     public void setId(String id) {
         this.id = id;

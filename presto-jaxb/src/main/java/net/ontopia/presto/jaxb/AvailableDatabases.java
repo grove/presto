@@ -6,7 +6,7 @@ import java.util.Collections;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
-public class AvailableDatabases {
+public class AvailableDatabases extends Document {
 
     private String name;
 
@@ -14,6 +14,11 @@ public class AvailableDatabases {
     private Collection<Database> databases = Collections.emptySet();
 
     public AvailableDatabases() {        
+    }
+
+    @Override
+    public String getFormat() {
+        return "available-databases";
     }
 
     public void setName(String name) {
