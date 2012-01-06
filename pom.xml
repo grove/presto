@@ -5,7 +5,7 @@
   <groupId>net.ontopia.presto</groupId>
   <artifactId>presto</artifactId>
   <packaging>pom</packaging>
-  <version>0.4.3</version>
+  <version>0.4.4-SNAPSHOT</version>
 
   <dependencyManagement>
     <dependencies>
