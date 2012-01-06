@@ -11,7 +11,7 @@ public interface JacksonDataProvider extends DefaultDataProvider {
 
     ObjectMapper getObjectMapper();
 
-    JacksonFieldStrategy getFieldStrategy();
+    JacksonDataStrategy getDataStrategy();
 
     PrestoFieldResolver createFieldResolver(PrestoSchemaProvider schemaProvider, ObjectNode config);
 

@@ -9,11 +9,11 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
 
-public abstract class JacksonBucketFieldStrategy implements JacksonFieldStrategy {
+public abstract class JacksonBucketDataStrategy implements JacksonDataStrategy {
 
     private final ObjectMapper mapper;
 
-    public JacksonBucketFieldStrategy(ObjectMapper mapper) {
+    public JacksonBucketDataStrategy(ObjectMapper mapper) {
         this.mapper = mapper;
     }
     
@@ -26,27 +26,51 @@ public abstract class JacksonBucketFieldStrategy implements JacksonFieldStrategy
     protected abstract String getWriteBucket(ObjectNode doc);
     
     @Override
-    public ArrayNode getFieldValue(ObjectNode doc, PrestoField field) {
-        return getBucketFieldValue(field, getReadBucket(doc, field, true));
+    public String getId(ObjectNode doc) {
+        return doc.get("_id").getTextValue();
     }
-
+    
+    @Override
+    public String getTypeId(ObjectNode doc) {
+        return doc.get(":type").getTextValue();
+    }
+    
+    @Override
+    public String getName(ObjectNode doc) {
+        JsonNode name = doc.get(":name");
+        return name == null ? null : name.getTextValue();
+    }
+    
+    @Override
+    public ArrayNode getFieldValue(ObjectNode doc, PrestoField field) {
+        return getBucketFieldValue(field.getActualId(), getReadBucket(doc, field, true));
+    }
+    
+    protected ArrayNode getFieldValue(ObjectNode doc, String fieldId) {
+        return getBucketFieldValue(fieldId, getReadBucket(doc, fieldId, true));
+    }
+    
     @Override
     public void putFieldValue(ObjectNode doc, PrestoField field, ArrayNode value) {
-        ObjectNode writeBucket = getWriteBucket(doc, field, true);
-        ObjectNode readBucket = getReadBucket(doc, field, false);
+        putFieldValue(doc, field.getActualId(), value);
+    }
+       
+    protected void putFieldValue(ObjectNode doc, String fieldId, ArrayNode value) {
+        ObjectNode writeBucket = getWriteBucket(doc, fieldId, true);
+        ObjectNode readBucket = getReadBucket(doc, fieldId, false);
         // remove write bucket field iff value equal to value in closest read bucket
-        if (readBucket != null && equalValues(value, getBucketFieldValue(field, readBucket))) {
-            if (writeBucket.has(field.getActualId())) {        
-                writeBucket.remove(field.getActualId());
+        if (readBucket != null && equalValues(value, getBucketFieldValue(fieldId, readBucket))) {
+            if (writeBucket.has(fieldId)) {        
+                writeBucket.remove(fieldId);
             }
         } else {
-            writeBucket.put(field.getActualId(), value);
+            writeBucket.put(fieldId, value);
         }
     }
 
-    protected ArrayNode getBucketFieldValue(PrestoField field, ObjectNode bucketData) {
+    protected ArrayNode getBucketFieldValue(String fieldId, ObjectNode bucketData) {
         if (bucketData != null) {
-            JsonNode value = bucketData.get(field.getActualId());
+            JsonNode value = bucketData.get(fieldId);
             return (ArrayNode)(value != null && value.isArray() ? value : null);
         }
         return null;
@@ -62,6 +86,10 @@ public abstract class JacksonBucketFieldStrategy implements JacksonFieldStrategy
     }
     
     protected ObjectNode getReadBucket(ObjectNode doc, PrestoField field, boolean includeWriteBucket) {
+        return getReadBucket(doc, field.getActualId(), includeWriteBucket);
+    }
+    
+    protected ObjectNode getReadBucket(ObjectNode doc, String fieldId, boolean includeWriteBucket) {
         String writeBucket = getWriteBucket(doc);
         // find the right bucket
         for (String bucketId : getReadBuckets(doc)) {
@@ -72,7 +100,7 @@ public abstract class JacksonBucketFieldStrategy implements JacksonFieldStrategy
             // return bucket if it exists and contains field
             if (doc.has(bucketId)) {
                 ObjectNode bucket = (ObjectNode)doc.get(bucketId);
-                if (bucket.has(field.getActualId())) {
+                if (bucket.has(fieldId)) {
                     return bucket;
                 }
             }
@@ -81,6 +109,10 @@ public abstract class JacksonBucketFieldStrategy implements JacksonFieldStrategy
     }
 
     protected ObjectNode getWriteBucket(ObjectNode doc, PrestoField field, boolean create) {
+        return getWriteBucket(doc, field.getActualId(), create);
+    }
+           
+    protected ObjectNode getWriteBucket(ObjectNode doc, String fieldId, boolean create) {
         String writeBucket = getWriteBucket(doc);
         ObjectNode bucket = null;
         if (doc.has(writeBucket)) {

@@ -60,28 +60,27 @@ public class JacksonTopic implements DefaultTopic {
 
     @Override
     public String getId() {
-        return data.get("_id").getTextValue();
+        return dataProvider.getDataStrategy().getId(getData());
     }
 
     @Override
     public String getName() {
-        JsonNode name = data.get(":name");
-        return name == null ? null : name.getTextValue();
+        return dataProvider.getDataStrategy().getName(getData());
     }
 
     @Override
     public String getTypeId() {
-        return data.get(":type").getTextValue();
+        return dataProvider.getDataStrategy().getTypeId(getData());
     }
 
     // json data access strategy
 
     protected ArrayNode getFieldValue(PrestoField field) {
-        return dataProvider.getFieldStrategy().getFieldValue(getData(), field);
+        return dataProvider.getDataStrategy().getFieldValue(getData(), field);
     }
 
     protected void putFieldValue(PrestoField field, ArrayNode value) {
-        dataProvider.getFieldStrategy().putFieldValue(getData(), field, value);
+        dataProvider.getDataStrategy().putFieldValue(getData(), field, value);
     }
     
     // methods for retrieving the state of a topic
