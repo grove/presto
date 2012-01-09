@@ -7,6 +7,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class Link {
     
+    private String id;
     private String name;
     private String type;
     
@@ -60,6 +61,14 @@ public class Link {
 
     public void setMode(String mode) {
         this.mode = mode;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
 }

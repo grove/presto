@@ -20,7 +20,6 @@ import net.ontopia.presto.jaxb.Topic;
 import net.ontopia.presto.jaxb.TopicType;
 import net.ontopia.presto.jaxb.TopicTypeTree;
 import net.ontopia.presto.jaxb.Value;
-import net.ontopia.presto.jaxb.View;
 import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoField;
@@ -83,9 +82,6 @@ public class Presto {
 
         result.setId(topic.getId());
         result.setName(topic.getName());
-        if (readOnlyMode) {
-            result.setReadOnlyMode(readOnlyMode);
-        }
 
         TopicType typeInfo = getTypeInfo(type);    
 
@@ -128,9 +124,8 @@ public class Presto {
             builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(session.getDatabaseId()).path(topic.getId());
             topicLinks.add(new Link("delete", builder.build().toString()));
         }
+        topicLinks.addAll(getViewLinks(topic, type, view, readOnlyMode));
         result.setLinks(topicLinks);
-
-        result.setViews(getViews(topic, type, view, readOnlyMode));
         
         return result;
     }
@@ -152,7 +147,8 @@ public class Presto {
 
         List<Link> topicLinks = new ArrayList<Link>();
         UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(session.getDatabaseId()).path("_" + type.getId()).path(view.getId());
-        topicLinks.add(new Link("create", builder.build().toString()));    
+        topicLinks.add(new Link("create", builder.build().toString()));
+        topicLinks.addAll(Collections.singleton(getViewLink(null, type, view, readOnlyMode)));
         result.setLinks(topicLinks);
 
         List<FieldData> fields = new ArrayList<FieldData>(); 
@@ -164,7 +160,6 @@ public class Presto {
             }
         }
         result.setFields(fields);
-        result.setViews(Collections.singleton(getView(null, type, view, readOnlyMode)));
         return result;
     }
 
@@ -404,31 +399,21 @@ public class Presto {
         }
     }
 
-    public List<View> getViews(PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnlyMode) {
-
+    public List<Link> getViewLinks(PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnlyMode) {
         Collection<PrestoView> otherViews = type.getViews(view);
 
-        List<View> views = new ArrayList<View>(otherViews.size()); 
+        List<Link> views = new ArrayList<Link>(otherViews.size()); 
         for (PrestoView otherView : otherViews) {
-            views.add(getView(topic, type, otherView, readOnlyMode));
+            views.add(getViewLink(topic, type, otherView, readOnlyMode));
         }
         return views;
     }
 
-    protected View getView(PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnlyMode) {
-        View result = new View();
+    protected Link getViewLink(PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnlyMode) {
+        UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(session.getDatabaseId()).path(topic.getId()).path(view.getId());
+        Link result = new Link("edit-in-view", builder.build().toString());
         result.setId(view.getId());
         result.setName(view.getName());
-
-        List<Link> links = new ArrayList<Link>();
-        if (topic != null) {
-            UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(session.getDatabaseId()).path(topic.getId()).path(view.getId());
-            if (readOnlyMode) {
-                builder = builder.queryParam("readOnly", "true");
-            }
-            links.add(new Link("edit-in-view", builder.build().toString()));
-        }
-        result.setLinks(links);
         return result;
     }
 

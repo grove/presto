@@ -2,27 +2,38 @@ package net.ontopia.presto.jaxb;
 
 import java.util.Collection;
 
+import javax.xml.bind.annotation.XmlRootElement;
+
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
+@XmlRootElement
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown=true)
-public class TopicType {
+public class TopicViews extends Document {
 
     private String id;
     private String name;
-    private Boolean readOnly;
+    private String view;
 
     private Collection<Link> links;
 
-    public TopicType() {        
+    private TopicType type;
+
+    private String interfaceControl;
+
+    private String format = "topic-views";
+    
+    @Override
+    public String getFormat() {
+        return format;
     }
 
-    public TopicType(String id, String name) {
-        this.id = id;
-        this.name = name;
+    @Override
+    public void setFormat(String format) {
+        this.format = format;
     }
-
+    
     public void setId(String id) {
         this.id = id;
     }
@@ -39,12 +50,20 @@ public class TopicType {
         return name;
     }
 
-    public void setReadOnly(Boolean readOnly) {
-        this.readOnly = readOnly;
+    public void setType(TopicType type) {
+        this.type = type;
     }
 
-    public Boolean isReadOnly() {
-        return readOnly;
+    public TopicType getType() {
+        return type;
+    }
+
+    public void setView(String view) {
+        this.view = view;
+    }
+
+    public String getView() {
+        return view;
     }
 
     public void setLinks(Collection<Link> links) {
@@ -57,6 +76,14 @@ public class TopicType {
 
     public Collection<Link> getLinks() {
         return links;
+    }
+
+    public String getInterfaceControl() {
+        return interfaceControl;
+    }
+
+    public void setInterfaceControl(String interfaceControl) {
+        this.interfaceControl = interfaceControl;
     }
 
 }
