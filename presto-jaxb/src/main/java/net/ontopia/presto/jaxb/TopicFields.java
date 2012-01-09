@@ -23,17 +23,10 @@ public class TopicFields extends Document {
     private Boolean errors;
 
     private Collection<FieldData> fields;
-
-    private String format = "topic-fields";
     
     @Override
     public String getFormat() {
-        return format;
-    }
-
-    @Override
-    public void setFormat(String format) {
-        this.format = format;
+        return "topic-fields";
     }
     
     public void setId(String id) {

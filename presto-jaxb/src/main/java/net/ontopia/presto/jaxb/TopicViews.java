@@ -21,17 +21,10 @@ public class TopicViews extends Document {
     private TopicType type;
 
     private String interfaceControl;
-
-    private String format = "topic-views";
     
     @Override
     public String getFormat() {
-        return format;
-    }
-
-    @Override
-    public void setFormat(String format) {
-        this.format = format;
+        return "topic-views";
     }
     
     public void setId(String id) {
