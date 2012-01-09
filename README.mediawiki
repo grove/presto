@@ -19,6 +19,7 @@ The framework consists of an SPI for schema providers, data providers and field 
 == Ideas for the future ==
 
 * Search API (TBD)
+* Wizard-like editing flow
 
 Feel free to take on any of these, or any other, if you want:
 
@@ -35,7 +36,7 @@ To start the REST interface, run the following commands:
  mvn -Djetty.port=9999 jetty:run
 
 Then open http://localhost:9999/presto/editor in your web browser.
- 
+
 == News ==
 
 * 2011-11-23: Version 0.4
