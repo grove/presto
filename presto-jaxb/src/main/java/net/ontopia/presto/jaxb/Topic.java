@@ -31,11 +31,18 @@ public class Topic extends Document {
 
     private Collection<FieldData> fields;
 
+    private String format = "topic";
+    
     @Override
     public String getFormat() {
-        return "topic";
+        return format;
     }
 
+    @Override
+    public void setFormat(String format) {
+        this.format = format;
+    }
+    
     public void setId(String id) {
         this.id = id;
     }
