@@ -110,23 +110,23 @@ public class Presto {
             }
         }
         result.setFields(fields);
-        
+
         List<Link> topicLinks = new ArrayList<Link>();
         UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(session.getDatabaseId()).path(topic.getId()).path(view.getId());
         topicLinks.add(new Link("edit", builder.build().toString()));
-        
+
         if (allowUpdates) {
             builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(session.getDatabaseId()).path(topic.getId()).path(view.getId());
             topicLinks.add(new Link("update", builder.build().toString()));
         }
-        
+
         if (!readOnlyMode && type.isRemovable()) {
             builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(session.getDatabaseId()).path(topic.getId());
             topicLinks.add(new Link("delete", builder.build().toString()));
         }
         topicLinks.addAll(getViewLinks(topic, type, view, readOnlyMode));
         result.setLinks(topicLinks);
-        
+
         return result;
     }
 
@@ -148,7 +148,7 @@ public class Presto {
         List<Link> topicLinks = new ArrayList<Link>();
         UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(session.getDatabaseId()).path("_" + type.getId()).path(view.getId());
         topicLinks.add(new Link("create", builder.build().toString()));
-        topicLinks.addAll(Collections.singleton(getViewLink(null, type, view, readOnlyMode)));
+        //        topicLinks.addAll(Collections.singleton(getViewLink(null, type, view, readOnlyMode)));
         result.setLinks(topicLinks);
 
         List<FieldData> fields = new ArrayList<FieldData>(); 
@@ -166,7 +166,7 @@ public class Presto {
     private FieldData getFieldInfo(PrestoTopic topic, PrestoFieldUsage field, boolean readOnlyMode) {
         return getFieldInfo(topic, field, readOnlyMode, 0, -1);
     }
-    
+
     public FieldData getFieldInfo(PrestoTopic topic, PrestoFieldUsage field, boolean readOnlyMode, int offset, int limit) {
 
         PrestoType type = field.getType();
@@ -411,7 +411,8 @@ public class Presto {
 
     protected Link getViewLink(PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnlyMode) {
         UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(session.getDatabaseId()).path(topic.getId()).path(view.getId());
-        Link result = new Link("edit-in-view", builder.build().toString());
+        String href = builder.build().toString();
+        Link result = new Link("edit-in-view", href);
         result.setId(view.getId());
         result.setName(view.getName());
         return result;
@@ -519,7 +520,7 @@ public class Presto {
         } else {
             update.addValues(field, addableValues, index);        
         }
-        
+
         changeSet.save();
 
         return getFieldInfo(update.getTopicAfterUpdate(), field, false);
@@ -567,9 +568,9 @@ public class Presto {
                 }
             }
         }
-        
+
         assignDefaultValues(topic, type, update);
-        
+
         changeSet.save();
         return update.getTopicAfterUpdate();
     }
@@ -588,12 +589,12 @@ public class Presto {
             }
         }        
     }
-    
+
     protected List<Object> getDefaultValues(PrestoTopic topic, PrestoType type, PrestoField field) {
         List<Object> result = new ArrayList<Object>();
         for (String value : field.getValues()) {
             // TODO: get values from: topic field, session properties
-            
+
             if (value != null) {
                 if (value.charAt(0) == '$') {
                     String variable = value.substring(1);
@@ -609,11 +610,11 @@ public class Presto {
         }
         return result;
     }
-    
+
     protected Collection<String> getVariableValues(String variable) {
         return Collections.emptyList(); // should be overridden
     }
-    
+
     private Collection<Object> resolveValues(PrestoFieldUsage field, Collection<Value> values, boolean resolveEmbedded) {
         Collection<Object> result = new ArrayList<Object>(values.size());
 
@@ -730,5 +731,5 @@ public class Presto {
             return Collections.singleton(typeMap);
         }
     }
-    
+
 }
