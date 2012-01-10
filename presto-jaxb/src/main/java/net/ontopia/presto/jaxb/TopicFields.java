@@ -18,6 +18,8 @@ public class TopicFields extends Document {
 
     private Origin origin;
 
+    private TopicType type;
+
     private Collection<Link> links;
     
     private Boolean errors;
@@ -67,6 +69,14 @@ public class TopicFields extends Document {
 
     public Origin getOrigin() {
         return origin;
+    }
+
+    public void setType(TopicType type) {
+        this.type = type;
+    }
+
+    public TopicType getType() {
+        return type;
     }
 
     public void setLinks(Collection<Link> links) {

@@ -18,8 +18,6 @@ public class TopicViews extends Document {
 
     private Collection<Link> links;
 
-    private TopicType type;
-
     private String interfaceControl;
     
     @Override
@@ -41,14 +39,6 @@ public class TopicViews extends Document {
 
     public String getName() {
         return name;
-    }
-
-    public void setType(TopicType type) {
-        this.type = type;
-    }
-
-    public TopicType getType() {
-        return type;
     }
 
     public void setView(String view) {
