@@ -15,10 +15,9 @@ public class TopicViews extends Document {
     private String id;
     private String name;
     private String view;
+    private String mode;
 
     private Collection<Link> links;
-
-    private String interfaceControl;
     
     @Override
     public String getFormat() {
@@ -61,12 +60,12 @@ public class TopicViews extends Document {
         return links;
     }
 
-    public String getInterfaceControl() {
-        return interfaceControl;
+    public String getMode() {
+        return mode;
     }
 
-    public void setInterfaceControl(String interfaceControl) {
-        this.interfaceControl = interfaceControl;
+    public void setMode(String mode) {
+        this.mode = mode;
     }
 
 }

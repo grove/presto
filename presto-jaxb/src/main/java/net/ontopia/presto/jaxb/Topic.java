@@ -14,7 +14,7 @@ public class Topic extends Document {
 
     private String id;
     private String name;
-    private String interfaceControl;
+    private String mode;
     
     private Boolean errors;
 
@@ -100,12 +100,12 @@ public class Topic extends Document {
         this.errors = errors;
     }
 
-    public String getInterfaceControl() {
-        return interfaceControl;
+    public String getMode() {
+        return mode;
     }
 
-    public void setInterfaceControl(String interfaceControl) {
-        this.interfaceControl = interfaceControl;
+    public void setMode(String mode) {
+        this.mode = mode;
     }
 
 }
