@@ -18,7 +18,7 @@ The framework consists of an SPI for schema providers, data providers and field 
 
 To start the REST interface, run the following commands:
 
- <nowiki>cd presto-webdemo<br/>
+ cd presto-webdemo;
  mvn -Djetty.port=9999 jetty:run</nowiki>
 
 Then open http://localhost:9999/presto/editor in your web browser. You can now follow the links to access the data in the data provider. You can also use the REST API to create and update data also. The API documentation is on its way.
