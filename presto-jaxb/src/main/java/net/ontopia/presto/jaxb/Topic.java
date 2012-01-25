@@ -81,11 +81,7 @@ public class Topic extends Document {
     }
 
     public void setLinks(Collection<Link> links) {
-        if (links.isEmpty()) {
-            this.links = null;
-        } else {
-            this.links = links;
-        }
+        this.links = links;
     }
 
     public Collection<Link> getLinks() {
