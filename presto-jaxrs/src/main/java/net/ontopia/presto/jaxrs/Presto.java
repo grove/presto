@@ -167,7 +167,7 @@ public class Presto {
         return getFieldInfo(topic, field, readOnlyMode, 0, -1);
     }
 
-    public FieldData getFieldInfo(PrestoTopic topic, PrestoFieldUsage field, boolean readOnlyMode, int offset, int limit) {
+    public FieldData getFieldInfo(PrestoTopic topic, final PrestoFieldUsage field, boolean readOnlyMode, int offset, int limit) {
 
         PrestoType type = field.getType();
         PrestoView parentView = field.getView();
@@ -342,8 +342,8 @@ public class Presto {
         if (field.isSorted()) {
             Collections.sort(fieldValues, new Comparator<Object>() {
                 public int compare(Object o1, Object o2) {
-                    String n1 = (o1 instanceof PrestoTopic) ? ((PrestoTopic)o1).getName() : (o1 == null ? null : o1.toString());
-                    String n2 = (o2 instanceof PrestoTopic) ? ((PrestoTopic)o2).getName() : (o2 == null ? null : o2.toString());
+                    String n1 = (o1 instanceof PrestoTopic) ? ((PrestoTopic)o1).getName(field) : (o1 == null ? null : o1.toString());
+                    String n2 = (o2 instanceof PrestoTopic) ? ((PrestoTopic)o2).getName(field) : (o2 == null ? null : o2.toString());
                     return compareComparables(n1, n2);
                 }
             });
@@ -432,7 +432,7 @@ public class Presto {
 
         Value result = new Value();
         result.setValue(value.getId());
-        result.setName(value.getName());
+        result.setName(value.getName(field));
         if (field.isEmbedded()) {
             PrestoType valueType = session.getSchemaProvider().getTypeById(value.getTypeId());
             result.setEmbedded(getTopicInfo(value, valueType, field.getValueView(), readOnlyMode));
@@ -475,7 +475,7 @@ public class Presto {
 
         Value result = new Value();
         result.setValue(value.getId());
-        result.setName(value.getName());
+        result.setName(value.getName(field));
 
         List<Link> links = new ArrayList<Link>();
         if (field.isTraversable()) {
