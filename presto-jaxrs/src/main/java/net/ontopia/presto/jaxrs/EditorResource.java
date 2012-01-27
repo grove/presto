@@ -665,48 +665,49 @@ public abstract class EditorResource {
 
     protected abstract PrestoSession createSession(String databaseId);
 
-    protected Presto createPresto(PrestoSession session, UriInfo uriInfo) {
-        return new Presto(session, uriInfo) {
-            @Override
-            public FieldData getFieldInfo(PrestoTopic topic, PrestoFieldUsage field, boolean readOnlyMode, int offset, int limit) {
-                FieldData fieldData = super.getFieldInfo(topic, field, readOnlyMode, offset, limit);
-                
-                List<FieldData.Message> messages = new ArrayList<FieldData.Message>();
-                // Move messages from extra.messages to fieldData.messages
-                Object extra = fieldData.getExtra();
-                if (extra != null && extra instanceof ObjectNode) {
-                    ObjectNode extraNode = (ObjectNode)extra;
-                    if (extraNode.get("messages") != null) {
-                        for (JsonNode messageNode : extraNode.get("messages")) {
-                            String type = messageNode.get("type").getTextValue();
-                            String message = messageNode.get("message").getTextValue();
-                            messages.add(new FieldData.Message(type, message));
-                        }
-                        extraNode.remove("messages");
+    public class EditorResourcePresto extends Presto {
+        public EditorResourcePresto(PrestoSession session, UriInfo uriInfo) {
+            super(session, uriInfo);
+        }
+        @Override
+        public FieldData getFieldInfo(PrestoTopic topic, PrestoFieldUsage field, boolean readOnlyMode, int offset, int limit) {
+            FieldData fieldData = super.getFieldInfo(topic, field, readOnlyMode, offset, limit);
+            
+            List<FieldData.Message> messages = new ArrayList<FieldData.Message>();
+            // Move messages from extra.messages to fieldData.messages
+            Object extra = fieldData.getExtra();
+            if (extra != null && extra instanceof ObjectNode) {
+                ObjectNode extraNode = (ObjectNode)extra;
+                if (extraNode.get("messages") != null) {
+                    for (JsonNode messageNode : extraNode.get("messages")) {
+                        String type = messageNode.get("type").getTextValue();
+                        String message = messageNode.get("message").getTextValue();
+                        messages.add(new FieldData.Message(type, message));
                     }
+                    extraNode.remove("messages");
                 }
-                
-                if (fieldData.getMessages() != null) {
-                    fieldData.getMessages().addAll(messages);
-                } else {
-                    fieldData.setMessages(messages);
-                }
-                return fieldData;
             }
-            @Override
-            protected Collection<String> getVariableValues(String variable) {
-                return EditorResource.this.getVariableValues(variable);
+            
+            if (fieldData.getMessages() != null) {
+                fieldData.getMessages().addAll(messages);
+            } else {
+                fieldData.setMessages(messages);
             }
-        };
+            return fieldData;
+        }
+        @Override
+        protected Collection<String> getVariableValues(String variable) {
+            if (variable.equals("now")) {
+                return Collections.singletonList(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new Date()));
+            } else if (variable.equals("username")) {
+                return Collections.singletonList(request.getRemoteUser());
+            }
+            return Collections.emptyList();
+        }
     }
     
-    protected Collection<String> getVariableValues(String variable) {
-        if (variable.equals("now")) {
-            return Collections.singletonList(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new Date()));
-        } else if (variable.equals("username")) {
-            return Collections.singletonList(request.getRemoteUser());
-        }
-        return Collections.emptyList();
+    protected Presto createPresto(PrestoSession session, UriInfo uriInfo) {
+        return new EditorResourcePresto(session, uriInfo);
     }
     
     protected abstract Collection<String> getDatabaseIds();
