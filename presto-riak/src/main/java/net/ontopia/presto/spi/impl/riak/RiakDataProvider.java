@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoFieldUsage;
@@ -40,7 +41,10 @@ public abstract class RiakDataProvider implements JacksonDataProvider {
     private final ObjectMapper mapper;
     private final JacksonDataStrategy dataStrategy;
 
-    public RiakDataProvider() {
+    private final String bucketId;
+
+    public RiakDataProvider(String bucketId) {
+        this.bucketId = bucketId;
         this.riakClient = createRiakClient();
         this.mapper = createObjectMapper();
         this.dataStrategy = createDataStrategy(mapper);  
@@ -70,7 +74,7 @@ public abstract class RiakDataProvider implements JacksonDataProvider {
     @Override
     public PrestoTopic getTopicById(String id) {
         try {
-            Bucket bucket = riakClient.fetchBucket("presto").execute();
+            Bucket bucket = riakClient.fetchBucket(bucketId).execute();
             return existing(bucket.fetch(id, ObjectNode.class).execute());
         } catch (RiakRetryFailedException e) {
             throw new RuntimeException(e);
@@ -119,9 +123,11 @@ public abstract class RiakDataProvider implements JacksonDataProvider {
     @Override
     public void create(PrestoTopic topic) {
         try {
-            Bucket bucket = riakClient.createBucket("presto").execute();
+            Bucket bucket = riakClient.createBucket(bucketId).execute();
             ObjectNode data = ((JacksonTopic)topic).getData();
-            bucket.store(data).execute();
+            String topicId = UUID.randomUUID().toString();
+            data.put("_id", topicId);
+            bucket.store(topicId, data).execute();
         } catch (RiakRetryFailedException e) {
             throw new RuntimeException(e);
         }
@@ -130,9 +136,9 @@ public abstract class RiakDataProvider implements JacksonDataProvider {
     @Override
     public void update(PrestoTopic topic) {
         try {
-            Bucket bucket = riakClient.fetchBucket("presto").execute();
+            Bucket bucket = riakClient.fetchBucket(bucketId).execute();
             ObjectNode data = ((JacksonTopic)topic).getData();
-            bucket.store(data).execute();
+            bucket.store(topic.getId(), data).execute();
         } catch (RiakRetryFailedException e) {
             throw new RuntimeException(e);
         }
@@ -141,9 +147,8 @@ public abstract class RiakDataProvider implements JacksonDataProvider {
     @Override
     public boolean delete(PrestoTopic topic) {
         try {
-            Bucket bucket = riakClient.fetchBucket("presto").execute();
-            ObjectNode data = ((JacksonTopic)topic).getData();
-            bucket.delete(data).execute();
+            Bucket bucket = riakClient.fetchBucket(bucketId).execute();
+            bucket.delete(topic.getId()).execute();
             return true;
         } catch (RiakException e) {
             throw new RuntimeException(e);

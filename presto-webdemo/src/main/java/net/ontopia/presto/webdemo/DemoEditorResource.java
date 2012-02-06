@@ -13,6 +13,7 @@ import net.ontopia.presto.spi.PrestoSession;
 import net.ontopia.presto.spi.impl.couchdb.CouchDataProvider;
 import net.ontopia.presto.spi.impl.pojo.PojoSchemaProvider;
 import net.ontopia.presto.spi.impl.pojo.PojoSession;
+import net.ontopia.presto.spi.impl.riak.RiakDataProvider;
 import net.ontopia.presto.spi.jackson.JacksonBucketDataStrategy;
 import net.ontopia.presto.spi.jackson.JacksonDataStrategy;
 
@@ -50,8 +51,14 @@ public class DemoEditorResource extends EditorResource {
         PojoSchemaProvider schemaProvider = PojoSchemaProvider.getSchemaProvider(databaseId, databaseId + ".presto.json");
         
         // schema stored in json and data stored in couchdb
-        final CouchDataProvider dataProvider = new CouchDataProvider() {
+        final CouchDataProvider dataProvider = createCouchDbDataProvider();
+//        final RiakDataProvider dataProvider = createRiakDataProvider();
 
+        return new PojoSession(databaseId, getDatabaseName(databaseId), schemaProvider, dataProvider);
+    }
+
+    private CouchDataProvider createCouchDbDataProvider() {
+        return new CouchDataProvider() {
             @Override
             protected CouchDbConnector createCouchDbConnector() {
                 HttpClient httpClient = new StdHttpClient.Builder().build();
@@ -73,10 +80,30 @@ public class DemoEditorResource extends EditorResource {
                 };
             }
         }.designDocId(DESIGN_DOCUMENT);
-
-        return new PojoSession(databaseId, getDatabaseName(databaseId), schemaProvider, dataProvider);
     }
-
+    
+    private RiakDataProvider createRiakDataProvider() {
+        try {
+            return new RiakDataProvider(DB_NAME) {
+                @Override
+                protected JacksonDataStrategy createDataStrategy(ObjectMapper mapper) {
+                    return new JacksonBucketDataStrategy(mapper) {
+                        @Override
+                        protected List<String> getReadBuckets(ObjectNode doc) {
+                            return READ_BUCKETS;
+                        }
+                        @Override
+                        protected String getWriteBucket(ObjectNode doc) {
+                            return WRITE_BUCKET;
+                        }
+                    };
+                }
+            };
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
     @Override
     protected Collection<String> getDatabaseIds() {          
         return databases.keySet();
