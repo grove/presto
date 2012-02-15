@@ -29,7 +29,7 @@ import org.ektorp.impl.StdCouchDbInstance;
 public class DemoEditorResource extends EditorResource {
 	
     public static final String DB_NAME = "presto-demo";
-    public static final String DESIGN_DOCUMENT = "_design/presto-demo";
+    public static final String COUCHDB_DESIGN_DOCUMENT = "_design/presto-demo";
 
     public static final String BUCKET_WRITE = "write";
     public static final String BUCKET_READ = "read";
@@ -48,10 +48,13 @@ public class DemoEditorResource extends EditorResource {
     @Override
     protected PrestoSession createSession(String databaseId) {
 
+        // schema stored in json format
         PojoSchemaProvider schemaProvider = PojoSchemaProvider.getSchemaProvider(databaseId, databaseId + ".presto.json");
         
-        // schema stored in json and data stored in couchdb
+        // data stored in couchdb
         final CouchDataProvider dataProvider = createCouchDbDataProvider();
+        
+        // data stored in riak
 //        final RiakDataProvider dataProvider = createRiakDataProvider();
 
         return new PojoSession(databaseId, getDatabaseName(databaseId), schemaProvider, dataProvider);
@@ -79,7 +82,7 @@ public class DemoEditorResource extends EditorResource {
                     }
                 };
             }
-        }.designDocId(DESIGN_DOCUMENT);
+        }.designDocId(COUCHDB_DESIGN_DOCUMENT);
     }
     
     private RiakDataProvider createRiakDataProvider() {

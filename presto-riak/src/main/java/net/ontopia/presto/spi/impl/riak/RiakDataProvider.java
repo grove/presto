@@ -123,21 +123,28 @@ public abstract class RiakDataProvider implements JacksonDataProvider {
     @Override
     public void create(PrestoTopic topic) {
         try {
-            Bucket bucket = riakClient.createBucket(bucketId).execute();
             ObjectNode data = ((JacksonTopic)topic).getData();
-            String topicId = UUID.randomUUID().toString();
+
+            String topicId = createNewTopicId(topic);
             data.put("_id", topicId);
+            
+            Bucket bucket = riakClient.createBucket(bucketId).execute();            
             bucket.store(topicId, data).execute();
         } catch (RiakRetryFailedException e) {
             throw new RuntimeException(e);
         }
     }
 
+    protected String createNewTopicId(PrestoTopic topic) {
+        return UUID.randomUUID().toString();
+    }
+    
     @Override
     public void update(PrestoTopic topic) {
         try {
-            Bucket bucket = riakClient.fetchBucket(bucketId).execute();
             ObjectNode data = ((JacksonTopic)topic).getData();
+            
+            Bucket bucket = riakClient.fetchBucket(bucketId).execute();
             bucket.store(topic.getId(), data).execute();
         } catch (RiakRetryFailedException e) {
             throw new RuntimeException(e);
