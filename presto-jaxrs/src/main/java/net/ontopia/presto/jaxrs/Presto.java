@@ -20,7 +20,6 @@ import net.ontopia.presto.jaxb.Topic;
 import net.ontopia.presto.jaxb.TopicType;
 import net.ontopia.presto.jaxb.TopicTypeTree;
 import net.ontopia.presto.jaxb.Value;
-import net.ontopia.presto.jaxb.View;
 import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoField;
@@ -49,6 +48,14 @@ public class Presto {
         this.uriInfo = uriInfo;
     }
 
+    protected PrestoSession getSession() {
+        return session;
+    }
+    
+    protected UriInfo getUriInfo() {
+        return uriInfo;
+    }
+    
     public Map<String,Object> getTopicData(PrestoTopic topic, PrestoType type) {
         Map<String,Object> result = new LinkedHashMap<String,Object>();
 
@@ -83,9 +90,6 @@ public class Presto {
 
         result.setId(topic.getId());
         result.setName(topic.getName());
-        if (readOnlyMode) {
-            result.setReadOnlyMode(readOnlyMode);
-        }
 
         TopicType typeInfo = getTypeInfo(type);    
 
@@ -114,24 +118,23 @@ public class Presto {
             }
         }
         result.setFields(fields);
-        
+
         List<Link> topicLinks = new ArrayList<Link>();
         UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(session.getDatabaseId()).path(topic.getId()).path(view.getId());
         topicLinks.add(new Link("edit", builder.build().toString()));
-        
+
         if (allowUpdates) {
             builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(session.getDatabaseId()).path(topic.getId()).path(view.getId());
             topicLinks.add(new Link("update", builder.build().toString()));
         }
-        
+
         if (!readOnlyMode && type.isRemovable()) {
             builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(session.getDatabaseId()).path(topic.getId());
             topicLinks.add(new Link("delete", builder.build().toString()));
         }
+        topicLinks.addAll(getViewLinks(topic, type, view, readOnlyMode));
         result.setLinks(topicLinks);
 
-        result.setViews(getViews(topic, type, view, readOnlyMode));
-        
         return result;
     }
 
@@ -152,7 +155,8 @@ public class Presto {
 
         List<Link> topicLinks = new ArrayList<Link>();
         UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(session.getDatabaseId()).path("_" + type.getId()).path(view.getId());
-        topicLinks.add(new Link("create", builder.build().toString()));    
+        topicLinks.add(new Link("create", builder.build().toString()));
+        //        topicLinks.addAll(Collections.singleton(getViewLink(null, type, view, readOnlyMode)));
         result.setLinks(topicLinks);
 
         List<FieldData> fields = new ArrayList<FieldData>(); 
@@ -164,15 +168,14 @@ public class Presto {
             }
         }
         result.setFields(fields);
-        result.setViews(Collections.singleton(getView(null, type, view, readOnlyMode)));
         return result;
     }
 
     private FieldData getFieldInfo(PrestoTopic topic, PrestoFieldUsage field, boolean readOnlyMode) {
         return getFieldInfo(topic, field, readOnlyMode, 0, -1);
     }
-    
-    public FieldData getFieldInfo(PrestoTopic topic, PrestoFieldUsage field, boolean readOnlyMode, int offset, int limit) {
+
+    public FieldData getFieldInfo(PrestoTopic topic, final PrestoFieldUsage field, boolean readOnlyMode, int offset, int limit) {
 
         PrestoType type = field.getType();
         PrestoView parentView = field.getView();
@@ -347,8 +350,8 @@ public class Presto {
         if (field.isSorted()) {
             Collections.sort(fieldValues, new Comparator<Object>() {
                 public int compare(Object o1, Object o2) {
-                    String n1 = (o1 instanceof PrestoTopic) ? ((PrestoTopic)o1).getName() : (o1 == null ? null : o1.toString());
-                    String n2 = (o2 instanceof PrestoTopic) ? ((PrestoTopic)o2).getName() : (o2 == null ? null : o2.toString());
+                    String n1 = (o1 instanceof PrestoTopic) ? ((PrestoTopic)o1).getName(field) : (o1 == null ? null : o1.toString());
+                    String n2 = (o2 instanceof PrestoTopic) ? ((PrestoTopic)o2).getName(field) : (o2 == null ? null : o2.toString());
                     return compareComparables(n1, n2);
                 }
             });
@@ -359,7 +362,7 @@ public class Presto {
         for (int i=start; i < end; i++) {
             Object value = fieldValues.get(i);
             if (value != null) {
-                values.add(getValue(field, value, readOnlyMode));
+                values.add(getExistingFieldValue(field, value, readOnlyMode));
             } else {
                 size--;
             }
@@ -379,74 +382,31 @@ public class Presto {
         return fieldData;
     }
 
-    protected Value getValue(PrestoFieldUsage field, Object fieldValue, boolean readOnlyMode) {
+    protected Value getExistingFieldValue(PrestoFieldUsage field, Object fieldValue, boolean readOnlyMode) {
         if (fieldValue instanceof PrestoTopic) {
-            PrestoTopic valueTopic = (PrestoTopic)fieldValue;
-            return getExistingTopicFieldValue(field, valueTopic, readOnlyMode);
+            PrestoTopic topicValue = (PrestoTopic)fieldValue;
+            return getExistingTopicFieldValue(field, topicValue, readOnlyMode);
         } else {
-            Value result = new Value();
-            result.setValue(fieldValue.toString());
-            boolean removable = !field.isReadOnly();
-            if (!readOnlyMode && removable) {
-                result.setRemovable(Boolean.TRUE);
-            }
-            return result;
+            String stringValue = fieldValue.toString();
+            return getExistingStringFieldValue(field, stringValue, readOnlyMode);
         }
     }
-
-    protected int compareComparables(String o1, String o2) {
-        if (o1 == null) {
-            return (o2 == null ? 0 : -1);
-        } else if (o2 == null){ 
-            return 1;
-        } else {
-            return o1.compareTo(o2);
+    
+    protected Value getExistingStringFieldValue(PrestoFieldUsage field, String fieldValue, boolean readOnlyMode) {
+        Value result = new Value();
+        result.setValue(fieldValue);
+        if (!readOnlyMode && !field.isReadOnly()) {
+            result.setRemovable(Boolean.TRUE);
         }
-    }
-
-    public List<View> getViews(PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnlyMode) {
-
-        Collection<PrestoView> otherViews = type.getViews(view);
-
-        List<View> views = new ArrayList<View>(otherViews.size()); 
-        for (PrestoView otherView : otherViews) {
-            views.add(getView(topic, type, otherView, readOnlyMode));
-        }
-        return views;
-    }
-
-    protected View getView(PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnlyMode) {
-        View result = new View();
-        result.setId(view.getId());
-        result.setName(view.getName());
-
-        List<Link> links = new ArrayList<Link>();
-        if (topic != null) {
-            UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(session.getDatabaseId()).path(topic.getId()).path(view.getId());
-            if (readOnlyMode) {
-                builder = builder.queryParam("readOnly", "true");
-            }
-            links.add(new Link("edit-in-view", builder.build().toString()));
-        }
-        result.setLinks(links);
         return result;
     }
-
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    protected <T> int compareStatic(Comparable o1, Comparable o2) {
-        if (o1 == null)
-            return (o2 == null ? 0 : -1);
-        else if (o2 == null)
-            return 1;
-        else
-            return o1.compareTo(o2);
-    }
-
-    public Value getExistingTopicFieldValue(PrestoFieldUsage field, PrestoTopic value, boolean readOnlyMode) {
+    
+    protected Value getExistingTopicFieldValue(PrestoFieldUsage field, PrestoTopic value, boolean readOnlyMode) {
 
         Value result = new Value();
         result.setValue(value.getId());
-        result.setName(value.getName());
+        result.setName(value.getName(field));
+        
         if (field.isEmbedded()) {
             PrestoType valueType = session.getSchemaProvider().getTypeById(value.getTypeId());
             result.setEmbedded(getTopicInfo(value, valueType, field.getValueView(), readOnlyMode));
@@ -485,11 +445,11 @@ public class Presto {
         return result;
     }
 
-    public Value getAllowedTopicFieldValue(PrestoFieldUsage field, PrestoTopic value) {
+    protected Value getAllowedTopicFieldValue(PrestoFieldUsage field, PrestoTopic value) {
 
         Value result = new Value();
         result.setValue(value.getId());
-        result.setName(value.getName());
+        result.setName(value.getName(field));
 
         List<Link> links = new ArrayList<Link>();
         if (field.isTraversable()) {
@@ -500,6 +460,45 @@ public class Presto {
         result.setLinks(links);
 
         return result;
+    }
+
+    protected int compareComparables(String o1, String o2) {
+        if (o1 == null) {
+            return (o2 == null ? 0 : -1);
+        } else if (o2 == null){ 
+            return 1;
+        } else {
+            return o1.compareTo(o2);
+        }
+    }
+
+    protected List<Link> getViewLinks(PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnlyMode) {
+        Collection<PrestoView> otherViews = type.getViews(view);
+
+        List<Link> views = new ArrayList<Link>(otherViews.size()); 
+        for (PrestoView otherView : otherViews) {
+            views.add(getViewLink(topic, type, otherView, readOnlyMode));
+        }
+        return views;
+    }
+
+    protected Link getViewLink(PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnlyMode) {
+        UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(session.getDatabaseId()).path(topic.getId()).path(view.getId());
+        String href = builder.build().toString();
+        Link result = new Link("edit-in-view", href);
+        result.setId(view.getId());
+        result.setName(view.getName());
+        return result;
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    protected <T> int compareStatic(Comparable o1, Comparable o2) {
+        if (o1 == null)
+            return (o2 == null ? 0 : -1);
+        else if (o2 == null)
+            return 1;
+        else
+            return o1.compareTo(o2);
     }
 
     protected TopicType getTypeInfo(PrestoType type) {
@@ -534,7 +533,7 @@ public class Presto {
         } else {
             update.addValues(field, addableValues, index);        
         }
-        
+
         changeSet.save();
 
         return getFieldInfo(update.getTopicAfterUpdate(), field, false);
@@ -582,9 +581,9 @@ public class Presto {
                 }
             }
         }
-        
+
         assignDefaultValues(topic, type, update);
-        
+
         changeSet.save();
         return update.getTopicAfterUpdate();
     }
@@ -603,12 +602,12 @@ public class Presto {
             }
         }        
     }
-    
+
     protected List<Object> getDefaultValues(PrestoTopic topic, PrestoType type, PrestoField field) {
         List<Object> result = new ArrayList<Object>();
         for (String value : field.getValues()) {
             // TODO: get values from: topic field, session properties
-            
+
             if (value != null) {
                 if (value.charAt(0) == '$') {
                     String variable = value.substring(1);
@@ -624,11 +623,11 @@ public class Presto {
         }
         return result;
     }
-    
+
     protected Collection<String> getVariableValues(String variable) {
         return Collections.emptyList(); // should be overridden
     }
-    
+
     private Collection<Object> resolveValues(PrestoFieldUsage field, Collection<Value> values, boolean resolveEmbedded) {
         Collection<Object> result = new ArrayList<Object>(values.size());
 
@@ -745,5 +744,5 @@ public class Presto {
             return Collections.singleton(typeMap);
         }
     }
-    
+
 }

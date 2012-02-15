@@ -3,6 +3,7 @@ package net.ontopia.presto.spi.jackson;
 import java.util.List;
 
 import net.ontopia.presto.spi.PrestoField;
+import net.ontopia.presto.spi.PrestoFieldUsage;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -11,6 +12,10 @@ import org.codehaus.jackson.node.ObjectNode;
 
 public abstract class JacksonBucketDataStrategy implements JacksonDataStrategy {
 
+    private static final String ID_DEFAULT_FIELD = "_id";
+    private static final String TYPE_DEFAULT_FIELD = ":type";
+    private static final String NAME_DEFAULT_FIELD = ":name";
+    
     private final ObjectMapper mapper;
 
     public JacksonBucketDataStrategy(ObjectMapper mapper) {
@@ -27,20 +32,25 @@ public abstract class JacksonBucketDataStrategy implements JacksonDataStrategy {
     
     @Override
     public String getId(ObjectNode doc) {
-        return doc.get("_id").getTextValue();
+        return doc.get(ID_DEFAULT_FIELD).getTextValue();
     }
     
     @Override
     public String getTypeId(ObjectNode doc) {
-        return doc.get(":type").getTextValue();
+        return doc.get(TYPE_DEFAULT_FIELD).getTextValue();
     }
     
     @Override
     public String getName(ObjectNode doc) {
-        JsonNode name = doc.get(":name");
+        JsonNode name = doc.get(NAME_DEFAULT_FIELD);
         return name == null ? null : name.getTextValue();
     }
     
+    @Override
+    public String getName(ObjectNode doc, PrestoFieldUsage field) {
+        return getName(doc);
+    }
+
     @Override
     public ArrayNode getFieldValue(ObjectNode doc, PrestoField field) {
         return getBucketFieldValue(field.getActualId(), getReadBucket(doc, field, true));
@@ -49,7 +59,15 @@ public abstract class JacksonBucketDataStrategy implements JacksonDataStrategy {
     protected ArrayNode getFieldValue(ObjectNode doc, String fieldId) {
         return getBucketFieldValue(fieldId, getReadBucket(doc, fieldId, true));
     }
-    
+
+    protected String getFirstStringValue(ObjectNode doc, String fieldId) {
+        ArrayNode node = getFieldValue(doc, fieldId);
+        if (node != null && node.size() > 0) {
+            return node.get(0).getTextValue();
+        }
+        return null;
+    }
+
     @Override
     public void putFieldValue(ObjectNode doc, PrestoField field, ArrayNode value) {
         putFieldValue(doc, field.getActualId(), value);

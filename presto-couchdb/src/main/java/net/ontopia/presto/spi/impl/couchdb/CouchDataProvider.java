@@ -109,7 +109,7 @@ public abstract class CouchDataProvider implements JacksonDataProvider {
     }
 
     @Override
-    public Collection<PrestoTopic> getAvailableFieldValues(PrestoFieldUsage field) {
+    public Collection<PrestoTopic> getAvailableFieldValues(final PrestoFieldUsage field) {
         if (field.isAddable()) {
             Collection<PrestoType> types = field.getAvailableFieldValueTypes();
             if (types.isEmpty()) {
@@ -136,7 +136,7 @@ public abstract class CouchDataProvider implements JacksonDataProvider {
             Collections.sort(result, new Comparator<PrestoTopic>() {
                 @Override
                 public int compare(PrestoTopic o1, PrestoTopic o2) {
-                    return compareComparables(o1.getName(), o2.getName());
+                    return compareComparables(o1.getName(field), o2.getName(field));
                 }
             });
             return result;

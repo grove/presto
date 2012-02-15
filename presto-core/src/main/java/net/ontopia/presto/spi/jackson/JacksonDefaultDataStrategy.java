@@ -1,6 +1,7 @@
 package net.ontopia.presto.spi.jackson;
 
 import net.ontopia.presto.spi.PrestoField;
+import net.ontopia.presto.spi.PrestoFieldUsage;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
@@ -22,6 +23,11 @@ public class JacksonDefaultDataStrategy implements JacksonDataStrategy {
     public String getName(ObjectNode doc) {
         JsonNode name = doc.get(":name");
         return name == null ? null : name.getTextValue();
+    }
+    
+    @Override
+    public String getName(ObjectNode doc, PrestoFieldUsage field) {
+        return getName(doc);
     }
 
     @Override

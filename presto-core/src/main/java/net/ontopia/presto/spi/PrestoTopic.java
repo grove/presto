@@ -8,6 +8,8 @@ public interface PrestoTopic {
 
     String getName();
 
+    String getName(PrestoFieldUsage field);
+
     String getTypeId();
 
     List<? extends Object> getValues(PrestoField field);

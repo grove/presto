@@ -10,26 +10,25 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 @XmlRootElement
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown=true)
-public class Topic extends Document {
+public class TopicFields extends Document {
 
     private String id;
     private String name;
-    private String mode;
-    
-    private Boolean errors;
+    private String view;
 
     private Origin origin;
 
     private TopicType type;
-    private String view;
 
     private Collection<Link> links;
+    
+    private Boolean errors;
 
     private Collection<FieldData> fields;
     
     @Override
     public String getFormat() {
-        return "topic";
+        return "topic-fields";
     }
     
     public void setId(String id) {
@@ -46,14 +45,6 @@ public class Topic extends Document {
 
     public String getName() {
         return name;
-    }
-
-    public void setType(TopicType type) {
-        this.type = type;
-    }
-
-    public TopicType getType() {
-        return type;
     }
 
     public void setView(String view) {
@@ -80,8 +71,20 @@ public class Topic extends Document {
         return origin;
     }
 
+    public void setType(TopicType type) {
+        this.type = type;
+    }
+
+    public TopicType getType() {
+        return type;
+    }
+
     public void setLinks(Collection<Link> links) {
-        this.links = links;
+        if (links.isEmpty()) {
+            this.links = null;
+        } else {
+            this.links = links;
+        }
     }
 
     public Collection<Link> getLinks() {
@@ -94,14 +97,6 @@ public class Topic extends Document {
 
     public void setErrors(Boolean errors) {
         this.errors = errors;
-    }
-
-    public String getMode() {
-        return mode;
-    }
-
-    public void setMode(String mode) {
-        this.mode = mode;
     }
 
 }

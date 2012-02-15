@@ -5,6 +5,7 @@
       "b:brewery" : { 
         "name" : "Brewery",
         "creatable" : true,
+        "removable" : true,
         "views": [
           { "id" : "info",
             "name": "Info",
