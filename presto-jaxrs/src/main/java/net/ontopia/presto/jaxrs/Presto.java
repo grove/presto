@@ -149,7 +149,7 @@ public class Presto {
         if (parentId != null) {
             result.setOrigin(new Origin(parentId, parentFieldId));
         }
-        result.setType(new TopicType(type.getId(), type.getName()));
+        result.setType(getTypeInfo(type));
 
         result.setView(view.getId());
 
@@ -566,19 +566,18 @@ public class Presto {
             update = changeSet.updateTopic(topic, type);
         }
 
+        // TODO: really no need to build a new fields map here.
         Map<String, PrestoFieldUsage> fields = getFieldInstanceMap(topic, type, view);
 
-        for (FieldData jsonField : data.getFields()) {
-            String fieldId = jsonField.getId();
+        for (FieldData fd : data.getFields()) {
+            String fieldId = fd.getId();
 
             PrestoFieldUsage field = fields.get(fieldId);
 
             // ignore read-only or pageable fields 
             if (!field.isReadOnly() && !field.isPageable()) {
-                if  (fields.containsKey(fieldId)) {
-                    Collection<Value> values = jsonField.getValues();
-                    update.setValues(field, resolveValues(field, values, true));
-                }
+                Collection<Value> values = fd.getValues();
+                update.setValues(field, resolveValues(field, values, true));
             }
         }
 
@@ -586,6 +585,15 @@ public class Presto {
 
         changeSet.save();
         return update.getTopicAfterUpdate();
+    }
+
+    private Map<String, PrestoFieldUsage> getFieldInstanceMap(PrestoTopic topic,
+            PrestoType type, PrestoView view) {
+        Map<String, PrestoFieldUsage> fields = new HashMap<String, PrestoFieldUsage>();
+        for (PrestoFieldUsage field : type.getFields(view)) {
+            fields.put(field.getId(), field);
+        }
+        return fields;
     }
 
     protected void assignDefaultValues(PrestoTopic topic, PrestoType type, PrestoUpdate update) {
@@ -676,15 +684,6 @@ public class Presto {
         }
 
         return updateTopic(topic, type, view, embeddedTopic);
-    }
-
-    private Map<String, PrestoFieldUsage> getFieldInstanceMap(PrestoTopic topic,
-            PrestoType type, PrestoView view) {
-        Map<String, PrestoFieldUsage> fields = new HashMap<String, PrestoFieldUsage>();
-        for (PrestoFieldUsage field : type.getFields(view)) {
-            fields.put(field.getId(), field);
-        }
-        return fields;
     }
 
     private Topic getEmbeddedReference(Value value) {
