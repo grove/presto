@@ -1,7 +1,7 @@
 package net.ontopia.presto.jaxrs;
 
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.TreeSet;
 
 import junit.framework.Assert;
@@ -35,16 +35,31 @@ public class PrestoTest {
     }
     
     @Test 
-    public void testCreateAndLookup() {
+    public void testCreateLookupAndDelete() {
         PrestoType personType = schemaProvider.getTypeById("person");
-        PrestoField nameField = personType.getFieldById("name");
         
         // create new person
         PrestoChangeSet cs = dataProvider.newChangeSet();
         
         PrestoUpdate john = cs.createTopic(personType);
-        Collection<? extends Object> names =  Collections.singleton("John Doe");
+        
+        PrestoField nameField = personType.getFieldById("name");
+        Collection<? extends Object> names =  Arrays.asList("John Doe");
         john.setValues(nameField, names);        
+
+        PrestoField interestsField = personType.getFieldById("interests");
+        Collection<? extends Object> interests =  Arrays.asList("Beer", "Wine", "Food");
+        john.setValues(interestsField, interests);        
+
+        PrestoField colorsField = personType.getFieldById("favorite-colors");
+        Collection<? extends Object> colors =  Arrays.asList("Green", "Black", "Blue", "Red");
+        Collection<? extends Object> removedColors =  Arrays.asList("Blue", "Green");
+        Collection<? extends Object> addedColors =  Arrays.asList("White", "Yellow");
+        Collection<? extends Object> finalColors =  Arrays.asList("Black", "Red", "White", "Yellow");
+        john.setValues(colorsField, colors);        
+        john.removeValues(colorsField, removedColors);
+        john.addValues(colorsField, addedColors);
+        
         cs.save();
         
         PrestoTopic createdJohn = john.getTopicAfterUpdate();
@@ -60,8 +75,24 @@ public class PrestoTest {
         Assert.assertEquals(foundJohn.getTypeId(), createdJohn.getTypeId());
         Assert.assertEquals(foundJohn.getTypeId(), personType.getId());
 
-        assertCollectionsEqual(foundJohn.getValues(nameField), createdJohn.getValues(nameField));
-        assertCollectionsEqual(foundJohn.getValues(nameField), names);
+        compareFieldValues(nameField, names, createdJohn, foundJohn);
+        compareFieldValues(interestsField, interests, createdJohn, foundJohn);
+        compareFieldValues(colorsField, finalColors, createdJohn, foundJohn);
+
+        // delete person
+        cs = dataProvider.newChangeSet();
+
+        cs.deleteTopic(foundJohn, personType);
+        cs.save();
+        
+        PrestoTopic deletedJohn = dataProvider.getTopicById(foundJohn.getId());
+        Assert.assertNull(deletedJohn);
+    }
+
+    private void compareFieldValues(PrestoField field, Collection<? extends Object> values, 
+            PrestoTopic t1, PrestoTopic t2) {
+        assertCollectionsEqual(t2.getValues(field), t1.getValues(field));
+        assertCollectionsEqual(t2.getValues(field), values);
     }
 
     private void assertCollectionsEqual(Collection<? extends Object> c1, Collection<? extends Object> c2) {

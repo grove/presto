@@ -15,13 +15,14 @@ import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.impl.couchdb.CouchDataProvider;
 import net.ontopia.presto.spi.impl.pojo.PojoSchemaProvider;
+import net.ontopia.presto.spi.impl.riak.RiakDataProvider;
 import net.ontopia.presto.spi.jackson.JacksonBucketDataStrategy;
 import net.ontopia.presto.spi.jackson.JacksonDataStrategy;
 
 public class PrestoTestService {
 
-    public static final String DB_NAME = "presto-demo";
-    public static final String COUCHDB_DESIGN_DOCUMENT = "_design/presto-demo";
+    public static final String DB_NAME = "presto-test";
+    public static final String COUCHDB_DESIGN_DOCUMENT = "_design/presto-test";
 
     public static final String BUCKET_WRITE = "write";
     public static final String BUCKET_READ = "read";
@@ -37,6 +38,7 @@ public class PrestoTestService {
 
     public static PrestoDataProvider createDataProvider(String databaseId) {
         return createCouchDbDataProvider();
+//        return createRiakDataProvider();
     }
     
     private static CouchDataProvider createCouchDbDataProvider() {
@@ -62,6 +64,28 @@ public class PrestoTestService {
                 };
             }
         }.designDocId(COUCHDB_DESIGN_DOCUMENT);
+    }
+    
+    private static RiakDataProvider createRiakDataProvider() {
+        try {
+            return new RiakDataProvider(DB_NAME) {
+                @Override
+                protected JacksonDataStrategy createDataStrategy(ObjectMapper mapper) {
+                    return new JacksonBucketDataStrategy(mapper) {
+                        @Override
+                        protected List<String> getReadBuckets(ObjectNode doc) {
+                            return READ_BUCKETS;
+                        }
+                        @Override
+                        protected String getWriteBucket(ObjectNode doc) {
+                            return WRITE_BUCKET;
+                        }
+                    };
+                }
+            };
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

@@ -86,6 +86,12 @@
                 "datatype": "http://psi.ontopia.net/ontology/datatype-html",
                 "maxCardinality": 1
               },
+              { "id" : "interests",
+                "name" : "Interests"
+              },
+              { "id" : "favorite-colors",
+                "name" : "Favorite colors"
+              },
               { "id" : "favorite-beer",
                 "name" : "Likes beer",
                 "datatype": "reference",
