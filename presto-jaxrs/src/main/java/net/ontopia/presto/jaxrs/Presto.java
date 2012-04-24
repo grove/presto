@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -566,13 +565,10 @@ public class Presto {
             update = changeSet.updateTopic(topic, type);
         }
 
-        // TODO: really no need to build a new fields map here.
-        Map<String, PrestoFieldUsage> fields = getFieldInstanceMap(topic, type, view);
-
         for (FieldData fd : data.getFields()) {
-            String fieldId = fd.getId();
 
-            PrestoFieldUsage field = fields.get(fieldId);
+            String fieldId = fd.getId();
+            PrestoFieldUsage field = type.getFieldById(fieldId, view);
 
             // ignore read-only or pageable fields 
             if (!field.isReadOnly() && !field.isPageable()) {
@@ -585,15 +581,6 @@ public class Presto {
 
         changeSet.save();
         return update.getTopicAfterUpdate();
-    }
-
-    private Map<String, PrestoFieldUsage> getFieldInstanceMap(PrestoTopic topic,
-            PrestoType type, PrestoView view) {
-        Map<String, PrestoFieldUsage> fields = new HashMap<String, PrestoFieldUsage>();
-        for (PrestoFieldUsage field : type.getFields(view)) {
-            fields.put(field.getId(), field);
-        }
-        return fields;
     }
 
     protected void assignDefaultValues(PrestoTopic topic, PrestoType type, PrestoUpdate update) {
