@@ -55,7 +55,7 @@ public class Presto {
         return uriInfo;
     }
     
-    public Map<String,Object> getTopicData(PrestoTopic topic, PrestoType type) {
+    public Map<String,Object> getTopicAsMap(PrestoTopic topic, PrestoType type) {
         Map<String,Object> result = new LinkedHashMap<String,Object>();
 
         result.put("_id", topic.getId());

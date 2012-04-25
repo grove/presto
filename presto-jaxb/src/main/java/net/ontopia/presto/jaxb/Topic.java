@@ -15,8 +15,6 @@ public class Topic extends Document {
     private String id;
     private String name;
     private String mode;
-    
-    private Boolean errors;
 
     private Origin origin;
 
@@ -26,10 +24,18 @@ public class Topic extends Document {
     private Collection<Link> links;
 
     private Collection<FieldData> fields;
-    
+
     @Override
     public String getFormat() {
         return "topic";
+    }
+
+    public String getMode() {
+        return mode;
+    }
+
+    public void setMode(String mode) {
+        this.mode = mode;
     }
     
     public void setId(String id) {
@@ -64,44 +70,28 @@ public class Topic extends Document {
         return view;
     }
 
-    public void setFields(Collection<FieldData> fields) {
-        this.fields = fields;
-    }
-
     public Collection<FieldData> getFields() {
         return fields;
     }
 
-    public void setOrigin(Origin origin) {
-        this.origin = origin;
+    public void setFields(Collection<FieldData> fields) {
+        this.fields = fields;
     }
 
     public Origin getOrigin() {
         return origin;
     }
 
-    public void setLinks(Collection<Link> links) {
-        this.links = links;
+    public void setOrigin(Origin origin) {
+        this.origin = origin;
     }
 
     public Collection<Link> getLinks() {
         return links;
     }
 
-    public Boolean getErrors() {
-        return errors;
-    }
-
-    public void setErrors(Boolean errors) {
-        this.errors = errors;
-    }
-
-    public String getMode() {
-        return mode;
-    }
-
-    public void setMode(String mode) {
-        this.mode = mode;
+    public void setLinks(Collection<Link> links) {
+        this.links = links;
     }
 
 }

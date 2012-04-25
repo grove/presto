@@ -48,9 +48,11 @@ public class Value {
     public void setName(String name) {
         this.name = name;
     }
+    
     public String getName() {
         return name;
     }
+    
     public void setLinks(Collection<Link> links) {
         if (links.isEmpty()) {
             this.links = null;
@@ -58,12 +60,15 @@ public class Value {
             this.links = links;
         }
     }
+    
     public Collection<Link> getLinks() {
         return links;
     }
+    
     public void setEmbedded(Topic embedded) {
         this.embedded = embedded;
     }
+    
     public Topic getEmbedded() {
         return embedded;
     }
@@ -71,6 +76,7 @@ public class Value {
     public Collection<Value> getValues() {
         return values;
     }
+    
     public void setValues(Collection<Value> values) {
         this.values = values;
     }

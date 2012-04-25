@@ -40,17 +40,19 @@ public class PrestoTest {
         
         // create new person
         PrestoChangeSet cs = dataProvider.newChangeSet();
-        
         PrestoUpdate john = cs.createTopic(personType);
         
+        // name
         PrestoField nameField = personType.getFieldById("name");
         Collection<? extends Object> names =  Arrays.asList("John Doe");
         john.setValues(nameField, names);        
 
+        // set values and unicode characters
         PrestoField interestsField = personType.getFieldById("interests");
-        Collection<? extends Object> interests =  Arrays.asList("Beer", "Wine", "Food");
+        Collection<? extends Object> interests =  Arrays.asList("Beer", "Wine", "Food", "苹果酒");
         john.setValues(interestsField, interests);        
 
+        // set, remove and add
         PrestoField colorsField = personType.getFieldById("favorite-colors");
         Collection<? extends Object> colors =  Arrays.asList("Green", "Black", "Blue", "Red");
         Collection<? extends Object> removedColors =  Arrays.asList("Blue", "Green");
@@ -72,8 +74,8 @@ public class PrestoTest {
         Assert.assertEquals(foundJohn.getId(), createdJohn.getId());
         Assert.assertEquals(foundJohn.getName(), createdJohn.getName());
 
-        Assert.assertEquals(foundJohn.getTypeId(), createdJohn.getTypeId());
         Assert.assertEquals(foundJohn.getTypeId(), personType.getId());
+        Assert.assertEquals(foundJohn.getTypeId(), createdJohn.getTypeId());
 
         compareFieldValues(nameField, names, createdJohn, foundJohn);
         compareFieldValues(interestsField, interests, createdJohn, foundJohn);

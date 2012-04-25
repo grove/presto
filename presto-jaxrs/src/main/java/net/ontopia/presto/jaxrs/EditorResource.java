@@ -245,7 +245,7 @@ public abstract class EditorResource {
             }
             PrestoType type = schemaProvider.getTypeById(topic.getTypeId());
 
-            Map<String,Object> result = createPresto(session, uriInfo).getTopicData(topic, type);
+            Map<String,Object> result = createPresto(session, uriInfo).getTopicAsMap(topic, type);
             return Response.ok(result).build();
 
         } catch (Exception e) {
