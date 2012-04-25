@@ -27,7 +27,7 @@ public class TopicUtils {
         return topic;
     }
     
-    public static TopicFields asTopicField(Topic t) {
+    public static TopicFields asTopicFields(Topic t) {
         TopicFields fields = new TopicFields();
         fields.setId(t.getId());
         fields.setName(t.getName());

@@ -4,14 +4,14 @@
   <parent>
     <groupId>net.ontopia.presto</groupId>
     <artifactId>presto</artifactId>
-    <version>0.4.5-SNAPSHOT</version>
+    <version>0.4.6-SNAPSHOT</version>
   </parent>
 
   <name>Presto - Test suite</name>
   <groupId>net.ontopia.presto</groupId>
   <artifactId>presto-test</artifactId>
   <packaging>jar</packaging>
-  <version>0.4.5-SNAPSHOT</version>
+  <version>0.4.6-SNAPSHOT</version>
 
   <dependencies>
     <dependency>
@@ -52,6 +52,7 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
+      <version>4.10</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
