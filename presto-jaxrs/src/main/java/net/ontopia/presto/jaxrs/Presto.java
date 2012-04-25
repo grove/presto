@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -149,7 +148,7 @@ public class Presto {
         if (parentId != null) {
             result.setOrigin(new Origin(parentId, parentFieldId));
         }
-        result.setType(new TopicType(type.getId(), type.getName()));
+        result.setType(getTypeInfo(type));
 
         result.setView(view.getId());
 
@@ -566,19 +565,15 @@ public class Presto {
             update = changeSet.updateTopic(topic, type);
         }
 
-        Map<String, PrestoFieldUsage> fields = getFieldInstanceMap(topic, type, view);
+        for (FieldData fd : data.getFields()) {
 
-        for (FieldData jsonField : data.getFields()) {
-            String fieldId = jsonField.getId();
-
-            PrestoFieldUsage field = fields.get(fieldId);
+            String fieldId = fd.getId();
+            PrestoFieldUsage field = type.getFieldById(fieldId, view);
 
             // ignore read-only or pageable fields 
             if (!field.isReadOnly() && !field.isPageable()) {
-                if  (fields.containsKey(fieldId)) {
-                    Collection<Value> values = jsonField.getValues();
-                    update.setValues(field, resolveValues(field, values, true));
-                }
+                Collection<Value> values = fd.getValues();
+                update.setValues(field, resolveValues(field, values, true));
             }
         }
 
@@ -676,15 +671,6 @@ public class Presto {
         }
 
         return updateTopic(topic, type, view, embeddedTopic);
-    }
-
-    private Map<String, PrestoFieldUsage> getFieldInstanceMap(PrestoTopic topic,
-            PrestoType type, PrestoView view) {
-        Map<String, PrestoFieldUsage> fields = new HashMap<String, PrestoFieldUsage>();
-        for (PrestoFieldUsage field : type.getFields(view)) {
-            fields.put(field.getId(), field);
-        }
-        return fields;
     }
 
     private Topic getEmbeddedReference(Value value) {

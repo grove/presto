@@ -39,6 +39,11 @@
 	<artifactId>slf4j-api</artifactId>
 	<version>1.5.11</version>
       </dependency>
+      <dependency>
+	<groupId>junit</groupId>
+	<artifactId>junit</artifactId>
+	<version>4.10</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -70,6 +75,7 @@
     <module>presto-jaxb</module>
     <module>presto-solr</module>
     <module>presto-webdemo</module>
+    <module>presto-test</module>
   </modules>
 
   <distributionManagement>
