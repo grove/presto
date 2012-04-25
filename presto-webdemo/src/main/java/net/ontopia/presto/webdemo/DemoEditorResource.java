@@ -85,6 +85,7 @@ public class DemoEditorResource extends EditorResource {
         }.designDocId(COUCHDB_DESIGN_DOCUMENT);
     }
     
+    @SuppressWarnings("unused")
     private RiakDataProvider createRiakDataProvider() {
         try {
             return new RiakDataProvider(DB_NAME) {
