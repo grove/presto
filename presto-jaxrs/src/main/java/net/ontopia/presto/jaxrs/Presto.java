@@ -601,12 +601,10 @@ public class Presto {
     protected List<Object> getDefaultValues(PrestoTopic topic, PrestoType type, PrestoField field) {
         List<Object> result = new ArrayList<Object>();
         for (String value : field.getValues()) {
-            // TODO: get values from: topic field, session properties
-
             if (value != null) {
                 if (value.charAt(0) == '$') {
                     String variable = value.substring(1);
-                    for (String varValue : getVariableValues(variable)) {
+                    for (String varValue : getVariableValues(topic, type, field, variable)) {
                         if (varValue != null) {
                             result.add(varValue);
                         }
@@ -619,7 +617,7 @@ public class Presto {
         return result;
     }
 
-    protected Collection<String> getVariableValues(String variable) {
+    protected Collection<String> getVariableValues(PrestoTopic topic, PrestoType type, PrestoField field, String variable) {
         return Collections.emptyList(); // should be overridden
     }
 
@@ -685,12 +683,11 @@ public class Presto {
         return value.getValue();
     }
 
-    public boolean deleteTopic(PrestoTopic topic, PrestoType type) {
+    public void deleteTopic(PrestoTopic topic, PrestoType type) {
         log.warn("Removing topic " + topic.getId() + " from database " + session.getDatabaseId());
         PrestoChangeSet changeSet = session.getDataProvider().newChangeSet();
         changeSet.deleteTopic(topic, type);
         changeSet.save();
-        return true;
     }
 
     public Collection<TopicTypeTree> getAvailableTypes(Collection<PrestoType> types, boolean tree) {

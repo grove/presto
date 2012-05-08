@@ -20,7 +20,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
@@ -35,6 +34,7 @@ import net.ontopia.presto.jaxb.RootInfo;
 import net.ontopia.presto.jaxb.Topic;
 import net.ontopia.presto.jaxb.TopicType;
 import net.ontopia.presto.spi.PrestoDataProvider;
+import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoSession;
@@ -272,19 +272,17 @@ public abstract class EditorResource {
             PrestoTopic topic = dataProvider.getTopicById(topicId);
 
             if (topic == null) {
-                // 200
-                ResponseBuilder builder = Response.ok();
-                return builder.build();        
+                // 404
+                return Response.status(Status.NOT_FOUND).build();        
             } else {
                 PrestoType type = schemaProvider.getTypeById(topic.getTypeId());
-                if (type.isRemovable() && createPresto(session, uriInfo).deleteTopic(topic, type)) {          
-                    // 200
-                    ResponseBuilder builder = Response.ok();
-                    return builder.build();
+                if (type.isRemovable()) {
+                    createPresto(session, uriInfo).deleteTopic(topic, type);          
+                    // 204
+                    return Response.noContent().build();
                 } else {
                     // 403
-                    ResponseBuilder builder = Response.status(Status.FORBIDDEN);
-                    return builder.build();
+                    return Response.status(Status.FORBIDDEN).build();
                 }
             }
 
@@ -394,6 +392,7 @@ public abstract class EditorResource {
             topic = presto.updateTopic(topic, type, view, preProcess(topicData));
 
             Topic result = presto.getTopicInfo(topic, type, view, false);
+            
             String id = result.getId();
             session.commit();
             onTopicUpdated(id);
@@ -440,7 +439,6 @@ public abstract class EditorResource {
                 FieldData result = createPresto(session, uriInfo).addFieldValues(topic, type, field, index, fieldData);
     
                 String id = topic.getId();
-    
                 session.commit();
                 onTopicUpdated(id);
     
@@ -448,8 +446,7 @@ public abstract class EditorResource {
             
             } else {
                 // 403
-                ResponseBuilder builder = Response.status(Status.FORBIDDEN);
-                return builder.build();
+                return Response.status(Status.FORBIDDEN).build();
             }
 
         } catch (Exception e) {
@@ -515,7 +512,6 @@ public abstract class EditorResource {
             PrestoFieldUsage field = type.getFieldById(fieldId, view);
 
             if (field.isRemovable()) {
-
                 FieldData result =  createPresto(session, uriInfo).removeFieldValues(topic, type, field, fieldData);
     
                 String id = topic.getId();    
@@ -526,8 +522,7 @@ public abstract class EditorResource {
                 
             } else {
                 // 403
-                ResponseBuilder builder = Response.status(Status.FORBIDDEN);
-                return builder.build();
+                return Response.status(Status.FORBIDDEN).build();
             }
         } catch (Exception e) {
             session.abort();
@@ -696,7 +691,7 @@ public abstract class EditorResource {
             return fieldData;
         }
         @Override
-        protected Collection<String> getVariableValues(String variable) {
+        protected Collection<String> getVariableValues(PrestoTopic topic, PrestoType type, PrestoField field, String variable) {
             if (variable.equals("now")) {
                 return Collections.singletonList(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new Date()));
             } else if (variable.equals("username")) {
