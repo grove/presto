@@ -587,13 +587,18 @@ public class Presto {
         boolean isNewTopic = (topic == null);
         // assign [initial] values
         for (PrestoField field : type.getFields()) {
+            List<Object> defaultValues = null;
+
             String valuesAssignmentType = field.getValuesAssignmentType();
             if (valuesAssignmentType.equals("initial")) {
                 if (isNewTopic) {
-                    update.setValues(field, getDefaultValues(topic, type, field));                    
+                    defaultValues = getDefaultValues(topic, type, field);                    
                 }
             } else if (valuesAssignmentType.equals("always")) {
-                update.setValues(field, getDefaultValues(topic, type, field));
+                defaultValues = getDefaultValues(topic, type, field);
+            }
+            if (defaultValues != null) {
+                update.setValues(field, defaultValues);                
             }
         }        
     }

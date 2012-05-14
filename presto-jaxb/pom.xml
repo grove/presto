@@ -15,9 +15,12 @@
 
   <dependencies>
     <dependency>
-      <groupId>net.ontopia.presto</groupId>
-      <artifactId>presto-core</artifactId>
-      <version>${project.version}</version>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-core-asl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-mapper-asl</artifactId>
     </dependency>
   </dependencies>
 

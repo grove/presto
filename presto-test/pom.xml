@@ -21,16 +21,6 @@
     </dependency>
     <dependency>
       <groupId>net.ontopia.presto</groupId>
-      <artifactId>presto-jaxb</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>net.ontopia.presto</groupId>
-      <artifactId>presto-jaxrs</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>net.ontopia.presto</groupId>
       <artifactId>presto-pojo</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -45,9 +35,21 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.ektorp</groupId>
+      <artifactId>org.ektorp</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-mapper-asl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-log4j12</artifactId>
-      <version>1.5.8</version>
+      <version>1.5.11</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
