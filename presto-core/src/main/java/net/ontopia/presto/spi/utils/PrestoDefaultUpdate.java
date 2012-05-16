@@ -2,6 +2,7 @@ package net.ontopia.presto.spi.utils;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +23,8 @@ public class PrestoDefaultUpdate implements PrestoUpdate, PrestoDefaultChangeSet
     private final DefaultTopic topic;
     private final PrestoType type;
     private final boolean isNew;
+    
+    private final Set<PrestoField> dirtyFields = new HashSet<PrestoField>();
 
     private int updateCount = 0;
 
@@ -135,11 +138,18 @@ public class PrestoDefaultUpdate implements PrestoUpdate, PrestoDefaultChangeSet
             } else {
                 changeSet.removeInverseFieldValue(isNew, topic, field, remValues);
             }
-        }        
+        }
+        // mark fields dirty
+        this.dirtyFields.add(field);
     }
         
     private PrestoSchemaProvider getSchemaProvider() {
         return type.getSchemaProvider();
+    }
+
+    @Override
+    public boolean isFieldUpdated(PrestoField field) {
+        return dirtyFields.contains(field);
     }
 
 }
