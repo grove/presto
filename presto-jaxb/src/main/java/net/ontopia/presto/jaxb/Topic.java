@@ -16,6 +16,8 @@ public class Topic extends Document {
     private String name;
     private String mode;
 
+    private String format = "topic";
+    
     private Origin origin;
 
     private TopicType type;
@@ -27,7 +29,15 @@ public class Topic extends Document {
 
     @Override
     public String getFormat() {
-        return "topic";
+        return format;
+    }
+
+    public void setFormat(String format) {
+        if (format.equals("topic") || format.equals("topic-fields")) {
+            this.format = format;
+        } else {
+            throw new IllegalArgumentException("Invalid format: '" + format + "' Expected: 'topic' or 'topic-fields.");
+        }
     }
 
     public String getMode() {
