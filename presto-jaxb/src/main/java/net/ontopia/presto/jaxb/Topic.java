@@ -15,6 +15,7 @@ public class Topic extends Document {
     private String id;
     private String name;
     private String mode;
+    private String format = "topic";
 
     private Origin origin;
 
@@ -27,9 +28,9 @@ public class Topic extends Document {
 
     @Override
     public String getFormat() {
-        return "topic";
+        return format;
     }
-
+    
     public String getMode() {
         return mode;
     }

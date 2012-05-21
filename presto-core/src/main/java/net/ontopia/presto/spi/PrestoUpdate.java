@@ -12,8 +12,12 @@ public interface PrestoUpdate {
 
     void removeValues(PrestoField field, Collection<?> values);
     
+//    boolean isNewTopic();
+    
     boolean isFieldUpdated(PrestoField field);
 
-    PrestoTopic getTopicAfterUpdate();
+    PrestoTopic getTopic();
+    
+    PrestoTopic getTopicAfterSave();
     
 }

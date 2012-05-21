@@ -64,7 +64,7 @@ public class PrestoTest {
         
         cs.save();
         
-        PrestoTopic createdJohn = john.getTopicAfterUpdate();
+        PrestoTopic createdJohn = john.getTopicAfterSave();
         Assert.assertNotNull(createdJohn);
         
         // lookup person

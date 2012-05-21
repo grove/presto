@@ -535,7 +535,7 @@ public class Presto {
 
         changeSet.save();
 
-        return getFieldInfo(update.getTopicAfterUpdate(), field, false);
+        return getFieldInfo(update.getTopicAfterSave(), field, false);
     }
 
     public FieldData removeFieldValues(PrestoTopic topic, PrestoType type, PrestoFieldUsage field, FieldData fieldObject) {
@@ -550,7 +550,7 @@ public class Presto {
 
         changeSet.save();
 
-        return getFieldInfo(update.getTopicAfterUpdate(), field, false);
+        return getFieldInfo(update.getTopicAfterSave(), field, false);
     }
 
     public PrestoTopic updateTopic(PrestoTopic topic, PrestoType type, PrestoView view, Topic data) {
@@ -580,7 +580,7 @@ public class Presto {
         assignDefaultValues(topic, type, update);
 
         changeSet.save();
-        return update.getTopicAfterUpdate();
+        return update.getTopicAfterSave();
     }
 
     protected void assignDefaultValues(PrestoTopic topic, PrestoType type, PrestoUpdate update) {

@@ -62,7 +62,7 @@ public class PrestoDefaultUpdate implements PrestoUpdate, PrestoDefaultChangeSet
     }
     
     @Override
-    public PrestoTopic getTopicAfterUpdate() {
+    public PrestoTopic getTopicAfterSave() {
         return topic.getDataProvider().getTopicById(topic.getId());
     }
 
