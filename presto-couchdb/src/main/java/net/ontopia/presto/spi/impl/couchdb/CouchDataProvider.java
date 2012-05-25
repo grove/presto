@@ -7,6 +7,8 @@ import java.util.Comparator;
 import java.util.List;
 
 import net.ontopia.presto.spi.PrestoChangeSet;
+import net.ontopia.presto.spi.PrestoChanges;
+import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
@@ -156,7 +158,24 @@ public abstract class CouchDataProvider implements JacksonDataProvider {
 
     @Override
     public PrestoChangeSet newChangeSet() {
-        return new PrestoDefaultChangeSet(this);
+        return new PrestoDefaultChangeSet(this) {
+            @Override
+            protected void onBeforeSave() {
+                CouchDataProvider.this.onBeforeSave(this, this.getPrestoChanges());
+            }
+        };
+    }
+
+    /**
+     * Override this method to do further updates before the changeset is saved.
+     */
+    protected void onBeforeSave(PrestoChangeSet changeSet, PrestoChanges changes) {
+    }
+    
+
+    // assign initial values
+    protected List<? extends Object> getInitialValues(PrestoField field) {
+        return Collections.emptyList();
     }
 
     @Override
@@ -199,7 +218,7 @@ public abstract class CouchDataProvider implements JacksonDataProvider {
     public void updateBulk(List<Change> changes) {
         List<ObjectNode> bulkDocuments = new ArrayList<ObjectNode>();
         for (Change change : changes) {
-            if (change.hasUpdate()) {
+            if (change.isTopicUpdated()) {
                 JacksonTopic topic = (JacksonTopic)change.getTopic();
 
                 if (change.getType().equals(Change.Type.DELETE)) {

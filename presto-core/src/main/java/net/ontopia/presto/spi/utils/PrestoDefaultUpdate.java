@@ -65,10 +65,20 @@ public class PrestoDefaultUpdate implements PrestoUpdate, PrestoDefaultChangeSet
     public PrestoTopic getTopicAfterSave() {
         return topic.getDataProvider().getTopicById(topic.getId());
     }
+ 
+    @Override
+    public boolean isNewTopic() {
+        return isNew;
+    }
+    
+    @Override
+    public boolean isTopicUpdated() {
+        return isNew || updateCount > 0;
+    }
 
     @Override
-    public boolean hasUpdate() {
-        return isNew || updateCount > 0;
+    public Collection<?> getValues(PrestoField field) {
+        return topic.getValues(field);
     }
 
     @Override

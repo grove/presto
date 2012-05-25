@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 
 import net.ontopia.presto.spi.PrestoChangeSet;
+import net.ontopia.presto.spi.PrestoChanges;
 import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
@@ -23,7 +24,7 @@ import org.slf4j.LoggerFactory;
 public class PrestoDefaultChangeSet implements PrestoChangeSet {
 
     private static Logger log = LoggerFactory.getLogger(PrestoDefaultChangeSet.class.getName());
-    
+
     public static interface DefaultDataProvider extends PrestoDataProvider {
 
         DefaultTopic newInstance(PrestoType type);
@@ -37,11 +38,11 @@ public class PrestoDefaultChangeSet implements PrestoChangeSet {
         void updateBulk(List<Change> changes);
 
     }
-    
+
     public static interface DefaultTopic extends PrestoTopic {
 
         DefaultDataProvider getDataProvider();
-        
+
         void updateNameProperty(Collection<? extends Object> values);
 
         void setValue(PrestoField field, Collection<? extends Object> values);
@@ -51,14 +52,14 @@ public class PrestoDefaultChangeSet implements PrestoChangeSet {
         void removeValue(PrestoField field, Collection<? extends Object> values);
 
     }
-    
+
     static final int DEFAULT_INDEX = -1;
 
     public static interface Change {
         enum Type {CREATE, UPDATE, DELETE};
         Type getType();
         PrestoTopic getTopic();
-        boolean hasUpdate();
+        boolean isTopicUpdated();
     }
 
     class ChangeDelete implements Change {
@@ -75,7 +76,7 @@ public class PrestoDefaultChangeSet implements PrestoChangeSet {
             return topic;
         }
         @Override
-        public boolean hasUpdate() {
+        public boolean isTopicUpdated() {
             return true;
         }
     }
@@ -126,7 +127,7 @@ public class PrestoDefaultChangeSet implements PrestoChangeSet {
 
         changes.add(new ChangeDelete(topic));
         deleted.add(topic);
-        
+
         // find and remove dependencies
         if (removeDependencies) {
             removeDependencies(topic, type);
@@ -184,11 +185,14 @@ public class PrestoDefaultChangeSet implements PrestoChangeSet {
             log.warn("PrestoChangeSet.save() method called multiple times.");
             return; // idempotent
         }
+
+        onBeforeSave();
+
         this.saved = true;
-        
+
         if (changes.size() == 1) {
             Change change = changes.get(0);
-            if (change.hasUpdate()) {
+            if (change.isTopicUpdated()) {
                 PrestoTopic topic = change.getTopic();
                 if (change.getType().equals(Change.Type.CREATE)) {
                     dataProvider.create(topic);                
@@ -216,7 +220,7 @@ public class PrestoDefaultChangeSet implements PrestoChangeSet {
                 if (!topic.equals(valueTopic)) {
                     PrestoType valueType = field.getSchemaProvider().getTypeById(valueTopic.getTypeId());
                     PrestoField inverseField = valueType.getFieldById(inverseFieldId);
-    
+
                     PrestoUpdate inverseUpdate = updateTopic(valueTopic, valueType);
                     inverseUpdate.addValues(inverseField, Collections.singleton(topic), PrestoDefaultChangeSet.DEFAULT_INDEX);
                 }
@@ -246,4 +250,29 @@ public class PrestoDefaultChangeSet implements PrestoChangeSet {
         }
     }
 
+    // onBeforeSave
+
+    protected void onBeforeSave() {
+    }
+
+    protected PrestoChanges getPrestoChanges() {
+        return new PrestoChanges() {
+            @Override
+            public PrestoUpdate getUpdate(PrestoTopic topic) {
+                return updates.get(topic);
+            }
+
+            @Override
+            public Collection<? extends PrestoUpdate> getUpdates() {
+                // make copy as to prevent concurrent modification exceptions
+                return new ArrayList<PrestoUpdate>(updates.values());
+            }
+
+            @Override
+            public Collection<? extends PrestoTopic> getDeleted() {
+                // make copy as to prevent concurrent modification exceptions
+                return new ArrayList<PrestoTopic>(deleted);
+            }
+        };
+    }
 }

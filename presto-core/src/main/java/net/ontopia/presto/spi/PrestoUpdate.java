@@ -4,6 +4,8 @@ import java.util.Collection;
 
 public interface PrestoUpdate {
 
+    Collection<?> getValues(PrestoField field);
+
     void setValues(PrestoField field, Collection<?> values);
 
     void addValues(PrestoField field, Collection<?> values);
@@ -12,11 +14,11 @@ public interface PrestoUpdate {
 
     void removeValues(PrestoField field, Collection<?> values);
     
-//    boolean isNewTopic();
+    boolean isNewTopic();
+    
+    boolean isTopicUpdated();
     
     boolean isFieldUpdated(PrestoField field);
-
-    PrestoTopic getTopic();
     
     PrestoTopic getTopicAfterSave();
     

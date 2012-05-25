@@ -155,7 +155,6 @@ public class Presto {
         List<Link> topicLinks = new ArrayList<Link>();
         UriBuilder builder = UriBuilder.fromUri(uriInfo.getBaseUri()).path("editor/topic/").path(session.getDatabaseId()).path("_" + type.getId()).path(view.getId());
         topicLinks.add(new Link("create", builder.build().toString()));
-        //        topicLinks.addAll(Collections.singleton(getViewLink(null, type, view, readOnlyMode)));
         result.setLinks(topicLinks);
 
         List<FieldData> fields = new ArrayList<FieldData>(); 
