@@ -333,12 +333,7 @@ public abstract class Presto {
 
         List<? extends Object> fieldValues;
         if (isNewTopic) {
-            String valuesAssignmentType = field.getValuesAssignmentType();
-            if (valuesAssignmentType.equals("initial")) {
-                fieldValues = getDefaultValues(topic, type, field);                    
-            } else {
-                fieldValues = Collections.emptyList();
-            }
+            fieldValues = getInitialValues(topic, type, field);
         } else {
             // server-side paging (only if not sorting)
             if (field.isPageable() && !field.isSorted()) {
@@ -616,7 +611,16 @@ public abstract class Presto {
             }
         }        
     }
-
+    
+    protected List<Object> getInitialValues(PrestoTopic topic, PrestoType type, PrestoField field) {
+        String valuesAssignmentType = field.getValuesAssignmentType();
+        if (valuesAssignmentType.equals("initial")) {
+            return getDefaultValues(topic, type, field);                    
+        } else {
+            return Collections.emptyList();
+        }
+    }
+    
     protected List<Object> getDefaultValues(PrestoTopic topic, PrestoType type, PrestoField field) {
         List<Object> result = new ArrayList<Object>();
         for (String value : field.getValues()) {
