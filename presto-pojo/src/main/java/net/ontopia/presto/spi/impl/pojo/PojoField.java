@@ -41,9 +41,6 @@ public class PojoField implements PrestoField {
     private String interfaceControl;
     private Object extra;
 
-    private String valuesAssignmentType = "default";
-    private Collection<String> values = Collections.emptyList();
-
     private Collection<PrestoType> availableFieldCreateTypes;
     private Collection<PrestoType> availableFieldValueTypes = new HashSet<PrestoType>();
 
@@ -303,24 +300,6 @@ public class PojoField implements PrestoField {
     @Override
     public Object getExtra() {
         return extra;
-    }
-
-    @Override
-    public String getValuesAssignmentType() {
-        return valuesAssignmentType;
-    }
-
-    protected void setValuesAssignmentType(String valuesAssignmentType) {
-        this.valuesAssignmentType = valuesAssignmentType;
-    }
-    
-    @Override
-    public Collection<String> getValues() {
-        return values;
-    }
-
-    protected void setValues(Collection<String> values) {
-        this.values = values;
     }
 
     @Override

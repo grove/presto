@@ -1,6 +1,5 @@
 package net.ontopia.presto.spi;
 
-import java.util.Collection;
 
 public interface PrestoField {
 
@@ -29,8 +28,6 @@ public interface PrestoField {
     Object getExtra();
     
     String getInverseFieldId();
-    
-    String getValuesAssignmentType();
 
     // characteristics
     
@@ -57,9 +54,5 @@ public interface PrestoField {
     boolean isRemovable();
 
     boolean isCascadingDelete();
-    
-    // values
-    
-    Collection<String> getValues();
 
 }

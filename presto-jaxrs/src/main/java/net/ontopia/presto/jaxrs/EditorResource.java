@@ -657,9 +657,16 @@ public abstract class EditorResource {
     // overridable methods
 
     public class EditorResourcePresto extends Presto {
+        
         public EditorResourcePresto(String databaseId, String databaseName, PrestoSchemaProvider schemaProvider, PrestoDataProvider dataProvider) {
             super(databaseId, databaseName, schemaProvider, dataProvider);
         }
+        
+        @Override
+        protected URI getBaseUri() {
+            return uriInfo.getBaseUri();
+        }
+
         @Override
         public FieldData getFieldInfo(PrestoTopic topic, PrestoFieldUsage field, boolean readOnlyMode, int offset, int limit) {
             FieldData fieldData = super.getFieldInfo(topic, field, readOnlyMode, offset, limit);
@@ -686,6 +693,7 @@ public abstract class EditorResource {
             }
             return fieldData;
         }
+        
         @Override
         protected Collection<String> getVariableValues(PrestoTopic topic, PrestoType type, PrestoField field, String variable) {
             if (variable.equals("now")) {
@@ -694,10 +702,6 @@ public abstract class EditorResource {
                 return Collections.singletonList(request.getRemoteUser());
             }
             return Collections.emptyList();
-        }
-        @Override
-        protected URI getBaseUri() {
-            return uriInfo.getBaseUri();
         }
     }
     

@@ -29,6 +29,8 @@ import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
 import net.ontopia.presto.spi.PrestoView;
 
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -598,32 +600,40 @@ public abstract class Presto {
         for (PrestoField field : type.getFields()) {
             List<Object> defaultValues = null;
 
-            String valuesAssignmentType = field.getValuesAssignmentType();
-            if (valuesAssignmentType.equals("initial")) {
-                if (isNewTopic) {
-                    defaultValues = getDefaultValues(topic, type, field);                    
+            ObjectNode extra = (ObjectNode)field.getExtra();
+            JsonNode assignment = extra.path("assigment");
+            if (assignment.isObject()) {
+                String valuesAssignmentType = assignment.get("type").getTextValue();
+                if (valuesAssignmentType.equals("create")) {
+                    if (isNewTopic) {
+                        defaultValues = getDefaultValues(topic, type, field, assignment);                    
+                    }
+                } else if (valuesAssignmentType.equals("update")) {
+                    defaultValues = getDefaultValues(topic, type, field, assignment);
                 }
-            } else if (valuesAssignmentType.equals("always")) {
-                defaultValues = getDefaultValues(topic, type, field);
-            }
-            if (defaultValues != null) {
-                update.setValues(field, defaultValues);                
+                if (defaultValues != null) {
+                    update.setValues(field, defaultValues);                
+                }
             }
         }        
     }
     
     protected List<Object> getInitialValues(PrestoTopic topic, PrestoType type, PrestoField field) {
-        String valuesAssignmentType = field.getValuesAssignmentType();
-        if (valuesAssignmentType.equals("initial")) {
-            return getDefaultValues(topic, type, field);                    
-        } else {
-            return Collections.emptyList();
+        ObjectNode extra = (ObjectNode)field.getExtra();
+        JsonNode assignment = extra.path("assigment");
+        if (assignment.isObject()) {
+            String valuesAssignmentType = assignment.get("type").getTextValue();
+            if (valuesAssignmentType.equals("initial")) {
+                return getDefaultValues(topic, type, field, assignment);                    
+            }
         }
+        return Collections.emptyList();
     }
     
-    protected List<Object> getDefaultValues(PrestoTopic topic, PrestoType type, PrestoField field) {
+    protected List<Object> getDefaultValues(PrestoTopic topic, PrestoType type, PrestoField field, JsonNode assignment) {
         List<Object> result = new ArrayList<Object>();
-        for (String value : field.getValues()) {
+        for (JsonNode valueNode : assignment.get("values")) {
+            String value = valueNode.getTextValue();
             if (value != null) {
                 if (value.charAt(0) == '$') {
                     String variable = value.substring(1);
