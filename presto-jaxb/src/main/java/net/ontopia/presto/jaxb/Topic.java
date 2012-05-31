@@ -16,8 +16,6 @@ public class Topic extends Document {
     private String name;
     private String mode;
     private String format = "topic";
-
-    private String format = "topic";
     
     private Origin origin;
 
