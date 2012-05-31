@@ -30,7 +30,15 @@ public class Topic extends Document {
     public String getFormat() {
         return format;
     }
-    
+
+    public void setFormat(String format) {
+        if (format.equals("topic") || format.equals("topic-fields")) {
+            this.format = format;
+        } else {
+            throw new IllegalArgumentException("Invalid format: '" + format + "' Expected: 'topic' or 'topic-fields.");
+        }
+    }
+
     public String getMode() {
         return mode;
     }

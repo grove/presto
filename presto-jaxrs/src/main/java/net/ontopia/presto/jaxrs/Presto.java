@@ -21,6 +21,7 @@ import net.ontopia.presto.jaxb.TopicTypeTree;
 import net.ontopia.presto.jaxb.Value;
 import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoDataProvider;
+import net.ontopia.presto.spi.PrestoDataProvider.ChangeSetHandler;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
@@ -29,8 +30,6 @@ import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
 import net.ontopia.presto.spi.PrestoView;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +44,6 @@ public abstract class Presto {
 
     private final PrestoSchemaProvider schemaProvider;
     private final PrestoDataProvider dataProvider;
-
 
     public Presto(String databaseId, String databaseName, PrestoSchemaProvider schemaProvider, PrestoDataProvider dataProvider) {
         this.databaseId = databaseId;
@@ -62,6 +60,10 @@ public abstract class Presto {
         return databaseName;
     }
 
+    public ChangeSetHandler getChangeSetHandler() {
+        return null;
+    }
+    
     public PrestoDataProvider getDataProvider() {
         return dataProvider;
     }
@@ -335,7 +337,7 @@ public abstract class Presto {
 
         List<? extends Object> fieldValues;
         if (isNewTopic) {
-            fieldValues = getInitialValues(topic, type, field);
+            fieldValues = Collections.emptyList(); // TODO: support initial values
         } else {
             // server-side paging (only if not sorting)
             if (field.isPageable() && !field.isSorted()) {
@@ -535,7 +537,7 @@ public abstract class Presto {
         Collection<Object> addableValues = resolveValues(field, fieldObject.getValues(), true);
 
         PrestoDataProvider dataProvider = getDataProvider();
-        PrestoChangeSet changeSet = dataProvider.newChangeSet();
+        PrestoChangeSet changeSet = dataProvider.newChangeSet(getChangeSetHandler());
         PrestoUpdate update = changeSet.updateTopic(topic, type);        
 
         if (index == null) {
@@ -554,7 +556,7 @@ public abstract class Presto {
         Collection<Object> removeableValues = resolveValues(field, fieldObject.getValues(), false);
 
         PrestoDataProvider dataProvider = getDataProvider();
-        PrestoChangeSet changeSet = dataProvider.newChangeSet();
+        PrestoChangeSet changeSet = dataProvider.newChangeSet(getChangeSetHandler());
         PrestoUpdate update = changeSet.updateTopic(topic, type);        
 
         update.removeValues(field, removeableValues);
@@ -567,7 +569,7 @@ public abstract class Presto {
     public PrestoTopic updateTopic(PrestoTopic topic, PrestoType type, PrestoView view, Topic data) {
 
         PrestoDataProvider dataProvider = getDataProvider();
-        PrestoChangeSet changeSet = dataProvider.newChangeSet();
+        PrestoChangeSet changeSet = dataProvider.newChangeSet(getChangeSetHandler());
 
         PrestoUpdate update;
         if (topic == null) {
@@ -588,70 +590,8 @@ public abstract class Presto {
             }
         }
 
-        assignDefaultValues(topic, type, update);
-
         changeSet.save();
         return update.getTopicAfterSave();
-    }
-
-    protected void assignDefaultValues(PrestoTopic topic, PrestoType type, PrestoUpdate update) {
-        boolean isNewTopic = (topic == null);
-        // assign [initial] values
-        for (PrestoField field : type.getFields()) {
-            List<Object> defaultValues = null;
-
-            ObjectNode extra = (ObjectNode)field.getExtra();
-            JsonNode assignment = extra.path("assigment");
-            if (assignment.isObject()) {
-                String valuesAssignmentType = assignment.get("type").getTextValue();
-                if (valuesAssignmentType.equals("create")) {
-                    if (isNewTopic) {
-                        defaultValues = getDefaultValues(topic, type, field, assignment);                    
-                    }
-                } else if (valuesAssignmentType.equals("update")) {
-                    defaultValues = getDefaultValues(topic, type, field, assignment);
-                }
-                if (defaultValues != null) {
-                    update.setValues(field, defaultValues);                
-                }
-            }
-        }        
-    }
-    
-    protected List<Object> getInitialValues(PrestoTopic topic, PrestoType type, PrestoField field) {
-        ObjectNode extra = (ObjectNode)field.getExtra();
-        JsonNode assignment = extra.path("assigment");
-        if (assignment.isObject()) {
-            String valuesAssignmentType = assignment.get("type").getTextValue();
-            if (valuesAssignmentType.equals("initial")) {
-                return getDefaultValues(topic, type, field, assignment);                    
-            }
-        }
-        return Collections.emptyList();
-    }
-    
-    protected List<Object> getDefaultValues(PrestoTopic topic, PrestoType type, PrestoField field, JsonNode assignment) {
-        List<Object> result = new ArrayList<Object>();
-        for (JsonNode valueNode : assignment.get("values")) {
-            String value = valueNode.getTextValue();
-            if (value != null) {
-                if (value.charAt(0) == '$') {
-                    String variable = value.substring(1);
-                    for (String varValue : getVariableValues(topic, type, field, variable)) {
-                        if (varValue != null) {
-                            result.add(varValue);
-                        }
-                    }
-                } else {
-                    result.add(value);
-                }
-            }
-        }
-        return result;
-    }
-
-    protected Collection<String> getVariableValues(PrestoTopic topic, PrestoType type, PrestoField field, String variable) {
-        return Collections.emptyList(); // should be overridden
     }
 
     private Collection<Object> resolveValues(PrestoFieldUsage field, Collection<Value> values, boolean resolveEmbedded) {
@@ -718,7 +658,7 @@ public abstract class Presto {
 
     public void deleteTopic(PrestoTopic topic, PrestoType type) {
         log.warn("Removing topic " + topic.getId() + " from database " + getDatabaseId());
-        PrestoChangeSet changeSet = getDataProvider().newChangeSet();
+        PrestoChangeSet changeSet = getDataProvider().newChangeSet(getChangeSetHandler());
         changeSet.deleteTopic(topic, type);
         changeSet.save();
     }

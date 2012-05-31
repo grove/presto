@@ -12,8 +12,12 @@ public interface PrestoDataProvider {
 
     Collection<PrestoTopic> getAvailableFieldValues(PrestoFieldUsage field);
 
-    PrestoChangeSet newChangeSet();
+    PrestoChangeSet newChangeSet(ChangeSetHandler handler);
     
     void close();
 
+    public static interface ChangeSetHandler {
+        public void onBeforeSave(PrestoChangeSet changeSet, PrestoChanges changes);
+    }
+    
 }

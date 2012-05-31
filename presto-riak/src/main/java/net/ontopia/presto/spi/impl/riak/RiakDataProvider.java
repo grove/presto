@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.UUID;
 
 import net.ontopia.presto.spi.PrestoChangeSet;
-import net.ontopia.presto.spi.PrestoChanges;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
@@ -100,19 +99,8 @@ public abstract class RiakDataProvider implements JacksonDataProvider {
     }
 
     @Override
-    public PrestoChangeSet newChangeSet() {
-        return new PrestoDefaultChangeSet(this) {
-            @Override
-            protected void onBeforeSave() {
-                RiakDataProvider.this.onBeforeSave(this, this.getPrestoChanges());
-            }
-        };
-    }
-
-    /**
-     * Override this method to do further updates before the changeset is saved.
-     */
-    protected void onBeforeSave(PrestoChangeSet changeSet, PrestoChanges changes) {
+    public PrestoChangeSet newChangeSet(ChangeSetHandler handler) {
+        return new PrestoDefaultChangeSet(this, handler);
     }
 
     @Override

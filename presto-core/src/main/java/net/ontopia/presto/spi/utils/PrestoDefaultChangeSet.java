@@ -17,11 +17,12 @@ import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
+import net.ontopia.presto.spi.PrestoDataProvider.ChangeSetHandler;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class PrestoDefaultChangeSet implements PrestoChangeSet {
+public class PrestoDefaultChangeSet implements PrestoChangeSet {
 
     private static Logger log = LoggerFactory.getLogger(PrestoDefaultChangeSet.class.getName());
 
@@ -82,6 +83,7 @@ public abstract class PrestoDefaultChangeSet implements PrestoChangeSet {
     }
 
     private final DefaultDataProvider dataProvider;
+    private final ChangeSetHandler handler;
 
     private final Set<PrestoTopic> deleted = new HashSet<PrestoTopic>();
     private final Map<PrestoTopic,PrestoDefaultUpdate> updates = new HashMap<PrestoTopic,PrestoDefaultUpdate>();
@@ -89,8 +91,9 @@ public abstract class PrestoDefaultChangeSet implements PrestoChangeSet {
 
     private boolean saved;
 
-    public PrestoDefaultChangeSet(DefaultDataProvider dataProvider) {
+    public PrestoDefaultChangeSet(DefaultDataProvider dataProvider, ChangeSetHandler handler) {
         this.dataProvider = dataProvider;
+        this.handler = handler;
     }
 
     public DefaultTopic newInstance(PrestoType type) {
@@ -186,8 +189,10 @@ public abstract class PrestoDefaultChangeSet implements PrestoChangeSet {
             return; // idempotent
         }
 
-        onBeforeSave();
-
+        if (handler != null) {
+            handler.onBeforeSave(this, this.getPrestoChanges());
+        }
+        
         this.saved = true;
 
         if (changes.size() == 1) {
@@ -208,8 +213,6 @@ public abstract class PrestoDefaultChangeSet implements PrestoChangeSet {
             dataProvider.updateBulk(changes);
         }       
     }
-
-    protected abstract void onBeforeSave();
 
     // inverse fields (foreign keys)
 

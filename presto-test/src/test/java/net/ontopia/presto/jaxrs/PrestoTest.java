@@ -39,7 +39,7 @@ public class PrestoTest {
         PrestoType personType = schemaProvider.getTypeById("person");
         
         // create new person
-        PrestoChangeSet cs = dataProvider.newChangeSet();
+        PrestoChangeSet cs = dataProvider.newChangeSet(null);
         PrestoUpdate john = cs.createTopic(personType);
         
         // name
@@ -82,7 +82,7 @@ public class PrestoTest {
         compareFieldValues(colorsField, finalColors, createdJohn, foundJohn);
 
         // delete person
-        cs = dataProvider.newChangeSet();
+        cs = dataProvider.newChangeSet(null);
 
         cs.deleteTopic(foundJohn, personType);
         cs.save();

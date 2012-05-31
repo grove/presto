@@ -20,6 +20,8 @@ public interface PrestoUpdate {
     
     boolean isFieldUpdated(PrestoField field);
     
+    PrestoTopic getTopic();
+
     PrestoTopic getTopicAfterSave();
     
 }

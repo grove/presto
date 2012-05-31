@@ -7,7 +7,6 @@ import java.util.Comparator;
 import java.util.List;
 
 import net.ontopia.presto.spi.PrestoChangeSet;
-import net.ontopia.presto.spi.PrestoChanges;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
@@ -157,19 +156,8 @@ public abstract class CouchDataProvider implements JacksonDataProvider {
     }
 
     @Override
-    public PrestoChangeSet newChangeSet() {
-        return new PrestoDefaultChangeSet(this) {
-            @Override
-            protected void onBeforeSave() {
-                CouchDataProvider.this.onBeforeSave(this, this.getPrestoChanges());
-            }
-        };
-    }
-
-    /**
-     * Override this method to do further updates before the changeset is saved.
-     */
-    protected void onBeforeSave(PrestoChangeSet changeSet, PrestoChanges changes) {
+    public PrestoChangeSet newChangeSet(ChangeSetHandler handler) {
+        return new PrestoDefaultChangeSet(this, handler);
     }
     
 
