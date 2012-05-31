@@ -1,11 +1,9 @@
 package net.ontopia.presto.spi.utils;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Set;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.Map;
 
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
@@ -13,6 +11,9 @@ import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.DefaultTopic;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PrestoDefaultUpdate implements PrestoUpdate, PrestoDefaultChangeSet.Change {
 
@@ -24,7 +25,7 @@ public class PrestoDefaultUpdate implements PrestoUpdate, PrestoDefaultChangeSet
     private final PrestoType type;
     private final boolean isNew;
     
-    private final Set<PrestoField> dirtyFields = new HashSet<PrestoField>();
+    private final Map<String,PrestoField> dirtyFields = new HashMap<String,PrestoField>();
 
     private int updateCount = 0;
 
@@ -150,7 +151,7 @@ public class PrestoDefaultUpdate implements PrestoUpdate, PrestoDefaultChangeSet
             }
         }
         // mark fields dirty
-        this.dirtyFields.add(field);
+        this.dirtyFields.put(field.getId(), field);
     }
         
     private PrestoSchemaProvider getSchemaProvider() {
@@ -159,7 +160,7 @@ public class PrestoDefaultUpdate implements PrestoUpdate, PrestoDefaultChangeSet
 
     @Override
     public boolean isFieldUpdated(PrestoField field) {
-        return dirtyFields.contains(field);
+        return dirtyFields.containsKey(field.getId());
     }
 
 }

@@ -716,7 +716,8 @@ public abstract class EditorResource {
             
             protected void assignDefaultValues(PrestoUpdate update) {
                 PrestoTopic topic = update.getTopic();
-                PrestoType type = getSchemaProvider().getTypeById(topic.getTypeId());
+                PrestoSchemaProvider schemaProvider = getSchemaProvider();
+                PrestoType type = schemaProvider.getTypeById(topic.getTypeId());
                 boolean isNewTopic = update.isNewTopic();
 
                 for (PrestoField field : type.getFields()) {
@@ -732,7 +733,19 @@ public abstract class EditorResource {
                                     defaultValues = getDefaultValues(topic, type, field, assignment);                    
                                 }
                             } else if (valuesAssignmentType.equals("update")) {
-                                defaultValues = getDefaultValues(topic, type, field, assignment);
+                                JsonNode fields = assignment.path("fields");
+                                if (fields.isArray()) {
+                                    // update only if any of the given fields are updated 
+                                    for (JsonNode fieldNode : fields) {
+                                        String fieldId = fieldNode.getTextValue();
+                                        PrestoField fieldById = type.getFieldById(fieldId);
+                                        if (update.isFieldUpdated(fieldById)) {
+                                            defaultValues = getDefaultValues(topic, type, field, assignment);
+                                        }
+                                    }
+                                } else {
+                                    defaultValues = getDefaultValues(topic, type, field, assignment);
+                                }
                             }
                             if (defaultValues != null) {
                                 update.setValues(field, defaultValues);                
