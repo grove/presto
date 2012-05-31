@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import net.ontopia.presto.spi.PrestoChangeSet;
+import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
@@ -155,8 +156,14 @@ public abstract class CouchDataProvider implements JacksonDataProvider {
     }
 
     @Override
-    public PrestoChangeSet newChangeSet() {
-        return new PrestoDefaultChangeSet(this);
+    public PrestoChangeSet newChangeSet(ChangeSetHandler handler) {
+        return new PrestoDefaultChangeSet(this, handler);
+    }
+    
+
+    // assign initial values
+    protected List<? extends Object> getInitialValues(PrestoField field) {
+        return Collections.emptyList();
     }
 
     @Override
@@ -199,7 +206,7 @@ public abstract class CouchDataProvider implements JacksonDataProvider {
     public void updateBulk(List<Change> changes) {
         List<ObjectNode> bulkDocuments = new ArrayList<ObjectNode>();
         for (Change change : changes) {
-            if (change.hasUpdate()) {
+            if (change.isTopicUpdated()) {
                 JacksonTopic topic = (JacksonTopic)change.getTopic();
 
                 if (change.getType().equals(Change.Type.DELETE)) {
@@ -247,7 +254,7 @@ public abstract class CouchDataProvider implements JacksonDataProvider {
     
     @Override
     public PrestoFieldResolver createFieldResolver(PrestoSchemaProvider schemaProvider, ObjectNode config) {
-        PrestoContext context = new PrestoContext(this, schemaProvider, getObjectMapper());
+        PrestoContext context = new PrestoContext(schemaProvider, this, getObjectMapper());
         String type = config.get("type").getTextValue();
         if (type == null) {
             log.error("type not specified on resolve item: " + config);

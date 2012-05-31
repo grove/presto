@@ -174,16 +174,6 @@ public class PojoFieldUsage implements PrestoFieldUsage {
     }
 
     @Override
-    public String getValuesAssignmentType() {
-        return field.getValuesAssignmentType();
-    }
-
-    @Override
-    public Collection<String> getValues() {
-        return field.getValues();
-    }
-
-    @Override
     public String getInverseFieldId() {
         return field.getInverseFieldId();
     }

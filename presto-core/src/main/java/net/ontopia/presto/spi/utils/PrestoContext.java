@@ -22,13 +22,13 @@ import org.codehaus.jackson.node.ObjectNode;
 
 public class PrestoContext {
 
-    private final PrestoDataProvider dataProvider;
     private final PrestoSchemaProvider schemaProvider;
+    private final PrestoDataProvider dataProvider;
     private final ObjectMapper mapper;
 
-    public PrestoContext(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, ObjectMapper mapper) {
-        this.dataProvider = dataProvider;
+    public PrestoContext(PrestoSchemaProvider schemaProvider, PrestoDataProvider dataProvider, ObjectMapper mapper) {
         this.schemaProvider = schemaProvider;
+        this.dataProvider = dataProvider;
         this.mapper = mapper;
     }
     
@@ -147,12 +147,12 @@ public class PrestoContext {
         return null;
     }
 
-    public PrestoDataProvider getDataProvider() {
-        return dataProvider;
-    }
-
     public PrestoSchemaProvider getSchemaProvider() {
         return schemaProvider;
+    }
+
+    public PrestoDataProvider getDataProvider() {
+        return dataProvider;
     }
 
     public ObjectMapper getObjectMapper() {

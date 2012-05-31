@@ -55,7 +55,7 @@ public abstract class MultiDataProvider implements PrestoDataProvider {
     }
 
     @Override
-    public PrestoChangeSet newChangeSet() {
+    public PrestoChangeSet newChangeSet(ChangeSetHandler handler) {
         // TODO Auto-generated method stub
         return null;
     }

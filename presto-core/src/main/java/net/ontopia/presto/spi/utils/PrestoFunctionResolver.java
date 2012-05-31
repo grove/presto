@@ -30,7 +30,7 @@ public class PrestoFunctionResolver implements PrestoFieldResolver {
     public PagedValues resolve(Collection<? extends Object> objects,
             PrestoType type, PrestoField field, boolean isReference, Paging paging) {
         
-        PrestoFunction func = getFunction(context, config);
+        PrestoFunction func = getFunction(config);
         if (func != null) {
             List<Object> result = func.execute(context, objects, type, field, paging);
             return new PrestoPagedValues(result, paging, result.size());            
@@ -39,7 +39,7 @@ public class PrestoFunctionResolver implements PrestoFieldResolver {
         }
     }
     
-    private PrestoFunction getFunction(PrestoContext context, ObjectNode resolveConfig) {
+    private PrestoFunction getFunction(ObjectNode resolveConfig) {
         JsonNode nameNode = resolveConfig.path("class");
         if (nameNode.isTextual()) {
             String className = nameNode.getTextValue();

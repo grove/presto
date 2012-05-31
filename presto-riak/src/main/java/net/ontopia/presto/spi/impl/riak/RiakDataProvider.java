@@ -99,8 +99,8 @@ public abstract class RiakDataProvider implements JacksonDataProvider {
     }
 
     @Override
-    public PrestoChangeSet newChangeSet() {
-        return new PrestoDefaultChangeSet(this);
+    public PrestoChangeSet newChangeSet(ChangeSetHandler handler) {
+        return new PrestoDefaultChangeSet(this, handler);
     }
 
     @Override
@@ -193,7 +193,7 @@ public abstract class RiakDataProvider implements JacksonDataProvider {
 
     @Override
     public PrestoFieldResolver createFieldResolver(PrestoSchemaProvider schemaProvider, ObjectNode config) {
-        PrestoContext context = new PrestoContext(this, schemaProvider, getObjectMapper());
+        PrestoContext context = new PrestoContext(schemaProvider, this, getObjectMapper());
         String type = config.get("type").getTextValue();
         if (type == null) {
             log.error("type not specified on resolve item: " + config);
