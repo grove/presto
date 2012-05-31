@@ -697,85 +697,92 @@ public abstract class EditorResource {
             }
             return fieldData;
         }
+        
         @Override
         public ChangeSetHandler getChangeSetHandler() {
-            return new ChangeSetHandler() {
-                @Override
-                public void onBeforeSave(PrestoChangeSet changeSet, PrestoChanges changes) {
-                    for (PrestoUpdate update : changes.getUpdates()) {
-                        if (update.isTopicUpdated()) {
-                            assignDefaultValues(update);
+            return new DefaultChangeSetHandler();
+        }
+
+        private class DefaultChangeSetHandler implements ChangeSetHandler {
+            
+            @Override
+            public void onBeforeSave(PrestoChangeSet changeSet, PrestoChanges changes) {
+                for (PrestoUpdate update : changes.getUpdates()) {
+                    if (update.isTopicUpdated()) {
+                        assignDefaultValues(update);
+                    }
+                }
+            }
+            
+            protected void assignDefaultValues(PrestoUpdate update) {
+                PrestoTopic topic = update.getTopic();
+                PrestoType type = getSchemaProvider().getTypeById(topic.getTypeId());
+                boolean isNewTopic = update.isNewTopic();
+
+                for (PrestoField field : type.getFields()) {
+                    ObjectNode extra = (ObjectNode)field.getExtra();
+                    if (extra != null) {
+                        JsonNode assignment = extra.path("assignment");
+                        if (assignment.isObject()) {
+                            List<Object> defaultValues = null;
+
+                            String valuesAssignmentType = assignment.get("type").getTextValue();
+                            if (valuesAssignmentType.equals("create")) {
+                                if (isNewTopic) {
+                                    defaultValues = getDefaultValues(topic, type, field, assignment);                    
+                                }
+                            } else if (valuesAssignmentType.equals("update")) {
+                                defaultValues = getDefaultValues(topic, type, field, assignment);
+                            }
+                            if (defaultValues != null) {
+                                update.setValues(field, defaultValues);                
+                            }
                         }
                     }
                 }
-            };
-        }
+            }
 
-        protected void assignDefaultValues(PrestoUpdate update) {
-            PrestoTopic topic = update.getTopic();
-            PrestoType type = getSchemaProvider().getTypeById(topic.getTypeId());
-            boolean isNewTopic = update.isNewTopic();
-            // assign [initial] values
-            for (PrestoField field : type.getFields()) {
-                List<Object> defaultValues = null;
-
+            @SuppressWarnings("unused")
+            protected List<Object> getInitialValues(PrestoType type, PrestoField field) {
                 ObjectNode extra = (ObjectNode)field.getExtra();
                 JsonNode assignment = extra.path("assigment");
                 if (assignment.isObject()) {
                     String valuesAssignmentType = assignment.get("type").getTextValue();
-                    if (valuesAssignmentType.equals("create")) {
-                        if (isNewTopic) {
-                            defaultValues = getDefaultValues(topic, type, field, assignment);                    
-                        }
-                    } else if (valuesAssignmentType.equals("update")) {
-                        defaultValues = getDefaultValues(topic, type, field, assignment);
-                    }
-                    if (defaultValues != null) {
-                        update.setValues(field, defaultValues);                
+                    if (valuesAssignmentType.equals("initial")) {
+                        return getDefaultValues(null, type, field, assignment);                    
                     }
                 }
-            }        
-        }
-        
-        protected List<Object> getInitialValues(PrestoType type, PrestoField field) {
-            ObjectNode extra = (ObjectNode)field.getExtra();
-            JsonNode assignment = extra.path("assigment");
-            if (assignment.isObject()) {
-                String valuesAssignmentType = assignment.get("type").getTextValue();
-                if (valuesAssignmentType.equals("initial")) {
-                    return getDefaultValues(null, type, field, assignment);                    
-                }
+                return Collections.emptyList();
             }
-            return Collections.emptyList();
-        }
-        
-        protected List<Object> getDefaultValues(PrestoTopic topic, PrestoType type, PrestoField field, JsonNode assignment) {
-            List<Object> result = new ArrayList<Object>();
-            for (JsonNode valueNode : assignment.get("values")) {
-                String value = valueNode.getTextValue();
-                if (value != null) {
-                    if (value.charAt(0) == '$') {
-                        String variable = value.substring(1);
-                        for (String varValue : getVariableValues(topic, type, field, variable)) {
-                            if (varValue != null) {
-                                result.add(varValue);
+
+            protected List<Object> getDefaultValues(PrestoTopic topic, PrestoType type, PrestoField field, JsonNode assignment) {
+                List<Object> result = new ArrayList<Object>();
+                for (JsonNode valueNode : assignment.get("values")) {
+                    String value = valueNode.getTextValue();
+                    if (value != null) {
+                        if (value.charAt(0) == '$') {
+                            String variable = value.substring(1);
+                            for (String varValue : getVariableValues(topic, type, field, variable)) {
+                                if (varValue != null) {
+                                    result.add(varValue);
+                                }
                             }
+                        } else {
+                            result.add(value);
                         }
-                    } else {
-                        result.add(value);
                     }
                 }
+                return result;
             }
-            return result;
-        }
-        
-        protected Collection<String> getVariableValues(PrestoTopic topic, PrestoType type, PrestoField field, String variable) {
-            if (variable.equals("now")) {
-                return Collections.singletonList(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new Date()));
-            } else if (variable.equals("username")) {
-                return Collections.singletonList(request.getRemoteUser());
+
+            protected Collection<String> getVariableValues(PrestoTopic topic, PrestoType type, PrestoField field, String variable) {
+                if (variable.equals("now")) {
+                    return Collections.singletonList(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new Date()));
+                } else if (variable.equals("username")) {
+                    return Collections.singletonList(request.getRemoteUser());
+                }
+                return Collections.emptyList();
             }
-            return Collections.emptyList();
         }
     }
     
