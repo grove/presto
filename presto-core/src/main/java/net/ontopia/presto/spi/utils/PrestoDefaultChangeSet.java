@@ -21,7 +21,7 @@ import net.ontopia.presto.spi.PrestoUpdate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PrestoDefaultChangeSet implements PrestoChangeSet {
+public abstract class PrestoDefaultChangeSet implements PrestoChangeSet {
 
     private static Logger log = LoggerFactory.getLogger(PrestoDefaultChangeSet.class.getName());
 
@@ -209,6 +209,8 @@ public class PrestoDefaultChangeSet implements PrestoChangeSet {
         }       
     }
 
+    protected abstract void onBeforeSave();
+
     // inverse fields (foreign keys)
 
     void addInverseFieldValue(boolean isNew, PrestoTopic topic, PrestoField field, Collection<?> values) {
@@ -248,11 +250,6 @@ public class PrestoDefaultChangeSet implements PrestoChangeSet {
                 }
             }
         }
-    }
-
-    // onBeforeSave
-
-    protected void onBeforeSave() {
     }
 
     protected PrestoChanges getPrestoChanges() {
