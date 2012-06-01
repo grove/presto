@@ -1,5 +1,7 @@
 package net.ontopia.presto.jaxb;
 
+import java.util.Map;
+
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
@@ -9,11 +11,11 @@ public class Link {
     
     private String id;
     private String name;
-    private String type;
     
     private String rel;
     private String href;
-    private String mode;
+
+    private Map<String,Object> params;
 
     public Link() {        
     }
@@ -47,28 +49,20 @@ public class Link {
         this.name = name;
     }
 
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public String getMode() {
-        return mode;
-    }
-
-    public void setMode(String mode) {
-        this.mode = mode;
-    }
-
     public String getId() {
         return id;
     }
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public Map<String,Object> getParams() {
+        return params;
+    }
+    
+    public void setParams(Map<String,Object> params) {
+        this.params = params;
     }
 
 }

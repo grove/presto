@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,8 @@ import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
 import net.ontopia.presto.spi.PrestoView;
 
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -151,6 +154,8 @@ public abstract class Presto {
         topicLinks.addAll(getViewLinks(topic, type, view, readOnlyMode));
         result.setLinks(topicLinks);
 
+        result = postProcessTopic(result, type);
+
         return result;
     }
 
@@ -185,6 +190,9 @@ public abstract class Presto {
             }
         }
         result.setFields(fields);
+        
+        result = postProcessTopic(result, type);
+        
         return result;
     }
 
@@ -207,8 +215,6 @@ public abstract class Presto {
         FieldData fieldData = new FieldData();
         fieldData.setId(fieldId);
         fieldData.setName(field.getName());
-
-        fieldData.setExtra(field.getExtra());
 
         int minCard = field.getMinCardinality();
         if (minCard > 0) {
@@ -391,6 +397,8 @@ public abstract class Presto {
             fieldData.setValuesTotal(size);
         }
 
+        fieldData = postProcessFieldData(fieldData, field);
+        
         return fieldData;
     }
 
@@ -500,9 +508,53 @@ public abstract class Presto {
         Link result = new Link("edit-in-view", href);
         result.setId(view.getId());
         result.setName(view.getName());
+        
+        result = postProcessViewLink(result, view);
+        
         return result;
     }
 
+    protected Link postProcessViewLink(Link link, PrestoView view) {
+        Map<String, Object> params = getExtraParamsMap(view.getExtra());
+        if (params != null) {
+            link.setParams(params);
+        }
+        return link;
+    }
+
+    protected FieldData postProcessFieldData(FieldData fieldData, PrestoField field) {
+        Map<String, Object> params = getExtraParamsMap(field.getExtra());
+        if (params != null) {
+            fieldData.setParams(params);
+        }
+        return fieldData;
+    }
+
+    protected Topic postProcessTopic(Topic topicData, PrestoType type) {
+        Map<String, Object> params = getExtraParamsMap(type.getExtra());
+        if (params != null) {
+            topicData.setParams(params);
+        }
+        return topicData;
+    }
+
+    private Map<String,Object> getExtraParamsMap(Object extra) {
+        if (extra != null && extra instanceof ObjectNode) {
+            ObjectNode extraNode = (ObjectNode)extra;
+            JsonNode params = extraNode.path("params");
+            if (params.isObject()) {
+                Map<String,Object> result = new LinkedHashMap<String,Object>();
+                Iterator<String> pnIter = params.getFieldNames();
+                while (pnIter.hasNext()) {
+                    String pn = pnIter.next();
+                    result.put(pn, params.get(pn));
+                }
+                return result;
+            }
+        }
+        return null;
+    }
+    
     @SuppressWarnings({"rawtypes", "unchecked"})
     protected <T> int compareStatic(Comparable o1, Comparable o2) {
         if (o1 == null)

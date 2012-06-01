@@ -1,6 +1,7 @@
 package net.ontopia.presto.jaxb;
 
 import java.util.Collection;
+import java.util.Map;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -21,6 +22,8 @@ public class Topic extends Document {
 
     private TopicType type;
     private String view;
+
+    private Map<String,Object> params;
 
     private Collection<Link> links;
 
@@ -101,6 +104,14 @@ public class Topic extends Document {
 
     public void setLinks(Collection<Link> links) {
         this.links = links;
+    }
+
+    public Map<String,Object> getParams() {
+        return params;
+    }
+
+    public void setParams(Map<String,Object> params) {
+        this.params = params;
     }
 
 }
