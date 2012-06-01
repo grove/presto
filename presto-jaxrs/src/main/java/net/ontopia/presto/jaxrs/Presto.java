@@ -532,9 +532,9 @@ public abstract class Presto {
     //    }
 
     protected FieldData postProcessFieldData(FieldData fieldData, PrestoField field) {
-        Object extra_ = field.getExtra();
-        if (extra_ != null && extra_ instanceof ObjectNode) {
-            ObjectNode extra = (ObjectNode)extra_;
+        Object e = field.getExtra();
+        if (e != null && e instanceof ObjectNode) {
+            ObjectNode extra = (ObjectNode)e;
             Map<String, Object> params = getExtraParamsMap(extra);
             if (params != null) {
                 fieldData.setParams(params);
@@ -556,9 +556,9 @@ public abstract class Presto {
     //    }
 
     protected Topic postProcessTopic(Topic topicData, PrestoType type) {
-        Object extra_ = type.getExtra();
-        if (extra_ != null && extra_ instanceof ObjectNode) {
-            ObjectNode extra = (ObjectNode)extra_;
+        Object e = type.getExtra();
+        if (e != null && e instanceof ObjectNode) {
+            ObjectNode extra = (ObjectNode)e;
             Map<String, Object> params = getExtraParamsMap(extra);
             if (params != null) {
                 topicData.setParams(params);
