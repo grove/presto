@@ -145,7 +145,7 @@ public abstract class EditorResource {
             }
             PrestoView view = type.getDefaultView();
 
-            Topic result = postProcess(session.getNewTopicInfo(type, view));
+            Topic result = session.getNewTopicInfo(type, view);
             return Response.ok(result).build();
 
         } catch (Exception e) {
@@ -219,7 +219,7 @@ public abstract class EditorResource {
             }
             PrestoView view = type.getDefaultView();
 
-            Topic result = postProcess(session.getNewTopicInfo(type, view, parentTopicId, parentFieldId));
+            Topic result = session.getNewTopicInfo(type, view, parentTopicId, parentFieldId);
             return Response.ok(result).build();
 
         } catch (Exception e) {
@@ -319,7 +319,7 @@ public abstract class EditorResource {
             PrestoType type = schemaProvider.getTypeById(topic.getTypeId());
             PrestoView view = type.getDefaultView();
 
-            Topic result = postProcess(session.getTopicInfo(topic, type, view, readOnly));
+            Topic result = session.getTopicInfo(topic, type, view, readOnly);
             return Response.ok(result).build();
 
         } catch (Exception e) {
@@ -352,7 +352,7 @@ public abstract class EditorResource {
             PrestoType type = schemaProvider.getTypeById(topic.getTypeId());
             PrestoView view = type.getViewById(viewId);
 
-            Topic result = postProcess(session.getTopicInfo(topic, type, view, readOnly));
+            Topic result = session.getTopicInfo(topic, type, view, readOnly);
             return Response.ok(result).build();
 
         } catch (Exception e) {
@@ -392,15 +392,12 @@ public abstract class EditorResource {
 
             PrestoView view = type.getViewById(viewId);
 
-            topic = session.updateTopic(topic, type, view, preProcess(topicData));
-
-            Topic result = session.getTopicInfo(topic, type, view, false);
+            Topic result = session.updateTopic(topic, type, view, topicData);
             
             String id = result.getId();
             session.commit();
             onTopicUpdated(id);
 
-            result = postProcess(result);
             return Response.ok(result).build();
 
         } catch (Exception e) {
@@ -693,9 +690,6 @@ public abstract class EditorResource {
                         fieldData.setMessages(messages);
                     }
                 }
-                if (extraNode.get("postProcessor") != null) {
-                    
-                }
             }
             
             return fieldData;
@@ -810,13 +804,5 @@ public abstract class EditorResource {
 
     protected void onTopicUpdated(String topicId) {      
     }
-
-    protected Topic preProcess(Topic topicInfo) {
-        return topicInfo;
-    }
-
-    protected Topic postProcess(Topic topicInfo) {
-        return topicInfo;
-    }
-
+    
 }

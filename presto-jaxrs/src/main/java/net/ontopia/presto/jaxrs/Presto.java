@@ -30,6 +30,7 @@ import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
 import net.ontopia.presto.spi.PrestoView;
+import net.ontopia.presto.spi.utils.Utils;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;
@@ -66,7 +67,7 @@ public abstract class Presto {
     public ChangeSetHandler getChangeSetHandler() {
         return null;
     }
-    
+
     public PrestoDataProvider getDataProvider() {
         return dataProvider;
     }
@@ -74,7 +75,7 @@ public abstract class Presto {
     public PrestoSchemaProvider getSchemaProvider() {
         return schemaProvider;
     }
-    
+
     public Map<String,Object> getTopicAsMap(PrestoTopic topic, PrestoType type) {
         Map<String,Object> result = new LinkedHashMap<String,Object>();
 
@@ -190,9 +191,9 @@ public abstract class Presto {
             }
         }
         result.setFields(fields);
-        
+
         result = postProcessTopic(result, type);
-        
+
         return result;
     }
 
@@ -398,7 +399,7 @@ public abstract class Presto {
         }
 
         fieldData = postProcessFieldData(fieldData, field);
-        
+
         return fieldData;
     }
 
@@ -411,7 +412,7 @@ public abstract class Presto {
             return getExistingStringFieldValue(field, stringValue, readOnlyMode);
         }
     }
-    
+
     protected Value getExistingStringFieldValue(PrestoFieldUsage field, String fieldValue, boolean readOnlyMode) {
         Value result = new Value();
         result.setValue(fieldValue);
@@ -420,13 +421,13 @@ public abstract class Presto {
         }
         return result;
     }
-    
+
     protected Value getExistingTopicFieldValue(PrestoFieldUsage field, PrestoTopic value, boolean readOnlyMode) {
 
         Value result = new Value();
         result.setValue(value.getId());
         result.setName(value.getName(field));
-        
+
         if (field.isEmbedded()) {
             PrestoType valueType = getSchemaProvider().getTypeById(value.getTypeId());
             result.setEmbedded(getTopicInfo(value, valueType, field.getValueView(), readOnlyMode));
@@ -508,53 +509,87 @@ public abstract class Presto {
         Link result = new Link("edit-in-view", href);
         result.setId(view.getId());
         result.setName(view.getName());
-        
+
         result = postProcessViewLink(result, view);
-        
+
         return result;
     }
 
     protected Link postProcessViewLink(Link link, PrestoView view) {
-        Map<String, Object> params = getExtraParamsMap(view.getExtra());
-        if (params != null) {
-            link.setParams(params);
+        Object extra = view.getExtra();
+        if (extra != null && extra instanceof ObjectNode) {
+            ObjectNode extraNode = (ObjectNode)extra;
+            Map<String, Object> params = getExtraParamsMap(extraNode);
+            if (params != null) {
+                link.setParams(params);
+            }
         }
         return link;
     }
 
+    //    protected FieldData preProcessFieldData(FieldData fieldData, PrestoField field) {
+    //        return fieldData;
+    //    }
+
     protected FieldData postProcessFieldData(FieldData fieldData, PrestoField field) {
-        Map<String, Object> params = getExtraParamsMap(field.getExtra());
-        if (params != null) {
-            fieldData.setParams(params);
+        Object extra_ = field.getExtra();
+        if (extra_ != null && extra_ instanceof ObjectNode) {
+            ObjectNode extra = (ObjectNode)extra_;
+            Map<String, Object> params = getExtraParamsMap(extra);
+            if (params != null) {
+                fieldData.setParams(params);
+            }
+            JsonNode postProcessorNode = extra.path("postProcessor");
+            if (postProcessorNode.isTextual()) {
+                String className = postProcessorNode.getTextValue();
+                PrestoProcessor processor = Utils.newInstanceOf(className, PrestoProcessor.class);
+                if (processor != null) {
+                    fieldData = processor.postProcess(fieldData, field);
+                }
+            }
         }
         return fieldData;
     }
 
+    //    protected Topic preProcessTopic(Topic topicData, PrestoType type) {
+    //        return topicData;
+    //    }
+
     protected Topic postProcessTopic(Topic topicData, PrestoType type) {
-        Map<String, Object> params = getExtraParamsMap(type.getExtra());
-        if (params != null) {
-            topicData.setParams(params);
-        }
+        Object extra_ = type.getExtra();
+        if (extra_ != null && extra_ instanceof ObjectNode) {
+            ObjectNode extra = (ObjectNode)extra_;
+            Map<String, Object> params = getExtraParamsMap(extra);
+            if (params != null) {
+                topicData.setParams(params);
+            }
+            JsonNode postProcessorNode = extra.path("postProcessor");
+            if (postProcessorNode.isTextual()) {
+                String className = postProcessorNode.getTextValue();
+                PrestoProcessor processor = Utils.newInstanceOf(className, PrestoProcessor.class);
+                if (processor != null) {
+                    topicData = processor.postProcess(topicData, type);
+                }
+            }
+        }    
         return topicData;
     }
 
-    private Map<String,Object> getExtraParamsMap(Object extra) {
-        if (extra != null && extra instanceof ObjectNode) {
-            ObjectNode extraNode = (ObjectNode)extra;
-            JsonNode params = extraNode.path("params");
-            if (params.isObject()) {
-                Map<String,Object> result = new LinkedHashMap<String,Object>();
-                Iterator<String> pnIter = params.getFieldNames();
-                while (pnIter.hasNext()) {
-                    String pn = pnIter.next();
-                    result.put(pn, params.get(pn));
-                }
-                return result;
+    private Map<String,Object> getExtraParamsMap(ObjectNode extra) {
+        ObjectNode extraNode = (ObjectNode)extra;
+        JsonNode params = extraNode.path("params");
+        if (params.isObject()) {
+            Map<String,Object> result = new LinkedHashMap<String,Object>();
+            Iterator<String> pnIter = params.getFieldNames();
+            while (pnIter.hasNext()) {
+                String pn = pnIter.next();
+                result.put(pn, params.get(pn));
             }
+            return result;
         }
         return null;
     }
-    
+
     @SuppressWarnings({"rawtypes", "unchecked"})
     protected <T> int compareStatic(Comparable o1, Comparable o2) {
         if (o1 == null)
@@ -618,7 +653,12 @@ public abstract class Presto {
         return getFieldInfo(update.getTopicAfterSave(), field, false);
     }
 
-    public PrestoTopic updateTopic(PrestoTopic topic, PrestoType type, PrestoView view, Topic data) {
+    public Topic updateTopic(PrestoTopic topic, PrestoType type, PrestoView view, Topic data) {
+        PrestoTopic result = updatePrestoTopic(topic, type, view, data);
+        return postProcessTopic(getTopicInfo(result, type, view, false), type);
+    }
+
+    protected PrestoTopic updatePrestoTopic(PrestoTopic topic, PrestoType type, PrestoView view, Topic data) {
 
         PrestoDataProvider dataProvider = getDataProvider();
         PrestoChangeSet changeSet = dataProvider.newChangeSet(getChangeSetHandler());
@@ -643,6 +683,7 @@ public abstract class Presto {
         }
 
         changeSet.save();
+
         return update.getTopicAfterSave();
     }
 
@@ -693,7 +734,7 @@ public abstract class Presto {
             type = schemaProvider.getTypeById(topic.getTypeId());
         }
 
-        return updateTopic(topic, type, view, embeddedTopic);
+        return updatePrestoTopic(topic, type, view, embeddedTopic);
     }
 
     private Topic getEmbeddedReference(Value value) {
@@ -755,11 +796,11 @@ public abstract class Presto {
 
     public void commit() {
     }
-    
+
     public void abort() {
     }
-    
+
     public void close() {
     }
-    
+
 }
