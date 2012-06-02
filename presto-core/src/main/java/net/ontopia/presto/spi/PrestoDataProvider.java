@@ -17,7 +17,11 @@ public interface PrestoDataProvider {
     void close();
 
     public static interface ChangeSetHandler {
+
         public void onBeforeSave(PrestoChangeSet changeSet, PrestoChanges changes);
+
+        public void onAfterSave(PrestoChangeSet changeSet, PrestoChanges changes);
+        
     }
     
 }

@@ -37,6 +37,7 @@ import net.ontopia.presto.jaxb.TopicType;
 import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoChanges;
 import net.ontopia.presto.spi.PrestoDataProvider;
+import net.ontopia.presto.spi.PrestoDataProvider.ChangeSetHandler;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
@@ -44,7 +45,6 @@ import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
 import net.ontopia.presto.spi.PrestoView;
-import net.ontopia.presto.spi.PrestoDataProvider.ChangeSetHandler;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;
@@ -54,7 +54,7 @@ public abstract class EditorResource {
 
     public final static String APPLICATION_JSON_UTF8 = "application/json;charset=UTF-8";
 
-    private @Context HttpServletRequest request;
+    @Context HttpServletRequest request;
     private @Context UriInfo uriInfo;
     
     @GET
@@ -107,15 +107,7 @@ public abstract class EditorResource {
 
         Presto session = createPresto(databaseId);
         try {
-            Database result = new Database();
-
-            result.setId(session.getDatabaseId());
-            result.setName(session.getDatabaseName());
-
-            List<Link> links = new ArrayList<Link>();
-            links.add(new Link("available-types-tree", uriInfo.getBaseUri() + "editor/available-types-tree/" + session.getDatabaseId()));
-            links.add(new Link("edit-topic-by-id", uriInfo.getBaseUri() + "editor/topic/" + session.getDatabaseId() + "/{topicId}"));
-            result.setLinks(links);      
+            Database result = session.getDatabaseInfo();
 
             return Response.ok(result).build();
 
@@ -393,10 +385,8 @@ public abstract class EditorResource {
             PrestoView view = type.getViewById(viewId);
 
             Topic result = session.updateTopic(topic, type, view, topicData);
-            
-            String id = result.getId();
+
             session.commit();
-            onTopicUpdated(id);
 
             return Response.ok(result).build();
 
@@ -438,9 +428,7 @@ public abstract class EditorResource {
             if (field.isAddable() || field.isCreatable()) {
                 FieldData result = session.addFieldValues(topic, type, field, index, fieldData);
     
-                String id = topic.getId();
                 session.commit();
-                onTopicUpdated(id);
     
                 return Response.ok(result).build();
             
@@ -514,9 +502,7 @@ public abstract class EditorResource {
             if (field.isRemovable()) {
                 FieldData result =  session.removeFieldValues(topic, type, field, fieldData);
     
-                String id = topic.getId();    
                 session.commit();
-                onTopicUpdated(id);
     
                 return Response.ok(result).build();
                 
@@ -696,103 +682,32 @@ public abstract class EditorResource {
         }
         
         @Override
-        public ChangeSetHandler getChangeSetHandler() {
-            return new DefaultChangeSetHandler();
-        }
+        protected ChangeSetHandler getChangeSetHandler() {
+            return new DefaultChangeSetHandler() {
 
-        private class DefaultChangeSetHandler implements ChangeSetHandler {
-            
-            @Override
-            public void onBeforeSave(PrestoChangeSet changeSet, PrestoChanges changes) {
-                for (PrestoUpdate update : changes.getUpdates()) {
-                    if (update.isTopicUpdated()) {
-                        assignDefaultValues(update);
-                    }
+                @Override
+                protected PrestoSchemaProvider getSchemaProvider() {
+                    return EditorResourcePresto.this.getSchemaProvider();
                 }
-            }
-            
-            protected void assignDefaultValues(PrestoUpdate update) {
-                PrestoTopic topic = update.getTopic();
-                PrestoSchemaProvider schemaProvider = getSchemaProvider();
-                PrestoType type = schemaProvider.getTypeById(topic.getTypeId());
-                boolean isNewTopic = update.isNewTopic();
-
-                for (PrestoField field : type.getFields()) {
-                    ObjectNode extra = (ObjectNode)field.getExtra();
-                    if (extra != null) {
-                        JsonNode assignment = extra.path("assignment");
-                        if (assignment.isObject()) {
-                            List<Object> defaultValues = null;
-
-                            String valuesAssignmentType = assignment.get("type").getTextValue();
-                            if (valuesAssignmentType.equals("create")) {
-                                if (isNewTopic) {
-                                    defaultValues = getDefaultValues(topic, type, field, assignment);                    
-                                }
-                            } else if (valuesAssignmentType.equals("update")) {
-                                JsonNode fields = assignment.path("fields");
-                                if (fields.isArray()) {
-                                    // update only if any of the given fields are updated 
-                                    for (JsonNode fieldNode : fields) {
-                                        String fieldId = fieldNode.getTextValue();
-                                        PrestoField fieldById = type.getFieldById(fieldId);
-                                        if (update.isFieldUpdated(fieldById)) {
-                                            defaultValues = getDefaultValues(topic, type, field, assignment);
-                                        }
-                                    }
-                                } else {
-                                    defaultValues = getDefaultValues(topic, type, field, assignment);
-                                }
-                            }
-                            if (defaultValues != null) {
-                                update.setValues(field, defaultValues);                
-                            }
+                @Override
+                public void onAfterSave(PrestoChangeSet changeSet, PrestoChanges changes) {
+                    for (PrestoUpdate update : changes.getUpdates()) {
+                        if (update.isTopicUpdated()) {
+                            EditorResource.this.onTopicUpdated(update.getTopic());
                         }
                     }
                 }
-            }
 
-            @SuppressWarnings("unused")
-            protected List<Object> getInitialValues(PrestoType type, PrestoField field) {
-                ObjectNode extra = (ObjectNode)field.getExtra();
-                JsonNode assignment = extra.path("assigment");
-                if (assignment.isObject()) {
-                    String valuesAssignmentType = assignment.get("type").getTextValue();
-                    if (valuesAssignmentType.equals("initial")) {
-                        return getDefaultValues(null, type, field, assignment);                    
+                @Override
+                protected Collection<String> getVariableValues(PrestoTopic topic, PrestoType type, PrestoField field, String variable) {
+                    if (variable.equals("now")) {
+                        return Collections.singletonList(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new Date()));
+                    } else if (variable.equals("username")) {
+                        return Collections.singletonList(request.getRemoteUser());
                     }
+                    return Collections.emptyList();
                 }
-                return Collections.emptyList();
-            }
-
-            protected List<Object> getDefaultValues(PrestoTopic topic, PrestoType type, PrestoField field, JsonNode assignment) {
-                List<Object> result = new ArrayList<Object>();
-                for (JsonNode valueNode : assignment.get("values")) {
-                    String value = valueNode.getTextValue();
-                    if (value != null) {
-                        if (value.charAt(0) == '$') {
-                            String variable = value.substring(1);
-                            for (String varValue : getVariableValues(topic, type, field, variable)) {
-                                if (varValue != null) {
-                                    result.add(varValue);
-                                }
-                            }
-                        } else {
-                            result.add(value);
-                        }
-                    }
-                }
-                return result;
-            }
-
-            protected Collection<String> getVariableValues(PrestoTopic topic, PrestoType type, PrestoField field, String variable) {
-                if (variable.equals("now")) {
-                    return Collections.singletonList(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new Date()));
-                } else if (variable.equals("username")) {
-                    return Collections.singletonList(request.getRemoteUser());
-                }
-                return Collections.emptyList();
-            }
+            };
         }
     }
     
@@ -802,7 +717,7 @@ public abstract class EditorResource {
 
     protected abstract String getDatabaseName(String databaseId);
 
-    protected void onTopicUpdated(String topicId) {      
+    protected void onTopicUpdated(PrestoTopic topic) {      
     }
     
 }

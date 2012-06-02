@@ -211,7 +211,11 @@ public class PrestoDefaultChangeSet implements PrestoChangeSet {
             }
         } else if (changes.size() > 1) {
             dataProvider.updateBulk(changes);
-        }       
+        }
+        
+        if (handler != null) {
+            handler.onAfterSave(this, this.getPrestoChanges());
+        }
     }
 
     // inverse fields (foreign keys)

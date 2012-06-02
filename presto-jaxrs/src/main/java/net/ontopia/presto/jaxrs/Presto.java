@@ -13,6 +13,7 @@ import java.util.Map;
 import javax.ws.rs.core.UriBuilder;
 
 import net.ontopia.presto.jaxb.AvailableFieldValues;
+import net.ontopia.presto.jaxb.Database;
 import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxb.Link;
 import net.ontopia.presto.jaxb.Origin;
@@ -56,15 +57,15 @@ public abstract class Presto {
         this.dataProvider = dataProvider;
     }
 
-    public String getDatabaseId() {
+    private String getDatabaseId() {
         return databaseId;
     }
 
-    public String getDatabaseName() {
+    private String getDatabaseName() {
         return databaseName;
     }
 
-    public ChangeSetHandler getChangeSetHandler() {
+    protected ChangeSetHandler getChangeSetHandler() {
         return null;
     }
 
@@ -398,7 +399,7 @@ public abstract class Presto {
             fieldData.setValuesTotal(size);
         }
 
-        fieldData = postProcessFieldData(fieldData, field);
+        fieldData = postProcessFieldData(fieldData, topic, field);
 
         return fieldData;
     }
@@ -531,7 +532,7 @@ public abstract class Presto {
     //        return fieldData;
     //    }
 
-    protected FieldData postProcessFieldData(FieldData fieldData, PrestoField field) {
+    protected FieldData postProcessFieldData(FieldData fieldData, PrestoTopic topic, PrestoFieldUsage field) {
         Object e = field.getExtra();
         if (e != null && e instanceof ObjectNode) {
             ObjectNode extra = (ObjectNode)e;
@@ -544,7 +545,9 @@ public abstract class Presto {
                 String className = postProcessorNode.getTextValue();
                 PrestoProcessor processor = Utils.newInstanceOf(className, PrestoProcessor.class);
                 if (processor != null) {
-                    fieldData = processor.postProcess(fieldData, field);
+                    processor.setSchemaProvider(schemaProvider);
+                    processor.setDataProvider(dataProvider);
+                    fieldData = processor.postProcess(fieldData, topic, field);
                 }
             }
         }
@@ -801,6 +804,20 @@ public abstract class Presto {
     }
 
     public void close() {
+    }
+
+    public Database getDatabaseInfo() {
+        Database result = new Database();
+
+        result.setId(getDatabaseId());
+        result.setName(getDatabaseName());
+
+        List<Link> links = new ArrayList<Link>();
+        links.add(new Link("available-types-tree", getBaseUri() + "editor/available-types-tree/" + getDatabaseId()));
+        links.add(new Link("edit-topic-by-id", getBaseUri() + "editor/topic/" + getDatabaseId() + "/{topicId}"));
+        result.setLinks(links);      
+        
+        return result;
     }
 
 }
