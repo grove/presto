@@ -50,10 +50,12 @@ public abstract class DefaultChangeSetHandler implements ChangeSetHandler {
                     List<Object> defaultValues = null;
 
                     String valuesAssignmentType = assignment.get("type").getTextValue();
+
                     if (valuesAssignmentType.equals("create")) {
                         if (isNewTopic) {
                             defaultValues = getDefaultValues(topic, type, field, assignment);                    
                         }
+                    
                     } else if (valuesAssignmentType.equals("update")) {
                         JsonNode fields = assignment.path("fields");
                         if (fields.isArray()) {
@@ -67,6 +69,23 @@ public abstract class DefaultChangeSetHandler implements ChangeSetHandler {
                             }
                         } else {
                             defaultValues = getDefaultValues(topic, type, field, assignment);
+                        }
+
+                    } else if (valuesAssignmentType.equals("first-update")) {
+                        if (topic.getValues(field).isEmpty()) {
+                            JsonNode fields = assignment.path("fields");
+                            if (fields.isArray()) {
+                                // update only if any of the given fields are updated 
+                                for (JsonNode fieldNode : fields) {
+                                    String fieldId = fieldNode.getTextValue();
+                                    PrestoField fieldById = type.getFieldById(fieldId);
+                                    if (update.isFieldUpdated(fieldById)) {
+                                        defaultValues = getDefaultValues(topic, type, field, assignment);
+                                    }
+                                }
+                            } else {
+                                defaultValues = getDefaultValues(topic, type, field, assignment);
+                            }
                         }
                     }
                     if (defaultValues != null) {
