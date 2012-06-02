@@ -156,7 +156,7 @@ public abstract class Presto {
         topicLinks.addAll(getViewLinks(topic, type, view, readOnlyMode));
         result.setLinks(topicLinks);
 
-        result = postProcessTopic(result, type);
+        result = postProcessTopic(result, topic, type, view);
 
         return result;
     }
@@ -193,7 +193,7 @@ public abstract class Presto {
         }
         result.setFields(fields);
 
-        result = postProcessTopic(result, type);
+        result = postProcessTopic(result, null, type, view);
 
         return result;
     }
@@ -558,7 +558,7 @@ public abstract class Presto {
     //        return topicData;
     //    }
 
-    protected Topic postProcessTopic(Topic topicData, PrestoType type) {
+    protected Topic postProcessTopic(Topic topicData, PrestoTopic topic, PrestoType type, PrestoView view) {
         Object e = type.getExtra();
         if (e != null && e instanceof ObjectNode) {
             ObjectNode extra = (ObjectNode)e;
@@ -571,7 +571,7 @@ public abstract class Presto {
                 String className = postProcessorNode.getTextValue();
                 PrestoProcessor processor = Utils.newInstanceOf(className, PrestoProcessor.class);
                 if (processor != null) {
-                    topicData = processor.postProcess(topicData, type);
+                    topicData = processor.postProcess(topicData, topic, type, view);
                 }
             }
         }    
@@ -658,7 +658,7 @@ public abstract class Presto {
 
     public Topic updateTopic(PrestoTopic topic, PrestoType type, PrestoView view, Topic data) {
         PrestoTopic result = updatePrestoTopic(topic, type, view, data);
-        return postProcessTopic(getTopicInfo(result, type, view, false), type);
+        return postProcessTopic(getTopicInfo(result, type, view, false), topic, type, view);
     }
 
     protected PrestoTopic updatePrestoTopic(PrestoTopic topic, PrestoType type, PrestoView view, Topic data) {

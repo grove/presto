@@ -7,6 +7,7 @@ import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
+import net.ontopia.presto.spi.PrestoView;
 
 public abstract class PrestoProcessor {
 
@@ -17,8 +18,8 @@ public abstract class PrestoProcessor {
         return fieldData;
     }
 
-    public Topic postProcess(Topic topic, PrestoType type) {
-        return topic;
+    public Topic postProcess(Topic topicData, PrestoTopic topic, PrestoType type, PrestoView view) {
+        return topicData;
     }
 
     protected PrestoDataProvider getDataProvider() {
