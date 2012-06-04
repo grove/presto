@@ -12,7 +12,9 @@ import java.util.Map;
 
 import javax.ws.rs.core.UriBuilder;
 
+import net.ontopia.presto.jaxb.AvailableFieldTypes;
 import net.ontopia.presto.jaxb.AvailableFieldValues;
+import net.ontopia.presto.jaxb.AvailableTopicTypes;
 import net.ontopia.presto.jaxb.Database;
 import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxb.Link;
@@ -263,14 +265,14 @@ public abstract class Presto {
                 boolean allowMove = !field.isSorted();
 
                 if (allowCreate) {
-                    if (!field.getAvailableFieldCreateTypes().isEmpty()) {
+                    if (!getAvailableFieldCreateTypes(topic, field).isEmpty()) {
                         UriBuilder builder = UriBuilder.fromUri(getBaseUri()).path("editor/available-field-types/").path(databaseId).path(topicId).path(parentViewId).path(fieldId);
                         fieldLinks.add(new Link("available-field-types", builder.build().toString()));
                     }
                 }
                 if (allowAdd) {
                     // ISSUE: should add-values and remove-values be links on list result instead?
-                    if (!field.getAvailableFieldValueTypes().isEmpty()) {
+                    if (!getAvailableFieldValueTypes(topic, field).isEmpty()) {
                         UriBuilder builder = UriBuilder.fromUri(getBaseUri()).path("editor/available-field-values/").path(databaseId).path(topicId).path(parentViewId).path(fieldId);
                         fieldLinks.add(new Link("available-field-values", builder.build().toString()));
                     }
@@ -325,7 +327,7 @@ public abstract class Presto {
             fieldData.setLinks(fieldLinks);
         }
 
-        Collection<PrestoType> availableFieldValueTypes = field.getAvailableFieldValueTypes();
+        Collection<PrestoType> availableFieldValueTypes = getAvailableFieldValueTypes(topic, field);
         if (!availableFieldValueTypes.isEmpty()) {
             List<TopicType> valueTypes = new ArrayList<TopicType>(availableFieldValueTypes.size());
             for (PrestoType valueType : availableFieldValueTypes) {
@@ -334,11 +336,11 @@ public abstract class Presto {
             fieldData.setValueTypes(valueTypes);
         }
 
-        Collection<PrestoType> availableFieldCreateTypes = field.getAvailableFieldCreateTypes();
+        Collection<PrestoType> availableFieldCreateTypes = getAvailableFieldCreateTypes(topic, field);
         if (!availableFieldCreateTypes.isEmpty()) {
             List<TopicType> createTypes = new ArrayList<TopicType>(availableFieldCreateTypes.size());
             for (PrestoType createType : availableFieldCreateTypes) {
-                createTypes.add(getCreateFieldInstance(topic, type, field, createType));
+                createTypes.add(getCreateFieldInstance(topic, field, createType));
             }
             fieldData.setCreateTypes(createTypes);
         }
@@ -452,22 +454,47 @@ public abstract class Presto {
         return result;
     }
 
-    public AvailableFieldValues createFieldInfoAllowed(PrestoFieldUsage field, Collection<PrestoTopic> availableFieldValues) {
+    public AvailableFieldValues getAvailableFieldValuesInfo(PrestoTopic topic, PrestoFieldUsage field) {
 
         AvailableFieldValues result = new AvailableFieldValues();
         result.setId(field.getId());
         result.setName(field.getName());
-
-        List<Value> values = new ArrayList<Value>(availableFieldValues.size());
-        for (PrestoTopic value : availableFieldValues) {
-            values.add(getAllowedTopicFieldValue(field, value));
-        }
-        result.setValues(values);
+        result.setValues(getAllowedFieldValues(topic, field));
 
         return result;
     }
+    
+    protected Collection<? extends Object> getAvailableFieldValues(PrestoTopic topic, PrestoFieldUsage field) {
+        return dataProvider.getAvailableFieldValues(topic, field);
+    }
 
-    protected Value getAllowedTopicFieldValue(PrestoFieldUsage field, PrestoTopic value) {
+    protected List<Value> getAllowedFieldValues(PrestoTopic topic, PrestoFieldUsage field) {
+        Collection<? extends Object> availableFieldValues = getAvailableFieldValues(topic, field);
+        
+        List<Value> result = new ArrayList<Value>(availableFieldValues.size());
+        for (Object value : availableFieldValues) {
+            result.add(getAllowedFieldValue(topic, field, value));
+        }
+        return result;
+    }
+    
+    protected Value getAllowedFieldValue(PrestoTopic topic, PrestoFieldUsage field, Object fieldValue) {
+        if (fieldValue instanceof PrestoTopic) {
+            PrestoTopic topicValue = (PrestoTopic)fieldValue;
+            return getAllowedTopicFieldValue(topic, field, topicValue);
+        } else {
+            String stringValue = fieldValue.toString();
+            return getAllowedStringFieldValue(topic, field, stringValue);
+        }
+    }
+
+    protected Value getAllowedStringFieldValue(PrestoTopic topic, PrestoFieldUsage field, String fieldValue) {
+        Value result = new Value();
+        result.setValue(fieldValue);
+        return result;
+    }
+
+    protected Value getAllowedTopicFieldValue(PrestoTopic topic, PrestoFieldUsage field, PrestoTopic value) {
 
         Value result = new Value();
         result.setValue(value.getId());
@@ -599,10 +626,11 @@ public abstract class Presto {
         return new TopicType(type.getId(), type.getName());
     }
 
-    public TopicType getCreateFieldInstance(PrestoTopic topic, PrestoType type, PrestoFieldUsage field, PrestoType createType) {
+    public TopicType getCreateFieldInstance(PrestoTopic topic, PrestoFieldUsage field, PrestoType createType) {
         TopicType result = getTypeInfo(createType);
-
+        
         boolean isNewTopic = topic == null;
+        PrestoType type = field.getType();
         String topicId = isNewTopic ? "_" + type.getId() : topic.getId();
 
         List<Link> links = new ArrayList<Link>();
@@ -750,16 +778,46 @@ public abstract class Presto {
         changeSet.deleteTopic(topic, type);
         changeSet.save();
     }
+    
+    public AvailableFieldTypes getAvailableFieldTypes(PrestoTopic topic, PrestoFieldUsage field) {
 
-    public Collection<TopicTypeTree> getAvailableTypes(Collection<PrestoType> types, boolean tree) {
+        AvailableFieldTypes result = new AvailableFieldTypes();
+        result.setId(field.getId());
+        result.setName(field.getName());
+
+        if (field.isCreatable()) {
+            Collection<PrestoType> availableFieldCreateTypes = getAvailableFieldCreateTypes(topic, field);
+            List<TopicType> types = new ArrayList<TopicType>(availableFieldCreateTypes.size());
+            for (PrestoType createType : availableFieldCreateTypes) {
+                types.add(getCreateFieldInstance(topic, field, createType));
+            }                
+            result.setTypes(types);
+        } else {
+            result.setTypes(new ArrayList<TopicType>());
+        }
+        return result;
+    }
+    
+    public AvailableTopicTypes getAvailableTypesInfo(boolean tree) {
+        AvailableTopicTypes result = new AvailableTopicTypes();
+        result.setTypes(getAvailableTypes(tree));
+        return result;
+    }
+    
+    protected Collection<TopicTypeTree> getAvailableTypes(boolean tree) {
+        Collection<PrestoType> rootTypes = schemaProvider.getRootTypes();
+        return getAvailableTypes(rootTypes, tree);
+    }
+    
+    protected Collection<TopicTypeTree> getAvailableTypes(Collection<PrestoType> types, boolean tree) {
         Collection<TopicTypeTree> result = new ArrayList<TopicTypeTree>(); 
-        for (PrestoType type : types) {
-            result.addAll(getAvailableTypes(type, tree));
+        for (PrestoType rootType : types) {
+            result.addAll(getAvailableTypes(rootType, tree));
         }
         return result;
     }
 
-    private Collection<TopicTypeTree> getAvailableTypes(PrestoType type, boolean tree) {
+    protected Collection<TopicTypeTree> getAvailableTypes(PrestoType type, boolean tree) {
         if (type.isHidden()) {
             return getAvailableTypes(type.getDirectSubTypes(), true);   
         } else {
@@ -810,6 +868,14 @@ public abstract class Presto {
         result.setLinks(links);      
         
         return result;
+    }
+
+    protected Collection<PrestoType> getAvailableFieldCreateTypes(PrestoTopic topic, PrestoFieldUsage field) {
+        return field.getAvailableFieldCreateTypes();
+    }
+
+    protected Collection<PrestoType> getAvailableFieldValueTypes(PrestoTopic topic, PrestoFieldUsage field) {
+        return field.getAvailableFieldValueTypes();
     }
 
 }

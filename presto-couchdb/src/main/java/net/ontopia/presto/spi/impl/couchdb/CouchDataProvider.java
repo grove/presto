@@ -110,7 +110,7 @@ public abstract class CouchDataProvider implements JacksonDataProvider {
     }
 
     @Override
-    public Collection<PrestoTopic> getAvailableFieldValues(final PrestoFieldUsage field) {
+    public Collection<? extends Object> getAvailableFieldValues(PrestoTopic topic, final PrestoFieldUsage field) {
         if (field.isAddable()) {
             Collection<PrestoType> types = field.getAvailableFieldValueTypes();
             if (types.isEmpty()) {

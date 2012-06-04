@@ -10,7 +10,7 @@ public interface PrestoDataProvider {
 
     Collection<PrestoTopic> getTopicsByIds(Collection<String> id);
 
-    Collection<PrestoTopic> getAvailableFieldValues(PrestoFieldUsage field);
+    Collection<? extends Object> getAvailableFieldValues(PrestoTopic topic, PrestoFieldUsage field);
 
     PrestoChangeSet newChangeSet(ChangeSetHandler handler);
     

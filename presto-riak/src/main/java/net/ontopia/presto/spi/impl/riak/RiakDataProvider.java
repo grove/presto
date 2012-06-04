@@ -94,7 +94,7 @@ public abstract class RiakDataProvider implements JacksonDataProvider {
     }
 
     @Override
-    public Collection<PrestoTopic> getAvailableFieldValues(PrestoFieldUsage field) {
+    public Collection<? extends Object> getAvailableFieldValues(PrestoTopic topic, PrestoFieldUsage field) {
         return Collections.emptyList();
     }
 
