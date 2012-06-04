@@ -15,7 +15,7 @@ public class Utils {
             if (type.isAssignableFrom(klass)) {
                 return (T) klass.newInstance();
             } else {
-                log.warn("Function class " + className + " not a PrestoFunction.");                    
+                log.warn("Function class " + className + " not assignable to " + type);                    
             }
         } catch (ClassNotFoundException e) {
             log.warn("Function class " + className + " not found.");

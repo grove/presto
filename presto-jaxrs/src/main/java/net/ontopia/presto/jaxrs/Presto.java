@@ -528,10 +528,6 @@ public abstract class Presto {
         return link;
     }
 
-    //    protected FieldData preProcessFieldData(FieldData fieldData, PrestoField field) {
-    //        return fieldData;
-    //    }
-
     protected FieldData postProcessFieldData(FieldData fieldData, PrestoTopic topic, PrestoFieldUsage field) {
         Object e = field.getExtra();
         if (e != null && e instanceof ObjectNode) {
@@ -553,10 +549,6 @@ public abstract class Presto {
         }
         return fieldData;
     }
-
-    //    protected Topic preProcessTopic(Topic topicData, PrestoType type) {
-    //        return topicData;
-    //    }
 
     protected Topic postProcessTopic(Topic topicData, PrestoTopic topic, PrestoType type, PrestoView view) {
         Object e = type.getExtra();
