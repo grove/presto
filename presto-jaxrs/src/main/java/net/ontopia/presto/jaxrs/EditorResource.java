@@ -77,6 +77,11 @@ public abstract class EditorResource {
     @Path("available-databases")
     public Response getDatabases() throws Exception {
 
+        AvailableDatabases result = getAvailableDatabasesInfo();
+        return Response.ok(result).build();
+    }
+
+    protected AvailableDatabases getAvailableDatabasesInfo() {
         AvailableDatabases result = new AvailableDatabases();
 
         result.setName("Presto - Editor REST API");
@@ -94,10 +99,9 @@ public abstract class EditorResource {
             databases.add(database);
         }
         result.setDatabases(databases);      
-
-        return Response.ok(result).build();
+        return result;
     }
-
+    
     @GET
     @Produces(APPLICATION_JSON_UTF8)
     @Path("database-info/{databaseId}")
