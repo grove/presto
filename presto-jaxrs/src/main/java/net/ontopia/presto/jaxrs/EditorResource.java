@@ -45,9 +45,6 @@ import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
 import net.ontopia.presto.spi.PrestoView;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ObjectNode;
-
 @Path("/editor")
 public abstract class EditorResource {
 
@@ -635,33 +632,6 @@ public abstract class EditorResource {
         @Override
         protected URI getBaseUri() {
             return uriInfo.getBaseUri();
-        }
-
-        @Override
-        public FieldData getFieldInfo(PrestoTopic topic, PrestoFieldUsage field, boolean readOnlyMode, int offset, int limit) {
-            FieldData fieldData = super.getFieldInfo(topic, field, readOnlyMode, offset, limit);
-            
-            // Move messages from extra.messages to fieldData.messages
-            Object extra = field.getExtra();
-            if (extra != null && extra instanceof ObjectNode) {
-                ObjectNode extraNode = (ObjectNode)extra;
-                if (extraNode.get("messages") != null) {
-                    List<FieldData.Message> messages = new ArrayList<FieldData.Message>();
-                    for (JsonNode messageNode : extraNode.get("messages")) {
-                        String type = messageNode.get("type").getTextValue();
-                        String message = messageNode.get("message").getTextValue();
-                        messages.add(new FieldData.Message(type, message));
-                    }
-                    extraNode.remove("messages");
-                    if (fieldData.getMessages() != null) {
-                        fieldData.getMessages().addAll(messages);
-                    } else {
-                        fieldData.setMessages(messages);
-                    }
-                }
-            }
-            
-            return fieldData;
         }
         
         @Override

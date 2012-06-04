@@ -573,6 +573,21 @@ public abstract class Presto {
                     fieldData = processor.postProcess(fieldData, topic, field);
                 }
             }
+            JsonNode messagesNode = extra.path("messages");
+            if (messagesNode.isArray()) {
+                List<FieldData.Message> messages = new ArrayList<FieldData.Message>();
+                for (JsonNode messageNode : messagesNode) {
+                    String type = messageNode.get("type").getTextValue();
+                    String message = messageNode.get("message").getTextValue();
+                    messages.add(new FieldData.Message(type, message));
+                }
+                if (fieldData.getMessages() != null) {
+                    fieldData.getMessages().addAll(messages);
+                } else {
+                    fieldData.setMessages(messages);
+                }
+            }
+
         }
         return fieldData;
     }
