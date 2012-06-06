@@ -15,14 +15,14 @@ public class Utils {
             if (type.isAssignableFrom(klass)) {
                 return (T) klass.newInstance();
             } else {
-                log.warn("Function class " + className + " not assignable to " + type);                    
+                log.warn("Class " + className + " not assignable to " + type);                    
             }
         } catch (ClassNotFoundException e) {
-            log.warn("Function class " + className + " not found.");
+            log.warn("Class " + className + " not found.");
         } catch (InstantiationException e) {
-            log.warn("Not able to instatiate function class " + className + ".");
+            log.warn("Not able to instatiate class " + className + ".");
         } catch (IllegalAccessException e) {
-            log.warn("Not able to instatiate function class " + className + " (illegal access).");
+            log.warn("Not able to instatiate class " + className + " (illegal access).");
         }
         return null;
     }

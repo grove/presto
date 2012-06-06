@@ -465,7 +465,50 @@ public abstract class Presto {
     }
     
     protected Collection<? extends Object> getAvailableFieldValues(PrestoTopic topic, PrestoFieldUsage field) {
+        Collection<? extends Object> result = getCustomAvailableValues(topic, field);
+        if (result != null) {
+            return result;
+        }
         return dataProvider.getAvailableFieldValues(topic, field);
+    }
+
+    private Collection<? extends Object> getCustomAvailableValues(PrestoTopic topic, PrestoFieldUsage field) {
+        ObjectNode extra = getFieldExtraNode(field);
+        if (extra != null) {
+            JsonNode availableValuesNode = extra.path("availableValues");
+            if (availableValuesNode.isArray()) {
+                List<Object> result = new ArrayList<Object>();
+                final boolean isReferenceField = field.isReferenceField();
+                for (JsonNode availableValueNode : availableValuesNode) {
+                    String availableValue = availableValueNode.getTextValue();
+                    if (isReferenceField) {
+                        PrestoTopic topicValue = dataProvider.getTopicById(availableValue);
+                        if (topicValue != null) {
+                            result.add(topicValue);
+                        }
+                    } else {
+                        result.add(availableValue);
+                    }
+                }
+                return result;
+            } else if (availableValuesNode.isObject()) {
+                JsonNode classNode = availableValuesNode.path("class");
+                if (classNode.isTextual()) {
+                    String className = classNode.getTextValue();
+                    AvailableFieldValuesResolver processor = Utils.newInstanceOf(className, AvailableFieldValuesResolver.class);
+                    if (processor != null) {
+                        processor.setSchemaProvider(schemaProvider);
+                        processor.setDataProvider(dataProvider);
+                        return processor.getAvailableFieldValues(topic, field);
+                    }
+                } else {
+                    log.warn("Field " + field.getId() + " extra.availableValues.class missing: " + extra);                    
+                }
+            } else if (!availableValuesNode.isMissingNode()) {
+                log.warn("Field " + field.getId() + " extra.availableValues is not an array: " + extra);
+            }
+        }
+        return null;
     }
 
     protected List<Value> getAllowedFieldValues(PrestoTopic topic, PrestoFieldUsage field) {
@@ -544,10 +587,9 @@ public abstract class Presto {
     }
 
     protected Link postProcessViewLink(Link link, PrestoView view) {
-        Object extra = view.getExtra();
-        if (extra != null && extra instanceof ObjectNode) {
-            ObjectNode extraNode = (ObjectNode)extra;
-            Map<String, Object> params = getExtraParamsMap(extraNode);
+        ObjectNode extra = getViewExtraNode(view);
+        if (extra != null) {
+            Map<String, Object> params = getExtraParamsMap(extra);
             if (params != null) {
                 link.setParams(params);
             }
@@ -555,10 +597,33 @@ public abstract class Presto {
         return link;
     }
 
-    protected FieldData postProcessFieldData(FieldData fieldData, PrestoTopic topic, PrestoFieldUsage field) {
+    protected ObjectNode getTypeExtraNode(PrestoType type) {
+        Object e = type.getExtra();
+        if (e != null && e instanceof ObjectNode) {
+            return (ObjectNode)e;
+        }
+        return null;
+    }
+
+    protected ObjectNode getViewExtraNode(PrestoView view) {
+        Object e = view.getExtra();
+        if (e != null && e instanceof ObjectNode) {
+            return (ObjectNode)e;
+        }
+        return null;
+    }
+
+    protected ObjectNode getFieldExtraNode(PrestoField field) {
         Object e = field.getExtra();
         if (e != null && e instanceof ObjectNode) {
-            ObjectNode extra = (ObjectNode)e;
+            return (ObjectNode)e;
+        }
+        return null;
+    }
+    
+    protected FieldData postProcessFieldData(FieldData fieldData, PrestoTopic topic, PrestoFieldUsage field) {
+        ObjectNode extra = getFieldExtraNode(field);
+        if (extra != null) {
             Map<String, Object> params = getExtraParamsMap(extra);
             if (params != null) {
                 fieldData.setParams(params);
@@ -566,7 +631,7 @@ public abstract class Presto {
             JsonNode postProcessorNode = extra.path("postProcessor");
             if (postProcessorNode.isTextual()) {
                 String className = postProcessorNode.getTextValue();
-                PrestoProcessor processor = Utils.newInstanceOf(className, PrestoProcessor.class);
+                FieldDataPostProcessor processor = Utils.newInstanceOf(className, FieldDataPostProcessor.class);
                 if (processor != null) {
                     processor.setSchemaProvider(schemaProvider);
                     processor.setDataProvider(dataProvider);
@@ -593,9 +658,8 @@ public abstract class Presto {
     }
 
     protected Topic postProcessTopic(Topic topicData, PrestoTopic topic, PrestoType type, PrestoView view) {
-        Object e = type.getExtra();
-        if (e != null && e instanceof ObjectNode) {
-            ObjectNode extra = (ObjectNode)e;
+        ObjectNode extra = getTypeExtraNode(type);
+        if (extra != null) {
             Map<String, Object> params = getExtraParamsMap(extra);
             if (params != null) {
                 topicData.setParams(params);
@@ -603,8 +667,10 @@ public abstract class Presto {
             JsonNode postProcessorNode = extra.path("postProcessor");
             if (postProcessorNode.isTextual()) {
                 String className = postProcessorNode.getTextValue();
-                PrestoProcessor processor = Utils.newInstanceOf(className, PrestoProcessor.class);
+                TopicPostProcessor processor = Utils.newInstanceOf(className, TopicPostProcessor.class);
                 if (processor != null) {
+                    processor.setSchemaProvider(schemaProvider);
+                    processor.setDataProvider(dataProvider);
                     topicData = processor.postProcess(topicData, topic, type, view);
                 }
             }
@@ -647,7 +713,7 @@ public abstract class Presto {
         boolean isNewTopic = topic == null;
         PrestoType type = field.getType();
         String topicId = isNewTopic ? "_" + type.getId() : topic.getId();
-
+        
         List<Link> links = new ArrayList<Link>();
         UriBuilder builder = UriBuilder.fromUri(getBaseUri()).path("editor/create-field-instance/").path(getDatabaseId()).path(topicId).path(field.getId()).path(createType.getId());
         links.add(new Link("create-field-instance", builder.build().toString()));
@@ -794,7 +860,7 @@ public abstract class Presto {
         changeSet.save();
     }
     
-    public AvailableFieldTypes getAvailableFieldTypes(PrestoTopic topic, PrestoFieldUsage field) {
+    public AvailableFieldTypes getAvailableFieldTypesInfo(PrestoTopic topic, PrestoFieldUsage field) {
 
         AvailableFieldTypes result = new AvailableFieldTypes();
         result.setId(field.getId());
@@ -884,13 +950,41 @@ public abstract class Presto {
         
         return result;
     }
-
+    
+    protected Collection<PrestoType> getAvailableFieldValueTypes(PrestoTopic topic, PrestoFieldUsage field) {
+        return field.getAvailableFieldValueTypes();
+    }
+    
     protected Collection<PrestoType> getAvailableFieldCreateTypes(PrestoTopic topic, PrestoFieldUsage field) {
+        Collection<PrestoType> result = getCustomAvailableFieldCreateTypes(topic, field);
+        if (result != null) {
+            return result;
+        }
         return field.getAvailableFieldCreateTypes();
     }
 
-    protected Collection<PrestoType> getAvailableFieldValueTypes(PrestoTopic topic, PrestoFieldUsage field) {
-        return field.getAvailableFieldValueTypes();
+    private Collection<PrestoType> getCustomAvailableFieldCreateTypes(PrestoTopic topic, PrestoFieldUsage field) {
+        ObjectNode extra = getFieldExtraNode(field);
+        if (extra != null) {
+            JsonNode createTypesNode = extra.path("createTypes");
+            if (createTypesNode.isObject()) {
+                JsonNode classNode = createTypesNode.path("class");
+                if (classNode.isTextual()) {
+                    String className = classNode.getTextValue();
+                    AvailableFieldCreateTypesResolver processor = Utils.newInstanceOf(className, AvailableFieldCreateTypesResolver.class);
+                    if (processor != null) {
+                        processor.setSchemaProvider(schemaProvider);
+                        processor.setDataProvider(dataProvider);
+                        return processor.getAvailableFieldCreateTypes(topic, field);
+                    }
+                } else {
+                    log.warn("Field " + field.getId() + " extra.createTypes.class missing: " + extra);                    
+                }
+            } else if (!createTypesNode.isMissingNode()) {
+                log.warn("Field " + field.getId() + " extra.createTypes is not an object: " + extra);
+            }
+        }
+        return null;
     }
 
 }

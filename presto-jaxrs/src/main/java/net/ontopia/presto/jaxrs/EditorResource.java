@@ -106,8 +106,8 @@ public abstract class EditorResource {
             @PathParam("databaseId") final String databaseId) throws Exception {
 
         Presto session = createPresto(databaseId);
-        try {
 
+        try {
             Database result = session.getDatabaseInfo();
             return Response.ok(result).build();
 
@@ -590,7 +590,7 @@ public abstract class EditorResource {
             PrestoView view = type.getViewById(viewId);
             PrestoFieldUsage field = type.getFieldById(fieldId, view);
             
-            AvailableFieldTypes result = session.getAvailableFieldTypes(topic, field); 
+            AvailableFieldTypes result = session.getAvailableFieldTypesInfo(topic, field); 
             return Response.ok(result).build();
 
         } catch (Exception e) {
@@ -609,7 +609,6 @@ public abstract class EditorResource {
         Presto session = createPresto(databaseId);
 
         try {
-
             AvailableTopicTypes result = session.getAvailableTypesInfo(true);
             return Response.ok(result).build();
 
@@ -642,6 +641,7 @@ public abstract class EditorResource {
                 protected PrestoSchemaProvider getSchemaProvider() {
                     return EditorResourcePresto.this.getSchemaProvider();
                 }
+                
                 @Override
                 public void onAfterSave(PrestoChangeSet changeSet, PrestoChanges changes) {
                     for (PrestoUpdate update : changes.getUpdates()) {
