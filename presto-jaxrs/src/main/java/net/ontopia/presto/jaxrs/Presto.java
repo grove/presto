@@ -261,20 +261,12 @@ public abstract class Presto {
                 boolean allowCreate = field.isCreatable();
                 boolean allowAdd = field.isAddable();
                 boolean allowRemove = field.isRemovable();
-
                 boolean allowMove = !field.isSorted();
 
                 if (allowCreate) {
                     if (!getAvailableFieldCreateTypes(topic, field).isEmpty()) {
                         UriBuilder builder = UriBuilder.fromUri(getBaseUri()).path("editor/available-field-types/").path(databaseId).path(topicId).path(parentViewId).path(fieldId);
                         fieldLinks.add(new Link("available-field-types", builder.build().toString()));
-                    }
-                }
-                if (allowAdd) {
-                    // ISSUE: should add-values and remove-values be links on list result instead?
-                    if (!getAvailableFieldValueTypes(topic, field).isEmpty()) {
-                        UriBuilder builder = UriBuilder.fromUri(getBaseUri()).path("editor/available-field-values/").path(databaseId).path(topicId).path(parentViewId).path(fieldId);
-                        fieldLinks.add(new Link("available-field-values", builder.build().toString()));
                     }
                 }
                 if (allowAdd || allowCreate) {
@@ -315,6 +307,13 @@ public abstract class Presto {
                         fieldLinks.add(new Link("move-field-values-to-index", builder.build().toString() + "/{index}"));
                     }
                 }
+            }
+        }
+        if (!isReadOnly && field.isAddable()) {
+            // ISSUE: should add-values and remove-values be links on list result instead?
+            if (!field.isReferenceField() ||!getAvailableFieldValueTypes(topic, field).isEmpty()) {
+                UriBuilder builder = UriBuilder.fromUri(getBaseUri()).path("editor/available-field-values/").path(databaseId).path(topicId).path(parentViewId).path(fieldId);
+                fieldLinks.add(new Link("available-field-values", builder.build().toString()));
             }
         }
 
@@ -534,6 +533,7 @@ public abstract class Presto {
     protected Value getAllowedStringFieldValue(PrestoTopic topic, PrestoFieldUsage field, String fieldValue) {
         Value result = new Value();
         result.setValue(fieldValue);
+        result.setName(fieldValue);
         return result;
     }
 
