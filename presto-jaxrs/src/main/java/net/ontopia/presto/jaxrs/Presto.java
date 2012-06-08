@@ -311,7 +311,7 @@ public abstract class Presto {
         }
         if (!isReadOnly && field.isAddable()) {
             // ISSUE: should add-values and remove-values be links on list result instead?
-            if (!field.isReferenceField() ||!getAvailableFieldValueTypes(topic, field).isEmpty()) {
+            if (!field.isReferenceField() || !getAvailableFieldValueTypes(topic, field).isEmpty()) {
                 UriBuilder builder = UriBuilder.fromUri(getBaseUri()).path("editor/available-field-values/").path(databaseId).path(topicId).path(parentViewId).path(fieldId);
                 fieldLinks.add(new Link("available-field-values", builder.build().toString()));
             }
@@ -723,9 +723,9 @@ public abstract class Presto {
     }
 
     public FieldData addFieldValues(PrestoTopic topic, PrestoType type, PrestoFieldUsage field, 
-            Integer index, FieldData fieldObject) {
+            Integer index, FieldData fieldData) {
 
-        Collection<Object> addableValues = resolveValues(field, fieldObject.getValues(), true);
+        Collection<? extends Object> addableValues = updateAndExtractValuesFromFieldData(field, fieldData, true);
 
         PrestoDataProvider dataProvider = getDataProvider();
         PrestoChangeSet changeSet = dataProvider.newChangeSet(getChangeSetHandler());
@@ -742,9 +742,9 @@ public abstract class Presto {
         return getFieldInfo(update.getTopicAfterSave(), field, false);
     }
 
-    public FieldData removeFieldValues(PrestoTopic topic, PrestoType type, PrestoFieldUsage field, FieldData fieldObject) {
+    public FieldData removeFieldValues(PrestoTopic topic, PrestoType type, PrestoFieldUsage field, FieldData fieldData) {
 
-        Collection<Object> removeableValues = resolveValues(field, fieldObject.getValues(), false);
+        Collection<? extends Object> removeableValues = updateAndExtractValuesFromFieldData(field, fieldData, false);
 
         PrestoDataProvider dataProvider = getDataProvider();
         PrestoChangeSet changeSet = dataProvider.newChangeSet(getChangeSetHandler());
@@ -774,15 +774,14 @@ public abstract class Presto {
             update = changeSet.updateTopic(topic, type);
         }
 
-        for (FieldData fd : data.getFields()) {
+        for (FieldData fieldData : data.getFields()) {
 
-            String fieldId = fd.getId();
+            String fieldId = fieldData.getId();
             PrestoFieldUsage field = type.getFieldById(fieldId, view);
 
             // ignore read-only or pageable fields 
             if (!field.isReadOnly() && !field.isPageable()) {
-                Collection<Value> values = fd.getValues();
-                update.setValues(field, resolveValues(field, values, true));
+                update.setValues(field, updateAndExtractValuesFromFieldData(field, fieldData, true));
             }
         }
 
@@ -791,18 +790,19 @@ public abstract class Presto {
         return update.getTopicAfterSave();
     }
 
-    private Collection<Object> resolveValues(PrestoFieldUsage field, Collection<Value> values, boolean resolveEmbedded) {
+    private Collection<? extends Object> updateAndExtractValuesFromFieldData(PrestoFieldUsage field, FieldData fieldData, boolean resolveEmbedded) {
+        Collection<Value> values = fieldData.getValues();
         Collection<Object> result = new ArrayList<Object>(values.size());
 
         if (!values.isEmpty()) {
 
             if (field.isReferenceField()) {
+                // TODO: inline-topic: create inline topic if inlined
                 List<String> valueIds = new ArrayList<String>(values.size());
                 for (Value value : values) {                
                     Topic embeddedReferenceValue = getEmbeddedReference(value);
                     if (resolveEmbedded && embeddedReferenceValue != null) {
-                        PrestoView valueView = field.getValueView();
-                        result.add(updateEmbeddedReference(valueView, embeddedReferenceValue));
+                        result.add(updateEmbeddedReference(field, embeddedReferenceValue));
                     } else {
                         String valueId = getReferenceValue(value);
                         if (valueId != null) {
@@ -820,7 +820,7 @@ public abstract class Presto {
         return result;
     }
 
-    private PrestoTopic updateEmbeddedReference(PrestoView view, Topic embeddedTopic) {
+    private PrestoTopic updateEmbeddedReference(PrestoFieldUsage field, Topic embeddedTopic) {
 
         PrestoDataProvider dataProvider = getDataProvider();
         PrestoSchemaProvider schemaProvider = getSchemaProvider();
@@ -837,6 +837,8 @@ public abstract class Presto {
             topic = dataProvider.getTopicById(topicId);
             type = schemaProvider.getTypeById(topic.getTypeId());
         }
+
+        PrestoView view = field.getValueView();
 
         return updatePrestoTopic(topic, type, view, embeddedTopic);
     }
