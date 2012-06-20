@@ -831,8 +831,7 @@ public abstract class Presto {
         PrestoType type;
         if (topicId == null) {
             TopicType topicType = embeddedTopic.getType();
-            String typeId = topicType.getId();
-            type = schemaProvider.getTypeById(typeId);
+            type = schemaProvider.getTypeById(topicType.getId());
         } else {
             topic = dataProvider.getTopicById(topicId);
             type = schemaProvider.getTypeById(topic.getTypeId());
