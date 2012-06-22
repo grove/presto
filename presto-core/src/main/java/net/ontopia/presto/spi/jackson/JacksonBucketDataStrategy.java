@@ -12,9 +12,9 @@ import org.codehaus.jackson.node.ObjectNode;
 
 public abstract class JacksonBucketDataStrategy implements JacksonDataStrategy {
 
-    private static final String ID_DEFAULT_FIELD = "_id";
-    private static final String TYPE_DEFAULT_FIELD = ":type";
-    private static final String NAME_DEFAULT_FIELD = ":name";
+    protected static final String ID_DEFAULT_FIELD = "_id";
+    protected static final String TYPE_DEFAULT_FIELD = ":type";
+    protected static final String NAME_DEFAULT_FIELD = ":name";
     
     private final ObjectMapper mapper;
 

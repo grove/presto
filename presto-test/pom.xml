@@ -35,6 +35,11 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>net.ontopia.presto</groupId>
+      <artifactId>presto-mongodb</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.ektorp</groupId>
       <artifactId>org.ektorp</artifactId>
     </dependency>

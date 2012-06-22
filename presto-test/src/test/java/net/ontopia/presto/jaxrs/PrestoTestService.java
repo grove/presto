@@ -3,21 +3,24 @@ package net.ontopia.presto.jaxrs;
 import java.util.Arrays;
 import java.util.List;
 
+import net.ontopia.presto.spi.PrestoDataProvider;
+import net.ontopia.presto.spi.PrestoSchemaProvider;
+import net.ontopia.presto.spi.impl.couchdb.CouchDataProvider;
+import net.ontopia.presto.spi.impl.mongodb.MongoDataProvider;
+import net.ontopia.presto.spi.impl.pojo.PojoSchemaProvider;
+import net.ontopia.presto.spi.impl.riak.RiakDataProvider;
+import net.ontopia.presto.spi.jackson.JacksonBucketDataStrategy;
+import net.ontopia.presto.spi.jackson.JacksonDataStrategy;
+
+import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
+import org.codehaus.jackson.node.POJONode;
 import org.ektorp.CouchDbConnector;
 import org.ektorp.CouchDbInstance;
 import org.ektorp.http.HttpClient;
 import org.ektorp.http.StdHttpClient;
 import org.ektorp.impl.StdCouchDbInstance;
-
-import net.ontopia.presto.spi.PrestoDataProvider;
-import net.ontopia.presto.spi.PrestoSchemaProvider;
-import net.ontopia.presto.spi.impl.couchdb.CouchDataProvider;
-import net.ontopia.presto.spi.impl.pojo.PojoSchemaProvider;
-import net.ontopia.presto.spi.impl.riak.RiakDataProvider;
-import net.ontopia.presto.spi.jackson.JacksonBucketDataStrategy;
-import net.ontopia.presto.spi.jackson.JacksonDataStrategy;
 
 public class PrestoTestService {
 
@@ -39,6 +42,7 @@ public class PrestoTestService {
     public static PrestoDataProvider createDataProvider(String databaseId) {
         return createCouchDbDataProvider();
 //        return createRiakDataProvider();
+//        return createMongoDataProvider();
     }
     
     private static CouchDataProvider createCouchDbDataProvider() {
@@ -87,5 +91,37 @@ public class PrestoTestService {
             throw new RuntimeException(e);
         }
     }
-
+    
+    private static MongoDataProvider createMongoDataProvider() {
+        return new MongoDataProvider() {
+            @Override
+            protected JacksonDataStrategy createDataStrategy(ObjectMapper mapper) {
+                return new JacksonBucketDataStrategy(mapper) {
+                    @Override
+                    public String getId(ObjectNode doc) {
+                        JsonNode idNode = doc.get(ID_DEFAULT_FIELD);
+                        if (idNode.isMissingNode()) {
+                            return null;
+                        } else if (idNode.isPojo()) { 
+                            Object pojo = ((POJONode)idNode).getPojo();
+                            return pojo.toString();
+                        } else if (idNode.isTextual()) {
+                            return idNode.getTextValue();
+                        } else {
+                            throw new RuntimeException("Unknown id type: " + idNode);
+                        }
+                    };
+                    @Override
+                    protected List<String> getReadBuckets(ObjectNode doc) {
+                        return READ_BUCKETS;
+                    }
+                    @Override
+                    protected String getWriteBucket(ObjectNode doc) {
+                        return WRITE_BUCKET;
+                    }
+                };
+            }
+        };
+    }
+    
 }

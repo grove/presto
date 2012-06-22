@@ -12,27 +12,27 @@
       <dependency>
         <groupId>org.codehaus.jackson</groupId>
         <artifactId>jackson-core-asl</artifactId>
-        <version>1.8.6</version>
+        <version>1.9.7</version>
       </dependency>
       <dependency>
         <groupId>org.codehaus.jackson</groupId>
         <artifactId>jackson-jaxrs</artifactId>
-        <version>1.8.6</version>
+        <version>1.9.7</version>
       </dependency>
       <dependency>
         <groupId>org.codehaus.jackson</groupId>
         <artifactId>jackson-mapper-asl</artifactId>
-        <version>1.8.6</version>
+        <version>1.9.7</version>
       </dependency>
       <dependency>
         <groupId>org.codehaus.jackson</groupId>
         <artifactId>jackson-xc</artifactId>
-        <version>1.8.6</version>
+        <version>1.9.7</version>
       </dependency>  
       <dependency>
         <groupId>org.ektorp</groupId>
         <artifactId>org.ektorp</artifactId>
-        <version>1.2.2</version>
+        <version>1.3.0</version>
       </dependency>
       <dependency>
         <groupId>com.sun.jersey</groupId>
@@ -48,6 +48,16 @@
         <groupId>javax.servlet</groupId>
         <artifactId>servlet-api</artifactId>
         <version>2.3</version>
+      </dependency>
+      <dependency>
+        <groupId>org.mongodb</groupId>
+        <artifactId>mongo-java-driver</artifactId>
+        <version>2.8.0</version>
+      </dependency>
+      <dependency>
+	<groupId>net.vz.mongodb.jackson</groupId>
+	<artifactId>mongo-jackson-mapper</artifactId>
+	<version>1.4.2</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -86,6 +96,7 @@
     <!--module>presto-ontopoly</module-->
     <module>presto-couchdb</module>
     <module>presto-riak</module>
+    <module>presto-mongodb</module>
     <module>presto-jaxrs</module>
     <module>presto-jaxb</module>
     <module>presto-solr</module>

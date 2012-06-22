@@ -2,7 +2,6 @@ package net.ontopia.presto.jaxrs;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import net.ontopia.presto.spi.PrestoChangeSet;
@@ -96,17 +95,17 @@ public abstract class DefaultChangeSetHandler implements ChangeSetHandler {
         }
     }
 
-    protected List<Object> getInitialValues(PrestoType type, PrestoField field) {
-        ObjectNode extra = (ObjectNode)field.getExtra();
-        JsonNode assignment = extra.path("assigment");
-        if (assignment.isObject()) {
-            String valuesAssignmentType = assignment.get("type").getTextValue();
-            if (valuesAssignmentType.equals("initial")) {
-                return getDefaultValues(null, type, field, assignment);                    
-            }
-        }
-        return Collections.emptyList();
-    }
+//    protected List<Object> getInitialValues(PrestoType type, PrestoField field) {
+//        ObjectNode extra = (ObjectNode)field.getExtra();
+//        JsonNode assignment = extra.path("assigment");
+//        if (assignment.isObject()) {
+//            String valuesAssignmentType = assignment.get("type").getTextValue();
+//            if (valuesAssignmentType.equals("initial")) {
+//                return getDefaultValues(null, type, field, assignment);                    
+//            }
+//        }
+//        return Collections.emptyList();
+//    }
 
     protected List<Object> getDefaultValues(PrestoTopic topic, PrestoType type, PrestoField field, JsonNode assignment) {
         List<Object> result = new ArrayList<Object>();

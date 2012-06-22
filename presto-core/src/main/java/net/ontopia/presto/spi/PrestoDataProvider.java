@@ -6,9 +6,9 @@ public interface PrestoDataProvider {
 
     String getProviderId();
     
-    PrestoTopic getTopicById(String id);
+    PrestoTopic getTopicById(String topicId);
 
-    Collection<PrestoTopic> getTopicsByIds(Collection<String> id);
+    Collection<PrestoTopic> getTopicsByIds(Collection<String> topicIds);
 
     Collection<? extends Object> getAvailableFieldValues(PrestoTopic topic, PrestoFieldUsage field);
 
