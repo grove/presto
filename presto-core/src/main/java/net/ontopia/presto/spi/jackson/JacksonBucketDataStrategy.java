@@ -60,14 +60,6 @@ public abstract class JacksonBucketDataStrategy implements JacksonDataStrategy {
         return getBucketFieldValue(fieldId, getReadBucket(doc, fieldId, true));
     }
 
-    protected String getFirstStringValue(ObjectNode doc, String fieldId) {
-        ArrayNode node = getFieldValue(doc, fieldId);
-        if (node != null && node.size() > 0) {
-            return node.get(0).getTextValue();
-        }
-        return null;
-    }
-
     @Override
     public void putFieldValue(ObjectNode doc, PrestoField field, ArrayNode value) {
         putFieldValue(doc, field.getActualId(), value);
@@ -92,15 +84,6 @@ public abstract class JacksonBucketDataStrategy implements JacksonDataStrategy {
             return (ArrayNode)(value != null && value.isArray() ? value : null);
         }
         return null;
-    }
-
-    protected boolean equalValues(Object o1, Object o2) {
-        if (o1 == null)
-            return (o2 == null ? true : false);
-        else if (o2 == null)
-            return false;
-        else
-            return o1.equals(o2);
     }
     
     protected ObjectNode getReadBucket(ObjectNode doc, PrestoField field, boolean includeWriteBucket) {
@@ -143,4 +126,23 @@ public abstract class JacksonBucketDataStrategy implements JacksonDataStrategy {
         return bucket;
     }
 
+    // -- convenience methods
+
+    protected boolean equalValues(Object o1, Object o2) {
+        if (o1 == null)
+            return (o2 == null ? true : false);
+        else if (o2 == null)
+            return false;
+        else
+            return o1.equals(o2);
+    }
+
+    protected String getFirstStringValue(ObjectNode doc, String fieldId) {
+        ArrayNode node = getFieldValue(doc, fieldId);
+        if (node != null && node.size() > 0) {
+            return node.get(0).getTextValue();
+        }
+        return null;
+    }
+    
 }
