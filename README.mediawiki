@@ -10,8 +10,8 @@ The framework consists of an SPI for schema providers, data providers and field 
 
 * Hypermedia-driven editing framework
 * JSON over HTTP using Hypermedia (implemented with Java/JAX-RS).
-* Data providers: CouchDB, Riak, Ontopoly
-* Schema providers: In-memory/JSON, Ontopoly
+* Data providers: CouchDB, Riak, MongoDB
+* Schema providers: In-memory/JSON
 * Field resolvers: CouchDB views, Solr queries, Java functions
 
 == Trying it out ==

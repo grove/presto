@@ -86,6 +86,7 @@ public abstract class MongoDataProvider extends JacksonDataProvider {
 
     @Override
     public void close() {
+        mongo.close();
     }
 
     // -- DefaultDataProvider
@@ -94,7 +95,6 @@ public abstract class MongoDataProvider extends JacksonDataProvider {
     public void create(PrestoTopic topic) {
         ObjectNode data = ((JacksonTopic)topic).getData();
         WriteResult<ObjectNode, Object> result = coll.insert(data);
-        System.out.println("I: " + result.getSavedId().getClass());
         ObjectNode saved = result.getSavedObject();
         JsonNode idNode = saved.get("_id");
         data.put("_id", idNode);
