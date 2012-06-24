@@ -18,6 +18,7 @@ import net.vz.mongodb.jackson.WriteResult;
 import org.bson.types.ObjectId;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;
+import org.codehaus.jackson.node.POJONode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,24 +65,28 @@ public abstract class MongoDataProvider extends JacksonDataProvider {
         // look up by document id
         ObjectNode doc = null;
         if (topicId != null) {
-            doc = coll.findOne(new BasicDBObject("_id", new ObjectId(topicId)));
+            doc = coll.findOne(new BasicDBObject("_id", internalTopicId(topicId)));
         }
         if (doc == null) {
             log.warn("Topic with id '" + topicId + "' not found.");
         }
         return existing(doc);
     }
-
+    
     @Override
     public Collection<PrestoTopic> getTopicsByIds(Collection<String> topicIds) {        
         Collection<PrestoTopic> result = new ArrayList<PrestoTopic>();
-        for (String topicId : topicIds) {
-            PrestoTopic topic = getTopicById(topicId);
-            if (topic != null) {
-                result.add(topic);
+        DBCursor<ObjectNode> cursor = coll.find(new BasicDBObject("_id", new BasicDBObject("$in", internalTopicIds(topicIds))));
+        try {
+            for (ObjectNode docNode : cursor) {
+                if (docNode.isObject()) {
+                    result.add(existing(docNode));
+                }
             }
+        } finally {
+            cursor.close();
         }
-        return null;
+        return result;
     }
 
     @Override
@@ -124,6 +129,37 @@ public abstract class MongoDataProvider extends JacksonDataProvider {
         mongo.close();
     }
 
+    // -- id handling
+    
+    protected final static String OBJECT_ID_PREFIX = ":";
+    
+    protected Object internalTopicId(String topicId) {
+        if (topicId.startsWith(OBJECT_ID_PREFIX)) {
+            return new ObjectId(topicId.substring(1));
+        } else {
+            return topicId;
+        }
+    }
+
+    protected Collection<Object> internalTopicIds(Collection<String> topicIds) {
+        Collection<Object> result = new ArrayList<Object>();
+        for (String topicId : topicIds) {
+            result.add(internalTopicId(topicId));
+        }
+        return result;
+    }
+    
+    protected String externalTopicId(JsonNode idNode) {
+        if (idNode.isPojo()) { 
+            Object pojo = ((POJONode)idNode).getPojo();
+            return OBJECT_ID_PREFIX + pojo.toString();
+        } else if (idNode.isTextual()) {
+            return idNode.getTextValue();
+        } else {
+            throw new RuntimeException("Unknown id type: " + idNode);
+        }    
+    }
+
     // -- DefaultDataProvider
 
     @Override
@@ -138,12 +174,12 @@ public abstract class MongoDataProvider extends JacksonDataProvider {
     @Override
     public void update(PrestoTopic topic) {
         ObjectNode data = ((JacksonTopic)topic).getData();
-        coll.updateById(topic.getId(), data);
+        coll.updateById(internalTopicId(topic.getId()), data);
     }
 
     @Override
     public boolean delete(PrestoTopic topic) {
-        coll.remove(new BasicDBObject("_id", new ObjectId(topic.getId())));
+        coll.remove(new BasicDBObject("_id", internalTopicId(topic.getId())));
         return true;
     }
 

@@ -61,13 +61,19 @@ public class PrestoTest {
         john.setValues(colorsField, colors);        
         john.removeValues(colorsField, removedColors);
         john.addValues(colorsField, addedColors);
+
+        PrestoUpdate danny = cs.createTopic(personType);
+        danny.setValues(nameField, Arrays.asList("Danny Doe"));
         
         cs.save();
         
         PrestoTopic createdJohn = john.getTopicAfterSave();
         Assert.assertNotNull(createdJohn);
+
+        PrestoTopic createdDanny = danny.getTopicAfterSave();
+        Assert.assertNotNull(createdDanny);
         
-        // lookup person
+        // lookup john
         PrestoTopic foundJohn = dataProvider.getTopicById(createdJohn.getId());
         Assert.assertNotNull(createdJohn);
 
@@ -81,6 +87,12 @@ public class PrestoTest {
         compareFieldValues(interestsField, interests, createdJohn, foundJohn);
         compareFieldValues(colorsField, finalColors, createdJohn, foundJohn);
 
+        // look up john and danny
+        Collection<PrestoTopic> topicsByIds = dataProvider.getTopicsByIds(Arrays.asList(createdJohn.getId(), createdDanny.getId()));
+        Assert.assertEquals(2, topicsByIds.size());
+        Assert.assertTrue(topicsByIds.contains(createdJohn));
+        Assert.assertTrue(topicsByIds.contains(createdDanny));
+        
         // delete person
         cs = dataProvider.newChangeSet(null);
 

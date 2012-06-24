@@ -32,7 +32,8 @@ public abstract class JacksonBucketDataStrategy implements JacksonDataStrategy {
     
     @Override
     public String getId(ObjectNode doc) {
-        return doc.get(ID_DEFAULT_FIELD).getTextValue();
+        JsonNode node = doc.get(ID_DEFAULT_FIELD);
+        return node == null ? null : node.getTextValue();
     }
     
     @Override
@@ -42,8 +43,8 @@ public abstract class JacksonBucketDataStrategy implements JacksonDataStrategy {
     
     @Override
     public String getName(ObjectNode doc) {
-        JsonNode name = doc.get(NAME_DEFAULT_FIELD);
-        return name == null ? null : name.getTextValue();
+        JsonNode node = doc.get(NAME_DEFAULT_FIELD);
+        return node == null ? null : node.getTextValue();
     }
     
     @Override

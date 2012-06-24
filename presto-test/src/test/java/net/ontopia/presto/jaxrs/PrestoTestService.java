@@ -99,17 +99,7 @@ public class PrestoTestService {
                 return new JacksonBucketDataStrategy(mapper) {
                     @Override
                     public String getId(ObjectNode doc) {
-                        JsonNode idNode = doc.get(ID_DEFAULT_FIELD);
-                        if (idNode.isMissingNode()) {
-                            return null;
-                        } else if (idNode.isPojo()) { 
-                            Object pojo = ((POJONode)idNode).getPojo();
-                            return pojo.toString();
-                        } else if (idNode.isTextual()) {
-                            return idNode.getTextValue();
-                        } else {
-                            throw new RuntimeException("Unknown id type: " + idNode);
-                        }
+                        return externalTopicId(doc.get(ID_DEFAULT_FIELD));
                     };
                     @Override
                     protected List<String> getReadBuckets(ObjectNode doc) {
