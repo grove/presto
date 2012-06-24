@@ -95,4 +95,13 @@ public abstract class JacksonDataProvider implements DefaultDataProvider {
         return null;
     }
 
+    protected final int compareComparables(String o1, String o2) {
+        if (o1 == null)
+            return (o2 == null ? 0 : -1);
+        else if (o2 == null)
+            return 1;
+        else
+            return o1.compareTo(o2);
+    }
+
 }

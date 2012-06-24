@@ -3,11 +3,15 @@ package net.ontopia.presto.spi.impl.mongodb;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoTopic;
+import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.jackson.JacksonDataProvider;
 import net.ontopia.presto.spi.jackson.JacksonTopic;
+import net.vz.mongodb.jackson.DBCursor;
 import net.vz.mongodb.jackson.JacksonDBCollection;
 import net.vz.mongodb.jackson.WriteResult;
 
@@ -17,6 +21,7 @@ import org.codehaus.jackson.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -80,7 +85,37 @@ public abstract class MongoDataProvider extends JacksonDataProvider {
     }
 
     @Override
-    public Collection<? extends Object> getAvailableFieldValues(PrestoTopic topic, PrestoFieldUsage field) {
+    public Collection<? extends Object> getAvailableFieldValues(PrestoTopic topic, final PrestoFieldUsage field) {
+        if (field.isAddable()) {
+            Collection<PrestoType> types = field.getAvailableFieldValueTypes();
+            if (!types.isEmpty()) {
+                
+                BasicDBList typeIds = new BasicDBList();
+                for (PrestoType type : types) {
+                    typeIds.add(type.getId());
+                }
+    
+                List<PrestoTopic> result = new ArrayList<PrestoTopic>(typeIds.size());
+                
+                DBCursor<ObjectNode> cursor = coll.find(new BasicDBObject(":type", new BasicDBObject("$in", typeIds)));
+                try {
+                    for (ObjectNode docNode : cursor) {
+                        if (docNode.isObject()) {
+                            result.add(existing(docNode));
+                        }
+                    }
+                } finally {
+                    cursor.close();
+                }
+                Collections.sort(result, new Comparator<PrestoTopic>() {
+                    @Override
+                    public int compare(PrestoTopic o1, PrestoTopic o2) {
+                        return compareComparables(o1.getName(field), o2.getName(field));
+                    }
+                });
+                return result;
+            }
+        }
         return Collections.emptyList();
     }
 
@@ -108,8 +143,8 @@ public abstract class MongoDataProvider extends JacksonDataProvider {
 
     @Override
     public boolean delete(PrestoTopic topic) {
-        WriteResult<ObjectNode, Object> result = coll.remove(new BasicDBObject("_id", new ObjectId(topic.getId())));
-        return true; // TODO: what to do?
+        coll.remove(new BasicDBObject("_id", new ObjectId(topic.getId())));
+        return true;
     }
 
 }
