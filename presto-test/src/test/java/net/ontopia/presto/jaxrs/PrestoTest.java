@@ -105,6 +105,9 @@ public class PrestoTest {
         
         PrestoTopic deletedJohn = dataProvider.getTopicById(foundJohn.getId());
         Assert.assertNull(deletedJohn);
+        topicsByIds = dataProvider.getTopicsByIds(Arrays.asList(createdJohn.getId(), createdDanny.getId()));
+        Assert.assertEquals(1, topicsByIds.size());
+        Assert.assertTrue(topicsByIds.contains(createdDanny));
     }
 
     private void compareFieldValues(PrestoField field, Collection<? extends Object> values, 
