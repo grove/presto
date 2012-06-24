@@ -59,6 +59,11 @@ public abstract class JacksonDataProvider implements DefaultDataProvider {
     }
 
     @Override
+    public PrestoChangeSet newChangeSet() {
+        return new PrestoDefaultChangeSet(this, null);
+    }
+
+    @Override
     public PrestoChangeSet newChangeSet(ChangeSetHandler handler) {
         return new PrestoDefaultChangeSet(this, handler);
     }

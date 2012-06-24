@@ -12,6 +12,8 @@ public interface PrestoDataProvider {
 
     Collection<? extends Object> getAvailableFieldValues(PrestoTopic topic, PrestoFieldUsage field);
 
+    PrestoChangeSet newChangeSet();
+
     PrestoChangeSet newChangeSet(ChangeSetHandler handler);
     
     void close();
