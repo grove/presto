@@ -7,15 +7,14 @@ import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.impl.couchdb.CouchDataProvider;
 import net.ontopia.presto.spi.impl.mongodb.MongoDataProvider;
+import net.ontopia.presto.spi.impl.mongodb.MultiCollectionMongoDataProvider;
 import net.ontopia.presto.spi.impl.pojo.PojoSchemaProvider;
 import net.ontopia.presto.spi.impl.riak.RiakDataProvider;
 import net.ontopia.presto.spi.jackson.JacksonBucketDataStrategy;
 import net.ontopia.presto.spi.jackson.JacksonDataStrategy;
 
-import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
-import org.codehaus.jackson.node.POJONode;
 import org.ektorp.CouchDbConnector;
 import org.ektorp.CouchDbInstance;
 import org.ektorp.http.HttpClient;
@@ -40,9 +39,9 @@ public class PrestoTestService {
     }
 
     public static PrestoDataProvider createDataProvider(String databaseId) {
-        return createCouchDbDataProvider();
+//        return createCouchDbDataProvider();
 //        return createRiakDataProvider();
-//        return createMongoDataProvider();
+        return createMongoDataProvider();
     }
     
     private static CouchDataProvider createCouchDbDataProvider() {
@@ -93,14 +92,10 @@ public class PrestoTestService {
     }
     
     private static MongoDataProvider createMongoDataProvider() {
-        return new MongoDataProvider() {
+        return new MultiCollectionMongoDataProvider() {
             @Override
             protected JacksonDataStrategy createDataStrategy(ObjectMapper mapper) {
                 return new JacksonBucketDataStrategy(mapper) {
-                    @Override
-                    public String getId(ObjectNode doc) {
-                        return externalTopicId(doc.get(ID_DEFAULT_FIELD));
-                    };
                     @Override
                     protected List<String> getReadBuckets(ObjectNode doc) {
                         return READ_BUCKETS;
