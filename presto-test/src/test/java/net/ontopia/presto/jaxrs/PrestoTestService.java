@@ -7,7 +7,6 @@ import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.impl.couchdb.CouchDataProvider;
 import net.ontopia.presto.spi.impl.mongodb.MongoDataProvider;
-import net.ontopia.presto.spi.impl.mongodb.MultiCollectionMongoDataProvider;
 import net.ontopia.presto.spi.impl.pojo.PojoSchemaProvider;
 import net.ontopia.presto.spi.impl.riak.RiakDataProvider;
 import net.ontopia.presto.spi.jackson.JacksonBucketDataStrategy;
@@ -39,9 +38,9 @@ public class PrestoTestService {
     }
 
     public static PrestoDataProvider createDataProvider(String databaseId) {
-//        return createCouchDbDataProvider();
+        return createCouchDbDataProvider();
 //        return createRiakDataProvider();
-        return createMongoDataProvider();
+//        return createMongoDataProvider();
     }
     
     private static CouchDataProvider createCouchDbDataProvider() {
@@ -92,7 +91,33 @@ public class PrestoTestService {
     }
     
     private static MongoDataProvider createMongoDataProvider() {
-        return new MultiCollectionMongoDataProvider() {
+        return new MongoDataProvider() {
+            
+            private static final String COLLECTION_KEY = "test";
+            
+            private static final String DATABASE_ID = "presto";
+            private static final String COLLECTION_ID = "test";
+            
+            @Override
+            protected String getCollectionKeyByTopicId(String topicId) {
+                return COLLECTION_KEY;
+            }
+
+            @Override
+            protected String getCollectionKeyByTypeId(String typeId) {
+                return COLLECTION_KEY;
+            }
+
+            @Override
+            protected String getDatabaseIdByCollectionKey(String collectionKey) {
+                return DATABASE_ID;
+            }
+
+            @Override
+            protected String getCollectionIdByCollectionKey(String collectionKey) {
+                return COLLECTION_ID;
+            }
+            
             @Override
             protected JacksonDataStrategy createDataStrategy(ObjectMapper mapper) {
                 return new JacksonBucketDataStrategy(mapper) {
@@ -106,6 +131,7 @@ public class PrestoTestService {
                     }
                 };
             }
+
         };
     }
     

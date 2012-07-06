@@ -29,6 +29,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.Mongo;
+import com.mongodb.MongoURI;
 
 public abstract class MongoDataProvider extends JacksonDataProvider {
 
@@ -42,8 +43,20 @@ public abstract class MongoDataProvider extends JacksonDataProvider {
     public MongoDataProvider() {
         identityStrategy = createIdentityStrategy();
     }
-    
-    protected abstract Mongo createMongo(String databaseId);        
+
+    private static final String DEFAULT_MONGO_URI = "mongodb://localhost";
+
+    protected Mongo createMongo(String databaseId) {
+        try {
+            return new Mongo(new MongoURI(getMongoURI()));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    protected String getMongoURI() {
+        return DEFAULT_MONGO_URI;
+    }
     
     protected IdentityStrategy getIdentityStrategy() {
         return identityStrategy;
