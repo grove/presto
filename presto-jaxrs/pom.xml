@@ -4,14 +4,14 @@
   <parent>
     <groupId>net.ontopia.presto</groupId>
     <artifactId>presto</artifactId>
-    <version>0.4.6-SNAPSHOT</version>
+    <version>0.4.7-SNAPSHOT</version>
   </parent>
 
   <name>Presto - JAX-RS resources</name>
   <groupId>net.ontopia.presto</groupId>
   <artifactId>presto-jaxrs</artifactId>
   <packaging>jar</packaging>
-  <version>0.4.6-SNAPSHOT</version>
+  <version>0.4.7-SNAPSHOT</version>
 
   <dependencies>
     <dependency>
@@ -26,18 +26,23 @@
     </dependency>
     <dependency>
       <groupId>com.sun.jersey</groupId>
-      <artifactId>jersey-servlet</artifactId>
-      <version>1.10</version>
+      <artifactId>jersey-core</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.sun.jersey</groupId>
-      <artifactId>jersey-json</artifactId>
-      <version>1.10</version>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-core-asl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-mapper-asl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
     </dependency>
     <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>servlet-api</artifactId>
-      <version>2.3</version>
       <scope>provided</scope>
     </dependency>
   </dependencies>

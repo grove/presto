@@ -1,6 +1,7 @@
 package net.ontopia.presto.jaxb;
 
 import java.util.Collection;
+import java.util.Map;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -30,7 +31,7 @@ public class FieldData extends Document {
     private Integer valuesOffset;
     private Integer valuesTotal;
     
-    private Object extra;
+    private Map<String,Object> params;
 
     private Integer minCardinality;
     private Integer maxCardinality;
@@ -192,14 +193,6 @@ public class FieldData extends Document {
     public Collection<Value> getValues() {
         return values;
     }
-
-    public void setExtra(Object extra) {
-        this.extra = extra;
-    }
-
-    public Object getExtra() {
-        return extra;
-    }
     
     public Collection<TopicType> getValueTypes() {
         return valueTypes;
@@ -263,6 +256,14 @@ public class FieldData extends Document {
 
     public void setMessages(Collection<Message> messages) {
         this.messages = messages;
+    }
+
+    public Map<String,Object> getParams() {
+        return params;
+    }
+
+    public void setParams(Map<String,Object> params) {
+        this.params = params;
     }
     
 }

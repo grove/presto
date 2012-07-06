@@ -6,7 +6,7 @@ public abstract class Document {
 
     public void setFormat(String format) {
         if (!getFormat().equals(format)) {
-            throw new IllegalArgumentException("Invalid format: " + format + " Expected: " + getFormat());
+            throw new IllegalArgumentException("Invalid format: '" + format + "' Expected: '" + getFormat() + "'");
         }
     }
     

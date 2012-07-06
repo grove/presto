@@ -12,9 +12,9 @@ import org.codehaus.jackson.node.ObjectNode;
 
 public abstract class JacksonBucketDataStrategy implements JacksonDataStrategy {
 
-    private static final String ID_DEFAULT_FIELD = "_id";
-    private static final String TYPE_DEFAULT_FIELD = ":type";
-    private static final String NAME_DEFAULT_FIELD = ":name";
+    protected static final String ID_DEFAULT_FIELD = "_id";
+    protected static final String TYPE_DEFAULT_FIELD = ":type";
+    protected static final String NAME_DEFAULT_FIELD = ":name";
     
     private final ObjectMapper mapper;
 
@@ -32,7 +32,8 @@ public abstract class JacksonBucketDataStrategy implements JacksonDataStrategy {
     
     @Override
     public String getId(ObjectNode doc) {
-        return doc.get(ID_DEFAULT_FIELD).getTextValue();
+        JsonNode node = doc.get(ID_DEFAULT_FIELD);
+        return node == null ? null : node.getTextValue();
     }
     
     @Override
@@ -42,8 +43,8 @@ public abstract class JacksonBucketDataStrategy implements JacksonDataStrategy {
     
     @Override
     public String getName(ObjectNode doc) {
-        JsonNode name = doc.get(NAME_DEFAULT_FIELD);
-        return name == null ? null : name.getTextValue();
+        JsonNode node = doc.get(NAME_DEFAULT_FIELD);
+        return node == null ? null : node.getTextValue();
     }
     
     @Override
@@ -58,14 +59,6 @@ public abstract class JacksonBucketDataStrategy implements JacksonDataStrategy {
     
     protected ArrayNode getFieldValue(ObjectNode doc, String fieldId) {
         return getBucketFieldValue(fieldId, getReadBucket(doc, fieldId, true));
-    }
-
-    protected String getFirstStringValue(ObjectNode doc, String fieldId) {
-        ArrayNode node = getFieldValue(doc, fieldId);
-        if (node != null && node.size() > 0) {
-            return node.get(0).getTextValue();
-        }
-        return null;
     }
 
     @Override
@@ -92,15 +85,6 @@ public abstract class JacksonBucketDataStrategy implements JacksonDataStrategy {
             return (ArrayNode)(value != null && value.isArray() ? value : null);
         }
         return null;
-    }
-
-    protected boolean equalValues(Object o1, Object o2) {
-        if (o1 == null)
-            return (o2 == null ? true : false);
-        else if (o2 == null)
-            return false;
-        else
-            return o1.equals(o2);
     }
     
     protected ObjectNode getReadBucket(ObjectNode doc, PrestoField field, boolean includeWriteBucket) {
@@ -143,4 +127,23 @@ public abstract class JacksonBucketDataStrategy implements JacksonDataStrategy {
         return bucket;
     }
 
+    // -- convenience methods
+
+    protected boolean equalValues(Object o1, Object o2) {
+        if (o1 == null)
+            return (o2 == null ? true : false);
+        else if (o2 == null)
+            return false;
+        else
+            return o1.equals(o2);
+    }
+
+    protected String getFirstStringValue(ObjectNode doc, String fieldId) {
+        ArrayNode node = getFieldValue(doc, fieldId);
+        if (node != null && node.size() > 0) {
+            return node.get(0).getTextValue();
+        }
+        return null;
+    }
+    
 }

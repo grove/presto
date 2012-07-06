@@ -5,14 +5,14 @@
   <parent>
     <groupId>net.ontopia.presto</groupId>
     <artifactId>presto</artifactId>
-    <version>0.4.6-SNAPSHOT</version>
+    <version>0.4.7-SNAPSHOT</version>
   </parent>
 
   <name>Presto - Web demo</name>
   <groupId>net.ontopia.presto</groupId>
   <artifactId>presto-webdemo</artifactId>
   <packaging>war</packaging>
-  <version>0.4.6-SNAPSHOT</version>
+  <version>0.4.7-SNAPSHOT</version>
 
   <repositories>
     <repository>
@@ -70,17 +70,17 @@
     <dependency>
       <groupId>com.sun.jersey</groupId>
       <artifactId>jersey-server</artifactId>
-      <version>1.10</version>
+      <version>1.11</version>
     </dependency>
     <dependency>
       <groupId>com.sun.jersey</groupId>
       <artifactId>jersey-json</artifactId>
-      <version>1.10</version>
+      <version>1.11</version>
     </dependency>
     <dependency>
       <groupId>com.sun.jersey.contribs</groupId>
       <artifactId>jersey-spring</artifactId>
-      <version>1.10</version>
+      <version>1.11</version>
     </dependency>
     <dependency>
       <groupId>javax.servlet</groupId>

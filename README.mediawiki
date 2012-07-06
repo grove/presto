@@ -10,8 +10,8 @@ The framework consists of an SPI for schema providers, data providers and field 
 
 * Hypermedia-driven editing framework
 * JSON over HTTP using Hypermedia (implemented with Java/JAX-RS).
-* Data providers: CouchDB, Riak, Ontopoly
-* Schema providers: In-memory/JSON, Ontopoly
+* Data providers: CouchDB, Riak, MongoDB
+* Schema providers: In-memory/JSON
 * Field resolvers: CouchDB views, Solr queries, Java functions
 
 == Trying it out ==
@@ -46,7 +46,7 @@ Then open http://localhost:9999/presto/editor in your web browser. You can now f
 Feel free to take on any of these, or any other, if you want:
 
 * A GUI built on top of the REST API
-* Data providers: SPARQL, Cassandra, MongoDb, OrientDB, Solr, elasticsearch, JDBC, JPA
+* Data providers: SPARQL, Blueprints, Cassandra, Solr, elasticsearch, JDBC, JPA
 * Field resolvers: elasticsearch query, Riak secondary indexes
 * Schema providers: a schema provider that stores its state in a data provider
 

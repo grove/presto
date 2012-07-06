@@ -1,10 +1,9 @@
 package net.ontopia.presto.spi.utils;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.Map;
 
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
@@ -12,6 +11,9 @@ import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.DefaultTopic;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PrestoDefaultUpdate implements PrestoUpdate, PrestoDefaultChangeSet.Change {
 
@@ -22,6 +24,8 @@ public class PrestoDefaultUpdate implements PrestoUpdate, PrestoDefaultChangeSet
     private final DefaultTopic topic;
     private final PrestoType type;
     private final boolean isNew;
+    
+    private final Map<String,PrestoField> dirtyFields = new HashMap<String,PrestoField>();
 
     private int updateCount = 0;
 
@@ -59,13 +63,23 @@ public class PrestoDefaultUpdate implements PrestoUpdate, PrestoDefaultChangeSet
     }
     
     @Override
-    public PrestoTopic getTopicAfterUpdate() {
+    public PrestoTopic getTopicAfterSave() {
         return topic.getDataProvider().getTopicById(topic.getId());
+    }
+ 
+    @Override
+    public boolean isNewTopic() {
+        return isNew;
+    }
+    
+    @Override
+    public boolean isTopicUpdated() {
+        return isNew || updateCount > 0;
     }
 
     @Override
-    public boolean hasUpdate() {
-        return isNew || updateCount > 0;
+    public Collection<?> getValues(PrestoField field) {
+        return topic.getValues(field);
     }
 
     @Override
@@ -135,11 +149,18 @@ public class PrestoDefaultUpdate implements PrestoUpdate, PrestoDefaultChangeSet
             } else {
                 changeSet.removeInverseFieldValue(isNew, topic, field, remValues);
             }
-        }        
+        }
+        // mark fields dirty
+        this.dirtyFields.put(field.getId(), field);
     }
         
     private PrestoSchemaProvider getSchemaProvider() {
         return type.getSchemaProvider();
+    }
+
+    @Override
+    public boolean isFieldUpdated(PrestoField field) {
+        return dirtyFields.containsKey(field.getId());
     }
 
 }

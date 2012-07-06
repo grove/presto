@@ -123,6 +123,7 @@ public class JacksonTopic implements DefaultTopic {
 
             if (fieldNode != null) { 
                 if (field.isReferenceField()) {
+                    // TODO: inline-topic: if ObjectNode then PrestoInlineTopic
                     List<String> topicIds = new ArrayList<String>(fieldNode.size());
                     for (int i=start; i < end; i ++) {
                         JsonNode value = fieldNode.get(i);

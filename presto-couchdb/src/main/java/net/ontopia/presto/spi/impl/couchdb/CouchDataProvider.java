@@ -6,24 +6,17 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.jackson.JacksonDataProvider;
-import net.ontopia.presto.spi.jackson.JacksonDataStrategy;
 import net.ontopia.presto.spi.jackson.JacksonTopic;
 import net.ontopia.presto.spi.utils.PrestoContext;
-import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.Change;
-import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.DefaultTopic;
 import net.ontopia.presto.spi.utils.PrestoFieldResolver;
-import net.ontopia.presto.spi.utils.PrestoFunctionResolver;
-import net.ontopia.presto.spi.utils.PrestoTraverseResolver;
 
 import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
 import org.ektorp.CouchDbConnector;
 import org.ektorp.DocumentNotFoundException;
@@ -35,7 +28,7 @@ import org.ektorp.ViewResult.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class CouchDataProvider implements JacksonDataProvider {
+public abstract class CouchDataProvider extends JacksonDataProvider {
 
     private static Logger log = LoggerFactory.getLogger(CouchDataProvider.class.getName());
 
@@ -43,15 +36,11 @@ public abstract class CouchDataProvider implements JacksonDataProvider {
     static final int DEFAULT_LIMIT = 100;
 
     private final CouchDbConnector db;
-    private final ObjectMapper mapper;
-    private final JacksonDataStrategy dataStrategy;
 
     protected String designDocId = "_design/presto";
 
     public CouchDataProvider() {
         this.db = createCouchDbConnector();
-        this.mapper = createObjectMapper();
-        this.dataStrategy = createDataStrategy(mapper);
     }
     
     protected abstract CouchDbConnector createCouchDbConnector();
@@ -59,12 +48,6 @@ public abstract class CouchDataProvider implements JacksonDataProvider {
     protected CouchDbConnector getCouchConnector() {
         return db;
     }
-    
-    protected ObjectMapper createObjectMapper() {
-        return new ObjectMapper();
-    }
-
-    abstract protected JacksonDataStrategy createDataStrategy(ObjectMapper mapper);
 
     // -- PrestoDataProvider
 
@@ -109,7 +92,7 @@ public abstract class CouchDataProvider implements JacksonDataProvider {
     }
 
     @Override
-    public Collection<PrestoTopic> getAvailableFieldValues(final PrestoFieldUsage field) {
+    public Collection<? extends Object> getAvailableFieldValues(PrestoTopic topic, final PrestoFieldUsage field) {
         if (field.isAddable()) {
             Collection<PrestoType> types = field.getAvailableFieldValueTypes();
             if (types.isEmpty()) {
@@ -145,42 +128,15 @@ public abstract class CouchDataProvider implements JacksonDataProvider {
         }
     }
 
-    private final int compareComparables(String o1, String o2) {
-        if (o1 == null)
-            return (o2 == null ? 0 : -1);
-        else if (o2 == null)
-            return 1;
-        else
-            return o1.compareTo(o2);
-    }
-
-    @Override
-    public PrestoChangeSet newChangeSet() {
-        return new PrestoDefaultChangeSet(this);
-    }
-
     @Override
     public void close() {
     }
 
-    // builder pattern
-
-    public CouchDataProvider designDocId(String designDocId) {    
-        this.designDocId = designDocId;
-        return this;
-    }
-
     // -- DefaultDataProvider
     
+    // this is here just to provide package visibility
     protected JacksonTopic existing(ObjectNode doc) {
-        return doc == null ? null : new JacksonTopic(this, doc);
-    }
-
-    @Override
-    public DefaultTopic newInstance(PrestoType type) {
-        ObjectNode doc = getObjectMapper().createObjectNode();
-        doc.put(":type", type.getId());
-        return new JacksonTopic(this, doc);
+        return super.existing(doc);
     }
     
     @Override
@@ -199,7 +155,7 @@ public abstract class CouchDataProvider implements JacksonDataProvider {
     public void updateBulk(List<Change> changes) {
         List<ObjectNode> bulkDocuments = new ArrayList<ObjectNode>();
         for (Change change : changes) {
-            if (change.hasUpdate()) {
+            if (change.isTopicUpdated()) {
                 JacksonTopic topic = (JacksonTopic)change.getTopic();
 
                 if (change.getType().equals(Change.Type.DELETE)) {
@@ -236,31 +192,24 @@ public abstract class CouchDataProvider implements JacksonDataProvider {
     // -- JacksonDataProvider
     
     @Override
-    public ObjectMapper getObjectMapper() {
-        return mapper;
-    }
-    
-    @Override
-    public JacksonDataStrategy getDataStrategy() {
-        return dataStrategy;
-    }
-    
-    @Override
     public PrestoFieldResolver createFieldResolver(PrestoSchemaProvider schemaProvider, ObjectNode config) {
-        PrestoContext context = new PrestoContext(this, schemaProvider, getObjectMapper());
+        PrestoContext context = new PrestoContext(schemaProvider, this, getObjectMapper());
         String type = config.get("type").getTextValue();
         if (type == null) {
             log.error("type not specified on resolve item: " + config);
         } else if (type.equals("couchdb-view")) {
             return new CouchViewResolver(this, context, config);
-        } else if (type.equals("traverse")) {
-            return new PrestoTraverseResolver(context, config);
-        } else if (type.equals("function")) {
-            return new PrestoFunctionResolver(context, config);
         } else {
-            log.error("Unknown type specified on resolve item: " + config);            
+            return super.createFieldResolver(schemaProvider, config);
         }
         return null;
+    }
+
+    // builder pattern
+
+    public CouchDataProvider designDocId(String designDocId) {    
+        this.designDocId = designDocId;
+        return this;
     }
 
 }

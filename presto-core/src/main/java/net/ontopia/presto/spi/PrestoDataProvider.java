@@ -6,14 +6,24 @@ public interface PrestoDataProvider {
 
     String getProviderId();
     
-    PrestoTopic getTopicById(String id);
+    PrestoTopic getTopicById(String topicId);
 
-    Collection<PrestoTopic> getTopicsByIds(Collection<String> id);
+    Collection<PrestoTopic> getTopicsByIds(Collection<String> topicIds);
 
-    Collection<PrestoTopic> getAvailableFieldValues(PrestoFieldUsage field);
+    Collection<? extends Object> getAvailableFieldValues(PrestoTopic topic, PrestoFieldUsage field);
 
     PrestoChangeSet newChangeSet();
+
+    PrestoChangeSet newChangeSet(ChangeSetHandler handler);
     
     void close();
 
+    public static interface ChangeSetHandler {
+
+        public void onBeforeSave(PrestoChangeSet changeSet, PrestoChanges changes);
+
+        public void onAfterSave(PrestoChangeSet changeSet, PrestoChanges changes);
+        
+    }
+    
 }

@@ -1,6 +1,7 @@
 package net.ontopia.presto.jaxb;
 
 import java.util.Collection;
+import java.util.Map;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -15,21 +16,38 @@ public class Topic extends Document {
     private String id;
     private String name;
     private String mode;
+    private String format = "topic";
     
-    private Boolean errors;
-
     private Origin origin;
 
     private TopicType type;
     private String view;
 
+    private Map<String,Object> params;
+
     private Collection<Link> links;
 
     private Collection<FieldData> fields;
-    
+
     @Override
     public String getFormat() {
-        return "topic";
+        return format;
+    }
+
+    public void setFormat(String format) {
+        if (format.equals("topic") || format.equals("topic-fields")) {
+            this.format = format;
+        } else {
+            throw new IllegalArgumentException("Invalid format: '" + format + "' Expected: 'topic' or 'topic-fields.");
+        }
+    }
+
+    public String getMode() {
+        return mode;
+    }
+
+    public void setMode(String mode) {
+        this.mode = mode;
     }
     
     public void setId(String id) {
@@ -64,44 +82,36 @@ public class Topic extends Document {
         return view;
     }
 
-    public void setFields(Collection<FieldData> fields) {
-        this.fields = fields;
-    }
-
     public Collection<FieldData> getFields() {
         return fields;
     }
 
-    public void setOrigin(Origin origin) {
-        this.origin = origin;
+    public void setFields(Collection<FieldData> fields) {
+        this.fields = fields;
     }
 
     public Origin getOrigin() {
         return origin;
     }
 
-    public void setLinks(Collection<Link> links) {
-        this.links = links;
+    public void setOrigin(Origin origin) {
+        this.origin = origin;
     }
 
     public Collection<Link> getLinks() {
         return links;
     }
 
-    public Boolean getErrors() {
-        return errors;
+    public void setLinks(Collection<Link> links) {
+        this.links = links;
     }
 
-    public void setErrors(Boolean errors) {
-        this.errors = errors;
+    public Map<String,Object> getParams() {
+        return params;
     }
 
-    public String getMode() {
-        return mode;
-    }
-
-    public void setMode(String mode) {
-        this.mode = mode;
+    public void setParams(Map<String,Object> params) {
+        this.params = params;
     }
 
 }

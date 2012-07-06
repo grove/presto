@@ -9,10 +9,9 @@ import java.util.Map;
 import javax.ws.rs.Path;
 
 import net.ontopia.presto.jaxrs.EditorResource;
-import net.ontopia.presto.spi.PrestoSession;
+import net.ontopia.presto.jaxrs.Presto;
 import net.ontopia.presto.spi.impl.couchdb.CouchDataProvider;
 import net.ontopia.presto.spi.impl.pojo.PojoSchemaProvider;
-import net.ontopia.presto.spi.impl.pojo.PojoSession;
 import net.ontopia.presto.spi.impl.riak.RiakDataProvider;
 import net.ontopia.presto.spi.jackson.JacksonBucketDataStrategy;
 import net.ontopia.presto.spi.jackson.JacksonDataStrategy;
@@ -46,7 +45,7 @@ public class DemoEditorResource extends EditorResource {
     }
 
     @Override
-    protected PrestoSession createSession(String databaseId) {
+    protected Presto createPresto(String databaseId) {
 
         // schema stored in json format
         PojoSchemaProvider schemaProvider = PojoSchemaProvider.getSchemaProvider(databaseId, databaseId + ".presto.json");
@@ -57,7 +56,7 @@ public class DemoEditorResource extends EditorResource {
         // data stored in riak
 //        final RiakDataProvider dataProvider = createRiakDataProvider();
 
-        return new PojoSession(databaseId, getDatabaseName(databaseId), schemaProvider, dataProvider);
+        return new EditorResourcePresto(databaseId, getDatabaseName(databaseId), schemaProvider, dataProvider);
     }
 
     private CouchDataProvider createCouchDbDataProvider() {
@@ -85,6 +84,7 @@ public class DemoEditorResource extends EditorResource {
         }.designDocId(COUCHDB_DESIGN_DOCUMENT);
     }
     
+    @SuppressWarnings("unused")
     private RiakDataProvider createRiakDataProvider() {
         try {
             return new RiakDataProvider(DB_NAME) {
