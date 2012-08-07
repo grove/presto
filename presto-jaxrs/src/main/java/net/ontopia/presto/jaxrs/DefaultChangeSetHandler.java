@@ -24,7 +24,10 @@ public abstract class DefaultChangeSetHandler implements ChangeSetHandler {
 
     @Override
     public void onBeforeSave(PrestoChangeSet changeSet, PrestoChanges changes) {
-        for (PrestoUpdate update : changes.getUpdates()) {
+        for (PrestoUpdate update : changes.getCreated()) {
+            assignDefaultValues(update);
+        }
+        for (PrestoUpdate update : changes.getUpdated()) {
             if (update.isTopicUpdated()) {
                 assignDefaultValues(update);
             }

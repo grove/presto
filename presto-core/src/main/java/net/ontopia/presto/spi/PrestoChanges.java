@@ -4,10 +4,11 @@ import java.util.Collection;
 
 public interface PrestoChanges {
     
-    PrestoUpdate getUpdate(PrestoTopic topic);
+    Collection<? extends PrestoUpdate> getCreated();
     
-    Collection<? extends PrestoUpdate> getUpdates();
+    Collection<? extends PrestoUpdate> getUpdated();
 
     Collection<? extends PrestoTopic> getDeleted();
+
 
 }
