@@ -215,7 +215,7 @@ public abstract class MongoDataProvider extends JacksonDataProvider {
         Map<String,BasicDBList> collectionKeys = new HashMap<String,BasicDBList>();
         for (PrestoType type : types) {
             String typeId = type.getId();
-            String collectionKey = getCollectionKeyByTopicId(typeId);
+            String collectionKey = getCollectionKeyByTypeId(typeId);
             BasicDBList partitionedTypeIds = collectionKeys.get(collectionKey);
             if (partitionedTypeIds == null) {
                 partitionedTypeIds = new BasicDBList();
