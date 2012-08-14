@@ -85,8 +85,10 @@ public class PrestoDefaultChangeSet implements PrestoChangeSet {
     private final DefaultDataProvider dataProvider;
     private final ChangeSetHandler handler;
 
-    private final Set<PrestoTopic> deleted = new HashSet<PrestoTopic>();
+    private final Set<PrestoDefaultUpdate> created = new HashSet<PrestoDefaultUpdate>();
     private final Map<PrestoTopic,PrestoDefaultUpdate> updates = new HashMap<PrestoTopic,PrestoDefaultUpdate>();
+    private final Set<PrestoTopic> deleted = new HashSet<PrestoTopic>();
+
     private final List<Change> changes = new ArrayList<Change>();
 
     private boolean saved;
@@ -104,6 +106,7 @@ public class PrestoDefaultChangeSet implements PrestoChangeSet {
     public PrestoUpdate createTopic(PrestoType type) {
         PrestoDefaultUpdate update = new PrestoDefaultUpdate(this, type);
         changes.add(update);
+        created.add(update);
         return update;
     }
 
@@ -262,12 +265,13 @@ public class PrestoDefaultChangeSet implements PrestoChangeSet {
     protected PrestoChanges getPrestoChanges() {
         return new PrestoChanges() {
             @Override
-            public PrestoUpdate getUpdate(PrestoTopic topic) {
-                return updates.get(topic);
+            public Collection<? extends PrestoUpdate> getCreated() {
+                // make copy as to prevent concurrent modification exceptions
+                return new ArrayList<PrestoUpdate>(created);
             }
 
             @Override
-            public Collection<? extends PrestoUpdate> getUpdates() {
+            public Collection<? extends PrestoUpdate> getUpdated() {
                 // make copy as to prevent concurrent modification exceptions
                 return new ArrayList<PrestoUpdate>(updates.values());
             }

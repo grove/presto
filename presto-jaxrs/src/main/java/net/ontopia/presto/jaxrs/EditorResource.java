@@ -644,10 +644,16 @@ public abstract class EditorResource {
                 
                 @Override
                 public void onAfterSave(PrestoChangeSet changeSet, PrestoChanges changes) {
-                    for (PrestoUpdate update : changes.getUpdates()) {
+                    for (PrestoUpdate create : changes.getCreated()) {
+                        EditorResource.this.onTopicCreated(create.getTopicAfterSave());
+                    }
+                    for (PrestoUpdate update : changes.getUpdated()) {
                         if (update.isTopicUpdated()) {
                             EditorResource.this.onTopicUpdated(update.getTopic());
                         }
+                    }
+                    for (PrestoTopic delete : changes.getDeleted()) {
+                        EditorResource.this.onTopicDeleted(delete);                        
                     }
                 }
 
@@ -670,7 +676,13 @@ public abstract class EditorResource {
 
     protected abstract String getDatabaseName(String databaseId);
 
+    protected void onTopicCreated(PrestoTopic topic) {      
+    }
+
     protected void onTopicUpdated(PrestoTopic topic) {      
     }
     
+    protected void onTopicDeleted(PrestoTopic topic) {      
+    }
+
 }
