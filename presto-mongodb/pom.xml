@@ -4,14 +4,14 @@
   <parent>
     <groupId>net.ontopia.presto</groupId>
     <artifactId>presto</artifactId>
-    <version>0.4.7-SNAPSHOT</version>
+    <version>0.4.7</version>
   </parent>
 
   <name>Presto - MongoDB data provider</name>
   <groupId>net.ontopia.presto</groupId>
   <artifactId>presto-mongodb</artifactId>
   <packaging>jar</packaging>
-  <version>0.4.7-SNAPSHOT</version>
+  <version>0.4.7</version>
 
   <dependencies>
     <dependency>
