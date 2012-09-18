@@ -7,7 +7,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoTopic;
@@ -17,10 +16,7 @@ import net.ontopia.presto.spi.jackson.JacksonTopic;
 import net.vz.mongodb.jackson.DBCursor;
 import net.vz.mongodb.jackson.JacksonDBCollection;
 
-import org.bson.types.ObjectId;
-import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;
-import org.codehaus.jackson.node.POJONode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -156,11 +152,7 @@ public abstract class MongoDataProvider extends JacksonDataProvider {
         JacksonDBCollection<ObjectNode, Object> coll = collections.get(collectionKey);
         if (coll == null) {
             String databaseId = getDatabaseIdByCollectionKey(collectionKey);
-            Mongo mongo = mongos.get(databaseId);
-            if (mongo == null) {
-                mongo = createMongo(databaseId);
-                mongos.put(databaseId, mongo);
-            }
+            Mongo mongo = getMongo(databaseId);
             DB db = mongo.getDB(databaseId);
             String collectionId = getCollectionIdByCollectionKey(collectionKey);
             DBCollection dbCollection = db.getCollection(collectionId);
@@ -168,6 +160,15 @@ public abstract class MongoDataProvider extends JacksonDataProvider {
             collections.put(collectionId, coll);
         }
         return coll;
+    }
+    
+    protected Mongo getMongo(String databaseId) {
+        Mongo mongo = mongos.get(databaseId);
+        if (mongo == null) {
+            mongo = createMongo(databaseId);
+            mongos.put(databaseId, mongo);
+        }
+        return mongo;
     }
     
     protected JacksonDBCollection<ObjectNode, Object> getCollectionByTopicId(String topicId) {
@@ -242,86 +243,4 @@ public abstract class MongoDataProvider extends JacksonDataProvider {
         }        
     }
 
-    // -- id handling strategy
-
-    public static interface IdentityStrategy {
-
-        String generateId(String typeId, ObjectNode data);
-
-        Object externalToInternalTopicId(String topicId);
-
-        Collection<?> externalToInternalTopicIds(Collection<String> topicIds);
-        
-        String externalTopicId(JsonNode idNode);
-        
-    }
-    
-    public static abstract class StringIdentityStrategy implements IdentityStrategy {
-        
-        @Override
-        public Object externalToInternalTopicId(String topicId) {
-            return topicId;
-        }
-    
-        @Override
-        public Collection<?> externalToInternalTopicIds(Collection<String> topicIds) {
-            return topicIds;
-        }
-        
-        @Override
-        public String externalTopicId(JsonNode idNode) {
-            if (idNode.isTextual()) {
-                return idNode.getTextValue();
-            } else {
-                throw new RuntimeException("Unknown id type: " + idNode);
-            }    
-        }
-    }
-    
-    public static class UUIDIdentityStrategy extends StringIdentityStrategy {
-        @Override
-        public String generateId(String typeId, ObjectNode data) {
-            return UUID.randomUUID().toString();
-        }
-    }
-    
-    public static class ObjectIdIdentityStrategy implements IdentityStrategy {
-        
-        protected final static String OBJECT_ID_PREFIX = ":";
-        
-        @Override
-        public String generateId(String typeId, ObjectNode data) {
-            return UUID.randomUUID().toString();
-        }
-        
-        @Override
-        public Object externalToInternalTopicId(String topicId) {
-            if (topicId.startsWith(OBJECT_ID_PREFIX)) {
-                return new ObjectId(topicId.substring(1));
-            } else {
-                return topicId;
-            }
-        }
-    
-        @Override
-        public Collection<Object> externalToInternalTopicIds(Collection<String> topicIds) {
-            Collection<Object> result = new ArrayList<Object>();
-            for (String topicId : topicIds) {
-                result.add(externalToInternalTopicId(topicId));
-            }
-            return result;
-        }
-        
-        @Override
-        public String externalTopicId(JsonNode idNode) {
-            if (idNode.isPojo()) { 
-                Object pojo = ((POJONode)idNode).getPojo();
-                return OBJECT_ID_PREFIX + pojo.toString();
-            } else if (idNode.isTextual()) {
-                return idNode.getTextValue();
-            } else {
-                throw new RuntimeException("Unknown id type: " + idNode);
-            }    
-        }
-    }
 }
