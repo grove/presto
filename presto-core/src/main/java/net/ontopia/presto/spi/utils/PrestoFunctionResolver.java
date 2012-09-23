@@ -14,10 +14,10 @@ import org.codehaus.jackson.node.ObjectNode;
 
 public class PrestoFunctionResolver implements PrestoFieldResolver {
 
-    private final PrestoContext context;
+    private final PrestoVariableContext context;
     private final ObjectNode config;
 
-    public PrestoFunctionResolver(PrestoContext context, ObjectNode config) {
+    public PrestoFunctionResolver(PrestoVariableContext context, ObjectNode config) {
         this.context = context;
         this.config = config;
     }

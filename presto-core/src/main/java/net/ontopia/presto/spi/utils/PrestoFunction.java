@@ -9,7 +9,7 @@ import net.ontopia.presto.spi.PrestoType;
 
 public interface PrestoFunction {
 
-    List<Object> execute(PrestoContext context, Collection<? extends Object> objects, 
+    List<Object> execute(PrestoVariableContext context, Collection<? extends Object> objects, 
             PrestoType type, PrestoField field, Paging paging);
 
 }

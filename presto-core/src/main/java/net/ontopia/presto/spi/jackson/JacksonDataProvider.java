@@ -5,7 +5,7 @@ import java.util.List;
 import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoType;
-import net.ontopia.presto.spi.utils.PrestoContext;
+import net.ontopia.presto.spi.utils.PrestoVariableContext;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.Change;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.DefaultDataProvider;
@@ -97,7 +97,7 @@ public abstract class JacksonDataProvider implements DefaultDataProvider {
     }
 
     public PrestoFieldResolver createFieldResolver(PrestoSchemaProvider schemaProvider, ObjectNode config) {
-        PrestoContext context = new PrestoContext(schemaProvider, this, getObjectMapper());
+        PrestoVariableContext context = new PrestoVariableContext(schemaProvider, this, getObjectMapper());
         String type = config.get("type").getTextValue();
         if (type == null) {
             log.error("type not specified on resolve item: " + config);

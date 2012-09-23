@@ -11,9 +11,9 @@ import net.ontopia.presto.spi.PrestoType;
 
 public class PrestoTopicFieldVariableResolver implements PrestoVariableResolver {
 
-    private final PrestoContext context;
+    private final PrestoVariableContext context;
 
-    public PrestoTopicFieldVariableResolver(PrestoContext context) {
+    public PrestoTopicFieldVariableResolver(PrestoVariableContext context) {
         this.context = context;
     }
     

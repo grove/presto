@@ -20,13 +20,13 @@ import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.JsonNodeFactory;
 import org.codehaus.jackson.node.ObjectNode;
 
-public class PrestoContext {
+public class PrestoVariableContext {
 
     private final PrestoSchemaProvider schemaProvider;
     private final PrestoDataProvider dataProvider;
     private final ObjectMapper mapper;
 
-    public PrestoContext(PrestoSchemaProvider schemaProvider, PrestoDataProvider dataProvider, ObjectMapper mapper) {
+    public PrestoVariableContext(PrestoSchemaProvider schemaProvider, PrestoDataProvider dataProvider, ObjectMapper mapper) {
         this.schemaProvider = schemaProvider;
         this.dataProvider = dataProvider;
         this.mapper = mapper;
