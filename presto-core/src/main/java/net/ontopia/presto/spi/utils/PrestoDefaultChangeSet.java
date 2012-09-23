@@ -28,7 +28,7 @@ public class PrestoDefaultChangeSet implements PrestoChangeSet {
 
     public static interface DefaultDataProvider extends PrestoDataProvider {
 
-        DefaultTopic newInstance(PrestoType type);
+        DefaultTopic newInstance(PrestoType type, String topicId);  // NOTE: if topic identity is null then assign one
 
         void create(PrestoTopic topic);
 
@@ -98,10 +98,9 @@ public class PrestoDefaultChangeSet implements PrestoChangeSet {
         this.handler = handler;
     }
 
-    public DefaultTopic newInstance(PrestoType type) {
-        return dataProvider.newInstance(type);
+    public DefaultTopic newInstance(PrestoType type, String topicId) {
+        return dataProvider.newInstance(type, topicId);
     }
-
     @Override
     public PrestoUpdate createTopic(PrestoType type) {
         PrestoDefaultUpdate update = new PrestoDefaultUpdate(this, type);
@@ -111,10 +110,18 @@ public class PrestoDefaultChangeSet implements PrestoChangeSet {
     }
 
     @Override
+    public PrestoUpdate createTopic(PrestoType type, String topicId) {
+        PrestoDefaultUpdate update = new PrestoDefaultUpdate(this, type, topicId);
+        changes.add(update);
+        created.add(update);
+        return update;
+    }
+
+    @Override
     public PrestoUpdate updateTopic(PrestoTopic topic, PrestoType type) {
         PrestoDefaultUpdate update = updates.get(topic);
         if (update == null) {
-            update = new PrestoDefaultUpdate(this, (DefaultTopic)topic, type);
+            update = new PrestoDefaultUpdate(this, type, (DefaultTopic)topic);
             changes.add(update);
             updates.put(topic, update);
         }

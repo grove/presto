@@ -91,4 +91,8 @@ public abstract class InMemoryJacksonDataProvider extends JacksonDataProvider {
 //        return null;
 //    }
 
+    public int getSize() {
+        return topics.size();
+    }
+    
 }

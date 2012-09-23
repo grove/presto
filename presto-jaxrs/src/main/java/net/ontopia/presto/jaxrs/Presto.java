@@ -769,6 +769,7 @@ public abstract class Presto {
 
         PrestoUpdate update;
         if (topic == null) {
+            // TODO: add support for assigning topic ids?
             update = changeSet.createTopic(type);
         } else {
             update = changeSet.updateTopic(topic, type);

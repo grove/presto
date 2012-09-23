@@ -60,8 +60,11 @@ public abstract class JacksonDataProvider implements DefaultDataProvider {
     }
 
     @Override
-    public DefaultTopic newInstance(PrestoType type) {
+    public DefaultTopic newInstance(PrestoType type, String topicId) {
         ObjectNode doc = getObjectMapper().createObjectNode();
+        if (topicId != null) {
+            doc.put("_id", topicId);
+        }
         doc.put(":type", type.getId());
         return new JacksonTopic(this, doc);
     }
