@@ -1,4 +1,4 @@
-package net.ontopia.presto.spi.impl.mongodb;
+package net.ontopia.presto.spi.jackson;
 
 import java.util.UUID;
 

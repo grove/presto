@@ -1,8 +1,6 @@
-package net.ontopia.presto.spi.impl.mongodb;
+package net.ontopia.presto.spi.jackson;
 
 import java.util.Collection;
-
-import org.codehaus.jackson.JsonNode;
 
 public abstract class StringIdentityStrategy implements IdentityStrategy {
     
@@ -15,13 +13,5 @@ public abstract class StringIdentityStrategy implements IdentityStrategy {
     public Collection<?> externalToInternalTopicIds(Collection<String> topicIds) {
         return topicIds;
     }
-    
-    @Override
-    public String externalTopicId(JsonNode idNode) {
-        if (idNode.isTextual()) {
-            return idNode.getTextValue();
-        } else {
-            throw new RuntimeException("Unknown id type: " + idNode);
-        }    
-    }
+
 }

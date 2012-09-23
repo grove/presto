@@ -25,10 +25,12 @@ public abstract class JacksonDataProvider implements DefaultDataProvider {
 
     protected final ObjectMapper mapper;
     protected final JacksonDataStrategy dataStrategy;
+    protected final IdentityStrategy identityStrategy;
 
     protected JacksonDataProvider() {
         this.mapper = createObjectMapper();
         this.dataStrategy = createDataStrategy(mapper);
+        this.identityStrategy = createIdentityStrategy();
     }
     
     protected ObjectMapper createObjectMapper() {
@@ -36,6 +38,12 @@ public abstract class JacksonDataProvider implements DefaultDataProvider {
     }
 
     abstract protected JacksonDataStrategy createDataStrategy(ObjectMapper mapper);
+    
+    protected IdentityStrategy getIdentityStrategy() {
+        return identityStrategy;
+    }
+    
+    protected abstract IdentityStrategy createIdentityStrategy();
 
     // -- JacksonDataProvider
     
