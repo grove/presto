@@ -1,16 +1,12 @@
 package net.ontopia.presto.jaxrs;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 
 import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoDataProvider;
@@ -19,7 +15,6 @@ import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
-import net.ontopia.presto.spi.jackson.InMemoryJacksonDataProvider;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.JsonParser;
@@ -30,7 +25,8 @@ import org.junit.Test;
 
 public class PrestoTestData {
 
-    public static void loadData(PrestoSchemaProvider schemaProvider, PrestoDataProvider dataProvider, String resource) throws Exception {
+    public static void loadData(PrestoTestContext ctx, String resource) throws Exception {
+
         ObjectMapper mapper = new ObjectMapper();
         InputStream istream = getInputStream(resource);
         if (istream != null) {
@@ -39,9 +35,7 @@ public class PrestoTestData {
                 jp.nextToken(); // ignore array start
                 while (jp.nextToken() == JsonToken.START_OBJECT) {
                     ObjectNode doc = jp.readValueAs(ObjectNode.class);
-                    if (dataProvider != null) {
-                        createTopic(schemaProvider, dataProvider, doc);
-                    }
+                    createTopic(ctx, doc);
                     System.out.println(doc);
                 }
             } finally {
@@ -52,7 +46,10 @@ public class PrestoTestData {
         }
     }
 
-    private static void createTopic(PrestoSchemaProvider schemaProvider, PrestoDataProvider dataProvider, ObjectNode doc) {
+    private static void createTopic(PrestoTestContext ctx, ObjectNode doc) {
+        PrestoSchemaProvider schemaProvider = ctx.getSchemaProvider();
+        PrestoDataProvider dataProvider = ctx.getDataProvider();
+        
         String typeId = doc.path(":type").asText();
         if (typeId == null) {
             throw new RuntimeException("Topic ':type' is null: " + doc);
@@ -107,29 +104,19 @@ public class PrestoTestData {
     
     @Test
     public void testLoadingOfTestData() throws Exception {
-        // load test data
-        String databaseId = "test";
-        PrestoDataProvider dataProvider = PrestoTestService.createDataProvider(databaseId);
-        PrestoSchemaProvider schemaProvider = PrestoTestService.createSchemaProvider(databaseId);
-        PrestoTestData.loadData(schemaProvider, dataProvider, "aass.json");
-
+        PrestoTestContext ctx = PrestoTestContext.create("test");
+        PrestoTestData.loadData(ctx, "aass.json");
+        
         // verify topic count
-        InMemoryJacksonDataProvider dp = (InMemoryJacksonDataProvider)dataProvider;
-        assertEquals("Number of topics", 3, dp.getSize());
-        PrestoTopic aassBayer = dp.getTopicById("beer:aass-bayer");
-        assertNotNull("Could not find topic 'beer:aass-bayer'", aassBayer);
+        ctx.assertTopicCount(3);
+        
+        PrestoTopic aassBayer = ctx.assertTopicExits("beer:aass-bayer");
+        PrestoTopic aass = ctx.assertTopicExits("brewery:aass");
         
         // foreign key checks
-        PrestoTopic aass = dp.getTopicById("brewery:aass");
-        PrestoType beerType = schemaProvider.getTypeById(aassBayer.getTypeId());
-        PrestoField brewedBy = beerType.getFieldById("brewed-by");
+        PrestoTopic hopefullAass = ctx.getFirstTopic(ctx.assertExactTopicValues(aassBayer, "brewed-by", Arrays.asList(aass)));
         
-        List<? extends Object> bayerBrewedBy = aassBayer.getValues(brewedBy);
-        PrestoTopic hopefullyAass = (PrestoTopic)bayerBrewedBy.iterator().next();
-        
-        assertEquals("Incorrect brewed-by count", 1, bayerBrewedBy.size());
-        assertTrue("Not brewed by brewery:aass", bayerBrewedBy.contains(aass));
-        assertEquals("Names not equal", aass.getName(), hopefullyAass.getName());
+        // verify names of looked up topic and topic retrieved through field
+        ctx.assertNamesEqual(aass, hopefullAass);
     }
-
 }
