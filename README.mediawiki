@@ -29,7 +29,7 @@ Then open http://localhost:9999/presto/editor in your web browser. You can now f
 * 2011-11-02: Version 0.3
 * 2011-09-11: Version 0.2
 * 2011-06-14: Version 0.1
-* 2011-05-15: Presto added to github.
+* 2011-05-15: Presto added to github
 
 == Todo ==
 
