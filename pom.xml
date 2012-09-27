@@ -118,9 +118,11 @@
       <uniqueVersion>false</uniqueVersion>
     </snapshotRepository>
   </distributionManagement>
-
+  
   <scm>
-    <connection>scm:git:git://github.com:grove/presto.git</connection>
+    <connection>scm:git:git@github.com:grove/presto.git</connection>
+    <url>scm:git:git@github.com:grove/presto.git</url>
+    <developerConnection>scm:git:git@github.com:grove/presto.git</developerConnection>
   </scm>
 
 </project>
