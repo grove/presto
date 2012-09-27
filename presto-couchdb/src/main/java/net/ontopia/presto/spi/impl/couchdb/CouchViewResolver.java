@@ -10,7 +10,7 @@ import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
 import net.ontopia.presto.spi.PrestoTopic.Paging;
 import net.ontopia.presto.spi.PrestoType;
-import net.ontopia.presto.spi.utils.PrestoContext;
+import net.ontopia.presto.spi.utils.PrestoVariableContext;
 import net.ontopia.presto.spi.utils.PrestoFieldResolver;
 import net.ontopia.presto.spi.utils.PrestoPagedValues;
 import net.ontopia.presto.spi.utils.PrestoTopicFieldVariableResolver;
@@ -30,10 +30,10 @@ public class CouchViewResolver implements PrestoFieldResolver {
     private static Logger log = LoggerFactory.getLogger(CouchViewResolver.class.getName());
 
     private final CouchDataProvider dataProvider;
-    private final PrestoContext context;
+    private final PrestoVariableContext context;
     private final ObjectNode config;
 
-    CouchViewResolver(CouchDataProvider dataProvider, PrestoContext context, ObjectNode config) {
+    CouchViewResolver(CouchDataProvider dataProvider, PrestoVariableContext context, ObjectNode config) {
         this.dataProvider = dataProvider;
         this.context = context;
         this.config = config;

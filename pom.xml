@@ -5,7 +5,7 @@
   <groupId>net.ontopia.presto</groupId>
   <artifactId>presto</artifactId>
   <packaging>pom</packaging>
-  <version>0.4.9-SNAPSHOT</version>
+  <version>0.5.0-SNAPSHOT</version>
 
   <dependencyManagement>
     <dependencies>
@@ -118,9 +118,11 @@
       <uniqueVersion>false</uniqueVersion>
     </snapshotRepository>
   </distributionManagement>
-
+  
   <scm>
-    <connection>scm:git:git://github.com/grove/presto.git</connection>
+    <connection>scm:git:git@github.com:grove/presto.git</connection>
+    <url>scm:git:git@github.com:grove/presto.git</url>
+    <developerConnection>scm:git:git@github.com:grove/presto.git</developerConnection>
   </scm>
 
 </project>

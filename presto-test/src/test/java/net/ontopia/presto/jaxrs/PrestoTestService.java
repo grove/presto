@@ -7,10 +7,15 @@ import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.impl.couchdb.CouchDataProvider;
 import net.ontopia.presto.spi.impl.mongodb.MongoDataProvider;
+import net.ontopia.presto.spi.impl.mongodb.ObjectIdIdentityStrategy;
 import net.ontopia.presto.spi.impl.pojo.PojoSchemaProvider;
 import net.ontopia.presto.spi.impl.riak.RiakDataProvider;
+import net.ontopia.presto.spi.jackson.DataProviderIdentityStrategy;
+import net.ontopia.presto.spi.jackson.IdentityStrategy;
+import net.ontopia.presto.spi.jackson.InMemoryJacksonDataProvider;
 import net.ontopia.presto.spi.jackson.JacksonBucketDataStrategy;
 import net.ontopia.presto.spi.jackson.JacksonDataStrategy;
+import net.ontopia.presto.spi.jackson.UUIDIdentityStrategy;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
@@ -38,9 +43,32 @@ public class PrestoTestService {
     }
 
     public static PrestoDataProvider createDataProvider(String databaseId) {
-        return createCouchDbDataProvider();
+        return createInMemoryDataProvider();
+//        return createCouchDbDataProvider();
 //        return createRiakDataProvider();
 //        return createMongoDataProvider();
+    }
+
+    private static InMemoryJacksonDataProvider createInMemoryDataProvider() {
+        return new InMemoryJacksonDataProvider() {
+            @Override
+            protected JacksonDataStrategy createDataStrategy(ObjectMapper mapper) {
+                return new JacksonBucketDataStrategy(mapper) {
+                    @Override
+                    protected List<String> getReadBuckets(ObjectNode doc) {
+                        return READ_BUCKETS;
+                    }
+                    @Override
+                    protected String getWriteBucket(ObjectNode doc) {
+                        return WRITE_BUCKET;
+                    }
+                };
+            }
+            @Override
+            protected IdentityStrategy createIdentityStrategy() {
+                return new UUIDIdentityStrategy();
+            }
+        };
     }
     
     private static CouchDataProvider createCouchDbDataProvider() {
@@ -65,6 +93,11 @@ public class PrestoTestService {
                     }
                 };
             }
+
+            @Override
+            protected IdentityStrategy createIdentityStrategy() {
+                return new DataProviderIdentityStrategy();
+            }
         }.designDocId(COUCHDB_DESIGN_DOCUMENT);
     }
     
@@ -83,6 +116,10 @@ public class PrestoTestService {
                             return WRITE_BUCKET;
                         }
                     };
+                }
+                @Override
+                protected IdentityStrategy createIdentityStrategy() {
+                    return new DataProviderIdentityStrategy();
                 }
             };
         } catch (Exception e) {
@@ -130,6 +167,11 @@ public class PrestoTestService {
                         return WRITE_BUCKET;
                     }
                 };
+            }
+
+            @Override
+            protected IdentityStrategy createIdentityStrategy() {
+                return new ObjectIdIdentityStrategy();
             }
 
         };

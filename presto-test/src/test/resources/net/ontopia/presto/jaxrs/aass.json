@@ -1,0 +1,5 @@
+[
+{ "_id" : "brewery:aass", ":type" : "b:brewery", "name" : "Aass Bryggeri", "description" : "A brewery from Drammen, Norway." },
+{ "_id" : "beer:aass-bayer", ":type" : "b:beer", "name" : "Aass Bayer", "brewed-by" : "brewery:aass" },
+{ "_id" : "beer:aass-pilsner", ":type" : "b:beer", "name" : "Aass Bayer", "brewed-by" : "brewery:aass" }
+]

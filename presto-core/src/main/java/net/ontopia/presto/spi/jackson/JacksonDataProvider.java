@@ -5,7 +5,7 @@ import java.util.List;
 import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoType;
-import net.ontopia.presto.spi.utils.PrestoContext;
+import net.ontopia.presto.spi.utils.PrestoVariableContext;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.Change;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.DefaultDataProvider;
@@ -25,10 +25,12 @@ public abstract class JacksonDataProvider implements DefaultDataProvider {
 
     protected final ObjectMapper mapper;
     protected final JacksonDataStrategy dataStrategy;
+    protected final IdentityStrategy identityStrategy;
 
     protected JacksonDataProvider() {
         this.mapper = createObjectMapper();
         this.dataStrategy = createDataStrategy(mapper);
+        this.identityStrategy = createIdentityStrategy();
     }
     
     protected ObjectMapper createObjectMapper() {
@@ -36,6 +38,12 @@ public abstract class JacksonDataProvider implements DefaultDataProvider {
     }
 
     abstract protected JacksonDataStrategy createDataStrategy(ObjectMapper mapper);
+    
+    protected IdentityStrategy getIdentityStrategy() {
+        return identityStrategy;
+    }
+    
+    protected abstract IdentityStrategy createIdentityStrategy();
 
     // -- JacksonDataProvider
     
@@ -52,8 +60,11 @@ public abstract class JacksonDataProvider implements DefaultDataProvider {
     }
 
     @Override
-    public DefaultTopic newInstance(PrestoType type) {
+    public DefaultTopic newInstance(PrestoType type, String topicId) {
         ObjectNode doc = getObjectMapper().createObjectNode();
+        if (topicId != null) {
+            doc.put("_id", topicId);
+        }
         doc.put(":type", type.getId());
         return new JacksonTopic(this, doc);
     }
@@ -86,7 +97,7 @@ public abstract class JacksonDataProvider implements DefaultDataProvider {
     }
 
     public PrestoFieldResolver createFieldResolver(PrestoSchemaProvider schemaProvider, ObjectNode config) {
-        PrestoContext context = new PrestoContext(schemaProvider, this, getObjectMapper());
+        PrestoVariableContext context = new PrestoVariableContext(schemaProvider, this, getObjectMapper());
         String type = config.get("type").getTextValue();
         if (type == null) {
             log.error("type not specified on resolve item: " + config);

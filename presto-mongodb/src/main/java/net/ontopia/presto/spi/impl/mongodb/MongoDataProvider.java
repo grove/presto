@@ -33,11 +33,8 @@ public abstract class MongoDataProvider extends JacksonDataProvider {
 
     private Map<String,Mongo> mongos = new HashMap<String,Mongo>();
     private Map<String,JacksonDBCollection<ObjectNode, Object>> collections = new HashMap<String,JacksonDBCollection<ObjectNode, Object>>();
-
-    private IdentityStrategy identityStrategy;
     
     public MongoDataProvider() {
-        identityStrategy = createIdentityStrategy();
     }
 
     private static final String DEFAULT_MONGO_URI = "mongodb://localhost";
@@ -52,14 +49,6 @@ public abstract class MongoDataProvider extends JacksonDataProvider {
 
     protected String getMongoURI() {
         return DEFAULT_MONGO_URI;
-    }
-    
-    protected IdentityStrategy getIdentityStrategy() {
-        return identityStrategy;
-    }
-    
-    protected IdentityStrategy createIdentityStrategy() {
-        return new UUIDIdentityStrategy();
     }
     
     // -- PrestoDataProvider
@@ -128,7 +117,10 @@ public abstract class MongoDataProvider extends JacksonDataProvider {
         ObjectNode data = ((JacksonTopic)topic).getData();
         String typeId = topic.getTypeId();
         JacksonDBCollection<ObjectNode, Object> collection = getCollectionByTypeId(typeId);
-        data.put("_id", identityStrategy.generateId(typeId, data));
+        String topicId = identityStrategy.generateId(typeId, data);
+        if (topicId != null) {
+            data.put("_id", topicId);
+        }
         collection.insert(data);
     }
     

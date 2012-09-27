@@ -12,7 +12,7 @@ import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.jackson.JacksonDataProvider;
 import net.ontopia.presto.spi.jackson.JacksonTopic;
-import net.ontopia.presto.spi.utils.PrestoContext;
+import net.ontopia.presto.spi.utils.PrestoVariableContext;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.Change;
 import net.ontopia.presto.spi.utils.PrestoFieldResolver;
 
@@ -193,7 +193,7 @@ public abstract class CouchDataProvider extends JacksonDataProvider {
     
     @Override
     public PrestoFieldResolver createFieldResolver(PrestoSchemaProvider schemaProvider, ObjectNode config) {
-        PrestoContext context = new PrestoContext(schemaProvider, this, getObjectMapper());
+        PrestoVariableContext context = new PrestoVariableContext(schemaProvider, this, getObjectMapper());
         String type = config.get("type").getTextValue();
         if (type == null) {
             log.error("type not specified on resolve item: " + config);

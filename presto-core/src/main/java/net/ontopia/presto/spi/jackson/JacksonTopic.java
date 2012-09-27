@@ -285,7 +285,7 @@ public class JacksonTopic implements DefaultTopic {
             if (jsonNode != null) {
                 Collection<String> existing = new LinkedHashSet<String>(jsonNode.size());
                 for (JsonNode item : jsonNode) {
-                    existing.add(item.getValueAsText());
+                    existing.add(item.asText());
                 }
                 for (Object value : values) {
                     existing.remove(getValue(value));

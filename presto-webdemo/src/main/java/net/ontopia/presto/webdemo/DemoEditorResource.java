@@ -13,6 +13,8 @@ import net.ontopia.presto.jaxrs.Presto;
 import net.ontopia.presto.spi.impl.couchdb.CouchDataProvider;
 import net.ontopia.presto.spi.impl.pojo.PojoSchemaProvider;
 import net.ontopia.presto.spi.impl.riak.RiakDataProvider;
+import net.ontopia.presto.spi.jackson.DataProviderIdentityStrategy;
+import net.ontopia.presto.spi.jackson.IdentityStrategy;
 import net.ontopia.presto.spi.jackson.JacksonBucketDataStrategy;
 import net.ontopia.presto.spi.jackson.JacksonDataStrategy;
 
@@ -81,6 +83,11 @@ public class DemoEditorResource extends EditorResource {
                     }
                 };
             }
+
+            @Override
+            protected IdentityStrategy createIdentityStrategy() {
+                return new DataProviderIdentityStrategy();
+            }
         }.designDocId(COUCHDB_DESIGN_DOCUMENT);
     }
     
@@ -100,6 +107,11 @@ public class DemoEditorResource extends EditorResource {
                             return WRITE_BUCKET;
                         }
                     };
+                }
+
+                @Override
+                protected IdentityStrategy createIdentityStrategy() {
+                    return new DataProviderIdentityStrategy();
                 }
             };
         } catch (Exception e) {

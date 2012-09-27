@@ -21,10 +21,10 @@ public class PrestoTraverseResolver implements PrestoFieldResolver {
 
     private static Logger log = LoggerFactory.getLogger(PrestoTraverseResolver.class.getName());
 
-    private final PrestoContext context;
+    private final PrestoVariableContext context;
     private final ObjectNode config;
 
-    public PrestoTraverseResolver(PrestoContext context, ObjectNode config) {
+    public PrestoTraverseResolver(PrestoVariableContext context, ObjectNode config) {
         this.context = context;
         this.config = config;
     }

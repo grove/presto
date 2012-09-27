@@ -2,12 +2,11 @@ package net.ontopia.presto.spi.impl.mongodb;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.UUID;
+
+import net.ontopia.presto.spi.jackson.IdentityStrategy;
 
 import org.bson.types.ObjectId;
-import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;
-import org.codehaus.jackson.node.POJONode;
 
 public class ObjectIdIdentityStrategy implements IdentityStrategy {
     
@@ -15,7 +14,7 @@ public class ObjectIdIdentityStrategy implements IdentityStrategy {
     
     @Override
     public String generateId(String typeId, ObjectNode data) {
-        return UUID.randomUUID().toString();
+        return null;
     }
     
     @Override
@@ -35,16 +34,5 @@ public class ObjectIdIdentityStrategy implements IdentityStrategy {
         }
         return result;
     }
-    
-    @Override
-    public String externalTopicId(JsonNode idNode) {
-        if (idNode.isPojo()) { 
-            Object pojo = ((POJONode)idNode).getPojo();
-            return OBJECT_ID_PREFIX + pojo.toString();
-        } else if (idNode.isTextual()) {
-            return idNode.getTextValue();
-        } else {
-            throw new RuntimeException("Unknown id type: " + idNode);
-        }    
-    }
+
 }

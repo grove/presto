@@ -28,12 +28,20 @@ public class PrestoDefaultUpdate implements PrestoUpdate, PrestoDefaultChangeSet
     private final Map<String,PrestoField> dirtyFields = new HashMap<String,PrestoField>();
 
     private int updateCount = 0;
-
+    
     PrestoDefaultUpdate(PrestoDefaultChangeSet changeSet, PrestoType type) {
-        this(changeSet, null, type);
+        this(changeSet, type, null, null);
     }
 
-    PrestoDefaultUpdate(PrestoDefaultChangeSet changeSet, DefaultTopic topic, PrestoType type) {
+    PrestoDefaultUpdate(PrestoDefaultChangeSet changeSet, PrestoType type, String topicId) {
+        this(changeSet, type, null, topicId);
+    }
+
+    PrestoDefaultUpdate(PrestoDefaultChangeSet changeSet, PrestoType type, DefaultTopic topic) {
+        this(changeSet, type, topic, null);
+    }
+    
+    private PrestoDefaultUpdate(PrestoDefaultChangeSet changeSet, PrestoType type, DefaultTopic topic, String topicId) {
         if (topic == null && type == null) {
             throw new IllegalArgumentException("At least one of topic or type must be specified.");
         }
@@ -43,7 +51,7 @@ public class PrestoDefaultUpdate implements PrestoUpdate, PrestoDefaultChangeSet
         
         if (topic == null) {
             if (type != null) {
-                this.topic = changeSet.newInstance(type);
+                this.topic = changeSet.newInstance(type, topicId);
             } else {
                 throw new RuntimeException("No topic and no type. I'm sorry, Dave. I'm afraid I can't do that.");
             }
