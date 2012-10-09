@@ -658,23 +658,32 @@ public abstract class Presto {
     }
 
     protected Topic postProcessTopic(Topic topicData, PrestoTopic topic, PrestoType type, PrestoView view) {
-        ObjectNode extra = getTypeExtraNode(type);
-        if (extra != null) {
-            Map<String, Object> params = getExtraParamsMap(extra);
-            if (params != null) {
-                topicData.setParams(params);
-            }
-            JsonNode postProcessorNode = extra.path("postProcessor");
-            if (postProcessorNode.isTextual()) {
-                String className = postProcessorNode.getTextValue();
-                TopicPostProcessor processor = Utils.newInstanceOf(className, TopicPostProcessor.class);
-                if (processor != null) {
-                    processor.setSchemaProvider(schemaProvider);
-                    processor.setDataProvider(dataProvider);
-                    topicData = processor.postProcess(topicData, topic, type, view);
-                }
-            }
+        ObjectNode topicExtra = getTypeExtraNode(type);
+        if (topicExtra != null) {
+            topicData = postProcessTopicExtra(topicData, topic, type, view, topicExtra);
         }    
+        ObjectNode viewExtra = getViewExtraNode(view);
+        if (viewExtra != null) {
+            topicData = postProcessTopicExtra(topicData, topic, type, view, viewExtra);
+        }    
+        return topicData;
+    }
+
+    private Topic postProcessTopicExtra(Topic topicData, PrestoTopic topic, PrestoType type, PrestoView view, ObjectNode extraNode) {
+        Map<String, Object> params = getExtraParamsMap(extraNode);
+        if (params != null) {
+            topicData.setParams(params);
+        }
+        JsonNode postProcessorNode = extraNode.path("postProcessor");
+        if (postProcessorNode.isTextual()) {
+            String className = postProcessorNode.getTextValue();
+            TopicPostProcessor processor = Utils.newInstanceOf(className, TopicPostProcessor.class);
+            if (processor != null) {
+                processor.setSchemaProvider(schemaProvider);
+                processor.setDataProvider(dataProvider);
+                topicData = processor.postProcess(topicData, topic, type, view);
+            }
+        }
         return topicData;
     }
 
