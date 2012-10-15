@@ -33,6 +33,7 @@ import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
 import net.ontopia.presto.spi.PrestoView;
+import net.ontopia.presto.spi.PrestoView.ViewType;
 import net.ontopia.presto.spi.utils.Utils;
 
 import org.codehaus.jackson.JsonNode;
@@ -155,7 +156,7 @@ public abstract class Presto {
             builder = UriBuilder.fromUri(getBaseUri()).path("editor/topic/").path(getDatabaseId()).path(topic.getId());
             topicLinks.add(new Link("delete", builder.build().toString()));
         }
-        topicLinks.addAll(getViewLinks(topic, type, view, readOnlyMode));
+        topicLinks.addAll(getViewLinks(topic, type, view, readOnlyMode, ViewType.EDIT_IN_VIEW));
         result.setLinks(topicLinks);
 
         result = postProcessTopic(result, topic, type, view);
@@ -344,6 +345,27 @@ public abstract class Presto {
             fieldData.setCreateTypes(createTypes);
         }
 
+
+        // get values (truncated if neccessary)
+        setFieldDataValues(isNewTopic, readOnlyMode, offset, limit, topic, field, fieldData);
+
+        fieldData = postProcessFieldData(fieldData, topic, field);
+
+        return fieldData;
+    }
+
+    protected List<Value> setFieldDataValues(boolean readOnlyMode, PrestoTopic topic, final PrestoFieldUsage field, FieldData fieldData) {
+        boolean isNewTopic = false;
+        int offset = 0;
+        int limit = DEFAULT_LIMIT;
+        return setFieldDataValues(isNewTopic, readOnlyMode, offset, limit, topic, field, fieldData);
+    }
+    
+    protected List<Value> setFieldDataValues(boolean isNewTopic, boolean readOnlyMode, int offset, int limit, 
+            PrestoTopic topic, final PrestoFieldUsage field, FieldData fieldData) {
+        
+        // TODO: refactor to return DTO instead of mutating FieldData here
+        
         List<? extends Object> fieldValues;
         if (isNewTopic) {
             fieldValues = Collections.emptyList(); // TODO: support initial values
@@ -352,11 +374,13 @@ public abstract class Presto {
             if (field.isPageable() && !field.isSorted()) {
                 int actualOffset = offset >= 0 ? offset : 0;
                 int actualLimit = limit > 0 ? limit : DEFAULT_LIMIT;
-                fieldData.setPageable(true);
                 PrestoTopic.PagedValues pagedValues = topic.getValues(field, actualOffset, actualLimit);
-                fieldData.setValuesOffset(pagedValues.getPaging().getOffset());
-                fieldData.setValuesLimit(pagedValues.getPaging().getLimit());
-                fieldData.setValuesTotal(pagedValues.getTotal());
+                if (fieldData != null) {
+                    fieldData.setPageable(true);
+                    fieldData.setValuesOffset(pagedValues.getPaging().getOffset());
+                    fieldData.setValuesLimit(pagedValues.getPaging().getLimit());
+                    fieldData.setValuesTotal(pagedValues.getTotal());
+                }
                 fieldValues = pagedValues.getValues();
             } else {
                 fieldValues = topic.getValues(field);
@@ -378,7 +402,6 @@ public abstract class Presto {
             });
         }
 
-        // get values (truncated if neccessary)
         List<Value> values = new ArrayList<Value>(fieldValues.size());
         for (int i=start; i < end; i++) {
             Object value = fieldValues.get(i);
@@ -388,23 +411,23 @@ public abstract class Presto {
                 size--;
             }
         }
-        fieldData.setValues(values);
 
-        // figure out how to truncate result (offset/limit)
-        if (field.isPageable() && field.isSorted()) {
-            int _limit = limit > 0 ? limit : DEFAULT_LIMIT;
-            start = Math.min(Math.max(0, offset), size);
-            end = Math.min(start+_limit, size);
-            fieldData.setValuesOffset(start);
-            fieldData.setValuesLimit(_limit);
-            fieldData.setValuesTotal(size);
+        if (fieldData != null) {
+            fieldData.setValues(values);
+                    
+            // figure out how to truncate result (offset/limit)
+            if (field.isPageable() && field.isSorted()) {
+                int _limit = limit > 0 ? limit : DEFAULT_LIMIT;
+                start = Math.min(Math.max(0, offset), size);
+                end = Math.min(start+_limit, size);
+                fieldData.setValuesOffset(start);
+                fieldData.setValuesLimit(_limit);
+                fieldData.setValuesTotal(size);
+            }
         }
-
-        fieldData = postProcessFieldData(fieldData, topic, field);
-
-        return fieldData;
+        return values;
     }
-
+    
     protected Value getExistingFieldValue(PrestoFieldUsage field, Object fieldValue, boolean readOnlyMode) {
         if (fieldValue instanceof PrestoTopic) {
             PrestoTopic topicValue = (PrestoTopic)fieldValue;
@@ -496,8 +519,7 @@ public abstract class Presto {
                     String className = classNode.getTextValue();
                     AvailableFieldValuesResolver processor = Utils.newInstanceOf(className, AvailableFieldValuesResolver.class);
                     if (processor != null) {
-                        processor.setSchemaProvider(schemaProvider);
-                        processor.setDataProvider(dataProvider);
+                        processor.setPresto(this);
                         return processor.getAvailableFieldValues(topic, field);
                     }
                 } else {
@@ -564,12 +586,14 @@ public abstract class Presto {
         }
     }
 
-    protected List<Link> getViewLinks(PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnlyMode) {
+    protected List<Link> getViewLinks(PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnlyMode, ViewType viewType) {
         Collection<PrestoView> otherViews = type.getViews(view);
 
         List<Link> views = new ArrayList<Link>(otherViews.size()); 
         for (PrestoView otherView : otherViews) {
-            views.add(getViewLink(topic, type, otherView, readOnlyMode));
+            if (otherView.getType().equals(viewType)) {
+                views.add(getViewLink(topic, type, otherView, readOnlyMode));
+            }
         }
         return views;
     }
@@ -577,7 +601,7 @@ public abstract class Presto {
     protected Link getViewLink(PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnlyMode) {
         UriBuilder builder = UriBuilder.fromUri(getBaseUri()).path("editor/topic/").path(getDatabaseId()).path(topic.getId()).path(view.getId());
         String href = builder.build().toString();
-        Link result = new Link("edit-in-view", href);
+        Link result = new Link(view.getType().getLinkId(), href);
         result.setId(view.getId());
         result.setName(view.getName());
 
@@ -633,8 +657,7 @@ public abstract class Presto {
                 String className = postProcessorNode.getTextValue();
                 FieldDataPostProcessor processor = Utils.newInstanceOf(className, FieldDataPostProcessor.class);
                 if (processor != null) {
-                    processor.setSchemaProvider(schemaProvider);
-                    processor.setDataProvider(dataProvider);
+                    processor.setPresto(this);
                     fieldData = processor.postProcess(fieldData, topic, field);
                 }
             }
@@ -679,8 +702,7 @@ public abstract class Presto {
             String className = postProcessorNode.getTextValue();
             TopicPostProcessor processor = Utils.newInstanceOf(className, TopicPostProcessor.class);
             if (processor != null) {
-                processor.setSchemaProvider(schemaProvider);
-                processor.setDataProvider(dataProvider);
+                processor.setPresto(this);
                 topicData = processor.postProcess(topicData, topic, type, view);
             }
         }
@@ -984,8 +1006,7 @@ public abstract class Presto {
                     String className = classNode.getTextValue();
                     AvailableFieldCreateTypesResolver processor = Utils.newInstanceOf(className, AvailableFieldCreateTypesResolver.class);
                     if (processor != null) {
-                        processor.setSchemaProvider(schemaProvider);
-                        processor.setDataProvider(dataProvider);
+                        processor.setPresto(this);
                         return processor.getAvailableFieldCreateTypes(topic, field);
                     }
                 } else {
