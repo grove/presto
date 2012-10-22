@@ -135,9 +135,9 @@
   </distributionManagement>
   
   <scm>
-    <connection>scm:git:git@github.com:grove/presto.git</connection>
-    <url>scm:git:git@github.com:grove/presto.git</url>
-    <developerConnection>scm:git:git@github.com:grove/presto.git</developerConnection>
+    <url>https://github.com/grove/presto</url>
+    <connection>scm:git:git://github.com/grove/presto.git</connection>
+    <developerConnection>scm:git:git://github.com/grove/presto.git</developerConnection>
   </scm>
 
 </project>
