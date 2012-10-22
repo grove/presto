@@ -5,6 +5,7 @@ import net.ontopia.presto.spi.PrestoView;
 public class PojoView implements PrestoView {
 
     private String id;
+    private ViewType type;
     private String name;
 
     private Object extra;
@@ -35,6 +36,15 @@ public class PojoView implements PrestoView {
     @Override
     public String getId() {
         return id;
+    }
+
+    @Override
+    public ViewType getType() {
+        return type;
+    }
+
+    public void setType(ViewType type) {
+        this.type = type;
     }
 
     @Override

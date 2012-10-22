@@ -73,6 +73,9 @@ public class FieldData extends Document {
         }
     }
 
+    public FieldData() {
+    }
+    
     @Override
     public String getFormat() {
         return "field";

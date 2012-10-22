@@ -5,23 +5,22 @@ import net.ontopia.presto.spi.PrestoSchemaProvider;
 
 public class AbstractProcessor {
 
-    private PrestoDataProvider dataProvider;
-    private PrestoSchemaProvider schemaProvider;
+    private Presto presto;
 
-    protected PrestoDataProvider getDataProvider() {
-        return dataProvider;
+    public void setPresto(Presto presto) {
+        this.presto = presto;
+    }
+
+    protected Presto getPresto() {
+        return presto;
     }
     
-    public void setDataProvider(PrestoDataProvider dataProvider) {
-        this.dataProvider = dataProvider;
+    protected PrestoDataProvider getDataProvider() {
+        return presto.getDataProvider();
     }
 
     protected PrestoSchemaProvider getSchemaProvider() {
-        return schemaProvider;
-    }
-    
-    public void setSchemaProvider(PrestoSchemaProvider schemaProvider) {
-        this.schemaProvider = schemaProvider;
+        return presto.getSchemaProvider();
     }
 
 }
