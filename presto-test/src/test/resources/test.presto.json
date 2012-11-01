@@ -86,6 +86,9 @@
                 "datatype": "http://psi.ontopia.net/ontology/datatype-html",
                 "maxCardinality": 1
               },
+              { "id" : "age",
+                "name" : "Age"
+              },
               { "id" : "interests",
                 "name" : "Interests"
               },
