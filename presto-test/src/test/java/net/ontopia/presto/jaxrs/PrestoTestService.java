@@ -39,7 +39,7 @@ public class PrestoTestService {
     public static final List<String> READ_BUCKETS = Arrays.asList(new String[] { BUCKET_WRITE, BUCKET_READ, BUCKET_INITIAL });
 
     public static PrestoSchemaProvider createSchemaProvider(String databaseId) {
-        return PojoSchemaProvider.getSchemaProvider(databaseId, databaseId + ".presto.json");
+        return PojoSchemaProvider.getSchemaProvider(databaseId, databaseId + ".schema.json");
     }
 
     public static PrestoDataProvider createDataProvider(String databaseId) {

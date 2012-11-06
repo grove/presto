@@ -1,0 +1,14 @@
+[
+{ "_id" : "nogne-o-ipa",
+  ":type" : "b:beer",
+  ":name" : "Nøgne Ø IPA",
+  "abv" : "7.5"
+},
+{ "_id" : "johndoe",
+  ":type" : "person",
+  ":name" : "John Doe",
+  "age" : "26",
+  "interests" : ["sports", "beer"],
+  "favorite-beer" : ["nogne-o-ipa"]
+}
+]

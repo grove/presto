@@ -101,6 +101,7 @@ public class PrestoDefaultChangeSet implements PrestoChangeSet {
     public DefaultTopic newInstance(PrestoType type, String topicId) {
         return dataProvider.newInstance(type, topicId);
     }
+
     @Override
     public PrestoUpdate createTopic(PrestoType type) {
         PrestoDefaultUpdate update = new PrestoDefaultUpdate(this, type);

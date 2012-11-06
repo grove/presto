@@ -63,6 +63,11 @@
                 "datatype": "reference",
                 "valueTypes" : ["b:brewery"],
                 "maxCardinality": 1
+              },
+              { "id" : "abv",
+                "name" : "Alcohol by bolume",
+                "datatype" : "http://psi.ontopia.net/ontology/datatype-integer",
+                "maxCardinality": 1
               }            
             ]
           }

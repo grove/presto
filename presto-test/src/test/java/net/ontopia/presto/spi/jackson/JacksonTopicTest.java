@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import junit.framework.TestCase;
-
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
@@ -32,21 +31,34 @@ public class JacksonTopicTest extends TestCase {
                 return new JacksonDefaultDataStrategy();
             }
         };
-        schemaProvider = PojoSchemaModel.parse("test", "test.presto.json");
+        this.schemaProvider = PojoSchemaModel.parse("test", "test.schema.json");
     }
 
-    private PrestoTopic createSimpleTopic() {
-        ObjectMapper mapper = dataProvider.mapper;
+    private void loadData(String filename) {
+        DataLoader.loadData(dataProvider, schemaProvider, filename);
+    }
+
+    private ObjectMapper getObjectMapper() {
+        return dataProvider.mapper;
+    }
+    
+    private PrestoTopic getPerson() {
+        ObjectNode data = getPersonObjectNode();
+        return createTopic(data);
+    }
+    
+    private ObjectNode getPersonObjectNode() {
+        ObjectMapper mapper = getObjectMapper();
         ObjectNode data = mapper.createObjectNode();
         data.put("_id", "johndoe");
         data.put(":type", "person");
         data.put(":name", "John Doe");
         data.put("age", createArray("26"));
-        return createTopic(data);
+        data.put("interests", createArray("sports", "beer"));
+        return data;
     }
-    
     private ArrayNode createArray(String... values) {
-        ObjectMapper mapper = dataProvider.mapper;
+        ObjectMapper mapper = getObjectMapper();
         ArrayNode result = mapper.createArrayNode();
         for (String value : values) {
             result.add(value);
@@ -60,30 +72,51 @@ public class JacksonTopicTest extends TestCase {
     
     @Test
     public void testGetId() {
-        PrestoTopic topic = createSimpleTopic();
+        PrestoTopic topic = getPerson();
         assertEquals("johndoe", topic.getId());
     }
     
     @Test
     public void testGetType() {
-        PrestoTopic topic = createSimpleTopic();
+        PrestoTopic topic = getPerson();
         assertEquals("person", topic.getTypeId());
     }
     
     @Test
     public void testGetName() {
-        PrestoTopic topic = createSimpleTopic();
+        PrestoTopic topic = getPerson();
         assertEquals("John Doe", topic.getName());
     }
     
     @Test
     public void testGetAgeFieldValue() {
-        PrestoTopic topic = createSimpleTopic();
-        PrestoType type = schemaProvider.getTypeById("person");
-        PrestoField field = type.getFieldById("age");
-        assertValuesEquals(Arrays.asList("26"), topic.getValues(field));
+        PrestoTopic topic = getPerson();
+        assertValuesEquals(Arrays.asList("26"), getFieldValues(topic, "age"));
     }
-
+    
+    @Test
+    public void testGetInterestsFieldValue() {
+        PrestoTopic topic = getPerson();
+        assertValuesEquals(Arrays.asList("sports", "beer"), getFieldValues(topic, "interests"));
+        
+        loadData("test.data.json");
+    }
+    
+    @Test
+    public void testFavoriteBeer() {
+        loadData("test.data.json");
+        PrestoTopic johndoe = dataProvider.getTopicById("johndoe");
+        PrestoTopic nogne_o_ipa = dataProvider.getTopicById("nogne-o-ipa");
+        assertValuesEquals(Arrays.asList(nogne_o_ipa), getFieldValues(johndoe, "favorite-beer"));
+    }
+ 
+    private List<? extends Object> getFieldValues(PrestoTopic topic, String fieldId) {
+        String typeId = topic.getTypeId();
+        PrestoType type = schemaProvider.getTypeById(typeId);
+        PrestoField field = type.getFieldById(fieldId);
+        return topic.getValues(field);
+    }
+    
     private void assertValuesEquals(List<? extends Object> expected, List<? extends Object> actual) {
         if (expected.size() == actual.size()) {
             boolean equals = true;
