@@ -28,7 +28,12 @@ public class JacksonTopicTest extends TestCase {
             }
             @Override
             protected JacksonDataStrategy createDataStrategy(ObjectMapper mapper) {
-                return new JacksonDefaultDataStrategy();
+                return new JacksonDefaultDataStrategy() {
+                    @Override
+                    public String getName(ObjectNode doc) {
+                        return getSingleStringFieldValue(doc, "name");
+                    }
+                };
             }
         };
         this.schemaProvider = PojoSchemaModel.parse("test", "test.schema.json");
@@ -50,13 +55,14 @@ public class JacksonTopicTest extends TestCase {
     private ObjectNode getPersonObjectNode() {
         ObjectMapper mapper = getObjectMapper();
         ObjectNode data = mapper.createObjectNode();
-        data.put("_id", "johndoe");
+        data.put("_id", "john.doe");
         data.put(":type", "person");
-        data.put(":name", "John Doe");
+        data.put("name", createArray("John Doe"));
         data.put("age", createArray("26"));
         data.put("interests", createArray("sports", "beer"));
         return data;
     }
+    
     private ArrayNode createArray(String... values) {
         ObjectMapper mapper = getObjectMapper();
         ArrayNode result = mapper.createArrayNode();
@@ -73,7 +79,7 @@ public class JacksonTopicTest extends TestCase {
     @Test
     public void testGetId() {
         PrestoTopic topic = getPerson();
-        assertEquals("johndoe", topic.getId());
+        assertEquals("john.doe", topic.getId());
     }
     
     @Test
@@ -105,9 +111,32 @@ public class JacksonTopicTest extends TestCase {
     @Test
     public void testFavoriteBeer() {
         loadData("test.data.json");
-        PrestoTopic johndoe = dataProvider.getTopicById("johndoe");
+        PrestoTopic johndoe = dataProvider.getTopicById("john.doe");
         PrestoTopic nogne_o_ipa = dataProvider.getTopicById("nogne-o-ipa");
         assertValuesEquals(Arrays.asList(nogne_o_ipa), getFieldValues(johndoe, "favorite-beer"));
+    }
+    
+    @Test
+    public void testInlineValues() {
+        loadData("test.data.json");
+
+        PrestoTopic johndoe = dataProvider.getTopicById("john.doe");
+        List<? extends Object> fv = getFieldValues(johndoe, "hosted-drinking-sessions");
+        assertEquals(2, fv.size());
+        System.out.println(fv);
+
+        PrestoTopic firstSession = (PrestoTopic)fv.get(0);
+        assertTrue("First session not an inline object", firstSession.isInline());
+        assertEquals("1", firstSession.getId());
+        
+        List<? extends Object> attendeesFirstSession = getFieldValues(firstSession, "attendees");
+        assertEquals(2, attendeesFirstSession.size());
+        System.out.println(attendeesFirstSession);
+
+        PrestoTopic firstAttendeeFirstSession = (PrestoTopic)attendeesFirstSession.get(0);
+        assertFalse("First session attendee an inline object", firstAttendeeFirstSession.isInline());
+        assertEquals("john.travolta", firstAttendeeFirstSession.getId());
+        assertEquals("John Travolta", firstAttendeeFirstSession.getName());
     }
  
     private List<? extends Object> getFieldValues(PrestoTopic topic, String fieldId) {

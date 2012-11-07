@@ -11,5 +11,7 @@ public interface PrestoChangeSet {
     void deleteTopic(PrestoTopic topic, PrestoType type);
 
     void save();
-    
+
+    PrestoInlineTopicBuilder createInlineTopic(PrestoType type, String topicId);
+
 }

@@ -25,10 +25,14 @@ public class JacksonDefaultDataStrategy implements JacksonDataStrategy {
     
     @Override
     public String getName(ObjectNode doc) {
-        JsonNode name = doc.get(NAME_DEFAULT_FIELD);
-        return name == null ? null : name.getTextValue();
+        return getSingleStringFieldValue(doc, NAME_DEFAULT_FIELD);
     }
     
+    protected String getSingleStringFieldValue(ObjectNode doc, String fieldId) {
+        JsonNode value = doc.get(fieldId);
+        return (value != null && value.isArray() && value.size() > 0 ? value.get(0).asText() : null); 
+    }
+
     @Override
     public String getName(ObjectNode doc, PrestoFieldUsage field) {
         return getName(doc);

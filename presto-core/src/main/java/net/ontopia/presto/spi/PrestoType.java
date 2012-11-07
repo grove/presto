@@ -11,6 +11,8 @@ public interface PrestoType {
 
     PrestoSchemaProvider getSchemaProvider();
 
+    boolean isInline();
+
     boolean isHidden(); // will it show up? instances will show up if exposed as field values though.
 
     boolean isReadOnly(); // can you edit it?
