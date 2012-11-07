@@ -105,6 +105,10 @@ public class PojoSchemaModel {
                 readOnlyType = typeConfig.get("readOnly").getBooleanValue();
             }
             type.setReadOnly(readOnlyType);
+            // inline
+            if (typeConfig.has("inline")) {
+                type.setInline(typeConfig.get("inline").getBooleanValue());
+            }
             // hidden
             if (typeConfig.has("hidden")) {
                 type.setHidden(typeConfig.get("hidden").getBooleanValue());
@@ -257,7 +261,11 @@ public class PojoSchemaModel {
             if (fieldConfig.has("validationType")) {
                 String validationType = fieldConfig.get("validationType").getTextValue();
                 field.setValidationType(validationType);
-            }                        
+            }           
+            // isInline
+            if (fieldConfig.has("inline")) {
+                field.setInline(fieldConfig.get("inline").getBooleanValue());
+            }
             // isEmbedded
             if (fieldConfig.has("embedded")) {
                 field.setEmbedded(fieldConfig.get("embedded").getBooleanValue());

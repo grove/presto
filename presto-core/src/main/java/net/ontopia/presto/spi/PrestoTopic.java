@@ -4,6 +4,8 @@ import java.util.List;
 
 public interface PrestoTopic {
 
+    boolean isInline();
+
     String getId();
 
     String getName();

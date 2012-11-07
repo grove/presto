@@ -24,6 +24,7 @@ public class PojoField implements PrestoField {
     private int maxCardinality;
     private String dataType;
     private String validationType;
+    private boolean isInline;
     private boolean isEmbedded;
     private boolean isHidden;
     private boolean isTraversable = true;
@@ -104,6 +105,11 @@ public class PojoField implements PrestoField {
     @Override
     public String getValidationType() {
         return validationType;
+    }
+
+    @Override
+    public boolean isInline() {
+        return isInline;
     }
 
     @Override
@@ -232,6 +238,10 @@ public class PojoField implements PrestoField {
         this.validationType = validationType;
     }
 
+    public void setInline(boolean isInline) {
+        this.isInline = isInline;
+    }
+
     public void setEmbedded(boolean isEmbedded) {
         this.isEmbedded = isEmbedded;
     }
@@ -308,6 +318,11 @@ public class PojoField implements PrestoField {
     
     void setInverseFieldId(String inverseFieldId) {
         this.inverseFieldId = inverseFieldId;
+    }
+
+    @Override
+    public String toString() {
+        return "PojoField[" + getId() + "|" + getName() + "]";
     }
     
 }

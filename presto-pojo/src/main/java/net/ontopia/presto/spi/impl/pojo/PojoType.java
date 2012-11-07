@@ -20,6 +20,7 @@ public class PojoType implements PrestoType {
     private String id;
     private String name;
     private boolean isReadOnly;
+    private boolean isInline;
     private boolean isHidden;
     private boolean isCreatable = true;
     private boolean isRemovable;
@@ -34,6 +35,7 @@ public class PojoType implements PrestoType {
     private Map<String,PrestoView> viewsMap = new HashMap<String,PrestoView>();
 
     private Object extra;
+
 
     PojoType(String id, PrestoSchemaProvider schemaProvider) {
         this.id = id;
@@ -77,6 +79,10 @@ public class PojoType implements PrestoType {
     @Override
     public boolean isReadOnly() {
         return isReadOnly;
+    }
+
+    public boolean isInline() {
+        return isInline;
     }
 
     @Override
@@ -166,6 +172,10 @@ public class PojoType implements PrestoType {
 
     protected void setReadOnly(boolean isReadOnly) {
         this.isReadOnly = isReadOnly;
+    }
+
+    protected void setInline(boolean isInline) {
+        this.isInline = isInline;
     }
 
     protected void setHidden(boolean isHidden) {
