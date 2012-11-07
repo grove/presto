@@ -124,7 +124,7 @@ public class DataLoader {
             if (!IGNORE_FIELDS.contains(fieldId)) {
                 PrestoField field = type.getFieldById(fieldId);
                 List<? extends Object> values = getFieldValues(changeSet, field, o);
-                builder.setField(field, values);
+                builder.setValues(field, values);
             }
         }
         return builder.build();

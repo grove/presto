@@ -28,6 +28,7 @@ import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoDataProvider.ChangeSetHandler;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoFieldUsage;
+import net.ontopia.presto.spi.PrestoInlineTopicBuilder;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
@@ -45,7 +46,7 @@ public abstract class Presto {
 
     private static Logger log = LoggerFactory.getLogger(Presto.class.getName());
 
-    private static final int DEFAULT_LIMIT = 100;
+    public static final int DEFAULT_LIMIT = 100;
 
     private final String databaseId;
     private final String databaseName;
@@ -354,16 +355,31 @@ public abstract class Presto {
         return fieldData;
     }
 
-    protected List<Value> setFieldDataValues(boolean readOnlyMode, PrestoTopic topic, final PrestoFieldUsage field, FieldData fieldData) {
-        boolean isNewTopic = false;
-        int offset = 0;
-        int limit = DEFAULT_LIMIT;
-        return setFieldDataValues(isNewTopic, readOnlyMode, offset, limit, topic, field, fieldData);
+    public static final class FieldDataValues {
+        private List<Object> inputValues; 
+        private List<Value> outputValues;
+        
+        FieldDataValues(List<Object> inputValues, List<Value> outputValues) {
+            this.inputValues = inputValues;
+            this.outputValues = outputValues;
+        }
+
+        public int size() {
+            return inputValues.size();
+        }
+        
+        public Object getInputValue(int index) {
+            return inputValues.get(index);
+        }
+        
+        public Value getOutputValue(int index) {
+            return outputValues.get(index);
+        }
     }
     
-    protected List<Value> setFieldDataValues(boolean isNewTopic, boolean readOnlyMode, int offset, int limit, 
+    protected FieldDataValues setFieldDataValues(boolean isNewTopic, boolean readOnlyMode, int offset, int limit, 
             PrestoTopic topic, final PrestoFieldUsage field, FieldData fieldData) {
-        
+
         // TODO: refactor to return DTO instead of mutating FieldData here
         
         List<? extends Object> fieldValues;
@@ -387,10 +403,6 @@ public abstract class Presto {
             }
         }
 
-        int size = fieldValues.size();
-        int start = 0;
-        int end = size;
-
         // sort the result
         if (field.isSorted()) {
             Collections.sort(fieldValues, new Comparator<Object>() {
@@ -402,18 +414,25 @@ public abstract class Presto {
             });
         }
 
-        List<Value> values = new ArrayList<Value>(fieldValues.size());
+        int size = fieldValues.size();
+        int start = 0;
+        int end = size;
+
+        List<Object> inputValues = new ArrayList<Object>(fieldValues.size());
+        List<Value> outputValues = new ArrayList<Value>(fieldValues.size());
         for (int i=start; i < end; i++) {
             Object value = fieldValues.get(i);
             if (value != null) {
-                values.add(getExistingFieldValue(field, value, readOnlyMode));
+                Value efv = getExistingFieldValue(field, value, readOnlyMode);
+                outputValues.add(efv);
+                inputValues.add(value);
             } else {
                 size--;
             }
         }
 
         if (fieldData != null) {
-            fieldData.setValues(values);
+            fieldData.setValues(outputValues);
                     
             // figure out how to truncate result (offset/limit)
             if (field.isPageable() && field.isSorted()) {
@@ -425,7 +444,7 @@ public abstract class Presto {
                 fieldData.setValuesTotal(size);
             }
         }
-        return values;
+        return new FieldDataValues(inputValues, outputValues);
     }
     
     protected Value getExistingFieldValue(PrestoFieldUsage field, Object fieldValue, boolean readOnlyMode) {
@@ -756,11 +775,11 @@ public abstract class Presto {
     public FieldData addFieldValues(PrestoTopic topic, PrestoType type, PrestoFieldUsage field, 
             Integer index, FieldData fieldData) {
 
-        Collection<? extends Object> addableValues = updateAndExtractValuesFromFieldData(field, fieldData, true);
-
         PrestoDataProvider dataProvider = getDataProvider();
         PrestoChangeSet changeSet = dataProvider.newChangeSet(getChangeSetHandler());
         PrestoUpdate update = changeSet.updateTopic(topic, type);        
+
+        Collection<? extends Object> addableValues = updateAndExtractValuesFromFieldData(changeSet, field, fieldData, true);
 
         if (index == null) {
             update.addValues(field, addableValues);
@@ -775,11 +794,11 @@ public abstract class Presto {
 
     public FieldData removeFieldValues(PrestoTopic topic, PrestoType type, PrestoFieldUsage field, FieldData fieldData) {
 
-        Collection<? extends Object> removeableValues = updateAndExtractValuesFromFieldData(field, fieldData, false);
-
         PrestoDataProvider dataProvider = getDataProvider();
         PrestoChangeSet changeSet = dataProvider.newChangeSet(getChangeSetHandler());
         PrestoUpdate update = changeSet.updateTopic(topic, type);        
+        
+        Collection<? extends Object> removeableValues = updateAndExtractValuesFromFieldData(changeSet, field, fieldData, false);
 
         update.removeValues(field, removeableValues);
 
@@ -813,7 +832,7 @@ public abstract class Presto {
 
             // ignore read-only or pageable fields 
             if (!field.isReadOnly() && !field.isPageable()) {
-                update.setValues(field, updateAndExtractValuesFromFieldData(field, fieldData, true));
+                update.setValues(field, updateAndExtractValuesFromFieldData(changeSet, field, fieldData, true));
             }
         }
 
@@ -822,27 +841,33 @@ public abstract class Presto {
         return update.getTopicAfterSave();
     }
 
-    private Collection<? extends Object> updateAndExtractValuesFromFieldData(PrestoFieldUsage field, FieldData fieldData, boolean resolveEmbedded) {
+    private Collection<? extends Object> updateAndExtractValuesFromFieldData(PrestoChangeSet changeSet, PrestoFieldUsage field, FieldData fieldData, boolean resolveEmbedded) {
         Collection<Value> values = fieldData.getValues();
         Collection<Object> result = new ArrayList<Object>(values.size());
 
         if (!values.isEmpty()) {
 
             if (field.isReferenceField()) {
-                // TODO: inline-topic: create inline topic if inlined
-                List<String> valueIds = new ArrayList<String>(values.size());
-                for (Value value : values) {                
-                    Topic embeddedReferenceValue = getEmbeddedReference(value);
-                    if (resolveEmbedded && embeddedReferenceValue != null) {
-                        result.add(updateEmbeddedReference(field, embeddedReferenceValue));
-                    } else {
-                        String valueId = getReferenceValue(value);
-                        if (valueId != null) {
-                            valueIds.add(getReferenceValue(value));
+                if (field.isInline()) {
+                    for (Value value : values) {
+                        Topic embeddedTopic = getEmbeddedTopic(value);
+                        result.add(getInlineTopic(changeSet, field, embeddedTopic));
+                    }                    
+                } else {
+                    List<String> valueIds = new ArrayList<String>(values.size());
+                    for (Value value : values) {                
+                        Topic embeddedTopic = getEmbeddedTopic(value);
+                        if (resolveEmbedded && embeddedTopic != null) {
+                            result.add(updateEmbeddedTopic(field, embeddedTopic));
+                        } else {
+                            String valueId = getReferenceValue(value);
+                            if (valueId != null) {
+                                valueIds.add(getReferenceValue(value));
+                            }
                         }
                     }
+                    result.addAll(getDataProvider().getTopicsByIds(valueIds));
                 }
-                result.addAll(getDataProvider().getTopicsByIds(valueIds));
             } else {
                 for (Value value : values) {
                     result.add(getPrimitiveValue(value));
@@ -852,7 +877,33 @@ public abstract class Presto {
         return result;
     }
 
-    private PrestoTopic updateEmbeddedReference(PrestoFieldUsage field, Topic embeddedTopic) {
+    private PrestoTopic getInlineTopic(PrestoChangeSet changeSet, PrestoFieldUsage inlineField, Topic embeddedTopic) {
+
+        PrestoSchemaProvider schemaProvider = getSchemaProvider();
+
+        TopicType topicType = embeddedTopic.getType();
+        PrestoType type = schemaProvider.getTypeById(topicType.getId());
+
+        if (!type.isInline()) {
+            throw new RuntimeException("Type " + type.getId() + " is not an inline type.");
+        }
+        PrestoView view = inlineField.getValueView();
+
+        String topicId = embeddedTopic.getId();
+        PrestoInlineTopicBuilder builder = changeSet.createInlineTopic(type, topicId);
+
+        for (FieldData fieldData : embeddedTopic.getFields()) {
+
+            String fieldId = fieldData.getId();
+            PrestoFieldUsage field = type.getFieldById(fieldId, view);
+
+            builder.setValues(field, updateAndExtractValuesFromFieldData(changeSet, field, fieldData, true));
+        }
+        
+        return builder.build();
+    }
+
+    private PrestoTopic updateEmbeddedTopic(PrestoFieldUsage field, Topic embeddedTopic) {
 
         PrestoDataProvider dataProvider = getDataProvider();
         PrestoSchemaProvider schemaProvider = getSchemaProvider();
@@ -874,7 +925,7 @@ public abstract class Presto {
         return updatePrestoTopic(topic, type, view, embeddedTopic);
     }
 
-    private Topic getEmbeddedReference(Value value) {
+    private Topic getEmbeddedTopic(Value value) {
         return value.getEmbedded();
     }
 

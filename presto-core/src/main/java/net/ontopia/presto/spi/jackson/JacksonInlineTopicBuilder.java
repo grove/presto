@@ -26,12 +26,15 @@ public class JacksonInlineTopicBuilder implements PrestoInlineTopicBuilder {
     }
 
     @Override
-    public void setField(PrestoField field, Collection<?> values) {
+    public void setValues(PrestoField field, Collection<?> values) {
         fields.put(field, values);
     }
 
     @Override
     public PrestoTopic build() {
+        if (topicId == null) {
+            topicId = dataProvider.getIdentityStrategy().generateId(type.getId(), null);
+        }
         ObjectNode data = dataProvider.createObjectNode(type, topicId);
         JacksonInlineTopic result = new JacksonInlineTopic(dataProvider, data);
         for (Entry<PrestoField,Collection<?>> e : fields.entrySet()) {

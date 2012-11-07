@@ -21,6 +21,16 @@ public class Value {
     private Topic embedded;
     private Collection<Value> values;
 
+    public Value() {
+    }
+    
+    public static Value getNullValue() {
+        Value result = new Value();
+        result.setValue(null);
+        result.setName(null);
+        return result;
+    }
+    
     public void setEditable(Boolean editable) {
         this.editable = editable;
     }
