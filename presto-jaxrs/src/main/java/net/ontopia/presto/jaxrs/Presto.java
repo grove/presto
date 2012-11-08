@@ -202,7 +202,7 @@ public abstract class Presto {
         return result;
     }
 
-    private FieldData getFieldInfo(PrestoTopic topic, PrestoFieldUsage field, boolean readOnlyMode) {
+    public FieldData getFieldInfo(PrestoTopic topic, PrestoFieldUsage field, boolean readOnlyMode) {
         return getFieldInfo(topic, field, readOnlyMode, 0, -1);
     }
 
@@ -345,7 +345,6 @@ public abstract class Presto {
             }
             fieldData.setCreateTypes(createTypes);
         }
-
 
         // get values (truncated if neccessary)
         setFieldDataValues(isNewTopic, readOnlyMode, offset, limit, topic, field, fieldData);

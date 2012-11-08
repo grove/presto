@@ -15,7 +15,8 @@ public class ValueFieldsPostProcessor extends FieldDataPostProcessor {
 
     @Override
     public FieldData postProcess(FieldData fieldData, PrestoTopic topic, PrestoFieldUsage field) {
-
+        boolean readOnlyMode = false;
+        
         // NOTE: use first value type
         Collection<PrestoType> availableFieldValueTypes = field.getAvailableFieldValueTypes();
         if (availableFieldValueTypes.isEmpty()) {
@@ -28,11 +29,7 @@ public class ValueFieldsPostProcessor extends FieldDataPostProcessor {
         // assign column value fields
         List<FieldData> valueFields = new ArrayList<FieldData>();
         for (PrestoFieldUsage valueField : fields) {
-            FieldData fd = new FieldData();
-            fd.setId(valueField.getId());
-            fd.setName(valueField.getName());
-            fd.setReadOnly(valueField.isReadOnly());
-            // TODO: add more fields
+            FieldData fd = getPresto().getFieldInfo(topic, valueField, readOnlyMode);
             valueFields.add(fd);
         }
         fieldData.setValueFields(valueFields);
