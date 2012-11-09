@@ -202,11 +202,16 @@ public abstract class Presto {
         return result;
     }
 
-    public FieldData getFieldInfo(PrestoTopic topic, PrestoFieldUsage field, boolean readOnlyMode) {
-        return getFieldInfo(topic, field, readOnlyMode, 0, -1);
+    private FieldData getFieldInfo(PrestoTopic topic, PrestoFieldUsage field, boolean readOnlyMode) {
+        return getFieldInfo(topic, field, readOnlyMode, 0, -1, true);
+    }
+    
+    public FieldData getFieldInfoNoValues(PrestoTopic topic, PrestoFieldUsage field, boolean readOnlyMode) {
+        return getFieldInfo(topic, field, readOnlyMode, 0, -1, false);
     }
 
-    public FieldData getFieldInfo(PrestoTopic topic, final PrestoFieldUsage field, boolean readOnlyMode, int offset, int limit) {
+    public FieldData getFieldInfo(PrestoTopic topic, final PrestoFieldUsage field, boolean readOnlyMode, 
+            int offset, int limit, boolean includeValues) {
 
         PrestoType type = field.getType();
         PrestoView parentView = field.getView();
@@ -347,8 +352,9 @@ public abstract class Presto {
         }
 
         // get values (truncated if neccessary)
-        setFieldDataValues(isNewTopic, readOnlyMode, offset, limit, topic, field, fieldData);
-
+        if (includeValues) {
+            setFieldDataValues(isNewTopic, readOnlyMode, offset, limit, topic, field, fieldData);
+        }
         fieldData = postProcessFieldData(fieldData, topic, field);
 
         return fieldData;

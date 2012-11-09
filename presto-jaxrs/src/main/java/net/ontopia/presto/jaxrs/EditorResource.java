@@ -180,7 +180,7 @@ public abstract class EditorResource {
             
             boolean readOnlyMode = false;
             
-            FieldData result = session.getFieldInfo(topic, field, readOnlyMode, start, limit);
+            FieldData result = session.getFieldInfo(topic, field, readOnlyMode, start, limit, true);
             return Response.ok(result).build();
 
         } catch (Exception e) {
