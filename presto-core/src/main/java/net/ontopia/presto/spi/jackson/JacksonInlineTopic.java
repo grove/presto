@@ -25,7 +25,7 @@ public class JacksonInlineTopic extends JacksonTopic {
             if (!other.isInline()) {
                 return false;
             } else {
-                return other.getId().equals(getId()); // ISSUE: compare getData() instead?
+                return getData().equals(other.getData());
             }
         }
         return false;
