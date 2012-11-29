@@ -10,7 +10,7 @@ The framework consists of an SPI for schema providers, data providers and field 
 
 * Hypermedia-driven editing framework
 * JSON over HTTP using Hypermedia (implemented with Java/JAX-RS).
-* Data providers: CouchDB, Riak, MongoDB
+* Data providers: CouchDB, Riak, MongoDB, In-memory
 * Schema providers: In-memory/JSON
 * Field resolvers: CouchDB views, Solr queries, Java functions
 
@@ -25,16 +25,13 @@ Then open http://localhost:9999/presto/editor in your web browser. You can now f
 
 == News ==
 
+* 2012-10-22: Version 0.5
 * 2011-11-23: Version 0.4
-* 2011-11-02: Version 0.3
-* 2011-09-11: Version 0.2
-* 2011-06-14: Version 0.1
-* 2011-05-15: Presto added to github
 
 == Todo ==
 
 * Server-side validation
-* Complete the Riak data provider
+* MongoDB query field resolver
 
 == Ideas for the future ==
 
