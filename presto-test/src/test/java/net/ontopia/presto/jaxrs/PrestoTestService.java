@@ -39,7 +39,7 @@ public class PrestoTestService {
     public static final List<String> READ_BUCKETS = Arrays.asList(new String[] { BUCKET_WRITE, BUCKET_READ, BUCKET_INITIAL });
 
     public static PrestoSchemaProvider createSchemaProvider(String databaseId) {
-        return PojoSchemaProvider.getSchemaProvider(databaseId, databaseId + ".presto.json");
+        return PojoSchemaProvider.getSchemaProvider(databaseId, databaseId + ".schema.json");
     }
 
     public static PrestoDataProvider createDataProvider(String databaseId) {
@@ -55,11 +55,11 @@ public class PrestoTestService {
             protected JacksonDataStrategy createDataStrategy(ObjectMapper mapper) {
                 return new JacksonBucketDataStrategy(mapper) {
                     @Override
-                    protected List<String> getReadBuckets(ObjectNode doc) {
+                    protected List<String> getReadBucketIds(ObjectNode doc) {
                         return READ_BUCKETS;
                     }
                     @Override
-                    protected String getWriteBucket(ObjectNode doc) {
+                    protected String getWriteBucketId(ObjectNode doc) {
                         return WRITE_BUCKET;
                     }
                 };
@@ -84,11 +84,11 @@ public class PrestoTestService {
             protected JacksonDataStrategy createDataStrategy(ObjectMapper mapper) {
                 return new JacksonBucketDataStrategy(mapper) {
                     @Override
-                    protected List<String> getReadBuckets(ObjectNode doc) {
+                    protected List<String> getReadBucketIds(ObjectNode doc) {
                         return READ_BUCKETS;
                     }
                     @Override
-                    protected String getWriteBucket(ObjectNode doc) {
+                    protected String getWriteBucketId(ObjectNode doc) {
                         return WRITE_BUCKET;
                     }
                 };
@@ -108,11 +108,11 @@ public class PrestoTestService {
                 protected JacksonDataStrategy createDataStrategy(ObjectMapper mapper) {
                     return new JacksonBucketDataStrategy(mapper) {
                         @Override
-                        protected List<String> getReadBuckets(ObjectNode doc) {
+                        protected List<String> getReadBucketIds(ObjectNode doc) {
                             return READ_BUCKETS;
                         }
                         @Override
-                        protected String getWriteBucket(ObjectNode doc) {
+                        protected String getWriteBucketId(ObjectNode doc) {
                             return WRITE_BUCKET;
                         }
                     };
@@ -159,11 +159,11 @@ public class PrestoTestService {
             protected JacksonDataStrategy createDataStrategy(ObjectMapper mapper) {
                 return new JacksonBucketDataStrategy(mapper) {
                     @Override
-                    protected List<String> getReadBuckets(ObjectNode doc) {
+                    protected List<String> getReadBucketIds(ObjectNode doc) {
                         return READ_BUCKETS;
                     }
                     @Override
-                    protected String getWriteBucket(ObjectNode doc) {
+                    protected String getWriteBucketId(ObjectNode doc) {
                         return WRITE_BUCKET;
                     }
                 };

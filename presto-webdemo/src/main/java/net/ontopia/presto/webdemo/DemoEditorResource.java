@@ -74,11 +74,11 @@ public class DemoEditorResource extends EditorResource {
             protected JacksonDataStrategy createDataStrategy(ObjectMapper mapper) {
                 return new JacksonBucketDataStrategy(mapper) {
                     @Override
-                    protected List<String> getReadBuckets(ObjectNode doc) {
+                    protected List<String> getReadBucketIds(ObjectNode doc) {
                         return READ_BUCKETS;
                     }
                     @Override
-                    protected String getWriteBucket(ObjectNode doc) {
+                    protected String getWriteBucketId(ObjectNode doc) {
                         return WRITE_BUCKET;
                     }
                 };
@@ -99,11 +99,11 @@ public class DemoEditorResource extends EditorResource {
                 protected JacksonDataStrategy createDataStrategy(ObjectMapper mapper) {
                     return new JacksonBucketDataStrategy(mapper) {
                         @Override
-                        protected List<String> getReadBuckets(ObjectNode doc) {
+                        protected List<String> getReadBucketIds(ObjectNode doc) {
                             return READ_BUCKETS;
                         }
                         @Override
-                        protected String getWriteBucket(ObjectNode doc) {
+                        protected String getWriteBucketId(ObjectNode doc) {
                             return WRITE_BUCKET;
                         }
                     };

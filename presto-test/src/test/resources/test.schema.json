@@ -63,6 +63,11 @@
                 "datatype": "reference",
                 "valueTypes" : ["b:brewery"],
                 "maxCardinality": 1
+              },
+              { "id" : "abv",
+                "name" : "Alcohol by bolume",
+                "datatype" : "http://psi.ontopia.net/ontology/datatype-integer",
+                "maxCardinality": 1
               }            
             ]
           }
@@ -86,6 +91,12 @@
                 "datatype": "http://psi.ontopia.net/ontology/datatype-html",
                 "maxCardinality": 1
               },
+              { "id" : "age",
+                "name" : "Age"
+              },
+              { "id" : "phone",
+                "name" : "Phone"
+              },
               { "id" : "interests",
                 "name" : "Interests"
               },
@@ -97,10 +108,39 @@
                 "datatype": "reference",
                 "valueTypes" : ["b:beer"],
                 "maxCardinality": 1
+              },
+              { "id" : "hosted-drinking-sessions",
+                "name" : "Hosted drinking sessions",
+                "datatype": "reference",
+                "inline" : true,
+                "valueTypes" : ["drinking-session"]
               }            
             ]
           }
         ]
-      }      
+      },
+      "drinking-session" : { 
+        "name" : "Drinking session",
+        "inline" : true,
+        "creatable" : true,
+        "views": [
+          { "id" : "info",
+            "name": "Info",
+            "fields" : [
+              { "id" : "date",
+                "name" : "date",
+                "datatype": "http://www.w3.org/2001/XMLSchema#date",
+                "minCardinality": 0,
+                "maxCardinality": 1
+              },
+              { "id" : "attendees",
+                "name" : "Attendees",
+                "datatype": "reference",
+                "valueTypes" : ["person"]
+              }            
+            ]
+          }
+        ]
+      }
    }
 }

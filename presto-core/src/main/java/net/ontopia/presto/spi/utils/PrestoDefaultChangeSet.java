@@ -12,17 +12,17 @@ import java.util.Set;
 import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoChanges;
 import net.ontopia.presto.spi.PrestoDataProvider;
+import net.ontopia.presto.spi.PrestoDataProvider.ChangeSetHandler;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
-import net.ontopia.presto.spi.PrestoDataProvider.ChangeSetHandler;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PrestoDefaultChangeSet implements PrestoChangeSet {
+public abstract class PrestoDefaultChangeSet implements PrestoChangeSet {
 
     private static Logger log = LoggerFactory.getLogger(PrestoDefaultChangeSet.class.getName());
 
@@ -38,10 +38,14 @@ public class PrestoDefaultChangeSet implements PrestoChangeSet {
 
         void updateBulk(List<Change> changes);
 
+        Object deserializeFieldValue(PrestoField field, Object value);
+
+        Object serializeFieldValue(PrestoField field, Object value);
+        
     }
 
     public static interface DefaultTopic extends PrestoTopic {
-
+        
         DefaultDataProvider getDataProvider();
 
         void updateNameProperty(Collection<? extends Object> values);
@@ -101,6 +105,7 @@ public class PrestoDefaultChangeSet implements PrestoChangeSet {
     public DefaultTopic newInstance(PrestoType type, String topicId) {
         return dataProvider.newInstance(type, topicId);
     }
+
     @Override
     public PrestoUpdate createTopic(PrestoType type) {
         PrestoDefaultUpdate update = new PrestoDefaultUpdate(this, type);
@@ -290,4 +295,5 @@ public class PrestoDefaultChangeSet implements PrestoChangeSet {
             }
         };
     }
+
 }

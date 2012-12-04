@@ -99,6 +99,11 @@ public class PojoFieldUsage implements PrestoFieldUsage {
     }
 
     @Override
+    public boolean isInline() {
+        return field.isInline();
+    }
+
+    @Override
     public boolean isEmbedded() {
         return field.isEmbedded();
     }
@@ -176,6 +181,11 @@ public class PojoFieldUsage implements PrestoFieldUsage {
     @Override
     public String getInverseFieldId() {
         return field.getInverseFieldId();
+    }
+
+    @Override
+    public String toString() {
+        return "PojoFieldUsage[" + getId() + "|" + getName() + "]";
     }
 
 }

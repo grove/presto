@@ -1,0 +1,28 @@
+[
+{ "_id" : "nogne-o-ipa",
+  ":type" : "b:beer",
+  "name" : ["Nøgne Ø IPA"],
+  "abv" : ["7.5"]
+},
+{ "_id" : "john.travolta",
+  ":type" : "person",
+  "name" : ["John Travolta"],
+  "phone" : ["55512345"]
+},
+{ "_id" : "james.dean",
+  ":type" : "person",
+  "name" : ["James Dean"],
+  "phone" : ["55512346"]
+},
+{ "_id" : "john.doe",
+  ":type" : "person",
+  "name" : ["John Doe"],
+  "age" : ["26"],
+  "interests" : ["sports", "beer"],
+  "favorite-beer" : ["nogne-o-ipa"],
+  "hosted-drinking-sessions" : [
+    {"_id": "1", ":type" : "drinking-session", "date" : ["2012-11-06"], "attendees" : ["john.travolta","james.dean"] },
+    {"_id": "2", ":type" : "drinking-session", "date" : ["2012-11-28"], "attendees" : ["james.dean"] }
+  ]
+}
+]

@@ -1,6 +1,8 @@
 package net.ontopia.presto.spi.jackson;
 
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoFieldUsage;
@@ -26,9 +28,9 @@ public abstract class JacksonBucketDataStrategy implements JacksonDataStrategy {
         return mapper;
     }
     
-    protected abstract List<String> getReadBuckets(ObjectNode doc);
+    protected abstract List<String> getReadBucketIds(ObjectNode doc);
 
-    protected abstract String getWriteBucket(ObjectNode doc);
+    protected abstract String getWriteBucketId(ObjectNode doc);
     
     @Override
     public String getId(ObjectNode doc) {
@@ -54,19 +56,63 @@ public abstract class JacksonBucketDataStrategy implements JacksonDataStrategy {
 
     @Override
     public ArrayNode getFieldValue(ObjectNode doc, PrestoField field) {
-        return getBucketFieldValue(field.getActualId(), getReadBucket(doc, field, true));
-    }
-    
-    protected ArrayNode getFieldValue(ObjectNode doc, String fieldId) {
-        return getBucketFieldValue(fieldId, getReadBucket(doc, fieldId, true));
+        String fieldId = field.getActualId();
+        ObjectNode extra = (ObjectNode)field.getExtra();
+        return getFieldValue(doc, fieldId, extra);
     }
 
+    protected ArrayNode getFieldValue(ObjectNode doc, String fieldId, ObjectNode extra) {
+        if (extra != null) {
+            JsonNode readStrategy = extra.path("readStrategy");
+            if (readStrategy.isObject()) {
+                JsonNode nameNode = readStrategy.path("name");
+                if (nameNode.isTextual()) {
+                    String name = nameNode.getTextValue();
+                    if ("union-buckets".equals(name)) {
+                        return getFieldValueUnionBuckets(doc, fieldId);
+                    }
+                }
+            }
+        }
+        return getFieldValuesDefault(doc, fieldId);
+    }
+
+    private ArrayNode getFieldValuesDefault(ObjectNode doc, String fieldId) {
+        // Strategy: default: value of closest read bucket with value in field
+        ObjectNode readBucket = getReadBucket(doc, fieldId, true);
+        return getBucketFieldValue(fieldId, readBucket);
+    }
+
+    private ArrayNode getFieldValueUnionBuckets(ObjectNode doc, String fieldId) {
+        // Strategy: union-buckets: value is union of all read buckets
+        Set<String> values = new LinkedHashSet<String>();
+        for (String bucketId : getReadBucketIds(doc)) {
+            ObjectNode bucket = getBucket(bucketId, doc);
+            if (bucket != null) {
+                ArrayNode bucketFieldValues = getBucketFieldValue(fieldId, bucket);
+                if (bucketFieldValues != null) {
+                    for (JsonNode bucketFieldValue : bucketFieldValues) {
+                        if (bucketFieldValue.isTextual()) {
+                            String textValue = bucketFieldValue.getTextValue();
+                            if (!values.contains(textValue)) {
+                                values.add(bucketFieldValue.getTextValue());
+                            }
+                        }
+                    }
+                }
+
+            }
+        }
+        ArrayNode result = getObjectMapper().createArrayNode();
+        for (String value : values) {
+            result.add(value);
+        }
+        return result;
+    }
+    
     @Override
     public void putFieldValue(ObjectNode doc, PrestoField field, ArrayNode value) {
-        putFieldValue(doc, field.getActualId(), value);
-    }
-       
-    protected void putFieldValue(ObjectNode doc, String fieldId, ArrayNode value) {
+        String fieldId = field.getActualId();
         ObjectNode writeBucket = getWriteBucket(doc, fieldId, true);
         ObjectNode readBucket = getReadBucket(doc, fieldId, false);
         // remove write bucket field iff value equal to value in closest read bucket
@@ -79,6 +125,10 @@ public abstract class JacksonBucketDataStrategy implements JacksonDataStrategy {
         }
     }
 
+    protected ObjectNode getBucket(String bucketId, ObjectNode doc) {
+        return (ObjectNode)doc.get(bucketId);
+    }
+    
     protected ArrayNode getBucketFieldValue(String fieldId, ObjectNode bucketData) {
         if (bucketData != null) {
             JsonNode value = bucketData.get(fieldId);
@@ -92,9 +142,9 @@ public abstract class JacksonBucketDataStrategy implements JacksonDataStrategy {
     }
     
     protected ObjectNode getReadBucket(ObjectNode doc, String fieldId, boolean includeWriteBucket) {
-        String writeBucket = getWriteBucket(doc);
+        String writeBucket = getWriteBucketId(doc);
         // find the right bucket
-        for (String bucketId : getReadBuckets(doc)) {
+        for (String bucketId : getReadBucketIds(doc)) {
             // ignore write bucket
             if (!includeWriteBucket && bucketId.equals(writeBucket)) {
                 continue;
@@ -115,7 +165,7 @@ public abstract class JacksonBucketDataStrategy implements JacksonDataStrategy {
     }
            
     protected ObjectNode getWriteBucket(ObjectNode doc, String fieldId, boolean create) {
-        String writeBucket = getWriteBucket(doc);
+        String writeBucket = getWriteBucketId(doc);
         ObjectNode bucket = null;
         if (doc.has(writeBucket)) {
             bucket = (ObjectNode)doc.get(writeBucket);
@@ -136,14 +186,6 @@ public abstract class JacksonBucketDataStrategy implements JacksonDataStrategy {
             return false;
         else
             return o1.equals(o2);
-    }
-
-    protected String getFirstStringValue(ObjectNode doc, String fieldId) {
-        ArrayNode node = getFieldValue(doc, fieldId);
-        if (node != null && node.size() > 0) {
-            return node.get(0).getTextValue();
-        }
-        return null;
     }
     
 }
