@@ -311,7 +311,8 @@ public abstract class EditorResource {
             PrestoType type = schemaProvider.getTypeById(topic.getTypeId());
             PrestoView view = type.getDefaultView();
 
-            Topic result = session.getTopicInfo(topic, type, view, readOnly);
+            Topic result = session.getTopicInfoAndProcess(topic, type, view, readOnly);
+            
             return Response.ok(result).build();
 
         } catch (Exception e) {
@@ -344,7 +345,7 @@ public abstract class EditorResource {
             PrestoType type = schemaProvider.getTypeById(topic.getTypeId());
             PrestoView view = type.getViewById(viewId);
 
-            Topic result = session.getTopicInfo(topic, type, view, readOnly);
+            Topic result = session.getTopicInfoAndProcess(topic, type, view, readOnly);
             return Response.ok(result).build();
 
         } catch (Exception e) {

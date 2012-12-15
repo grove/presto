@@ -23,6 +23,9 @@ import net.ontopia.presto.jaxb.Topic;
 import net.ontopia.presto.jaxb.TopicType;
 import net.ontopia.presto.jaxb.TopicTypeTree;
 import net.ontopia.presto.jaxb.Value;
+import net.ontopia.presto.jaxrs.PrestoProcessor.Status;
+import net.ontopia.presto.jaxrs.resolve.AvailableFieldCreateTypesResolver;
+import net.ontopia.presto.jaxrs.resolve.AvailableFieldValuesResolver;
 import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoDataProvider.ChangeSetHandler;
@@ -54,11 +57,14 @@ public abstract class Presto {
     private final PrestoSchemaProvider schemaProvider;
     private final PrestoDataProvider dataProvider;
 
+    private final PrestoProcessor processor;
+
     public Presto(String databaseId, String databaseName, PrestoSchemaProvider schemaProvider, PrestoDataProvider dataProvider) {
         this.databaseId = databaseId;
         this.databaseName = databaseName;
         this.schemaProvider = schemaProvider;
         this.dataProvider = dataProvider;
+        this.processor = new PrestoProcessor(this);
     }
 
     private String getDatabaseId() {
@@ -107,6 +113,16 @@ public abstract class Presto {
                 result.add(fieldValue);
             }
         }
+        return result;
+    }
+
+    public Topic getTopicInfoAndProcess(PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnlyMode) {
+        Topic result = getTopicInfo(topic, type, view, readOnlyMode);
+        
+//        Status status = new Status();
+//        result = processor.preProcessTopic(result, topic, type, view, status);
+        result = processor.postProcessTopic(result, topic, type, view, null);
+        
         return result;
     }
 
@@ -160,8 +176,6 @@ public abstract class Presto {
         topicLinks.addAll(getViewLinks(topic, type, view, readOnlyMode, ViewType.EDIT_IN_VIEW));
         result.setLinks(topicLinks);
 
-        result = postProcessTopic(result, topic, type, view);
-
         return result;
     }
 
@@ -197,7 +211,9 @@ public abstract class Presto {
         }
         result.setFields(fields);
 
-        result = postProcessTopic(result, null, type, view);
+//        Status status = new Status();
+//        result = processor.preProcessTopic(result, null, type, view, status);
+        result = processor.postProcessTopic(result, null, type, view, null);
 
         return result;
     }
@@ -355,7 +371,8 @@ public abstract class Presto {
         if (includeValues) {
             setFieldDataValues(isNewTopic, readOnlyMode, offset, limit, topic, field, fieldData);
         }
-        fieldData = postProcessFieldData(fieldData, topic, field);
+        
+//        fieldData = processor.postProcessFieldData(fieldData, topic, field, null);
 
         return fieldData;
     }
@@ -382,7 +399,7 @@ public abstract class Presto {
         }
     }
     
-    protected FieldDataValues setFieldDataValues(boolean isNewTopic, boolean readOnlyMode, int offset, int limit, 
+    public FieldDataValues setFieldDataValues(boolean isNewTopic, boolean readOnlyMode, int offset, int limit, 
             PrestoTopic topic, final PrestoFieldUsage field, FieldData fieldData) {
 
         // TODO: refactor to return DTO instead of mutating FieldData here
@@ -519,6 +536,7 @@ public abstract class Presto {
     }
 
     private Collection<? extends Object> getCustomAvailableValues(PrestoTopic topic, PrestoFieldUsage field) {
+        // TODO: shouldn't this be a PrestoFunction
         ObjectNode extra = getFieldExtraNode(field);
         if (extra != null) {
             JsonNode availableValuesNode = extra.path("availableValues");
@@ -645,7 +663,7 @@ public abstract class Presto {
         return link;
     }
 
-    protected ObjectNode getTypeExtraNode(PrestoType type) {
+    public ObjectNode getTypeExtraNode(PrestoType type) {
         Object e = type.getExtra();
         if (e != null && e instanceof ObjectNode) {
             return (ObjectNode)e;
@@ -653,7 +671,7 @@ public abstract class Presto {
         return null;
     }
 
-    protected ObjectNode getViewExtraNode(PrestoView view) {
+    public ObjectNode getViewExtraNode(PrestoView view) {
         Object e = view.getExtra();
         if (e != null && e instanceof ObjectNode) {
             return (ObjectNode)e;
@@ -661,79 +679,15 @@ public abstract class Presto {
         return null;
     }
 
-    protected ObjectNode getFieldExtraNode(PrestoField field) {
+    public ObjectNode getFieldExtraNode(PrestoField field) {
         Object e = field.getExtra();
         if (e != null && e instanceof ObjectNode) {
             return (ObjectNode)e;
         }
         return null;
     }
-    
-    protected FieldData postProcessFieldData(FieldData fieldData, PrestoTopic topic, PrestoFieldUsage field) {
-        ObjectNode extra = getFieldExtraNode(field);
-        if (extra != null) {
-            Map<String, Object> params = getExtraParamsMap(extra);
-            if (params != null) {
-                fieldData.setParams(params);
-            }
-            JsonNode postProcessorNode = extra.path("postProcessor");
-            if (postProcessorNode.isTextual()) {
-                String className = postProcessorNode.getTextValue();
-                FieldDataPostProcessor processor = Utils.newInstanceOf(className, FieldDataPostProcessor.class);
-                if (processor != null) {
-                    processor.setPresto(this);
-                    fieldData = processor.postProcess(fieldData, topic, field);
-                }
-            }
-            JsonNode messagesNode = extra.path("messages");
-            if (messagesNode.isArray()) {
-                List<FieldData.Message> messages = new ArrayList<FieldData.Message>();
-                for (JsonNode messageNode : messagesNode) {
-                    String type = messageNode.get("type").getTextValue();
-                    String message = messageNode.get("message").getTextValue();
-                    messages.add(new FieldData.Message(type, message));
-                }
-                if (fieldData.getMessages() != null) {
-                    fieldData.getMessages().addAll(messages);
-                } else {
-                    fieldData.setMessages(messages);
-                }
-            }
 
-        }
-        return fieldData;
-    }
-
-    protected Topic postProcessTopic(Topic topicData, PrestoTopic topic, PrestoType type, PrestoView view) {
-        ObjectNode topicExtra = getTypeExtraNode(type);
-        if (topicExtra != null) {
-            topicData = postProcessTopicExtra(topicData, topic, type, view, topicExtra);
-        }    
-        ObjectNode viewExtra = getViewExtraNode(view);
-        if (viewExtra != null) {
-            topicData = postProcessTopicExtra(topicData, topic, type, view, viewExtra);
-        }    
-        return topicData;
-    }
-
-    private Topic postProcessTopicExtra(Topic topicData, PrestoTopic topic, PrestoType type, PrestoView view, ObjectNode extraNode) {
-        Map<String, Object> params = getExtraParamsMap(extraNode);
-        if (params != null) {
-            topicData.setParams(params);
-        }
-        JsonNode postProcessorNode = extraNode.path("postProcessor");
-        if (postProcessorNode.isTextual()) {
-            String className = postProcessorNode.getTextValue();
-            TopicPostProcessor processor = Utils.newInstanceOf(className, TopicPostProcessor.class);
-            if (processor != null) {
-                processor.setPresto(this);
-                topicData = processor.postProcess(topicData, topic, type, view);
-            }
-        }
-        return topicData;
-    }
-
-    private Map<String,Object> getExtraParamsMap(ObjectNode extra) {
+    protected Map<String,Object> getExtraParamsMap(ObjectNode extra) {
         ObjectNode extraNode = (ObjectNode)extra;
         JsonNode params = extraNode.path("params");
         if (params.isObject()) {
@@ -813,8 +767,18 @@ public abstract class Presto {
     }
 
     public Topic updateTopic(PrestoTopic topic, PrestoType type, PrestoView view, Topic data) {
-        PrestoTopic result = updatePrestoTopic(topic, type, view, data);
-        return postProcessTopic(getTopicInfo(result, type, view, false), topic, type, view);
+        Status status = new Status();
+        
+        data = processor.preProcessTopic(data, topic, type, view, status);
+
+        if (status.isValid()) {
+            PrestoTopic result = updatePrestoTopic(topic, type, view, data);
+            
+            return processor.postProcessTopic(getTopicInfo(result, type, view, false), topic, type, view, null);
+                
+        } else {
+            return processor.postProcessTopic(data, topic, type, view, null);
+        }
     }
 
     protected PrestoTopic updatePrestoTopic(PrestoTopic topic, PrestoType type, PrestoView view, Topic data) {
@@ -930,7 +894,7 @@ public abstract class Presto {
         return updatePrestoTopic(topic, type, view, embeddedTopic);
     }
 
-    private Topic getEmbeddedTopic(Value value) {
+    Topic getEmbeddedTopic(Value value) {
         return value.getEmbedded();
     }
 

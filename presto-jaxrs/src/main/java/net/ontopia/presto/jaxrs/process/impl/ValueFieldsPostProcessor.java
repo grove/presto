@@ -1,4 +1,4 @@
-package net.ontopia.presto.jaxrs;
+package net.ontopia.presto.jaxrs.process.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -6,15 +6,17 @@ import java.util.List;
 
 import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxb.Value;
+import net.ontopia.presto.jaxrs.Presto;
 import net.ontopia.presto.jaxrs.Presto.FieldDataValues;
+import net.ontopia.presto.jaxrs.process.FieldDataProcessor;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 
-public class ValueFieldsPostProcessor extends FieldDataPostProcessor {
+public class ValueFieldsPostProcessor extends FieldDataProcessor {
 
     @Override
-    public FieldData postProcess(FieldData fieldData, PrestoTopic topic, PrestoFieldUsage field) {
+    public FieldData processFieldData(FieldData fieldData, PrestoTopic topic, PrestoFieldUsage field) {
         boolean readOnlyMode = false;
         
         // NOTE: use first value type

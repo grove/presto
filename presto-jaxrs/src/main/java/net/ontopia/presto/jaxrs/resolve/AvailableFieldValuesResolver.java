@@ -1,7 +1,8 @@
-package net.ontopia.presto.jaxrs;
+package net.ontopia.presto.jaxrs.resolve;
 
 import java.util.Collection;
 
+import net.ontopia.presto.jaxrs.process.AbstractProcessor;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoTopic;
 
