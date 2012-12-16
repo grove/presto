@@ -695,7 +695,7 @@ public abstract class Presto {
         return null;
     }
 
-    protected Map<String,Object> getExtraParamsMap(ObjectNode extra) {
+    public Map<String,Object> getExtraParamsMap(ObjectNode extra) {
         ObjectNode extraNode = (ObjectNode)extra;
         JsonNode params = extraNode.path("params");
         if (params.isObject()) {

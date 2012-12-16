@@ -2,12 +2,15 @@ package net.ontopia.presto.jaxrs;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxb.Topic;
 import net.ontopia.presto.jaxb.TopicType;
 import net.ontopia.presto.jaxb.Value;
+import net.ontopia.presto.jaxrs.process.AbstractProcessor;
 import net.ontopia.presto.jaxrs.process.FieldDataProcessor;
 import net.ontopia.presto.jaxrs.process.TopicProcessor;
 import net.ontopia.presto.spi.PrestoDataProvider;
@@ -71,17 +74,13 @@ public class PrestoProcessor {
 
         // process the topic
         ObjectNode schemaExtra = presto.getSchemaExtraNode(presto.getSchemaProvider());
-        if (schemaExtra != null) {
-            topicData = processTopicExtra(topicData, topic, type, view, schemaExtra, processType, status);
-        }    
+        topicData = processTopicExtra(topicData, topic, type, view, schemaExtra, processType, status);
+        
         ObjectNode topicExtra = presto.getTypeExtraNode(type);
-        if (topicExtra != null) {
-            topicData = processTopicExtra(topicData, topic, type, view, topicExtra, processType, status);
-        }    
+        topicData = processTopicExtra(topicData, topic, type, view, topicExtra, processType, status);
+        
         ObjectNode viewExtra = presto.getViewExtraNode(view);
-        if (viewExtra != null) {
-            topicData = processTopicExtra(topicData, topic, type, view, viewExtra, processType, status);
-        }    
+        topicData = processTopicExtra(topicData, topic, type, view, viewExtra, processType, status);
 
         // process the field data
         Collection<FieldData> fields = topicData.getFields();
@@ -98,33 +97,6 @@ public class PrestoProcessor {
         topicData.setFields(newFields);
 
         return topicData;
-    }
-
-    private Topic processTopicExtra(Topic topicData, PrestoTopic topic, PrestoType type, PrestoView view, ObjectNode extraNode, Type processType, Status status) {
-        Map<String, Object> params = presto.getExtraParamsMap(extraNode);
-        if (params != null) {
-            topicData.setParams(params);
-        }
-        JsonNode processorNode = getProcessorNode(extraNode, processType);
-        if (processorNode.isTextual()) {
-            String className = processorNode.getTextValue();
-            TopicProcessor processor = Utils.newInstanceOf(className, TopicProcessor.class, false);
-            if (processor != null) {
-                processor.setPresto(presto);
-                processor.setType(processType);
-                processor.setStatus(status);
-                topicData = processor.processTopic(topicData, topic, type, view);
-            }
-        }
-        return topicData;
-    }
-    
-    private JsonNode getProcessorNode(ObjectNode extraNode, Type processType) {
-        if (processType == Type.PRE_PROCESS) {
-            return extraNode.path("preProcessor");            
-        } else {
-            return extraNode.path("postProcessor");
-        }
     }
     
 //    public FieldData preProcessFieldData(FieldData fieldData, PrestoTopic topic, PrestoFieldUsage field, Status status) {
@@ -168,31 +140,92 @@ public class PrestoProcessor {
         // reset errors when pre-process
         if (processType == Type.PRE_PROCESS) {
             fieldData.setErrors(null);
+            fieldData.setMessages(null);
         }
 
         // process field
-        ObjectNode extraNode = presto.getFieldExtraNode(field);
-        if (extraNode != null) {
+        ObjectNode schemaExtra = presto.getSchemaExtraNode(presto.getSchemaProvider());
+        fieldData = processFieldDataExtra(fieldData, topic, field, schemaExtra, processType, status);
+        
+        ObjectNode topicExtra = presto.getTypeExtraNode(field.getType());
+        fieldData = processFieldDataExtra(fieldData, topic, field, topicExtra, processType, status);
+        
+        ObjectNode viewExtra = presto.getViewExtraNode(field.getView());
+        fieldData = processFieldDataExtra(fieldData, topic, field, viewExtra, processType, status);
 
-            // TODO: should be replaced by a post processor
-            Map<String, Object> params = presto.getExtraParamsMap(extraNode);
-            if (params != null) {
-                fieldData.setParams(params);
+        ObjectNode fieldExtra = presto.getFieldExtraNode(field);
+        fieldData = processFieldDataExtra(fieldData, topic, field, fieldExtra, processType, status);
+        
+        return fieldData;
+    }
+
+    private Topic processTopicExtra(Topic topicData, PrestoTopic topic, PrestoType type, PrestoView view, ObjectNode extraNode, Type processType, Status status) {
+        if (extraNode != null) {
+            JsonNode processorsNode = getTopicProcessorsNode(extraNode, processType);
+            for (TopicProcessor processor : getProcessors(TopicProcessor.class, processorsNode, processType, status)) {
+                topicData = processor.processTopic(topicData, topic, type, view);
             }
-            
-            JsonNode processorNode = getProcessorNode(extraNode, processType);
-            if (processorNode.isTextual()) {
-                String className = processorNode.getTextValue();
-                FieldDataProcessor processor = Utils.newInstanceOf(className, FieldDataProcessor.class);
-                if (processor != null) {
-                    processor.setPresto(presto);
-                    processor.setType(processType);
-                    processor.setStatus(status);
-                    fieldData = processor.processFieldData(fieldData, topic, field);
-                }
+        }
+        return topicData;
+    }
+    
+    private FieldData processFieldDataExtra(FieldData fieldData, PrestoTopic topic, PrestoFieldUsage field, ObjectNode extraNode, Type processType, Status status) {
+        if (extraNode != null) {
+            JsonNode processorsNode = getFieldDataProcessorsNode(extraNode, processType);
+            for (FieldDataProcessor processor : getProcessors(FieldDataProcessor.class, processorsNode, processType, status)) {
+                fieldData = processor.processFieldData(fieldData, topic, field);                
             }
         }
         return fieldData;
+    }
+    
+    private JsonNode getTopicProcessorsNode(ObjectNode extraNode, Type processType) {
+        if (processType == Type.PRE_PROCESS) {
+            return extraNode.path("topicPreProcessors");            
+        } else {
+            return extraNode.path("topicPostProcessors");
+        }
+    }
+    
+    private JsonNode getFieldDataProcessorsNode(ObjectNode extraNode, Type processType) {
+        if (processType == Type.PRE_PROCESS) {
+            return extraNode.path("fieldPreProcessors");            
+        } else {
+            return extraNode.path("fieldPostProcessors");
+        }
+    }
+
+    private <T extends AbstractProcessor> Iterable<T> getProcessors(Class<T> klass, JsonNode processorsNode, Type processType, Status status) {
+        if (processorsNode.isTextual()) {
+            String className = processorsNode.getTextValue();
+            T processor = getProcessorInstance(klass, className, processType, status);
+            if (processor != null) {
+                return Collections.singleton(processor);
+            }
+        } else if (processorsNode.isArray()) {
+            for (JsonNode processorNode : processorsNode) {
+                List<T> result = new ArrayList<T>();
+                if (processorNode.isTextual()) {
+                    String className = processorNode.getTextValue();
+                    T processor = getProcessorInstance(klass, className, processType, status);
+                    if (processor != null) {
+                        result.add(processor);
+                    }
+                }
+                return result;
+            }
+        }
+        return Collections.emptyList();
+    }
+
+    private <T extends AbstractProcessor> T getProcessorInstance(Class<T> klass, String className, Type processType, Status status) {
+        T processor = Utils.newInstanceOf(className, klass);
+        if (processor != null) {
+            processor.setPresto(presto);
+            processor.setType(processType);
+            processor.setStatus(status);
+        }
+        return processor;
     }
 
 }

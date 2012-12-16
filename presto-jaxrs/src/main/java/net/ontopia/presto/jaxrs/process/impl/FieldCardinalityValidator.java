@@ -27,11 +27,11 @@ public class FieldCardinalityValidator extends FieldDataProcessor {
                 }
             }
         } else {
-            if (cardinality < minCardinality) {
+            if (minCardinality > 0 && cardinality < minCardinality) {
                 setValid(false);
                 addError(fieldData, "Field must have at least " + minCardinality + getValuesString(minCardinality));
             }
-            if (cardinality > maxCardinality) {
+            if (maxCardinality > 0 && cardinality > maxCardinality) {
                 setValid(false);
                 addError(fieldData, "Field must have no more than " + maxCardinality + getValuesString(maxCardinality));
             }
