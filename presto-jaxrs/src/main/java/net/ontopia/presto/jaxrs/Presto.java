@@ -663,6 +663,14 @@ public abstract class Presto {
         return link;
     }
 
+    public ObjectNode getSchemaExtraNode(PrestoSchemaProvider schemaProvider) {
+        Object e = schemaProvider.getExtra();
+        if (e != null && e instanceof ObjectNode) {
+            return (ObjectNode)e;
+        }
+        return null;
+    }
+
     public ObjectNode getTypeExtraNode(PrestoType type) {
         Object e = type.getExtra();
         if (e != null && e instanceof ObjectNode) {

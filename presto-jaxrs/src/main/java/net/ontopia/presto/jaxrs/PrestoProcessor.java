@@ -2,7 +2,6 @@ package net.ontopia.presto.jaxrs;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 import net.ontopia.presto.jaxb.FieldData;
@@ -71,6 +70,10 @@ public class PrestoProcessor {
 //        }
 
         // process the topic
+        ObjectNode schemaExtra = presto.getSchemaExtraNode(presto.getSchemaProvider());
+        if (schemaExtra != null) {
+            topicData = processTopicExtra(topicData, topic, type, view, schemaExtra, processType, status);
+        }    
         ObjectNode topicExtra = presto.getTypeExtraNode(type);
         if (topicExtra != null) {
             topicData = processTopicExtra(topicData, topic, type, view, topicExtra, processType, status);
@@ -105,7 +108,7 @@ public class PrestoProcessor {
         JsonNode processorNode = getProcessorNode(extraNode, processType);
         if (processorNode.isTextual()) {
             String className = processorNode.getTextValue();
-            TopicProcessor processor = Utils.newInstanceOf(className, TopicProcessor.class);
+            TopicProcessor processor = Utils.newInstanceOf(className, TopicProcessor.class, false);
             if (processor != null) {
                 processor.setPresto(presto);
                 processor.setType(processType);
@@ -170,10 +173,13 @@ public class PrestoProcessor {
         // process field
         ObjectNode extraNode = presto.getFieldExtraNode(field);
         if (extraNode != null) {
+
+            // TODO: should be replaced by a post processor
             Map<String, Object> params = presto.getExtraParamsMap(extraNode);
             if (params != null) {
                 fieldData.setParams(params);
             }
+            
             JsonNode processorNode = getProcessorNode(extraNode, processType);
             if (processorNode.isTextual()) {
                 String className = processorNode.getTextValue();
@@ -185,23 +191,6 @@ public class PrestoProcessor {
                     fieldData = processor.processFieldData(fieldData, topic, field);
                 }
             }
-////            // TODO: should be replaced by a post processor
-//            if (processType == Type.POST_PROCESS) {
-//                JsonNode messagesNode = extraNode.path("messages");
-//                if (messagesNode.isArray()) {
-//                    List<FieldData.Message> messages = new ArrayList<FieldData.Message>();
-//                    for (JsonNode messageNode : messagesNode) {
-//                        String type = messageNode.get("type").getTextValue();
-//                        String message = messageNode.get("message").getTextValue();
-//                        messages.add(new FieldData.Message(type, message));
-//                    }
-//                    if (fieldData.getMessages() != null) {
-//                        fieldData.getMessages().addAll(messages);
-//                    } else {
-//                        fieldData.setMessages(messages);
-//                    }
-//                }
-//            }
         }
         return fieldData;
     }

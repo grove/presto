@@ -10,4 +10,6 @@ public interface PrestoSchemaProvider {
 
     Collection<PrestoType> getRootTypes();
 
+    Object getExtra();
+
 }
