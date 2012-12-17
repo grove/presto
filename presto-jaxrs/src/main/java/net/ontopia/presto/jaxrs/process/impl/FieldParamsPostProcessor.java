@@ -14,9 +14,11 @@ public class FieldParamsPostProcessor extends FieldDataProcessor {
     @Override
     public FieldData processFieldData(FieldData fieldData, PrestoTopic topic, PrestoFieldUsage field) {
         ObjectNode extraNode = getPresto().getFieldExtraNode(field);
-        Map<String, Object> params = getPresto().getExtraParamsMap(extraNode);
-        if (params != null) {
-            fieldData.setParams(params);
+        if (extraNode != null) {
+            Map<String, Object> params = getPresto().getExtraParamsMap(extraNode);
+            if (params != null) {
+                fieldData.setParams(params);
+            }
         }
         return fieldData;
     }

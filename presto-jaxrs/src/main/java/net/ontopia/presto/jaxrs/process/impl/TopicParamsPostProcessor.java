@@ -15,9 +15,11 @@ public class TopicParamsPostProcessor extends TopicProcessor {
     @Override
     public Topic processTopic(Topic topicData, PrestoTopic topic, PrestoType type, PrestoView view) {
         ObjectNode extraNode = getPresto().getTypeExtraNode(type);
-        Map<String, Object> params = getPresto().getExtraParamsMap(extraNode);
-        if (params != null) {
-            topicData.setParams(params);
+        if (extraNode != null) {
+            Map<String, Object> params = getPresto().getExtraParamsMap(extraNode);
+            if (params != null) {
+                topicData.setParams(params);
+            }
         }
         return topicData;
     }
