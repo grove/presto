@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -67,11 +68,11 @@ public abstract class Presto {
         this.processor = new PrestoProcessor(this);
     }
 
-    private String getDatabaseId() {
+    public String getDatabaseId() {
         return databaseId;
     }
 
-    private String getDatabaseName() {
+    public String getDatabaseName() {
         return databaseName;
     }
 
@@ -179,7 +180,7 @@ public abstract class Presto {
         return result;
     }
 
-    protected abstract URI getBaseUri();
+    public abstract URI getBaseUri();
 
     public Topic getNewTopicInfo(PrestoType type, PrestoView view) {
         return getNewTopicInfo(type, view, null, null);
@@ -276,7 +277,7 @@ public abstract class Presto {
             fieldData.setReadOnly(Boolean.TRUE);
         }
 
-        List<Link> fieldLinks = new ArrayList<Link>();      
+        Collection<Link> fieldLinks = new LinkedHashSet<Link>();      
         if (field.isReferenceField()) {
             fieldData.setDatatype("reference");
 
@@ -772,6 +773,14 @@ public abstract class Presto {
         changeSet.save();
 
         return getFieldInfo(update.getTopicAfterSave(), field, false);
+    }
+
+    public Topic validateTopic(PrestoTopic topic, PrestoType type, PrestoView view, Topic data) {
+        Status status = new Status();
+        
+        data = processor.preProcessTopic(data, topic, type, view, status);
+
+        return processor.postProcessTopic(data, topic, type, view, null);
     }
 
     public Topic updateTopic(PrestoTopic topic, PrestoType type, PrestoView view, Topic data) {

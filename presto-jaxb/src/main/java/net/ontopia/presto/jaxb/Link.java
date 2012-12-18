@@ -65,4 +65,49 @@ public class Link {
         this.params = params;
     }
 
+    @Override
+    public int hashCode() {
+        int result = 0;
+        if (id != null) {
+            result += id.hashCode();
+        }            
+        if (rel != null) {
+            result += rel.hashCode();
+        }            
+        if (href != null) {
+            result += href.hashCode();
+        }            
+        if (params != null) {
+            result += params.hashCode();
+        }            
+        if (name != null) {
+            result += name.hashCode();
+        }            
+        return result; 
+    }
+    
+    @Override
+    public boolean equals(Object other) {
+        if (other instanceof Link) {
+            Link o = (Link)other;
+            
+            System.out.println(isEqual(id, o.id) + " " +
+                    isEqual(rel, o.rel) + " " +
+                    isEqual(href, o.href) + " " +
+                    isEqual(params, o.params) + " " +
+                    isEqual(name, o.name));
+            
+            return isEqual(id, o.id) && 
+                    isEqual(rel, o.rel) && 
+                    isEqual(href, o.href) && 
+                    isEqual(params, o.params) && 
+                    isEqual(name, o.name);
+        }
+        return false;
+    }
+    
+    public static boolean isEqual(Object o1, Object o2) {
+        return (o1 == null ? o2 == null : o1.equals(o2));
+    }
+
 }
