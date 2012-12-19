@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxb.Topic;
@@ -91,6 +90,7 @@ public class PrestoProcessor {
             String fieldId = fieldData.getId();
             PrestoFieldUsage field = type.getFieldById(fieldId, view);
 
+            // process field            
             FieldData newFieldData = processFieldData(fieldData, topic, field, processType, status);
             newFields.add(newFieldData);
         }            
@@ -107,7 +107,7 @@ public class PrestoProcessor {
 //        return processFieldData(fieldData, topic, field, Type.POST_PROCESS, status);
 //    }
     
-    private FieldData processFieldData(FieldData fieldData, PrestoTopic topic, PrestoFieldUsage field, Type processType, Status status) {
+    public FieldData processFieldData(FieldData fieldData, PrestoTopic topic, PrestoFieldUsage field, Type processType, Status status) {
         // process nested data first
         PrestoSchemaProvider schemaProvider = getSchemaProvider();
         PrestoDataProvider dataProvider = getDataProvider();
@@ -116,23 +116,26 @@ public class PrestoProcessor {
 
             PrestoView valueView = field.getValueView();
 
-            for (Value value : fieldData.getValues()) {
-                Topic embeddedTopic = presto.getEmbeddedTopic(value);
-                if (embeddedTopic != null) {
-                    String topicId = embeddedTopic.getId();
-    
-                    PrestoTopic valueTopic = null;
-                    PrestoType valueType;
-                    if (topicId == null) {
-                        TopicType topicType = embeddedTopic.getType();
-                        valueType = schemaProvider.getTypeById(topicType.getId());
-                    } else {
-                        valueTopic = dataProvider.getTopicById(topicId);
-                        valueType = schemaProvider.getTypeById(valueTopic.getTypeId());
+            Collection<Value> values = fieldData.getValues();
+            if (values != null) {
+                for (Value value : values) {
+                    Topic embeddedTopic = presto.getEmbeddedTopic(value);
+                    if (embeddedTopic != null) {
+                        String topicId = embeddedTopic.getId();
+        
+                        PrestoTopic valueTopic = null;
+                        PrestoType valueType;
+                        if (topicId == null) {
+                            TopicType topicType = embeddedTopic.getType();
+                            valueType = schemaProvider.getTypeById(topicType.getId());
+                        } else {
+                            valueTopic = dataProvider.getTopicById(topicId);
+                            valueType = schemaProvider.getTypeById(valueTopic.getTypeId());
+                        }
+                        
+                        embeddedTopic = processTopic(embeddedTopic, valueTopic, valueType, valueView, processType, status);
+                        value.setEmbedded(embeddedTopic);
                     }
-                    
-                    embeddedTopic = processTopic(embeddedTopic, valueTopic, valueType, valueView, processType, status);
-                    value.setEmbedded(embeddedTopic);
                 }
             }
         }
@@ -203,8 +206,8 @@ public class PrestoProcessor {
                 return Collections.singleton(processor);
             }
         } else if (processorsNode.isArray()) {
+            List<T> result = new ArrayList<T>();
             for (JsonNode processorNode : processorsNode) {
-                List<T> result = new ArrayList<T>();
                 if (processorNode.isTextual()) {
                     String className = processorNode.getTextValue();
                     T processor = getProcessorInstance(klass, className, processType, status);
@@ -212,8 +215,8 @@ public class PrestoProcessor {
                         result.add(processor);
                     }
                 }
-                return result;
             }
+            return result;
         }
         return Collections.emptyList();
     }

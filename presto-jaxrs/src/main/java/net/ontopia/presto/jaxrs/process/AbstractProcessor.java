@@ -16,6 +16,10 @@ public class AbstractProcessor {
     private Status status;
     private Type processType;
 
+    public Type getType() {
+        return processType;
+    }
+    
     public void setType(Type processType) {
         this.processType = processType;
     }
@@ -44,6 +48,10 @@ public class AbstractProcessor {
         return presto.getSchemaProvider();
     }
 
+    public Status getStatus() {
+        return status;
+    }
+    
     public void setStatus(Status status) {
         this.status = status;
     }

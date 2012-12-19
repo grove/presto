@@ -88,6 +88,10 @@ public abstract class Presto {
         return schemaProvider;
     }
 
+    public PrestoProcessor getProcessor() {
+        return processor;
+    }
+    
     public Map<String,Object> getTopicAsMap(PrestoTopic topic, PrestoType type) {
         Map<String,Object> result = new LinkedHashMap<String,Object>();
 
