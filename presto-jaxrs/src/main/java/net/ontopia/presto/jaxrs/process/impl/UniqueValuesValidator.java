@@ -26,9 +26,9 @@ public class UniqueValuesValidator extends FieldDataProcessor {
 
     @Override
     public FieldData processFieldData(FieldData fieldData, PrestoTopic topic, PrestoFieldUsage field) {
-        ObjectNode extraNode = (ObjectNode)field.getExtra();
-        if (extraNode != null) {
-            JsonNode resolveConfig = extraNode.path("validate-resolve");
+        ObjectNode processorConfig = getConfig();
+        if (processorConfig != null) {
+            JsonNode resolveConfig = processorConfig.path("validate-resolve");
             PrestoDataProvider dataProvider = getDataProvider();
             if (dataProvider instanceof JacksonDataProvider) {
                 Paging paging = new PrestoPaging(0, 1);

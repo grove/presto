@@ -13,10 +13,10 @@ public class ValueLengthValidator extends FieldDataProcessor {
 
     @Override
     public FieldData processFieldData(FieldData fieldData, PrestoTopic topic, PrestoFieldUsage field) {
-        ObjectNode extraNode = (ObjectNode)field.getExtra();
-        if (extraNode != null) {
-            int minLength = getInt(extraNode, "minLength");
-            int maxLength = getInt(extraNode, "maxLength");
+        ObjectNode processorConfig = (ObjectNode)getConfig();
+        if (processorConfig != null) {
+            int minLength = getInt(processorConfig, "minLength");
+            int maxLength = getInt(processorConfig, "maxLength");
             for (Value value : fieldData.getValues()) {
                 String v = value.getValue();
                 int length = v.length();

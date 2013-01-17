@@ -201,7 +201,13 @@ public class PrestoProcessor {
     private <T extends AbstractProcessor> Iterable<T> getProcessors(Class<T> klass, JsonNode processorsNode, Type processType, Status status) {
         if (processorsNode.isTextual()) {
             String className = processorsNode.getTextValue();
-            T processor = getProcessorInstance(klass, className, processType, status);
+            T processor = getProcessorInstance(klass, className, null, processType, status);
+            if (processor != null) {
+                return Collections.singleton(processor);
+            }
+        } else if (processorsNode.isObject()) {
+            String className = processorsNode.path("class").getTextValue();
+            T processor = getProcessorInstance(klass, className, (ObjectNode)processorsNode, processType, status);
             if (processor != null) {
                 return Collections.singleton(processor);
             }
@@ -210,7 +216,13 @@ public class PrestoProcessor {
             for (JsonNode processorNode : processorsNode) {
                 if (processorNode.isTextual()) {
                     String className = processorNode.getTextValue();
-                    T processor = getProcessorInstance(klass, className, processType, status);
+                    T processor = getProcessorInstance(klass, className, null, processType, status);
+                    if (processor != null) {
+                        result.add(processor);
+                    }
+                } else if (processorNode.isObject()) {
+                    String className = processorNode.path("class").getTextValue();
+                    T processor = getProcessorInstance(klass, className, (ObjectNode)processorNode, processType, status);
                     if (processor != null) {
                         result.add(processor);
                     }
@@ -221,12 +233,13 @@ public class PrestoProcessor {
         return Collections.emptyList();
     }
 
-    private <T extends AbstractProcessor> T getProcessorInstance(Class<T> klass, String className, Type processType, Status status) {
+    private <T extends AbstractProcessor> T getProcessorInstance(Class<T> klass, String className, ObjectNode processorConfig, Type processType, Status status) {
         T processor = Utils.newInstanceOf(className, klass);
         if (processor != null) {
             processor.setPresto(presto);
             processor.setType(processType);
             processor.setStatus(status);
+            processor.setConfig(processorConfig);
         }
         return processor;
     }

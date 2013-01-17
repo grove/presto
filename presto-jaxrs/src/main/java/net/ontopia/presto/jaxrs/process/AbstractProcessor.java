@@ -3,6 +3,8 @@ package net.ontopia.presto.jaxrs.process;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.codehaus.jackson.node.ObjectNode;
+
 import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxrs.Presto;
 import net.ontopia.presto.jaxrs.PrestoProcessor.Status;
@@ -15,7 +17,8 @@ public class AbstractProcessor {
     private Presto presto;
     private Status status;
     private Type processType;
-
+    private ObjectNode config;
+    
     public Type getType() {
         return processType;
     }
@@ -69,6 +72,14 @@ public class AbstractProcessor {
             fieldData.setErrors(errors);
         }
         errors.add(error);
+    }
+
+    public ObjectNode getConfig() {
+        return config;
+    }
+
+    public void setConfig(ObjectNode config) {
+        this.config = config;
     }
    
 }

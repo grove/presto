@@ -21,9 +21,9 @@ public class AddOnChangeLinkPostProcessor extends FieldDataProcessor {
     @Override
     public FieldData processFieldData(FieldData fieldData, PrestoTopic topic, PrestoFieldUsage field) {
         
-        ObjectNode extraNode = getPresto().getFieldExtraNode(field);
-        if (extraNode != null) {
-            JsonNode validateNode = extraNode.path("validateOnChange");
+        ObjectNode processorConfig = getConfig();
+        if (processorConfig != null) {
+            JsonNode validateNode = processorConfig.path("validateOnChange");
             if (validateNode.isBoolean() && validateNode.asBoolean()) {
                 return addOnChangeLink(fieldData, topic, field);
             }

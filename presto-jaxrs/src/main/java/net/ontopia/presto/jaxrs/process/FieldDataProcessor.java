@@ -14,7 +14,7 @@ public abstract class FieldDataProcessor extends AbstractProcessor {
     public abstract FieldData processFieldData(FieldData fieldData, PrestoTopic topic, PrestoFieldUsage field);
 
     protected String getErrorMessage(String errorId, PrestoFieldUsage field, String defaultErrorMessage, Object... args) {
-        String errorMessage = getErrorMessage(errorId, field, defaultErrorMessage);
+        String errorMessage = getErrorMessageConfig(errorId, field, defaultErrorMessage);
         if (args != null && args.length > 0) {
             return MessageFormat.format(errorMessage, args);
         } else {
@@ -22,10 +22,10 @@ public abstract class FieldDataProcessor extends AbstractProcessor {
         }
     }
     
-    protected String getErrorMessage(String errorId, PrestoFieldUsage field, String defaultErrorMessage) {
-        ObjectNode extraNode = (ObjectNode)field.getExtra();
-        if (extraNode != null) {
-            JsonNode errorNode = extraNode.path("error-messages").path(errorId);
+    private String getErrorMessageConfig(String errorId, PrestoFieldUsage field, String defaultErrorMessage) {
+        ObjectNode config = getConfig();
+        if (config != null) {
+            JsonNode errorNode = config.path("error-messages").path(errorId);
             if (errorNode.isTextual()) {
                 return errorNode.getTextValue();
             }
