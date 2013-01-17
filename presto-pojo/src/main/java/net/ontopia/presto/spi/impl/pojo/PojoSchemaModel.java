@@ -70,13 +70,18 @@ public class PojoSchemaModel {
         private Map<String, ObjectNode> typesMap;
         private Map<String,PojoType> types;
         
-        public void parse(String databaseId, ObjectNode json) {
+        public void parse(String databaseId, ObjectNode schema) {
             schemaProvider = new PojoSchemaProvider();
             schemaProvider.setDatabaseId(databaseId);
 
-            fieldsMap = createFieldsMap(json);
-            viewsMap = createViewsMap(json);
-            typesMap = createTypesMap(json);
+            // extra
+            if (schema.has("extra")) {
+                schemaProvider.setExtra(schema.get("extra"));
+            }
+
+            fieldsMap = createFieldsMap(schema);
+            viewsMap = createViewsMap(schema);
+            typesMap = createTypesMap(schema);
 
             types = new HashMap<String,PojoType>();
             

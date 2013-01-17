@@ -7,14 +7,18 @@ public class Utils {
 
     private static Logger log = LoggerFactory.getLogger(Utils.class.getName());
 
-    @SuppressWarnings("unchecked")
     public static final <T> T newInstanceOf(String className, Class<T> type) {
+        return newInstanceOf(className, type, true);
+    }
+    
+    @SuppressWarnings("unchecked")
+    public static final <T> T newInstanceOf(String className, Class<T> type, boolean warnIfDifferentType) {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         try {
             Class<?> klass = Class.forName(className, true, classLoader);
             if (type.isAssignableFrom(klass)) {
                 return (T) klass.newInstance();
-            } else {
+            } else if (warnIfDifferentType) {
                 log.warn("Class " + className + " not assignable to " + type);                    
             }
         } catch (ClassNotFoundException e) {

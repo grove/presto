@@ -5,29 +5,29 @@
   <groupId>net.ontopia.presto</groupId>
   <artifactId>presto</artifactId>
   <packaging>pom</packaging>
-  <version>0.5.2-SNAPSHOT</version>
+  <version>0.5.3-SNAPSHOT</version>
 
   <dependencyManagement>
     <dependencies>
       <dependency>
         <groupId>org.codehaus.jackson</groupId>
         <artifactId>jackson-core-asl</artifactId>
-        <version>1.9.7</version>
+        <version>1.9.11</version>
       </dependency>
       <dependency>
         <groupId>org.codehaus.jackson</groupId>
         <artifactId>jackson-jaxrs</artifactId>
-        <version>1.9.7</version>
+        <version>1.9.11</version>
       </dependency>
       <dependency>
         <groupId>org.codehaus.jackson</groupId>
         <artifactId>jackson-mapper-asl</artifactId>
-        <version>1.9.7</version>
+        <version>1.9.11</version>
       </dependency>
       <dependency>
         <groupId>org.codehaus.jackson</groupId>
         <artifactId>jackson-xc</artifactId>
-        <version>1.9.7</version>
+        <version>1.9.11</version>
       </dependency>  
       <dependency>
         <groupId>org.ektorp</groupId>
@@ -37,22 +37,22 @@
       <dependency>
         <groupId>com.sun.jersey</groupId>
         <artifactId>jersey-core</artifactId>
-        <version>1.14</version>
+        <version>1.16</version>
       </dependency>
       <dependency>
 	<groupId>com.sun.jersey</groupId>
 	<artifactId>jersey-server</artifactId>
-        <version>1.14</version>
+        <version>1.16</version>
       </dependency>
       <dependency>
 	<groupId>com.sun.jersey</groupId>
 	<artifactId>jersey-json</artifactId>
-        <version>1.14</version>
+        <version>1.16</version>
       </dependency>
       <dependency>
 	<groupId>com.sun.jersey.contribs</groupId>
 	<artifactId>jersey-spring</artifactId>
-        <version>1.14</version>
+        <version>1.16</version>
       </dependency>
       <dependency>
 	<groupId>org.slf4j</groupId>

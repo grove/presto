@@ -311,7 +311,8 @@ public abstract class EditorResource {
             PrestoType type = schemaProvider.getTypeById(topic.getTypeId());
             PrestoView view = type.getDefaultView();
 
-            Topic result = session.getTopicInfo(topic, type, view, readOnly);
+            Topic result = session.getTopicInfoAndProcess(topic, type, view, readOnly);
+            
             return Response.ok(result).build();
 
         } catch (Exception e) {
@@ -344,7 +345,7 @@ public abstract class EditorResource {
             PrestoType type = schemaProvider.getTypeById(topic.getTypeId());
             PrestoView view = type.getViewById(viewId);
 
-            Topic result = session.getTopicInfo(topic, type, view, readOnly);
+            Topic result = session.getTopicInfoAndProcess(topic, type, view, readOnly);
             return Response.ok(result).build();
 
         } catch (Exception e) {
@@ -352,6 +353,49 @@ public abstract class EditorResource {
             throw e;
         } finally {
             session.close();      
+        }
+    }
+
+    @PUT
+    @Produces(APPLICATION_JSON_UTF8)
+    @Consumes(APPLICATION_JSON_UTF8)
+    @Path("validate-topic/{databaseId}/{topicId}/{viewId}")
+    public Response validateTopic(
+            @PathParam("databaseId") final String databaseId, 
+            @PathParam("topicId") final String topicId, 
+            @PathParam("viewId") final String viewId, Topic topicData) throws Exception {
+
+        Presto session = createPresto(databaseId);
+
+        try {
+            PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
+            PrestoDataProvider dataProvider = session.getDataProvider();
+
+            PrestoTopic topic = null;
+            PrestoType type;
+            if (topicId.startsWith("_")) {
+                type = schemaProvider.getTypeById(topicId.substring(1));
+            } else {
+                topic = dataProvider.getTopicById(topicId);
+                if (topic == null) {
+                    return Response.status(Status.NOT_FOUND).build();
+                }
+                type = schemaProvider.getTypeById(topic.getTypeId());
+            }
+
+            PrestoView view = type.getViewById(viewId);
+
+            Topic result = session.validateTopic(topic, type, view, topicData);
+
+            session.commit();
+
+            return Response.ok(result).build();
+
+        } catch (Exception e) {
+            session.abort();
+            throw e;
+        } finally {
+            session.close();
         }
     }
 
@@ -629,7 +673,7 @@ public abstract class EditorResource {
         }
         
         @Override
-        protected URI getBaseUri() {
+        public URI getBaseUri() {
             return uriInfo.getBaseUri();
         }
         

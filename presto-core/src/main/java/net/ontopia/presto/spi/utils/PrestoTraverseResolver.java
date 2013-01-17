@@ -17,21 +17,16 @@ import org.codehaus.jackson.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PrestoTraverseResolver implements PrestoFieldResolver {
+public class PrestoTraverseResolver extends PrestoFieldResolver {
 
     private static Logger log = LoggerFactory.getLogger(PrestoTraverseResolver.class.getName());
 
-    private final PrestoVariableContext context;
-    private final ObjectNode config;
-
-    public PrestoTraverseResolver(PrestoVariableContext context, ObjectNode config) {
-        this.context = context;
-        this.config = config;
-    }
-
     @Override
     public PagedValues resolve(Collection<? extends Object> objects,
-            PrestoType type, PrestoField field, boolean isReference, Paging paging) {
+            PrestoField field, boolean isReference, Paging paging, PrestoVariableResolver variableResolver) {
+        
+        ObjectNode config = getConfig();
+        
         if (config.has("path")) {
             JsonNode pathNode = config.get("path");
             if (pathNode.isArray()) {
@@ -49,6 +44,8 @@ public class PrestoTraverseResolver implements PrestoFieldResolver {
     }
 
     private Collection<Object> traverseField(Collection<Object> objects, String fieldId) {
+        PrestoVariableContext context = getVariableContext();
+        
         Collection<Object> result = new HashSet<Object>();
         for (Object object : objects) {
             if (object instanceof PrestoTopic) {

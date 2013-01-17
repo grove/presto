@@ -7,14 +7,11 @@ import java.util.Comparator;
 import java.util.List;
 
 import net.ontopia.presto.spi.PrestoFieldUsage;
-import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.jackson.JacksonDataProvider;
 import net.ontopia.presto.spi.jackson.JacksonTopic;
-import net.ontopia.presto.spi.utils.PrestoVariableContext;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.Change;
-import net.ontopia.presto.spi.utils.PrestoFieldResolver;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;
@@ -187,22 +184,6 @@ public abstract class CouchDataProvider extends JacksonDataProvider {
                 return false;
             }
         }
-    }
-
-    // -- JacksonDataProvider
-    
-    @Override
-    public PrestoFieldResolver createFieldResolver(PrestoSchemaProvider schemaProvider, ObjectNode config) {
-        PrestoVariableContext context = new PrestoVariableContext(schemaProvider, this, getObjectMapper());
-        String type = config.get("type").getTextValue();
-        if (type == null) {
-            log.error("type not specified on resolve item: " + config);
-        } else if (type.equals("couchdb-view")) {
-            return new CouchViewResolver(this, context, config);
-        } else {
-            return super.createFieldResolver(schemaProvider, config);
-        }
-        return null;
     }
 
     // builder pattern

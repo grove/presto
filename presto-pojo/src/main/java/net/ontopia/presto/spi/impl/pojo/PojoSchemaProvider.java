@@ -15,6 +15,8 @@ public class PojoSchemaProvider implements PrestoSchemaProvider {
 
     private Map<String,PrestoType> typesMap = new HashMap<String,PrestoType>();
 
+    private Object extra;
+
     public static PojoSchemaProvider getSchemaProvider(String databaseId, String schemaFile) {
         return PojoSchemaModel.parse(databaseId, schemaFile);
     }
@@ -50,6 +52,15 @@ public class PojoSchemaProvider implements PrestoSchemaProvider {
 
     protected void addType(PrestoType type) {
         this.typesMap.put(type.getId(), type);        
+    }
+
+    @Override
+    public Object getExtra() {
+        return extra;
+    }
+
+    public void setExtra(Object extra) {
+        this.extra = extra;
     }
 
 }
