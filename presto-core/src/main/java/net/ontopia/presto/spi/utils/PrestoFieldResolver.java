@@ -2,14 +2,37 @@ package net.ontopia.presto.spi.utils;
 
 import java.util.Collection;
 
+import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
 import net.ontopia.presto.spi.PrestoTopic.Paging;
-import net.ontopia.presto.spi.PrestoType;
 
-public interface PrestoFieldResolver {
+import org.codehaus.jackson.node.ObjectNode;
 
-    PagedValues resolve(Collection<? extends Object> objects,
-            PrestoType type, PrestoField field, boolean isReference, Paging paging);
+public abstract class PrestoFieldResolver {
+
+    private PrestoVariableContext variableContext;
+    private ObjectNode config;
+
+    public PrestoDataProvider getDataProvider() {
+        return getVariableContext().getDataProvider();
+    }
+    
+    public PrestoVariableContext getVariableContext() {
+        return variableContext;
+    }
+    public void setVariableContext(PrestoVariableContext variableContext) {
+        this.variableContext = variableContext;
+    }
+    
+    public ObjectNode getConfig() {
+        return config;
+    }
+    public void setConfig(ObjectNode config) {
+        this.config = config;
+    }
+
+    public abstract PagedValues resolve(Collection<? extends Object> objects,
+            PrestoField field, boolean isReference, Paging paging, PrestoVariableResolver variableResolver);
 
 }

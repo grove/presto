@@ -7,28 +7,19 @@ import java.util.List;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
 import net.ontopia.presto.spi.PrestoTopic.Paging;
-import net.ontopia.presto.spi.PrestoType;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;
 
-public class PrestoFunctionResolver implements PrestoFieldResolver {
-
-    private final PrestoVariableContext context;
-    private final ObjectNode config;
-
-    public PrestoFunctionResolver(PrestoVariableContext context, ObjectNode config) {
-        this.context = context;
-        this.config = config;
-    }
+public class PrestoFunctionResolver extends PrestoFieldResolver {
 
     @Override
     public PagedValues resolve(Collection<? extends Object> objects,
-            PrestoType type, PrestoField field, boolean isReference, Paging paging) {
+            PrestoField field, boolean isReference, Paging paging, PrestoVariableResolver variableResolver) {
         
-        PrestoFunction func = getFunction(config);
+        PrestoFunction func = getFunction(getConfig());
         if (func != null) {
-            List<Object> result = func.execute(context, objects, type, field, paging);
+            List<Object> result = func.execute(getVariableContext(), objects, field, paging);
             return new PrestoPagedValues(result, paging, result.size());            
         } else {
             return new PrestoPagedValues(Collections.emptyList(), paging, 0);        

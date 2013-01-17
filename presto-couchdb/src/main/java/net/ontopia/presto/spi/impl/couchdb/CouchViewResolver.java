@@ -9,11 +9,9 @@ import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
 import net.ontopia.presto.spi.PrestoTopic.Paging;
-import net.ontopia.presto.spi.PrestoType;
-import net.ontopia.presto.spi.utils.PrestoVariableContext;
 import net.ontopia.presto.spi.utils.PrestoFieldResolver;
 import net.ontopia.presto.spi.utils.PrestoPagedValues;
-import net.ontopia.presto.spi.utils.PrestoTopicFieldVariableResolver;
+import net.ontopia.presto.spi.utils.PrestoVariableContext;
 import net.ontopia.presto.spi.utils.PrestoVariableResolver;
 
 import org.codehaus.jackson.JsonNode;
@@ -24,24 +22,18 @@ import org.ektorp.ViewResult.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CouchViewResolver implements PrestoFieldResolver {
+public class CouchViewResolver extends PrestoFieldResolver {
 
     @SuppressWarnings("unused")
     private static Logger log = LoggerFactory.getLogger(CouchViewResolver.class.getName());
 
-    private final CouchDataProvider dataProvider;
-    private final PrestoVariableContext context;
-    private final ObjectNode config;
-
-    CouchViewResolver(CouchDataProvider dataProvider, PrestoVariableContext context, ObjectNode config) {
-        this.dataProvider = dataProvider;
-        this.context = context;
-        this.config = config;
-    }
-
     @Override
     public PagedValues resolve(Collection<? extends Object> objects,
-            PrestoType type, PrestoField field, boolean isReference, Paging paging) {
+            PrestoField field, boolean isReference, Paging paging, PrestoVariableResolver variableResolver) {
+
+        PrestoVariableContext context = getVariableContext();
+        ObjectNode config = getConfig();
+        
         String designDocId = config.get("designDocId").getTextValue();
         String viewName = config.get("viewName").getTextValue();
 
@@ -59,7 +51,6 @@ public class CouchViewResolver implements PrestoFieldResolver {
         Object endKey = null;
 
         if (config.has("key")) {
-            PrestoVariableResolver variableResolver = new PrestoTopicFieldVariableResolver(context);
             keys = context.replaceVariables(variableResolver, objects, config.get("key"));
             if (keys.isEmpty()) {
                 return new PrestoPagedValues(Collections.emptyList(), paging, 0);
@@ -67,8 +58,6 @@ public class CouchViewResolver implements PrestoFieldResolver {
             query = query.keys(keys);
 
         } else if (config.has("startKey") && config.has("endKey")) {
-            PrestoVariableResolver variableResolver = new PrestoTopicFieldVariableResolver(context);
-
             Collection<?> startKeys = context.replaceVariables(variableResolver, objects, config.get("startKey"));            
             Collection<?> endKeys = context.replaceVariables(variableResolver, objects, config.get("endKey"));
             
@@ -112,7 +101,9 @@ public class CouchViewResolver implements PrestoFieldResolver {
             }
         }
 
-        List<Object> result = new ArrayList<Object>();        
+        List<Object> result = new ArrayList<Object>();
+
+        CouchDataProvider dataProvider = (CouchDataProvider)getDataProvider();
         ViewResult viewResult = dataProvider.getCouchConnector().queryView(query);
 
         if (includeDocs) {

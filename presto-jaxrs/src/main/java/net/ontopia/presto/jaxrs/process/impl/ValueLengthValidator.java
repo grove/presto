@@ -24,19 +24,19 @@ public class ValueLengthValidator extends FieldDataProcessor {
                     if (length < minLength || length > maxLength) {
                         setValid(false);
                         if (minLength == maxLength) {
-                            addError(fieldData, "Field value must have exactly " + minLength + getCharactersString(minLength));
+                            addError(fieldData, getErrorMessage("value-length-exact", field, "Field value must have exactly {0} {1}", minLength, getCharactersString(minLength)));
                         } else {
-                            addError(fieldData, "Field value must have between " + minLength + " and " + maxLength + getCharactersString(maxLength));
+                            addError(fieldData, getErrorMessage("value-length-between", field, "Field value must have between {0} and {1} {2}", minLength, maxLength, getCharactersString(maxLength)));
                         }
                     }
                 } else {
                     if (length < minLength) {
                         setValid(false);
-                        addError(fieldData, "Field value must have at least " + minLength + getCharactersString(minLength));
+                        addError(fieldData, getErrorMessage("value-length-at-least", field, "Field value must have at least {0} {1}", minLength, getCharactersString(minLength)));
                     }
                     if (length > maxLength) {
                         setValid(false);
-                        addError(fieldData, "Field value must have at most " + maxLength + getCharactersString(maxLength));
+                        addError(fieldData, getErrorMessage("value-length-no-more-than", field, "Field value must have no more than {0} {1}", maxLength, getCharactersString(maxLength)));
                     }
                 }
             }
@@ -46,9 +46,9 @@ public class ValueLengthValidator extends FieldDataProcessor {
 
     protected String getCharactersString(int length) {
         if (length == 1) {
-            return " character";
+            return "character";
         } else {
-            return " characters";
+            return "characters";
         }
     }
 

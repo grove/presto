@@ -1,42 +1,40 @@
 package net.ontopia.presto.spi.jackson;
 
+import java.util.Collection;
 import java.util.List;
 
 import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoInlineTopicBuilder;
-import net.ontopia.presto.spi.PrestoSchemaProvider;
+import net.ontopia.presto.spi.PrestoTopic.PagedValues;
+import net.ontopia.presto.spi.PrestoTopic.Paging;
 import net.ontopia.presto.spi.PrestoType;
-import net.ontopia.presto.spi.utils.PrestoVariableContext;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.Change;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.DefaultDataProvider;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.DefaultTopic;
-import net.ontopia.presto.spi.utils.PrestoFieldResolver;
-import net.ontopia.presto.spi.utils.PrestoFunctionResolver;
-import net.ontopia.presto.spi.utils.PrestoTraverseResolver;
+import net.ontopia.presto.spi.utils.PrestoVariableResolver;
 
+import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public abstract class JacksonDataProvider implements DefaultDataProvider {
-
-    private static Logger log = LoggerFactory.getLogger(JacksonDataProvider.class.getName());
 
     protected final ObjectMapper mapper;
     protected final JacksonDataStrategy dataStrategy;
     protected final IdentityStrategy identityStrategy;
-
+    protected final JacksonResolver resolver;
+    
     private static final JacksonDataStrategy inlineDataStrategy = new JacksonDefaultDataStrategy();
     
     protected JacksonDataProvider() {
         this.mapper = createObjectMapper();
         this.dataStrategy = createDataStrategy(mapper);
         this.identityStrategy = createIdentityStrategy();
+        this.resolver = createResolver();
     }
-    
+
     protected ObjectMapper createObjectMapper() {
         return new ObjectMapper();
     }
@@ -51,6 +49,15 @@ public abstract class JacksonDataProvider implements DefaultDataProvider {
 
     protected JacksonDataStrategy getInlineDataStrategy() {
         return inlineDataStrategy;
+    }
+    
+    protected JacksonResolver createResolver() {
+        return new JacksonResolver() {
+            @Override
+            protected JacksonDataProvider getDataProvider() {
+                return JacksonDataProvider.this;
+            }
+        };
     }
 
     // -- JacksonDataProvider
@@ -124,21 +131,6 @@ public abstract class JacksonDataProvider implements DefaultDataProvider {
         }
     }
 
-    public PrestoFieldResolver createFieldResolver(PrestoSchemaProvider schemaProvider, ObjectNode config) {
-        PrestoVariableContext context = new PrestoVariableContext(schemaProvider, this, getObjectMapper());
-        String type = config.get("type").getTextValue();
-        if (type == null) {
-            log.error("type not specified on resolve item: " + config);
-        } else if (type.equals("traverse")) {
-            return new PrestoTraverseResolver(context, config);
-        } else if (type.equals("function")) {
-            return new PrestoFunctionResolver(context, config);
-        } else {
-            log.error("Unknown type specified on resolve item: " + config);            
-        }
-        return null;
-    }
-
     protected final int compareComparables(String o1, String o2) {
         if (o1 == null)
             return (o2 == null ? 0 : -1);
@@ -156,6 +148,11 @@ public abstract class JacksonDataProvider implements DefaultDataProvider {
     @Override
     public Object serializeFieldValue(PrestoField field, Object value) {
        return value; 
+    }
+
+    public PagedValues resolveValues(Collection<? extends Object> objects, PrestoField field, Paging paging, 
+            JsonNode resolveConfig, PrestoVariableResolver variableResolver) {
+        return resolver.resolveValues(objects, field, paging, resolveConfig, variableResolver);
     }
 
 }

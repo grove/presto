@@ -12,7 +12,6 @@ import java.util.Map.Entry;
 
 import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
-import net.ontopia.presto.spi.PrestoTopic;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -38,12 +37,12 @@ public class PrestoVariableContext {
         }
         Collection<JsonNode> result = new ArrayList<JsonNode>();
         for (Object value : values) {
-            result.addAll(replaceVariables(variableResolver, (PrestoTopic)value, key));
+            result.addAll(replaceVariables(variableResolver, value, key));
         }
         return result;
     }
 
-    private Collection<JsonNode> replaceVariables(PrestoVariableResolver variableResolver, PrestoTopic topic, JsonNode key) {
+    private Collection<JsonNode> replaceVariables(PrestoVariableResolver variableResolver, Object value, JsonNode key) {
         // find set of variables
         Collection<String> varNames = new HashSet<String>();
         findVariables(key, varNames);
@@ -54,16 +53,26 @@ public class PrestoVariableContext {
         int totalSize = 1;
         Map<String,List<String>> varValues = new HashMap<String,List<String>>();
         for (String variable : varNames) {
-            List<String> valueStrings = variableResolver.getValues(topic, variable);
+            List<String> valueStrings = variableResolver.getValues(value, variable);
             varValues.put(variable, valueStrings);
             totalSize = totalSize * valueStrings.size();
         }
         int varCount = varValues.size(); // number of variables
-        int arraySize = totalSize/varCount; // size of array
+        int arraySize; // size of array
+        if (totalSize == 0) {
+            arraySize = 0;
+        } else if (totalSize == 1) {
+            arraySize = 1;
+        } else {
+            arraySize = totalSize/varCount;
+        }
         int arrayCount = varCount * arraySize;
         // A:[1,2] B[5,6,7] C[0] -> [1,5,0] [1,6,0] [1,7,0] 
         //                          [2,5,0] [2,6,0] [2,7,0]
-
+        // A:[1] B[2,3] -> [1, 2], [1, 3]
+        // A:[1] B[2] -> [1, 2]
+        // A:[] B[2] -> null
+        
         // make keys from cross-product of variable values
         Map<String,String> map = new HashMap<String,String>();
         Collection<JsonNode> keys = new ArrayList<JsonNode>();
@@ -89,11 +98,10 @@ public class PrestoVariableContext {
             }
             ObjectNode result = nodeFactory.objectNode();
             for (String key : keys) {
-                String variable = getVariable(key);
-                if (variable != null) {
-                    result.put(variables.get(variable), replaceVariables(variables, onode.get(key)));
+                if (isVariable(key)) {
+                    result.put(variables.get(getVariable(key)), replaceVariables(variables, onode.get(key)));
                 } else {
-                    result.put(key, replaceVariables(variables, onode.get(key)));
+                    result.put(getKey(key), replaceVariables(variables, onode.get(key)));
                 }
             }
             return result;
@@ -106,11 +114,11 @@ public class PrestoVariableContext {
             }
             return result;
         } else if (node.isTextual()) {
-            String variable = getVariable(node.getTextValue());
-            if (variable != null) {
-                return nodeFactory.textNode(variables.get(variable));
+            String key = node.getTextValue();
+            if (isVariable(key)) {
+                return nodeFactory.textNode(variables.get(getVariable(key)));
             } else {
-                return nodeFactory.textNode(node.getTextValue());
+                return nodeFactory.textNode(getKey(key));
             }
         }
         return getObjectMapper().valueToTree(node);
@@ -118,18 +126,18 @@ public class PrestoVariableContext {
 
     private void findVariables(JsonNode node, Collection<String> variables) {
         if (node.isTextual()) {
-            String variable = getVariable(node.getTextValue());
-            if (variable != null) {
-                variables.add(variable);
+            String key = node.getTextValue();
+            if (isVariable(key)) {
+                variables.add(getVariable(key));
             }            
         } else if (node.isObject()) {
             ObjectNode onode = (ObjectNode)node;
             Iterator<Entry<String, JsonNode>> fields = onode.getFields();
             while (fields.hasNext()) {
                 Entry<String,JsonNode> field = fields.next();
-                String variable = getVariable(field.getKey());
-                if (variable != null) {
-                    variables.add(variable);
+                String key = field.getKey();
+                if (isVariable(key)) {
+                    variables.add(getVariable(key));
                 }
                 findVariables(field.getValue(), variables);
             }
@@ -140,11 +148,27 @@ public class PrestoVariableContext {
         }
     }
 
+    private boolean isVariable(String value) {
+        if (value.length() > 1 && value.charAt(0) == '$' && 
+                (Character.isLetter(value.charAt(1)) || value.charAt(1) == ':')) {
+            return true;
+        }
+        return false;
+    }
+    
     private String getVariable(String value) {
-        if (value.startsWith("$")) {
+        if (isVariable(value)) {
+            // proper variable
             return value.substring(1);
         }
-        return null;
+        throw new RuntimeException("Illegal variable: " + value);
+    }
+    
+    private String getKey(String value) {
+        if (isVariable(value)) {
+            throw new RuntimeException("Illegal key: " + value);
+        }
+        return value;
     }
 
     public PrestoSchemaProvider getSchemaProvider() {

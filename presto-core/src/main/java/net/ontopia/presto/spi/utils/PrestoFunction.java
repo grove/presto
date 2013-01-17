@@ -5,11 +5,10 @@ import java.util.List;
 
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic.Paging;
-import net.ontopia.presto.spi.PrestoType;
 
 public interface PrestoFunction {
 
     List<Object> execute(PrestoVariableContext context, Collection<? extends Object> objects, 
-            PrestoType type, PrestoField field, Paging paging);
+            PrestoField field, Paging paging);
 
 }

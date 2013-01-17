@@ -21,19 +21,19 @@ public class FieldCardinalityValidator extends FieldDataProcessor {
             if (cardinality < minCardinality || cardinality > maxCardinality) {
                 setValid(false);
                 if (minCardinality == maxCardinality) {
-                    addError(fieldData, "Field must have exactly " + minCardinality + getValuesString(minCardinality));
+                    addError(fieldData, getErrorMessage("cardinality-exact", field, "Field must have exactly {0} {1}", minCardinality, getValuesString(minCardinality)));
                 } else {
-                    addError(fieldData, "Field must have between " + minCardinality + " and " + maxCardinality + getValuesString(maxCardinality));
+                    addError(fieldData, getErrorMessage("cardinality-between", field, "Field must have between {0} and {1} {2}", minCardinality, maxCardinality, getValuesString(maxCardinality)));
                 }
             }
         } else {
             if (minCardinality > 0 && cardinality < minCardinality) {
                 setValid(false);
-                addError(fieldData, "Field must have at least " + minCardinality + getValuesString(minCardinality));
+                addError(fieldData, getErrorMessage("cardinality-at-least", field, "Field must have at least {0} {1}", minCardinality, getValuesString(minCardinality)));
             }
             if (maxCardinality > 0 && cardinality > maxCardinality) {
                 setValid(false);
-                addError(fieldData, "Field must have no more than " + maxCardinality + getValuesString(maxCardinality));
+                addError(fieldData, getErrorMessage("cardinality-no-more-than", field, "Field must have no more than {0} {1}", maxCardinality, getValuesString(maxCardinality)));
             }
         }
         return fieldData;
@@ -41,9 +41,9 @@ public class FieldCardinalityValidator extends FieldDataProcessor {
 
     protected String getValuesString(int cardinality) {
         if (cardinality == 1) {
-            return " value";
+            return "value";
         } else {
-            return " values";
+            return "values";
         }
     }
 

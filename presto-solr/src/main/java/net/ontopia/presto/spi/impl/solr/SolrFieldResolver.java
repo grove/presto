@@ -10,11 +10,9 @@ import java.util.List;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
 import net.ontopia.presto.spi.PrestoTopic.Paging;
-import net.ontopia.presto.spi.PrestoType;
-import net.ontopia.presto.spi.utils.PrestoVariableContext;
 import net.ontopia.presto.spi.utils.PrestoFieldResolver;
 import net.ontopia.presto.spi.utils.PrestoPagedValues;
-import net.ontopia.presto.spi.utils.PrestoTopicFieldVariableResolver;
+import net.ontopia.presto.spi.utils.PrestoVariableContext;
 import net.ontopia.presto.spi.utils.PrestoVariableResolver;
 
 import org.apache.solr.client.solrj.SolrQuery;
@@ -32,17 +30,9 @@ import org.codehaus.jackson.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class SolrFieldResolver implements PrestoFieldResolver {
+public abstract class SolrFieldResolver extends PrestoFieldResolver {
 
     private static Logger log = LoggerFactory.getLogger(SolrFieldResolver.class.getName());
-
-    private final PrestoVariableContext context;
-    private final ObjectNode config;
-
-    public SolrFieldResolver(PrestoVariableContext context, ObjectNode config) {
-        this.context = context;
-        this.config = config;
-    }
 
     public abstract URL getSolrServerUrl();
 
@@ -50,15 +40,16 @@ public abstract class SolrFieldResolver implements PrestoFieldResolver {
 
     @Override
     public PagedValues resolve(Collection<? extends Object> objects,
-            PrestoType type, PrestoField field, boolean isReference,
-            Paging paging) {
+            PrestoField field, boolean isReference,
+            Paging paging, PrestoVariableResolver variableResolver) {
 
+        PrestoVariableContext context = getVariableContext();
+        ObjectNode config = getConfig();
+        
         SolrServer solrServer = getSolrServer();
         URL solrServerUrl = getSolrServerUrl();
         
         SolrQuery solrQuery = new SolrQuery();
-
-        PrestoVariableResolver variableResolver = new PrestoTopicFieldVariableResolver(context);
 
         CharSequence q_query = expandQuery(variableResolver, " AND ", objects, config.path("q"));
         if (isEmpty(q_query)) {
@@ -105,7 +96,7 @@ public abstract class SolrFieldResolver implements PrestoFieldResolver {
             }
 
             List<Object> result = new ArrayList<Object>(results.size());
-            if (field.isReferenceField()) {
+            if (isReference) {
                 result.addAll(context.getDataProvider().getTopicsByIds(values));
             } else {
                 result.addAll(values);
@@ -149,7 +140,7 @@ public abstract class SolrFieldResolver implements PrestoFieldResolver {
                 }
 
             } else {
-                Collection<JsonNode> qvalues = context.replaceVariables(variableResolver, objects, qo);
+                Collection<JsonNode> qvalues = getVariableContext().replaceVariables(variableResolver, objects, qo);
                 if (qvalues.isEmpty()) {
                     return null;
                 }
