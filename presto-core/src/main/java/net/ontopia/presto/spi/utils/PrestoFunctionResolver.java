@@ -30,7 +30,9 @@ public class PrestoFunctionResolver extends PrestoFieldResolver {
         JsonNode nameNode = resolveConfig.path("class");
         if (nameNode.isTextual()) {
             String className = nameNode.getTextValue();
-            return Utils.newInstanceOf(className, PrestoFunction.class);
+            if (className != null) {
+                return Utils.newInstanceOf(className, PrestoFunction.class);
+            }
         }
         return null;
     }
