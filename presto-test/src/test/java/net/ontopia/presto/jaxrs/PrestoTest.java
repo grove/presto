@@ -13,6 +13,7 @@ import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -28,7 +29,7 @@ public class PrestoTest {
         this.schemaProvider = PrestoTestService.createSchemaProvider(databaseId);
     }
     
-    @Before 
+    @After 
     public void tearDown() {
         this.dataProvider = null;
         this.schemaProvider = null;
