@@ -17,7 +17,8 @@ public class FieldMessagesPostProcessor extends FieldDataProcessor {
     public FieldData processFieldData(FieldData fieldData, PrestoTopic topic, PrestoFieldUsage field) {
         ObjectNode extraNode = getPresto().getFieldExtraNode(field);
         if (extraNode != null) {
-            JsonNode messagesNode = extraNode.path("messages");
+            String messagesKey = getMessagesKey();
+            JsonNode messagesNode = extraNode.path(messagesKey);
             if (messagesNode.isArray()) {
                 List<FieldData.Message> messages = new ArrayList<FieldData.Message>();
                 for (JsonNode messageNode : messagesNode) {
@@ -33,6 +34,15 @@ public class FieldMessagesPostProcessor extends FieldDataProcessor {
             }
         }
         return fieldData;
+    }
+
+    private String getMessagesKey() {
+        String result = null;
+        ObjectNode config = getConfig();
+        if (config != null && config.has("key")) {
+            result = config.get("key").getTextValue();
+        }
+        return result == null ? "messages" : result;
     }
 
 }
