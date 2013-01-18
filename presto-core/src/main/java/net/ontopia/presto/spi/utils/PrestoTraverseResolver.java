@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
 
 public class PrestoTraverseResolver extends PrestoFieldResolver {
 
-    private static Logger log = LoggerFactory.getLogger(PrestoTraverseResolver.class.getName());
+    private static Logger log = LoggerFactory.getLogger(PrestoTraverseResolver.class);
 
     @Override
     public PagedValues resolve(Collection<? extends Object> objects,

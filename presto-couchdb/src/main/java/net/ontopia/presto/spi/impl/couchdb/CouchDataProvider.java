@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 
 public abstract class CouchDataProvider extends JacksonDataProvider {
 
-    private static Logger log = LoggerFactory.getLogger(CouchDataProvider.class.getName());
+    private static Logger log = LoggerFactory.getLogger(CouchDataProvider.class);
 
     static final int DEFAULT_OFFSET = 0;
     static final int DEFAULT_LIMIT = 100;

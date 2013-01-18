@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 
 public class PrestoDefaultUpdate implements PrestoUpdate, PrestoDefaultChangeSet.Change {
 
-    private static Logger log = LoggerFactory.getLogger(PrestoDefaultUpdate.class.getName());
+    private static Logger log = LoggerFactory.getLogger(PrestoDefaultUpdate.class);
 
     private final PrestoDefaultChangeSet changeSet;
 

@@ -29,7 +29,7 @@ import com.mongodb.MongoURI;
 
 public abstract class MongoDataProvider extends JacksonDataProvider {
 
-    private static Logger log = LoggerFactory.getLogger(MongoDataProvider.class.getName());
+    private static Logger log = LoggerFactory.getLogger(MongoDataProvider.class);
 
     private Map<String,Mongo> mongos = new HashMap<String,Mongo>();
     private Map<String,JacksonDBCollection<ObjectNode, Object>> collections = new HashMap<String,JacksonDBCollection<ObjectNode, Object>>();

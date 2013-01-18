@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 
 public class Utils {
 
-    private static Logger log = LoggerFactory.getLogger(Utils.class.getName());
+    private static Logger log = LoggerFactory.getLogger(Utils.class);
 
     public static final <T> T newInstanceOf(String className, Class<T> type) {
         return newInstanceOf(className, type, true);

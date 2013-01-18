@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 
 public abstract class JacksonResolver {
 
-    private static Logger log = LoggerFactory.getLogger(JacksonResolver.class.getName());
+    private static Logger log = LoggerFactory.getLogger(JacksonResolver.class);
 
     protected abstract JacksonDataProvider getDataProvider();
 
