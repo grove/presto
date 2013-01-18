@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 
 public abstract class PrestoDefaultChangeSet implements PrestoChangeSet {
 
-    private static Logger log = LoggerFactory.getLogger(PrestoDefaultChangeSet.class.getName());
+    private static Logger log = LoggerFactory.getLogger(PrestoDefaultChangeSet.class);
 
     public static interface DefaultDataProvider extends PrestoDataProvider {
 

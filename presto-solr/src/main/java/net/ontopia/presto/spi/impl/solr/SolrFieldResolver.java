@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 
 public abstract class SolrFieldResolver extends PrestoFieldResolver {
 
-    private static Logger log = LoggerFactory.getLogger(SolrFieldResolver.class.getName());
+    private static Logger log = LoggerFactory.getLogger(SolrFieldResolver.class);
 
     public abstract URL getSolrServerUrl();
 

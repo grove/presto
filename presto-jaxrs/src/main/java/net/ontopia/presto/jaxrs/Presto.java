@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
 
 public abstract class Presto {
 
-    private static Logger log = LoggerFactory.getLogger(Presto.class.getName());
+    private static Logger log = LoggerFactory.getLogger(Presto.class);
 
     public static final int DEFAULT_LIMIT = 100;
 
@@ -564,14 +564,15 @@ public abstract class Presto {
                 JsonNode classNode = availableValuesNode.path("class");
                 if (classNode.isTextual()) {
                     String className = classNode.getTextValue();
-                    AvailableFieldValuesResolver processor = Utils.newInstanceOf(className, AvailableFieldValuesResolver.class);
-                    if (processor != null) {
-                        processor.setPresto(this);
-                        return processor.getAvailableFieldValues(topic, field);
+                    if (className != null) {
+                        AvailableFieldValuesResolver processor = Utils.newInstanceOf(className, AvailableFieldValuesResolver.class);
+                        if (processor != null) {
+                            processor.setPresto(this);
+                            return processor.getAvailableFieldValues(topic, field);
+                        }
                     }
-                } else {
-                    log.warn("Field " + field.getId() + " extra.availableValues.class missing: " + extra);                    
                 }
+                log.warn("Not able to extract extra.availableValues.class from field " + field.getId() + ": " + extra);                    
             } else if (!availableValuesNode.isMissingNode()) {
                 log.warn("Field " + field.getId() + " extra.availableValues is not an array: " + extra);
             }
@@ -1045,14 +1046,15 @@ public abstract class Presto {
                 JsonNode classNode = createTypesNode.path("class");
                 if (classNode.isTextual()) {
                     String className = classNode.getTextValue();
-                    AvailableFieldCreateTypesResolver processor = Utils.newInstanceOf(className, AvailableFieldCreateTypesResolver.class);
-                    if (processor != null) {
-                        processor.setPresto(this);
-                        return processor.getAvailableFieldCreateTypes(topic, field);
+                    if (className != null) {
+                        AvailableFieldCreateTypesResolver processor = Utils.newInstanceOf(className, AvailableFieldCreateTypesResolver.class);
+                        if (processor != null) {
+                            processor.setPresto(this);
+                            return processor.getAvailableFieldCreateTypes(topic, field);
+                        }
                     }
-                } else {
-                    log.warn("Field " + field.getId() + " extra.createTypes.class missing: " + extra);                    
                 }
+                log.warn("Not able to extract extra.createTypes.class from field " + field.getId() + ": " + extra);                    
             } else if (!createTypesNode.isMissingNode()) {
                 log.warn("Field " + field.getId() + " extra.createTypes is not an object: " + extra);
             }

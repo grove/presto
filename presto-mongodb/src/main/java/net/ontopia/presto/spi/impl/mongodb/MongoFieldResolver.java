@@ -36,7 +36,7 @@ import com.mongodb.MongoException;
 
 public abstract class MongoFieldResolver extends PrestoFieldResolver {
 
-    private static Logger log = LoggerFactory.getLogger(MongoFieldResolver.class.getName());
+    private static Logger log = LoggerFactory.getLogger(MongoFieldResolver.class);
 
     private final ObjectMapper mapper = new ObjectMapper();
 

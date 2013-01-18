@@ -21,10 +21,17 @@ import net.ontopia.presto.spi.PrestoView;
 import net.ontopia.presto.spi.utils.Utils;
 
 import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PrestoProcessor {
 
+    private static Logger log = LoggerFactory.getLogger(PrestoProcessor.class);
+
+    private final ObjectMapper mapper = new ObjectMapper();
+    
     private Presto presto;
 
     public static class Status {
@@ -165,8 +172,10 @@ public class PrestoProcessor {
     private Topic processTopicExtra(Topic topicData, PrestoTopic topic, PrestoType type, PrestoView view, ObjectNode extraNode, Type processType, Status status) {
         if (extraNode != null) {
             JsonNode processorsNode = getTopicProcessorsNode(extraNode, processType);
-            for (TopicProcessor processor : getProcessors(TopicProcessor.class, processorsNode, processType, status)) {
-                topicData = processor.processTopic(topicData, topic, type, view);
+            if (!processorsNode.isMissingNode()) {
+                for (TopicProcessor processor : getProcessors(TopicProcessor.class, processorsNode, processType, status)) {
+                    topicData = processor.processTopic(topicData, topic, type, view);
+                }
             }
         }
         return topicData;
@@ -175,8 +184,10 @@ public class PrestoProcessor {
     private FieldData processFieldDataExtra(FieldData fieldData, PrestoTopic topic, PrestoFieldUsage field, ObjectNode extraNode, Type processType, Status status) {
         if (extraNode != null) {
             JsonNode processorsNode = getFieldDataProcessorsNode(extraNode, processType);
-            for (FieldDataProcessor processor : getProcessors(FieldDataProcessor.class, processorsNode, processType, status)) {
-                fieldData = processor.processFieldData(fieldData, topic, field);                
+            if (!processorsNode.isMissingNode()) {
+                for (FieldDataProcessor processor : getProcessors(FieldDataProcessor.class, processorsNode, processType, status)) {
+                    fieldData = processor.processFieldData(fieldData, topic, field);                
+                }
             }
         }
         return fieldData;
@@ -199,38 +210,68 @@ public class PrestoProcessor {
     }
 
     private <T extends AbstractProcessor> Iterable<T> getProcessors(Class<T> klass, JsonNode processorsNode, Type processType, Status status) {
-        if (processorsNode.isTextual()) {
-            String className = processorsNode.getTextValue();
-            T processor = getProcessorInstance(klass, className, null, processType, status);
-            if (processor != null) {
-                return Collections.singleton(processor);
-            }
-        } else if (processorsNode.isObject()) {
-            String className = processorsNode.path("class").getTextValue();
-            T processor = getProcessorInstance(klass, className, (ObjectNode)processorsNode, processType, status);
-            if (processor != null) {
-                return Collections.singleton(processor);
-            }
-        } else if (processorsNode.isArray()) {
+        if (processorsNode.isArray()) {
             List<T> result = new ArrayList<T>();
             for (JsonNode processorNode : processorsNode) {
-                if (processorNode.isTextual()) {
-                    String className = processorNode.getTextValue();
-                    T processor = getProcessorInstance(klass, className, null, processType, status);
-                    if (processor != null) {
-                        result.add(processor);
-                    }
-                } else if (processorNode.isObject()) {
-                    String className = processorNode.path("class").getTextValue();
-                    T processor = getProcessorInstance(klass, className, (ObjectNode)processorNode, processType, status);
-                    if (processor != null) {
-                        result.add(processor);
-                    }
+                T processor = getProcessor(klass, processorNode, processType, status);
+                if (processor != null) {
+                    result.add(processor);
                 }
             }
             return result;
+        } else {
+            T processor = getProcessor(klass, processorsNode, processType, status);
+            if (processor != null) {
+                return Collections.singleton(processor);
+            }
         }
         return Collections.emptyList();
+    }
+
+    private <T extends AbstractProcessor> T getProcessor(Class<T> klass, JsonNode processorNode, Type processType, Status status) {
+        if (processorNode.isTextual()) {
+            String className = processorNode.getTextValue();
+            if (className != null) {
+                return getProcessorInstance(klass, className, null, processType, status);
+            }
+        } else if (processorNode.isObject()) {
+            if (processorNode.has("class")) {
+                String className = processorNode.path("class").getTextValue();
+                if (className != null) {
+                    return getProcessorInstance(klass, className, (ObjectNode)processorNode, processType, status);
+                }
+            } else if (processorNode.has("processor")) {
+                String ref = processorNode.path("processor").getTextValue();
+                ObjectNode extra = (ObjectNode)getSchemaProvider().getExtra();
+                if (extra != null) {
+                    JsonNode globalProcessorNode = extra.path("processors").path(ref);
+                    ObjectNode mergedProcessorNode = mergeObjectNodes(globalProcessorNode, processorNode);
+                    mergedProcessorNode.remove("processor"); // remove 'processor' entry to avoid recursion
+                    return getProcessor(klass, mergedProcessorNode, processType, status);
+                }
+            } 
+        }
+        log.warn("Could not find processor for config: {}", processorNode);
+        return null;
+    }
+    
+    private ObjectNode mergeObjectNodes(JsonNode n1, JsonNode n2) {
+        if (n1.isObject() && n2.isObject()) {
+            ObjectNode result = mapper.createObjectNode();
+            result.putAll((ObjectNode)n1);
+            result.putAll((ObjectNode)n2);
+            return result;
+        } else if (n1.isObject()) {
+            ObjectNode result = mapper.createObjectNode();
+            result.putAll((ObjectNode)n1);
+            return result;
+        } else if (n2.isObject()) {
+            ObjectNode result = mapper.createObjectNode();
+            result.putAll((ObjectNode)n2);
+            return result;
+        } else {
+            return null;
+        }
     }
 
     private <T extends AbstractProcessor> T getProcessorInstance(Class<T> klass, String className, ObjectNode processorConfig, Type processType, Status status) {

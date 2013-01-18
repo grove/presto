@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 
 public class PojoSchemaModel {
 
-    private static Logger log = LoggerFactory.getLogger(PojoSchemaModel.class.getName());
+    private static Logger log = LoggerFactory.getLogger(PojoSchemaModel.class);
 
     public static PojoSchemaProvider parse(String databaseId, String schemaFilename) {
         ClassLoader cl = Thread.currentThread().getContextClassLoader();

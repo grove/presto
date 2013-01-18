@@ -21,30 +21,22 @@ public class FieldCardinalityValidator extends FieldDataProcessor {
             if (cardinality < minCardinality || cardinality > maxCardinality) {
                 setValid(false);
                 if (minCardinality == maxCardinality) {
-                    addError(fieldData, getErrorMessage("cardinality-exact", field, "Field must have exactly {0} {1}", minCardinality, getValuesString(minCardinality)));
+                    addError(fieldData, getErrorMessage("cardinality-exact", field, "Field must have exactly {0,choice,0#{0} values|1#{0} value|2#{0} values}", minCardinality, maxCardinality));
                 } else {
-                    addError(fieldData, getErrorMessage("cardinality-between", field, "Field must have between {0} and {1} {2}", minCardinality, maxCardinality, getValuesString(maxCardinality)));
+                    addError(fieldData, getErrorMessage("cardinality-between", field, "Field must have between {0} and {1} values", minCardinality, maxCardinality));
                 }
             }
         } else {
             if (minCardinality > 0 && cardinality < minCardinality) {
                 setValid(false);
-                addError(fieldData, getErrorMessage("cardinality-at-least", field, "Field must have at least {0} {1}", minCardinality, getValuesString(minCardinality)));
+                addError(fieldData, getErrorMessage("cardinality-at-least", field, "Field must have at least {0,choice,0#{0} values|1#{0} value|2#{0} values}", minCardinality, maxCardinality));
             }
             if (maxCardinality > 0 && cardinality > maxCardinality) {
                 setValid(false);
-                addError(fieldData, getErrorMessage("cardinality-no-more-than", field, "Field must have no more than {0} {1}", maxCardinality, getValuesString(maxCardinality)));
+                addError(fieldData, getErrorMessage("cardinality-no-more-than", field, "Field must have no more than {1,choice,0#{1} values|1#{1} value|2#{1} values}", minCardinality, maxCardinality));
             }
         }
         return fieldData;
-    }
-
-    protected String getValuesString(int cardinality) {
-        if (cardinality == 1) {
-            return "value";
-        } else {
-            return "values";
-        }
     }
 
 }

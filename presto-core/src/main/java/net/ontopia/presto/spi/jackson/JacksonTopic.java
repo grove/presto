@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 
 public class JacksonTopic implements DefaultTopic {
 
-    private static Logger log = LoggerFactory.getLogger(JacksonTopic.class.getName());
+    private static Logger log = LoggerFactory.getLogger(JacksonTopic.class);
 
     protected final JacksonDataProvider dataProvider;  
     protected final ObjectNode data;
