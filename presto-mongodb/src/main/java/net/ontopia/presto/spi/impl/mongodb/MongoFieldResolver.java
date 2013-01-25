@@ -58,8 +58,20 @@ public abstract class MongoFieldResolver extends PrestoFieldResolver {
             DBCollection collection = db.getCollection(coll);
 
             JsonNode qNode = config.path("q");
-
             Collection<JsonNode> qvalues = context.replaceVariables(variableResolver, objects, qNode);
+            if (qvalues.isEmpty()) {
+                qNode = config.path("q.alt");
+                if (qNode.isArray()) {
+                    for (JsonNode qn : qNode) {
+                        qvalues = context.replaceVariables(variableResolver, objects, qn);
+                        if (!qvalues.isEmpty()) {
+                            break;
+                        }
+                    }
+                } else {
+                    qvalues = context.replaceVariables(variableResolver, objects, qNode);
+                }
+            }
             DBObject q;
             if (qvalues.isEmpty()) {
                 return new PrestoPagedValues(Collections.emptyList(), paging, 0);
