@@ -703,7 +703,8 @@ public abstract class EditorResource {
             PrestoView view = type.getViewById(viewId);
             PrestoFieldUsage field = type.getFieldById(fieldId, view);
             
-            AvailableFieldTypes result = session.getAvailableFieldTypesInfo(topic, field); 
+//            LinkList result = session.getAvailableFieldTypesInfo(topic, field); 
+            AvailableFieldTypes result = session.getAvailableFieldTypesInfo(topic, field);
             return Response.ok(result).build();
 
         } catch (Exception e) {

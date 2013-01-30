@@ -43,8 +43,8 @@ public class FieldData extends Document {
     
     private Collection<FieldData> valueFields;
 
-    private Collection<TopicType> valueTypes;
-    private Collection<TopicType> createTypes;
+//    private Collection<TopicType> valueTypes;
+//    private Collection<TopicType> createTypes;
 
     private Collection<Message> messages;
     private Collection<String> errors;
@@ -199,21 +199,21 @@ public class FieldData extends Document {
         return values;
     }
     
-    public Collection<TopicType> getValueTypes() {
-        return valueTypes;
-    }
-
-    public void setValueTypes(Collection<TopicType> valueTypes) {
-        this.valueTypes = valueTypes;
-    }
-    
-    public Collection<TopicType> getCreateTypes() {
-        return createTypes;
-    }
-
-    public void setCreateTypes(Collection<TopicType> createTypes) {
-        this.createTypes = createTypes;
-    }
+//    public Collection<TopicType> getValueTypes() {
+//        return valueTypes;
+//    }
+//
+//    public void setValueTypes(Collection<TopicType> valueTypes) {
+//        this.valueTypes = valueTypes;
+//    }
+//    
+//    public Collection<TopicType> getCreateTypes() {
+//        return createTypes;
+//    }
+//
+//    public void setCreateTypes(Collection<TopicType> createTypes) {
+//        this.createTypes = createTypes;
+//    }
 
     public Collection<FieldData> getValueFields() {
         return valueFields;

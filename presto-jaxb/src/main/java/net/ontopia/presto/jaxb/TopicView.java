@@ -18,8 +18,8 @@ public class TopicView {
     private String href;
     private String mode;
 
-    private String topicId;
-    private TopicType type;
+    private String topicId; // TODO: move to params?
+    private String topicTypeId; // TODO: move to params?
     
     private String format;
     private Layout layout;
@@ -48,54 +48,56 @@ public class TopicView {
     public void setId(String id) {
         this.id = id;
     }
+    
     public String getName() {
         return name;
     }
     public void setName(String name) {
         this.name = name;
     }
+    
     public String getFormat() {
         return format;
     }
     public void setFormat(String format) {
         this.format = format;
     }
+    
     public Layout getLayout() {
         return layout;
     }
     public void setLayout(Layout layout) {
         this.layout = layout;
     }
+    
     public Map<String, Object> getParams() {
         return params;
     }
     public void setParams(Map<String, Object> params) {
         this.params = params;
     }
+    
     public Collection<Link> getLinks() {
         return links;
     }
     public void setLinks(Collection<Link> links) {
         this.links = links;
     }
+    
     public Collection<FieldData> getFields() {
         return fields;
     }
     public void setFields(Collection<FieldData> fields) {
         this.fields = fields;
     }
+    
     public String getHref() {
         return href;
     }
     public void setHref(String href) {
         this.href = href;
     }
-    public TopicType getType() {
-        return type;
-    }
-    public void setType(TopicType type) {
-        this.type = type;
-    }
+
     public String getMode() {
         return mode;
     }
@@ -117,6 +119,14 @@ public class TopicView {
 
     public void setOrigin(Origin origin) {
         this.origin = origin;
+    }
+
+    public String getTopicTypeId() {
+        return topicTypeId;
+    }
+
+    public void setTopicTypeId(String topicTypeId) {
+        this.topicTypeId = topicTypeId;
     }
 
 }

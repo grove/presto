@@ -15,9 +15,7 @@ public class Topic extends Document {
 
     private String id;
     private String name;
-    private String href;
     private String mode;
-    private TopicType type;
     private String view;
 
     private String format = "topic";
@@ -96,22 +94,6 @@ public class Topic extends Document {
 
     public void setViews(Collection<TopicView> views) {
         this.views = views;
-    }
-
-    public String getHref() {
-        return href;
-    }
-
-    public void setHref(String href) {
-        this.href = href;
-    }
-
-    public TopicType getType() {
-        return type;
-    }
-
-    public void setType(TopicType type) {
-        this.type = type;
     }
 
 }

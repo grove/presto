@@ -133,8 +133,8 @@ public class PrestoProcessor {
                         PrestoTopic valueTopic = null;
                         PrestoType valueType;
                         if (topicId == null) {
-                            TopicType topicType = embeddedTopic.getType();
-                            valueType = schemaProvider.getTypeById(topicType.getId());
+                            String topicTypeId = embeddedTopic.getTopicTypeId();
+                            valueType = schemaProvider.getTypeById(topicTypeId);
                         } else {
                             valueTopic = dataProvider.getTopicById(topicId);
                             valueType = schemaProvider.getTypeById(valueTopic.getTypeId());
