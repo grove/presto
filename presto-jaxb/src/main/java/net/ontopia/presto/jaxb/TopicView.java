@@ -17,8 +17,9 @@ public class TopicView {
     private String name;
     private String href;
     private String mode;
+
+    private String topicId;
     private TopicType type;
-    private String view;
     
     private String format;
     private Layout layout;
@@ -102,12 +103,12 @@ public class TopicView {
         this.mode = mode;
     }
 
-    public String getView() {
-        return view;
+    public String getTopicId() {
+        return topicId;
     }
 
-    public void setView(String view) {
-        this.view = view;
+    public void setTopicId(String topicId) {
+        this.topicId = topicId;
     }
     
     public Origin getOrigin() {

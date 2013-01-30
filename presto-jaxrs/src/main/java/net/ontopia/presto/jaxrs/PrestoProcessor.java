@@ -128,7 +128,7 @@ public class PrestoProcessor {
                 for (Value value : values) {
                     TopicView embeddedTopic = presto.getEmbeddedTopic(value);
                     if (embeddedTopic != null) {
-                        String topicId = embeddedTopic.getId();
+                        String topicId = embeddedTopic.getTopicId();
         
                         PrestoTopic valueTopic = null;
                         PrestoType valueType;

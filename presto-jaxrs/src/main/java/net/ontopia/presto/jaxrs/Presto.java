@@ -122,8 +122,12 @@ public abstract class Presto {
     public Topic getTopicAndProcess(PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnlyMode) {
         
         Topic result = new Topic();
+        result.setId(topic.getId());
+        result.setName(topic.getName());
+
         result.setType(getTopicTypeWithNoLinks(type));
-        result.setView(view.getId());
+        String viewId = view.getId();
+        result.setView(viewId);
 
         String href = Links.getTopicEditLink(getBaseUri(), getDatabaseId(), topic.getId(), view.getId(), readOnlyMode);
         result.setHref(href);
@@ -132,10 +136,26 @@ public abstract class Presto {
         Collection<PrestoView> views = type.getViews(view);
         List<TopicView> topicViews = new ArrayList<TopicView>(views.size()); 
         for (PrestoView v : views) {
-            topicViews.add(getTopicViewAndProcess(topic, type, v, readOnlyMode));
+            if (viewId.equals(v.getId())) {
+                topicViews.add(getTopicViewAndProcess(topic, type, v, readOnlyMode));
+            } else {
+                topicViews.add(getTopicViewRemote(topic, type, v));
+            }
         }
         result.setViews(topicViews);
         
+        return result;
+    }
+    
+    public TopicView getTopicViewRemote(PrestoTopic topic, PrestoType type, PrestoView view) {
+        TopicView result = TopicView.remoteView();
+        
+        result.setId(view.getId());
+        result.setName(view.getName());
+        result.setTopicId(topic.getId());
+
+        String href = Links.getTopicViewEditLink(getBaseUri(), getDatabaseId(), topic.getId(), view.getId());
+        result.setHref(href);
         return result;
     }
     
@@ -152,9 +172,9 @@ public abstract class Presto {
     public TopicView getTopicView(PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnlyMode) {
         TopicView result = TopicView.view();
         
-        result.setId(topic.getId());
-        result.setName(topic.getName());
-        result.setView(view.getId());
+        result.setId(view.getId());
+        result.setName(view.getName());
+        result.setTopicId(topic.getId());
 
         String href = Links.getTopicViewEditLink(getBaseUri(), getDatabaseId(), topic.getId(), view.getId());
         result.setHref(href);
@@ -201,7 +221,7 @@ public abstract class Presto {
         final boolean readOnlyMode = false;
 
         TopicView result = TopicView.view();
-        result.setView(view.getId());
+        result.setId(view.getId());
         result.setType(getTopicTypeWithNoLinks(type));
 
         String href;
@@ -883,7 +903,7 @@ public abstract class Presto {
         }
         PrestoView view = inlineField.getValueView();
 
-        String topicId = embeddedTopic.getId();
+        String topicId = embeddedTopic.getTopicId();
         PrestoInlineTopicBuilder builder = changeSet.createInlineTopic(type, topicId);
 
         for (FieldData fieldData : embeddedTopic.getFields()) {
@@ -902,7 +922,7 @@ public abstract class Presto {
         PrestoDataProvider dataProvider = getDataProvider();
         PrestoSchemaProvider schemaProvider = getSchemaProvider();
 
-        String topicId = embeddedTopic.getId();
+        String topicId = embeddedTopic.getTopicId();
 
         PrestoTopic topic = null;
         PrestoType type;

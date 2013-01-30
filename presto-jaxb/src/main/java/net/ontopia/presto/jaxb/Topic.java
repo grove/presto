@@ -113,7 +113,5 @@ public class Topic extends Document {
     public void setType(TopicType type) {
         this.type = type;
     }
-    
-    
 
 }
