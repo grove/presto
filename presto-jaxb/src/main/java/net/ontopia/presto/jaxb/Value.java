@@ -18,7 +18,7 @@ public class Value {
     // reference
     private String name;
     private Collection<Link> links;
-    private Topic embedded;
+    private TopicView embedded;
     private Collection<Value> values;
 
     public Value() {
@@ -75,11 +75,11 @@ public class Value {
         return links;
     }
     
-    public void setEmbedded(Topic embedded) {
+    public void setEmbedded(TopicView embedded) {
         this.embedded = embedded;
     }
     
-    public Topic getEmbedded() {
+    public TopicView getEmbedded() {
         return embedded;
     }
     

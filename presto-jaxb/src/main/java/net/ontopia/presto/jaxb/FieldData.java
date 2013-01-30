@@ -39,6 +39,8 @@ public class FieldData extends Document {
     private Collection<Link> links;
     private Collection<Value> values;
     
+    private Collection<Value> availableValues;
+    
     private Collection<FieldData> valueFields;
 
     private Collection<TopicType> valueTypes;
@@ -268,5 +270,12 @@ public class FieldData extends Document {
     public void setParams(Map<String,Object> params) {
         this.params = params;
     }
-    
+
+    public Collection<Value> getAvailableValues() {
+        return availableValues;
+    }
+
+    public void setAvailableValues(Collection<Value> availableValues) {
+        this.availableValues = availableValues;
+    }
 }
