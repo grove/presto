@@ -91,12 +91,6 @@ public class Link {
         if (other instanceof Link) {
             Link o = (Link)other;
             
-            System.out.println(isEqual(id, o.id) + " " +
-                    isEqual(rel, o.rel) + " " +
-                    isEqual(href, o.href) + " " +
-                    isEqual(params, o.params) + " " +
-                    isEqual(name, o.name));
-            
             return isEqual(id, o.id) && 
                     isEqual(rel, o.rel) && 
                     isEqual(href, o.href) && 
