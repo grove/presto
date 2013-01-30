@@ -57,7 +57,12 @@
       <dependency>
 	<groupId>org.slf4j</groupId>
 	<artifactId>slf4j-api</artifactId>
-	<version>1.5.11</version>
+	<version>1.6.2</version>
+      </dependency>
+      <dependency>
+	<groupId>org.slf4j</groupId>
+	<artifactId>slf4j-log4j12</artifactId>
+	<version>1.6.2</version>
       </dependency>
       <dependency>
         <groupId>javax.servlet</groupId>
@@ -73,6 +78,12 @@
 	<groupId>net.vz.mongodb.jackson</groupId>
 	<artifactId>mongo-jackson-mapper</artifactId>
 	<version>1.4.2</version>
+      </dependency>
+      <dependency>
+	<groupId>junit</groupId>
+	<artifactId>junit</artifactId>
+	<version>4.11</version>
+	<scope>test</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>

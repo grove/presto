@@ -9,7 +9,6 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class Link {
     
-    private String id;
     private String name;
     
     private String rel;
@@ -49,14 +48,6 @@ public class Link {
         this.name = name;
     }
 
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
     public Map<String,Object> getParams() {
         return params;
     }
@@ -68,9 +59,6 @@ public class Link {
     @Override
     public int hashCode() {
         int result = 0;
-        if (id != null) {
-            result += id.hashCode();
-        }            
         if (rel != null) {
             result += rel.hashCode();
         }            
@@ -91,8 +79,7 @@ public class Link {
         if (other instanceof Link) {
             Link o = (Link)other;
             
-            return isEqual(id, o.id) && 
-                    isEqual(rel, o.rel) && 
+            return isEqual(rel, o.rel) && 
                     isEqual(href, o.href) && 
                     isEqual(params, o.params) && 
                     isEqual(name, o.name);
