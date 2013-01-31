@@ -226,7 +226,8 @@ public abstract class Presto {
     public TopicView getNewTopicView(PrestoType type, PrestoView view, String parentId, String parentFieldId) {
         TopicView result = TopicView.view();
         result.setId(view.getId());
-        result.setName(view.getName());
+//        result.setName(view.getName());
+        result.setName("*" + type.getName() + "*");
 
 //        result.setType(getTopicTypeWithNoLinks(type));
         result.setTopicTypeId(type.getId());
@@ -331,11 +332,6 @@ public abstract class Presto {
                 boolean allowRemove = field.isRemovable();
                 boolean allowMove = !field.isSorted();
 
-                if (allowCreate) {
-                    if (!getAvailableFieldCreateTypes(topic, field).isEmpty()) {
-                        fieldLinks.add(new Link("available-field-types", Links.createAvailableFieldTypesLink(getBaseUri(), databaseId, topicId, parentViewId, fieldId)));
-                    }
-                }
                 if (allowAdd || allowCreate) {
                     if (!isNewTopic) {
                         fieldLinks.add(new Link("add-field-values", Links.addFieldValuesLink(getBaseUri(), databaseId, topicId, parentViewId, fieldId)));
@@ -379,19 +375,7 @@ public abstract class Presto {
             fieldLinks.add(new Link("paging", Links.pagingLink(getBaseUri(), databaseId, topicId, parentViewId, fieldId)));    
         }
 
-//        Collection<PrestoType> availableFieldValueTypes = getAvailableFieldValueTypes(topic, field);
-//        if (!availableFieldValueTypes.isEmpty()) {
-//            List<TopicType> valueTypes = new ArrayList<TopicType>(availableFieldValueTypes.size());
-//            for (PrestoType valueType : availableFieldValueTypes) {
-//                valueTypes.add(getTopicTypeWithNoLinks(valueType));
-//            }
-//            fieldData.setValueTypes(valueTypes);
-//        }
-
-        Collection<PrestoType> availableFieldCreateTypes = getAvailableFieldCreateTypes(topic, field);
-        for (PrestoType createType : availableFieldCreateTypes) {
-            fieldLinks.add(getCreateFieldInstanceLink(topic, field, createType));
-        }
+        fieldLinks.addAll(getCreateFieldInstanceLinks(topic, field));
 
         if (!fieldLinks.isEmpty()) {
             fieldData.setLinks(fieldLinks);
@@ -405,6 +389,26 @@ public abstract class Presto {
 //        fieldData = processor.postProcessFieldData(fieldData, topic, field, null);
 
         return fieldData;
+    }
+
+    private Collection<? extends Link> getCreateFieldInstanceLinks(PrestoTopic topic, PrestoFieldUsage field) {
+        Collection<PrestoType> availableFieldCreateTypes = getAvailableFieldCreateTypes(topic, field);
+        if (!availableFieldCreateTypes.isEmpty()) {
+            return Collections.emptyList();
+        }
+        Collection<Link> links = new ArrayList<Link>(availableFieldCreateTypes.size());
+        for (PrestoType createType : availableFieldCreateTypes) {
+            links.add(getCreateFieldInstanceLink(topic, field, createType));
+        }
+        if (links.size() > 1) {
+            Link link = new Link();
+            link.setRel("create-field-instance");
+            link.setLinks(links);
+            link.setName("Ny"); // FIXME: localize
+            return Collections.singleton(link);
+        } else {
+            return links;
+        }
     }
 
     public static final class FieldDataValues {

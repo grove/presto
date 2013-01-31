@@ -1,5 +1,6 @@
 package net.ontopia.presto.jaxb;
 
+import java.util.Collection;
 import java.util.Map;
 
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
@@ -15,6 +16,8 @@ public class Link {
     private String href;
 
     private Map<String,Object> params;
+
+    private Collection<Link> links;
 
     public Link() {        
     }
@@ -89,6 +92,14 @@ public class Link {
     
     public static boolean isEqual(Object o1, Object o2) {
         return (o1 == null ? o2 == null : o1.equals(o2));
+    }
+
+    public Collection<Link> getLinks() {
+        return links;
+    }
+
+    public void setLinks(Collection<Link> links) {
+        this.links = links;
     }
 
 }

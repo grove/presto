@@ -18,7 +18,6 @@ public class Topic extends Document {
     private String mode;
     private String view;
 
-    private String format = "topic";
     private Layout layout;
     
     private Map<String, Object> params;
@@ -29,7 +28,7 @@ public class Topic extends Document {
        
     @Override
     public String getFormat() {
-        return format;
+        return "topic";
     }
 
     public String getMode() {

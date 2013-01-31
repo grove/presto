@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.List;
 
 import net.ontopia.presto.jaxb.FieldData;
-import net.ontopia.presto.jaxb.TopicType;
 import net.ontopia.presto.jaxb.TopicView;
 import net.ontopia.presto.jaxb.Value;
 import net.ontopia.presto.jaxrs.process.AbstractProcessor;

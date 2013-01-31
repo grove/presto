@@ -62,11 +62,6 @@ public class Links {
         return builder.build().toString();
     }
 
-    public static String createAvailableFieldTypesLink(URI baseUri, String databaseId, String topicId, String parentViewId, String fieldId) {
-        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/available-field-types/").path(databaseId).path(topicId).path(parentViewId).path(fieldId);
-        return builder.build().toString();
-    }
-
     public static String addFieldValuesLink(URI baseUri, String databaseId, String topicId, String parentViewId, String fieldId) {
         UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/add-field-values/").path(databaseId).path(topicId).path(parentViewId).path(fieldId);
         return builder.build().toString();
