@@ -7,6 +7,47 @@
   <packaging>pom</packaging>
   <version>0.6.0-SNAPSHOT</version>
 
+  <developers>
+    <developer>
+      <id>grove</id>
+      <name>Geir Ove Grønmo</name>
+      <email>grove@geirove.org</email>
+      <url>https://github.com/grove</url>
+      <timezone>GMT+1</timezone>
+    </developer>
+  </developers>
+
+  <distributionManagement>
+    <repository>
+      <id>agrep01</id>
+      <name>agrep01</name>
+      <url>http://agrep01:8080/artifactory/libs-releases-local</url>
+      <uniqueVersion>false</uniqueVersion>
+    </repository>
+    <snapshotRepository>
+      <id>agrep01-snapshots</id>
+      <name>agrep01-snapshots</name>
+      <url>http://agrep01:8080/artifactory/libs-snapshots-local</url>
+      <uniqueVersion>false</uniqueVersion>
+    </snapshotRepository>
+  </distributionManagement>
+  
+  <scm>
+    <connection>scm:git:git://github.com/grove/presto.git</connection>
+    <developerConnection>scm:git:git://github.com/grove/presto.git</developerConnection>
+    <url>git@github.com:grove/presto.git</url>
+  </scm>
+
+  <url>https://github.com/grove/presto</url>
+
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
   <dependencyManagement>
     <dependencies>
       <dependency>
@@ -134,26 +175,5 @@
     <module>presto-webdemo</module>
     <module>presto-test</module>
   </modules>
-
-  <distributionManagement>
-    <repository>
-      <id>agrep01</id>
-      <name>agrep01</name>
-      <url>http://agrep01:8080/artifactory/libs-releases-local</url>
-      <uniqueVersion>false</uniqueVersion>
-    </repository>
-    <snapshotRepository>
-      <id>agrep01-snapshots</id>
-      <name>agrep01-snapshots</name>
-      <url>http://agrep01:8080/artifactory/libs-snapshots-local</url>
-      <uniqueVersion>false</uniqueVersion>
-    </snapshotRepository>
-  </distributionManagement>
-  
-  <scm>
-    <url>https://github.com/grove/presto</url>
-    <connection>scm:git:git://github.com/grove/presto.git</connection>
-    <developerConnection>scm:git:git://github.com/grove/presto.git</developerConnection>
-  </scm>
 
 </project>
