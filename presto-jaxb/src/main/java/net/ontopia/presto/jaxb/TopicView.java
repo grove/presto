@@ -17,14 +17,14 @@ public class TopicView {
     private String name;
     private String href;
     private String mode;
-
-    private String topicId; // TODO: move to params?
-    private String topicTypeId; // TODO: move to params?
     
     private String format;
     private Layout layout;
 
-    private Origin origin;
+    private String topicId; // ISSUE: embed in href or place in params?
+    private String topicTypeId;
+
+//    private Origin origin;
 
     private Map<String, Object> params;
     private Collection<Link> links;
@@ -113,13 +113,13 @@ public class TopicView {
         this.topicId = topicId;
     }
     
-    public Origin getOrigin() {
-        return origin;
-    }
-
-    public void setOrigin(Origin origin) {
-        this.origin = origin;
-    }
+//    public Origin getOrigin() {
+//        return origin;
+//    }
+//
+//    public void setOrigin(Origin origin) {
+//        this.origin = origin;
+//    }
 
     public String getTopicTypeId() {
         return topicTypeId;

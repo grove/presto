@@ -234,7 +234,7 @@ public abstract class Presto {
         
         String href;
         if (parentId != null) {
-            result.setOrigin(new Origin(parentId, parentFieldId));
+//            result.setOrigin(new Origin(parentId, parentFieldId));
             href = Links.createFieldInstanceLink(getBaseUri(), getDatabaseId(), parentId, parentFieldId, type.getId());
         } else {
             href = Links.createInstanceLink(getBaseUri(), getDatabaseId(), type.getId());
