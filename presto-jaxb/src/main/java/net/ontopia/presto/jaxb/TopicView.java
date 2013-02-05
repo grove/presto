@@ -30,16 +30,20 @@ public class TopicView {
     private Collection<Link> links;
     private Collection<FieldData> fields;
     
+    public TopicView() {
+        this("topic-view");
+    }
+    
+    public TopicView(String format) {
+        this.format = format;
+    }
+
     public static TopicView remoteView() {
-        TopicView topicView = new TopicView();
-        topicView.setFormat("topic-view-remote");
-        return topicView;
+        return new TopicView("topic-view-remote");
     }
     
     public static TopicView view() {
-        TopicView topicView = new TopicView();
-        topicView.setFormat("topic-view");
-        return topicView;
+        return new TopicView();
     }
    
     public String getId() {
