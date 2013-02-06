@@ -17,7 +17,6 @@ import net.ontopia.presto.jaxb.AvailableTopicTypes;
 import net.ontopia.presto.jaxb.Database;
 import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxb.Link;
-import net.ontopia.presto.jaxb.Origin;
 import net.ontopia.presto.jaxb.Topic;
 import net.ontopia.presto.jaxb.TopicType;
 import net.ontopia.presto.jaxb.TopicTypeTree;
