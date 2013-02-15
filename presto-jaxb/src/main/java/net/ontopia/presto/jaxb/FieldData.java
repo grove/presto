@@ -24,7 +24,7 @@ public class FieldData extends Document {
     private Boolean pageable;
 
     private String datatype;
-    private String validation;
+    private String validation; // TODO: move to params
     private String interfaceControl;
     
     private Integer valuesLimit;
