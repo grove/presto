@@ -1,6 +1,7 @@
 package net.ontopia.presto.jaxb;
 
 import java.util.Collection;
+import java.util.Map;
 
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
@@ -9,8 +10,8 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class Value {
 
-    private Boolean editable;
-    private Boolean removable;
+    private Boolean editable; // TODO: move to params
+    private Boolean removable; // TODO: move to params
 
     // primitive
     private String value;
@@ -18,8 +19,10 @@ public class Value {
     // reference
     private String name;
     private Collection<Link> links;
-    private Topic embedded;
+    private TopicView embedded;
     private Collection<Value> values;
+
+    private Map<String,Object> params;
 
     public Value() {
     }
@@ -75,11 +78,11 @@ public class Value {
         return links;
     }
     
-    public void setEmbedded(Topic embedded) {
+    public void setEmbedded(TopicView embedded) {
         this.embedded = embedded;
     }
     
-    public Topic getEmbedded() {
+    public TopicView getEmbedded() {
         return embedded;
     }
     
@@ -89,6 +92,14 @@ public class Value {
     
     public void setValues(Collection<Value> values) {
         this.values = values;
+    }
+
+    public Map<String,Object> getParams() {
+        return params;
+    }
+
+    public void setParams(Map<String,Object> params) {
+        this.params = params;
     }
     
     

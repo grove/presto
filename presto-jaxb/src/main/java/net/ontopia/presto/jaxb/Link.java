@@ -1,5 +1,6 @@
 package net.ontopia.presto.jaxb;
 
+import java.util.Collection;
 import java.util.Map;
 
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
@@ -9,13 +10,14 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class Link {
     
-    private String id;
     private String name;
     
     private String rel;
     private String href;
 
     private Map<String,Object> params;
+
+    private Collection<Link> links;
 
     public Link() {        
     }
@@ -49,14 +51,6 @@ public class Link {
         this.name = name;
     }
 
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
     public Map<String,Object> getParams() {
         return params;
     }
@@ -68,9 +62,6 @@ public class Link {
     @Override
     public int hashCode() {
         int result = 0;
-        if (id != null) {
-            result += id.hashCode();
-        }            
         if (rel != null) {
             result += rel.hashCode();
         }            
@@ -91,8 +82,7 @@ public class Link {
         if (other instanceof Link) {
             Link o = (Link)other;
             
-            return isEqual(id, o.id) && 
-                    isEqual(rel, o.rel) && 
+            return isEqual(rel, o.rel) && 
                     isEqual(href, o.href) && 
                     isEqual(params, o.params) && 
                     isEqual(name, o.name);
@@ -102,6 +92,14 @@ public class Link {
     
     public static boolean isEqual(Object o1, Object o2) {
         return (o1 == null ? o2 == null : o1.equals(o2));
+    }
+
+    public Collection<Link> getLinks() {
+        return links;
+    }
+
+    public void setLinks(Collection<Link> links) {
+        this.links = links;
     }
 
 }

@@ -24,7 +24,7 @@ public class FieldData extends Document {
     private Boolean pageable;
 
     private String datatype;
-    private String validation;
+    private String validation; // TODO: move to params
     private String interfaceControl;
     
     private Integer valuesLimit;
@@ -39,10 +39,9 @@ public class FieldData extends Document {
     private Collection<Link> links;
     private Collection<Value> values;
     
+    private Collection<Value> availableValues;
+    
     private Collection<FieldData> valueFields;
-
-    private Collection<TopicType> valueTypes;
-    private Collection<TopicType> createTypes;
 
     private Collection<Message> messages;
     private Collection<String> errors;
@@ -196,22 +195,6 @@ public class FieldData extends Document {
     public Collection<Value> getValues() {
         return values;
     }
-    
-    public Collection<TopicType> getValueTypes() {
-        return valueTypes;
-    }
-
-    public void setValueTypes(Collection<TopicType> valueTypes) {
-        this.valueTypes = valueTypes;
-    }
-    
-    public Collection<TopicType> getCreateTypes() {
-        return createTypes;
-    }
-
-    public void setCreateTypes(Collection<TopicType> createTypes) {
-        this.createTypes = createTypes;
-    }
 
     public Collection<FieldData> getValueFields() {
         return valueFields;
@@ -268,5 +251,12 @@ public class FieldData extends Document {
     public void setParams(Map<String,Object> params) {
         this.params = params;
     }
-    
+
+    public Collection<Value> getAvailableValues() {
+        return availableValues;
+    }
+
+    public void setAvailableValues(Collection<Value> availableValues) {
+        this.availableValues = availableValues;
+    }
 }

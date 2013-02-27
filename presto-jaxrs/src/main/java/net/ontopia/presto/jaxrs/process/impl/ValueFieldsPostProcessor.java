@@ -31,7 +31,7 @@ public class ValueFieldsPostProcessor extends FieldDataProcessor {
         // assign column value fields
         List<FieldData> valueFields = new ArrayList<FieldData>();
         for (PrestoFieldUsage valueField : fields) {
-            FieldData fd = getPresto().getFieldInfoNoValues(topic, valueField, readOnlyMode);
+            FieldData fd = getPresto().getFieldDataNoValues(topic, valueField, readOnlyMode);
             
             // process the value field
             fd = getPresto().getProcessor().processFieldData(fd, topic, valueField, getType(), getStatus());
