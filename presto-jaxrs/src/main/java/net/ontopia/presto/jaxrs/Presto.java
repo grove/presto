@@ -300,7 +300,7 @@ public abstract class Presto {
 
         String validationType = field.getValidationType();
         if (validationType != null) {
-            fieldData.setValidation(validationType);
+            setParam(fieldData, "validationType", validationType);
         }
 
         String interfaceControl = field.getInterfaceControl(); // ISSUE: should we default the interface control?
@@ -310,10 +310,6 @@ public abstract class Presto {
 
         if (field.isEmbedded()) {
             fieldData.setEmbeddable(true);
-        }
-
-        if (field.isPageable()) {
-            fieldData.setPageable(true);
         }
 
         boolean isReadOnly = readOnlyMode || field.isReadOnly();
@@ -390,6 +386,15 @@ public abstract class Presto {
         return fieldData;
     }
 
+    private void setParam(FieldData fieldData, String key, Object value) {
+        Map<String, Object> params = fieldData.getParams();
+        if (params == null) {
+            params = new LinkedHashMap<String,Object>();
+            fieldData.setParams(params);
+        }
+        params.put(key, value);
+    }
+
     private Collection<? extends Link> getCreateFieldInstanceLinks(PrestoTopic topic, PrestoFieldUsage field) {
         Collection<PrestoType> availableFieldCreateTypes = getAvailableFieldCreateTypes(topic, field);
         if (!availableFieldCreateTypes.isEmpty()) {
@@ -447,7 +452,6 @@ public abstract class Presto {
                 int actualLimit = limit > 0 ? limit : DEFAULT_LIMIT;
                 PrestoTopic.PagedValues pagedValues = topic.getValues(field, actualOffset, actualLimit);
                 if (fieldData != null) {
-                    fieldData.setPageable(true);
                     fieldData.setValuesOffset(pagedValues.getPaging().getOffset());
                     fieldData.setValuesLimit(pagedValues.getPaging().getLimit());
                     fieldData.setValuesTotal(pagedValues.getTotal());
