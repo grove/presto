@@ -17,28 +17,28 @@ public class FieldData extends Document {
     private String name;
     
     private Boolean readOnly;
-    private Boolean editable; // whether or not its values are editable (TODO: use Value.editable instead)
+    private Boolean editable; // whether or not its values are editable (TODO: use Value.editable instead?)
 
     private Boolean embeddable; // if to expect embeddable values 
 
     private String datatype;
     private String interfaceControl;
-    
-    private Integer valuesLimit; // TODO: replace with paging object
-    private Integer valuesOffset;
-    private Integer valuesTotal;
-    
-    private Map<String,Object> params;
 
     private Integer minCardinality;
     private Integer maxCardinality;
-
-    private Collection<Link> links;
-    private Collection<Value> values;
-    
-    private Collection<Value> availableValues;
     
     private Collection<FieldData> valueFields;
+    
+    private Map<String,Object> params;
+
+    private Collection<Link> links;
+    
+    private Integer valuesLimit;
+    private Integer valuesOffset;
+    private Integer valuesTotal;
+
+    private Collection<Value> values;
+    private Collection<Value> valuesAvailable;
 
     private Collection<Message> messages;
     private Collection<String> errors;
@@ -225,11 +225,12 @@ public class FieldData extends Document {
         this.params = params;
     }
 
-    public Collection<Value> getAvailableValues() {
-        return availableValues;
+    public Collection<Value> getValuesAvailable() {
+        return valuesAvailable;
     }
 
-    public void setAvailableValues(Collection<Value> availableValues) {
-        this.availableValues = availableValues;
+    public void setValuesAvailable(Collection<Value> valuesAvailable) {
+        this.valuesAvailable = valuesAvailable;
     }
+    
 }
