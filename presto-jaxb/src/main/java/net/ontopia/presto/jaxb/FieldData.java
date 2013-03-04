@@ -38,7 +38,7 @@ public class FieldData extends Document {
     private Integer valuesTotal;
 
     private Collection<Value> values;
-    private Collection<Value> valuesAvailable;
+    private Collection<Value> availableValues;
 
     private Collection<Message> messages;
     private Collection<String> errors;
@@ -225,12 +225,12 @@ public class FieldData extends Document {
         this.params = params;
     }
 
-    public Collection<Value> getValuesAvailable() {
-        return valuesAvailable;
+    public Collection<Value> getAvailableValues() {
+        return availableValues;
     }
 
-    public void setValuesAvailable(Collection<Value> valuesAvailable) {
-        this.valuesAvailable = valuesAvailable;
+    public void setAvailableValues(Collection<Value> availableValues) {
+        this.availableValues = availableValues;
     }
     
 }
