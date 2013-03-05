@@ -498,11 +498,17 @@ public abstract class EditorResource {
             PrestoView view = type.getViewById(viewId);
 
             TopicView result = session.updateTopic(topic, type, view, topicView);
-
             session.commit();
 
-            return Response.ok(result).build();
-
+            // FIXME: create new endpoint for CREATE
+            if (topic == null) {
+                // return Topic if new, otherwise TopicView
+                String newTopicId = result.getTopicId();
+                return getTopicInDefaultView(databaseId, newTopicId, false);
+            } else {
+                return Response.ok(result).build();
+            }
+            
         } catch (Exception e) {
             session.abort();
             throw e;

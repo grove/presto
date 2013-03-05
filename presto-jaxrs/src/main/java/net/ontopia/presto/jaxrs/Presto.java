@@ -136,12 +136,32 @@ public abstract class Presto {
         List<TopicView> topicViews = new ArrayList<TopicView>(views.size()); 
         for (PrestoView v : views) {
             if (viewId.equals(v.getId())) {
-                topicViews.add(getTopicViewAndProcess(topic, type, v, readOnlyMode));
+                topicViews.add(getTopicView(topic, type, v, readOnlyMode));
             } else {
                 topicViews.add(getTopicViewRemote(topic, type, v));
             }
         }
         result.setViews(topicViews);
+
+        result = processor.postProcessTopic(result, topic, type, view, null);
+
+        return result;
+    }
+    
+    public TopicView getTopicViewRemoteAndProcess(PrestoTopic topic, PrestoType type, PrestoView view) {
+        TopicView result = getTopicViewRemote(topic, type, view);
+        
+        result = processor.postProcessTopicView(result, topic, type, view, null);
+
+        return result;
+    }
+    
+    public TopicView getTopicViewAndProcess(PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnlyMode) {
+        TopicView result = getTopicView(topic, type, view, readOnlyMode);
+        
+//        Status status = new Status();
+//        result = processor.preProcessTopicView(result, topic, type, view, status);
+        result = processor.postProcessTopicView(result, topic, type, view, null);
         
         return result;
     }
@@ -155,19 +175,10 @@ public abstract class Presto {
 
         String href = Links.getTopicViewEditLink(getBaseUri(), getDatabaseId(), topic.getId(), view.getId());
         result.setHref(href);
+
         return result;
     }
     
-    public TopicView getTopicViewAndProcess(PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnlyMode) {
-        TopicView result = getTopicView(topic, type, view, readOnlyMode);
-        
-//        Status status = new Status();
-//        result = processor.preProcessTopic(result, topic, type, view, status);
-        result = processor.postProcessTopicView(result, topic, type, view, null);
-        
-        return result;
-    }
-
     public TopicView getTopicView(PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnlyMode) {
         TopicView result = TopicView.view();
         result.setId(view.getId());

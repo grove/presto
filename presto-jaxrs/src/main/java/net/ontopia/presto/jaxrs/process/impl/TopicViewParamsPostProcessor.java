@@ -2,26 +2,26 @@ package net.ontopia.presto.jaxrs.process.impl;
 
 import java.util.Map;
 
-import net.ontopia.presto.jaxb.Topic;
-import net.ontopia.presto.jaxrs.process.TopicProcessor;
+import net.ontopia.presto.jaxb.TopicView;
+import net.ontopia.presto.jaxrs.process.TopicViewProcessor;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoView;
 
 import org.codehaus.jackson.node.ObjectNode;
 
-public class TopicParamsPostProcessor extends TopicProcessor {
+public class TopicViewParamsPostProcessor extends TopicViewProcessor {
 
     @Override
-    public Topic processTopic(Topic topicData, PrestoTopic topic, PrestoType type, PrestoView view) {
-        ObjectNode extraNode = getPresto().getTypeExtraNode(type);
+    public TopicView processTopicView(TopicView topicView, PrestoTopic topic, PrestoType type, PrestoView view) {
+        ObjectNode extraNode = getPresto().getViewExtraNode(view);
         if (extraNode != null) {
             Map<String, Object> params = getPresto().getExtraParamsMap(extraNode);
             if (params != null) {
-                topicData.setParams(params);
+                topicView.setParams(params);
             }
         }
-        return topicData;
+        return topicView;
     }
 
 }
