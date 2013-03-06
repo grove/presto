@@ -408,8 +408,14 @@ public abstract class Presto {
 
     private Collection<? extends Link> getCreateFieldInstanceLinks(PrestoTopic topic, PrestoFieldUsage field) {
         Collection<PrestoType> availableFieldCreateTypes = getAvailableFieldCreateTypes(topic, field);
-        if (!availableFieldCreateTypes.isEmpty()) {
+        if (availableFieldCreateTypes.isEmpty()) {
             return Collections.emptyList();
+        }
+        if (availableFieldCreateTypes.size() == 1) {
+            PrestoType createType = availableFieldCreateTypes.iterator().next();
+            Link link = getCreateFieldInstanceLink(topic, field, createType);
+            link.setName("Ny");
+            return Collections.singleton(link);
         }
         Collection<Link> links = new ArrayList<Link>(availableFieldCreateTypes.size());
         for (PrestoType createType : availableFieldCreateTypes) {
