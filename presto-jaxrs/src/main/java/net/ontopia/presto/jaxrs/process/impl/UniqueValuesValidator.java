@@ -7,6 +7,7 @@ import java.util.List;
 
 import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxb.Value;
+import net.ontopia.presto.jaxrs.PrestoContext;
 import net.ontopia.presto.jaxrs.process.FieldDataProcessor;
 import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoFieldUsage;
@@ -25,7 +26,7 @@ import org.codehaus.jackson.node.ObjectNode;
 public class UniqueValuesValidator extends FieldDataProcessor {
 
     @Override
-    public FieldData processFieldData(FieldData fieldData, PrestoTopic topic, PrestoFieldUsage field) {
+    public FieldData processFieldData(FieldData fieldData, PrestoContext context, PrestoFieldUsage field) {
         ObjectNode processorConfig = getConfig();
         if (processorConfig != null) {
             JsonNode resolveConfig = processorConfig.path("validate-resolve");
@@ -34,6 +35,11 @@ public class UniqueValuesValidator extends FieldDataProcessor {
                 Paging paging = new PrestoPaging(0, 1);
                 
                 PrestoVariableResolver variableResolver = new FieldDataVariableResolver(field.getSchemaProvider(), fieldData);
+                
+                PrestoTopic topic = context.getTopic();
+                
+                // ISSUE: what if topic is null?
+                
                 Collection<? extends Object> objects = Collections.singleton(topic);
                 
                 PagedValues result = ((JacksonDataProvider)dataProvider).resolveValues(objects, field, paging, resolveConfig, variableResolver);

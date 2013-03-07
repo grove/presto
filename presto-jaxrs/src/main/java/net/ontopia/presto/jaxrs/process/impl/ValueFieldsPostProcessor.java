@@ -8,6 +8,7 @@ import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxb.Value;
 import net.ontopia.presto.jaxrs.Presto;
 import net.ontopia.presto.jaxrs.Presto.FieldDataValues;
+import net.ontopia.presto.jaxrs.PrestoContext;
 import net.ontopia.presto.jaxrs.process.FieldDataProcessor;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoTopic;
@@ -16,7 +17,7 @@ import net.ontopia.presto.spi.PrestoType;
 public class ValueFieldsPostProcessor extends FieldDataProcessor {
 
     @Override
-    public FieldData processFieldData(FieldData fieldData, PrestoTopic topic, PrestoFieldUsage field) {
+    public FieldData processFieldData(FieldData fieldData, PrestoContext context, PrestoFieldUsage field) {
         boolean readOnlyMode = false;
         
         // NOTE: use first value type
@@ -31,10 +32,10 @@ public class ValueFieldsPostProcessor extends FieldDataProcessor {
         // assign column value fields
         List<FieldData> valueFields = new ArrayList<FieldData>();
         for (PrestoFieldUsage valueField : fields) {
-            FieldData fd = getPresto().getFieldDataNoValues(topic, valueField, readOnlyMode);
+            FieldData fd = getPresto().getFieldDataNoValues(context, valueField, readOnlyMode);
             
             // process the value field
-            fd = getPresto().getProcessor().processFieldData(fd, topic, valueField, getType(), getStatus());
+            fd = getPresto().getProcessor().processFieldData(fd, context, valueField, getType(), getStatus());
 
             valueFields.add(fd);
         }
@@ -43,7 +44,7 @@ public class ValueFieldsPostProcessor extends FieldDataProcessor {
         // retrieve field values
 
         // NOTE: have already done paging
-        FieldDataValues fieldDataValues = setFieldDataValues(topic, field, fieldData);
+        FieldDataValues fieldDataValues = setFieldDataValues(context.getTopic(), field, fieldData);
         
         // post process field values
         int size = fieldDataValues.size();

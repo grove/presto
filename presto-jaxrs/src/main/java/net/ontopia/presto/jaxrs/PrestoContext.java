@@ -29,14 +29,49 @@ public class PrestoContext {
             isNewTopic = false;
         }
         if (type != null) {
-            view = type.getViewById(viewId);
+            if (viewId == null) {
+                view = type.getDefaultView();
+            } else {
+                view = type.getViewById(viewId);
+            }
         } else {
             view = null;
         }
     }
+    
+    private PrestoContext (Presto session, PrestoType type, PrestoView view) {
+        this(session, null, type, view, true);
+    }
 
+    private PrestoContext (Presto session, PrestoTopic topic, PrestoType type, PrestoView view) {
+        this(session, topic, type, view, false);
+    }
+    
+    private PrestoContext (Presto session, PrestoTopic topic, PrestoType type, PrestoView view, boolean isNewTopic) {
+        this.topic = topic;
+        this.type = type;
+        this.view = view;
+        this.isNewTopic = false;
+    }
+
+    public static PrestoContext create(Presto session, String topicId) {
+        return new PrestoContext(session, topicId, null);
+    }
+    
     public static PrestoContext create(Presto session, String topicId, String viewId) {
         return new PrestoContext(session, topicId, viewId);
+    }
+
+    public static PrestoContext create(Presto session, PrestoType type) {
+        return new PrestoContext(session, type, type.getDefaultView());
+    }
+    
+    public static PrestoContext create(Presto session, PrestoType type, PrestoView view) {
+        return new PrestoContext(session, type, view);
+    }
+    
+    public static PrestoContext create(Presto session, PrestoTopic topic, PrestoType type, PrestoView view) {
+        return new PrestoContext(session, topic, type, view);
     }
     
     public boolean isMissingTopic() {
