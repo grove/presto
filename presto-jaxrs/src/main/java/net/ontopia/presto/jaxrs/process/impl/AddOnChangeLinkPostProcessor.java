@@ -34,30 +34,32 @@ public class AddOnChangeLinkPostProcessor extends FieldDataProcessor {
 
     private FieldData addOnChangeLink(FieldData fieldData, PrestoTopic topic,
             PrestoFieldUsage field) {
-        Collection<Link> links = fieldData.getLinks();
-        if (links == null) {
-            links = new LinkedHashSet<Link>();
+        // TODO: may want to support this for inline *new* topics as well
+        if (topic != null) {
+            Collection<Link> links = fieldData.getLinks();
+            if (links == null) {
+                links = new LinkedHashSet<Link>();
+            }
+            
+            Presto presto = getPresto();
+            PrestoView view = field.getView();
+            
+            UriBuilder builder = UriBuilder.fromUri(presto.getBaseUri())
+                    .path("editor/validate-topic/")
+                    .path(presto.getDatabaseId())
+                    .path(topic.getId())
+                    .path(view.getId());
+            String href = builder.build().toString();
+    
+            Link link = new Link();
+            link.setRel("onchange");
+            link.setHref(href);
+    
+            if (!links.contains(link)) {
+                links.add(link);
+            }
+            fieldData.setLinks(links);
         }
-        
-        Presto presto = getPresto();
-        PrestoView view = field.getView();
-        
-        UriBuilder builder = UriBuilder.fromUri(presto.getBaseUri())
-                .path("editor/validate-topic/")
-                .path(presto.getDatabaseId())
-                .path(topic.getId())
-                .path(view.getId());
-        String href = builder.build().toString();
-
-        Link link = new Link();
-        link.setRel("onchange");
-        link.setHref(href);
-
-        if (!links.contains(link)) {
-            links.add(link);
-        }
-        fieldData.setLinks(links);
-
         return fieldData;
     }
 
