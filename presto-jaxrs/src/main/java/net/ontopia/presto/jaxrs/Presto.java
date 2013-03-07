@@ -124,12 +124,8 @@ public abstract class Presto {
         result.setId(topic.getId());
         result.setName(topic.getName());
 
-//        result.setType(getTopicTypeWithNoLinks(type));
         String viewId = view.getId();
         result.setView(viewId);
-
-//        String href = Links.getTopicEditLink(getBaseUri(), getDatabaseId(), topic.getId(), view.getId(), readOnlyMode);
-//        result.setHref(href);
         
         // create topic-views
         Collection<PrestoView> views = type.getViews(view);
@@ -172,9 +168,7 @@ public abstract class Presto {
         result.setId(view.getId());
         result.setName(view.getName());
         result.setTopicId(topic.getId());
-
-        String href = Links.getTopicViewEditLink(getBaseUri(), getDatabaseId(), topic.getId(), view.getId());
-        result.setHref(href);
+        result.setHref(Links.getTopicViewHref(getBaseUri(), getDatabaseId(), topic.getId(), view.getId()));
 
         return result;
     }
@@ -187,12 +181,10 @@ public abstract class Presto {
         result.setTopicId(topic.getId());
         result.setTopicTypeId(type.getId());
 
-        String href = Links.getTopicViewEditLink(getBaseUri(), getDatabaseId(), topic.getId(), view.getId());
+        String href = Links.getTopicViewHref(getBaseUri(), getDatabaseId(), topic.getId(), view.getId());
         result.setHref(href);
 
         boolean isTypeReadOnly = readOnlyMode || type.isReadOnly(); // ISSUE: do we really need this?
-//        TopicType typeInfo = getTopicTypeWithCreateInstanceLink(type, isTypeReadOnly);
-//        result.setType(typeInfo);
         
         List<FieldData> fields = new ArrayList<FieldData>(); 
         boolean allowUpdates = !isTypeReadOnly;
@@ -208,8 +200,6 @@ public abstract class Presto {
 
         List<Link> links = new ArrayList<Link>();
         links.add(Links.createLabel(type.getName()));
-
-//        topicLinks.add(new Link("edit", href));
 
         if (allowUpdates) {
             links.add(new Link("update", href));
@@ -236,15 +226,12 @@ public abstract class Presto {
     public TopicView getNewTopicView(PrestoType type, PrestoView view, String parentId, String parentFieldId) {
         TopicView result = TopicView.view();
         result.setId(view.getId());
-//        result.setName(view.getName());
         result.setName("*" + type.getName() + "*");
 
-//        result.setType(getTopicTypeWithNoLinks(type));
         result.setTopicTypeId(type.getId());
         
         String href;
         if (parentId != null) {
-//            result.setOrigin(new Origin(parentId, parentFieldId));
             href = Links.createFieldInstanceLink(getBaseUri(), getDatabaseId(), parentId, parentFieldId, type.getId());
         } else {
             href = Links.createInstanceLink(getBaseUri(), getDatabaseId(), type.getId());

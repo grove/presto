@@ -35,15 +35,8 @@ public class Links {
         return builder.build().toString();
     }
     
-    public static String getTopicViewEditLink(URI baseUri, String databaseId, String topicId, String viewId) {
-        return getTopicViewEditLink(baseUri, databaseId, topicId, viewId, false);
-    }
-    
-    public static String getTopicViewEditLink(URI baseUri, String databaseId, String topicId, String viewId, boolean readOnly) {
+    public static String getTopicViewHref(URI baseUri, String databaseId, String topicId, String viewId) {
         UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/topic-view/").path(databaseId).path(topicId).path(viewId);
-        if (readOnly) {
-            builder = builder.queryParam("readOnly", "true");
-        }
         return builder.build().toString();
     }
     

@@ -8,7 +8,8 @@ TODOs
 
 - Server-side sorting of field sets
 
-- Optional lazy-loading of field values
+- Optional lazy-loading of field values by adding 'field-values' link to
+  FieldData.
 
 - Add support for new inline topics to AddOnChangeLinkPostProcessor.
   Right now we're not able to create an ID for the topic.
@@ -38,3 +39,7 @@ TODOs
       } 
 
   - UNION, INTERSECTION, MINUS
+
+- Flattended fields (a kind of embedding). if more than one field
+  uses a resolver to access the same data then batching these up
+  into a higher level resolver makes sense.
