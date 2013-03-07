@@ -408,27 +408,25 @@ public abstract class Presto {
 
     private Collection<? extends Link> getCreateFieldInstanceLinks(PrestoTopic topic, PrestoFieldUsage field) {
         Collection<PrestoType> availableFieldCreateTypes = getAvailableFieldCreateTypes(topic, field);
+        
         if (availableFieldCreateTypes.isEmpty()) {
             return Collections.emptyList();
-        }
-        if (availableFieldCreateTypes.size() == 1) {
+        
+        } else if (availableFieldCreateTypes.size() == 1) {
             PrestoType createType = availableFieldCreateTypes.iterator().next();
             Link link = getCreateFieldInstanceLink(topic, field, createType);
-            link.setName("Ny");
-            return Collections.singleton(link);
-        }
-        Collection<Link> links = new ArrayList<Link>(availableFieldCreateTypes.size());
-        for (PrestoType createType : availableFieldCreateTypes) {
-            links.add(getCreateFieldInstanceLink(topic, field, createType));
-        }
-        if (links.size() > 1) {
-            Link link = new Link();
-            link.setRel("create-field-instance");
-            link.setLinks(links);
             link.setName("Ny"); // FIXME: localize
             return Collections.singleton(link);
         } else {
-            return links;
+            Collection<Link> links = new ArrayList<Link>(availableFieldCreateTypes.size());
+            for (PrestoType createType : availableFieldCreateTypes) {
+                links.add(getCreateFieldInstanceLink(topic, field, createType));
+            }
+            Link link = new Link();
+            link.setRel("create-field-instance");
+            link.setName("Ny"); // FIXME: localize
+            link.setLinks(links);
+            return Collections.singleton(link);
         }
     }
 
