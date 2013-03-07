@@ -1,0 +1,40 @@
+----------------------------------------------------------------------
+TODOs
+---------------------------------------------------------------------
+
+- Flexible and compact server-side API for building HTTP representations
+
+- Ability to edit inline topics as if they were standalone topics
+
+- Server-side sorting of field sets
+
+- Optional lazy-loading of field values
+
+- Add support for new inline topics to AddOnChangeLinkPostProcessor.
+  Right now we're not able to create an ID for the topic.
+
+- Add Presto resource texts for "Ny" / "New" to the schema (see
+  'create-instance' and 'create-field-instance' links)
+
+  - example: "resources" : {"new-topic-label" : "Ny {0}"}
+
+- Client should add Value.params['valueType']=<type-id> when adding
+  "external" values to a field. This so that the server can be more
+  strict when validating.
+
+- Make "name" the default name field instead of the current ":name"
+  non-field.
+
+- Add Value.errors
+
+- Add HTTP ETag header to responses
+
+- Field resolver that does aggregation of field values (replace, merge/union)
+
+  "extra" : { 
+    "resolve : [
+      { "type" : "merge",
+        "expression" : { "UNION" : [ "red", {"INTERSECTION" : [ "blue", "green" ] } }
+      } 
+
+  - UNION, INTERSECTION, MINUS
