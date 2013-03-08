@@ -51,7 +51,7 @@ public class PrestoContext {
         this.topic = topic;
         this.type = type;
         this.view = view;
-        this.isNewTopic = false;
+        this.isNewTopic = isNewTopic;
     }
 
     public static PrestoContext create(Presto session, String topicId) {
