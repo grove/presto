@@ -28,6 +28,7 @@ import net.ontopia.presto.jaxrs.resolve.AvailableFieldValuesResolver;
 import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoDataProvider.ChangeSetHandler;
+import net.ontopia.presto.spi.PrestoView.ViewType;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoInlineTopicBuilder;
@@ -134,12 +135,14 @@ public abstract class Presto {
         Collection<PrestoView> views = type.getViews(view);
         List<TopicView> topicViews = new ArrayList<TopicView>(views.size()); 
         for (PrestoView v : views) {
-            PrestoContext subcontext = PrestoContext.create(this, topic, type, v);
-            
-            if (viewId.equals(v.getId())) {
-                topicViews.add(getTopicView(subcontext, readOnlyMode));
-            } else {
-                topicViews.add(getTopicViewRemote(subcontext));
+            if (ViewType.EDIT_IN_VIEW.equals(v.getType())) {
+                PrestoContext subcontext = PrestoContext.create(this, topic, type, v);
+                
+                if (viewId.equals(v.getId())) {
+                    topicViews.add(getTopicView(subcontext, readOnlyMode));
+                } else {
+                    topicViews.add(getTopicViewRemote(subcontext));
+                }
             }
         }
         result.setViews(topicViews);
