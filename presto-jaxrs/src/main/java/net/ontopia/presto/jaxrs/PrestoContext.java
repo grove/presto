@@ -19,7 +19,9 @@ public class PrestoContext {
         PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
         PrestoDataProvider dataProvider = session.getDataProvider();
 
-        if (topicId.startsWith("_")) {
+        if (topicId == null) {
+            throw new RuntimeException("topicId cannot be null");
+        } else if (topicId.startsWith("_")) {
             type = schemaProvider.getTypeById(topicId.substring(1));
             topic = null;
             isNewTopic = true;
