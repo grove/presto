@@ -387,7 +387,12 @@ public abstract class EditorResource {
         Presto session = createPresto(databaseId);
 
         try {
-            PrestoContext context = PrestoContext.create(session, topicId, viewId);
+            // NOTE: the topicId is the topic that requested the validation, but the 
+            // validation needs to start with the topicId of the received topicView. The 
+            // former is a descendant of the latter.
+            String topicViewTopicId = topicView.getTopicId();
+            
+            PrestoContext context = PrestoContext.create(session, topicViewTopicId, viewId);
 
             if (context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -431,7 +436,12 @@ public abstract class EditorResource {
             if (context.isNewTopic()) {
                 // return Topic if new, otherwise TopicView
                 String newTopicId = result.getTopicId();
-                return getTopicInDefaultView(databaseId, newTopicId, false);
+                if (newTopicId == null) {
+                    // WARN: probably means that the topic was not valid
+                    return Response.ok(result).build();
+                } else {
+                    return getTopicInDefaultView(databaseId, newTopicId, false);
+                }
             } else {
                 return Response.ok(result).build();
             }
