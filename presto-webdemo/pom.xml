@@ -5,14 +5,14 @@
   <parent>
     <groupId>net.ontopia.presto</groupId>
     <artifactId>presto</artifactId>
-    <version>0.6.2</version>
+    <version>0.6.3-SNAPSHOT</version>
   </parent>
 
   <name>Presto - Web demo</name>
   <groupId>net.ontopia.presto</groupId>
   <artifactId>presto-webdemo</artifactId>
   <packaging>war</packaging>
-  <version>0.6.2</version>
+  <version>0.6.3-SNAPSHOT</version>
 
   <repositories>
     <repository>
