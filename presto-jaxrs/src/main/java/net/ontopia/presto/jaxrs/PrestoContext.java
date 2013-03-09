@@ -14,8 +14,9 @@ public class PrestoContext {
     private final PrestoView view;
 
     private final boolean isNewTopic;
+    private final boolean isReadOnly;
     
-    private PrestoContext(Presto session, String topicId, String viewId) {
+    private PrestoContext(Presto session, String topicId, String viewId, boolean readOnly) {
         PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
         PrestoDataProvider dataProvider = session.getDataProvider();
 
@@ -39,41 +40,50 @@ public class PrestoContext {
         } else {
             view = null;
         }
-    }
-    
-    private PrestoContext (Presto session, PrestoType type, PrestoView view) {
-        this(session, null, type, view, true);
+        this.isReadOnly = readOnly;
     }
 
-    private PrestoContext (Presto session, PrestoTopic topic, PrestoType type, PrestoView view) {
-        this(session, topic, type, view, false);
+    private PrestoContext (Presto session, PrestoType type, PrestoView view, boolean readOnly) {
+        this(session, null, type, view, true, readOnly);
+    }
+
+    private PrestoContext (Presto session, PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnly) {
+        this(session, topic, type, view, false, readOnly);
     }
     
-    private PrestoContext (Presto session, PrestoTopic topic, PrestoType type, PrestoView view, boolean isNewTopic) {
+    private PrestoContext (Presto session, PrestoTopic topic, PrestoType type, PrestoView view, boolean isNewTopic, boolean readOnly) {
         this.topic = topic;
         this.type = type;
         this.view = view;
         this.isNewTopic = isNewTopic;
+        this.isReadOnly = readOnly;
     }
 
-    public static PrestoContext create(Presto session, String topicId) {
-        return new PrestoContext(session, topicId, null);
+    public static PrestoContext create(Presto session, String topicId, boolean readOnly) {
+        return new PrestoContext(session, topicId, null, readOnly);
     }
     
-    public static PrestoContext create(Presto session, String topicId, String viewId) {
-        return new PrestoContext(session, topicId, viewId);
+    public static PrestoContext create(Presto session, String topicId, String viewId, boolean readOnly) {
+        return new PrestoContext(session, topicId, viewId, readOnly);
+    }
+    
+    public static PrestoContext create(Presto session, PrestoTopic topic, boolean readOnly) {
+        PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
+        String typeId = topic.getTypeId();
+        PrestoType type = schemaProvider.getTypeById(typeId);
+        return new PrestoContext(session, topic, type, type.getDefaultView(), readOnly);
     }
 
-    public static PrestoContext create(Presto session, PrestoType type) {
-        return new PrestoContext(session, type, type.getDefaultView());
+    public static PrestoContext create(Presto session, PrestoType type, boolean readOnly) {
+        return new PrestoContext(session, type, type.getDefaultView(), readOnly);
     }
     
-    public static PrestoContext create(Presto session, PrestoType type, PrestoView view) {
-        return new PrestoContext(session, type, view);
+    public static PrestoContext create(Presto session, PrestoType type, PrestoView view, boolean readOnly) {
+        return new PrestoContext(session, type, view, readOnly);
     }
     
-    public static PrestoContext create(Presto session, PrestoTopic topic, PrestoType type, PrestoView view) {
-        return new PrestoContext(session, topic, type, view);
+    public static PrestoContext create(Presto session, PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnly) {
+        return new PrestoContext(session, topic, type, view, readOnly);
     }
     
     public boolean isMissingTopic() {
@@ -82,6 +92,10 @@ public class PrestoContext {
     
     public boolean isNewTopic() {
         return isNewTopic;
+    }
+    
+    public boolean isReadOnly() {
+        return isReadOnly;
     }
     
     public PrestoTopic getTopic() {

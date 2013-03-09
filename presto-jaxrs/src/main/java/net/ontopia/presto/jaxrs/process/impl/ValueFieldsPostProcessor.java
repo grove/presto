@@ -18,7 +18,6 @@ public class ValueFieldsPostProcessor extends FieldDataProcessor {
 
     @Override
     public FieldData processFieldData(FieldData fieldData, PrestoContext context, PrestoFieldUsage field) {
-        boolean readOnlyMode = false;
         
         // NOTE: use first value type
         Collection<PrestoType> availableFieldValueTypes = field.getAvailableFieldValueTypes();
@@ -32,7 +31,7 @@ public class ValueFieldsPostProcessor extends FieldDataProcessor {
         // assign column value fields
         List<FieldData> valueFields = new ArrayList<FieldData>();
         for (PrestoFieldUsage valueField : fields) {
-            FieldData fd = getPresto().getFieldDataNoValues(context, valueField, readOnlyMode);
+            FieldData fd = getPresto().getFieldDataNoValues(context, valueField);
             
             // process the value field
             fd = getPresto().getProcessor().processFieldData(fd, context, valueField, getType(), getStatus());
@@ -44,7 +43,7 @@ public class ValueFieldsPostProcessor extends FieldDataProcessor {
         // retrieve field values
 
         // NOTE: have already done paging
-        FieldDataValues fieldDataValues = setFieldDataValues(context.getTopic(), field, fieldData);
+        FieldDataValues fieldDataValues = setFieldDataValues(context, field, fieldData);
         
         // post process field values
         int size = fieldDataValues.size();
@@ -53,29 +52,28 @@ public class ValueFieldsPostProcessor extends FieldDataProcessor {
         for (int i=0; i < size; i++) {
             Object inputValue = fieldDataValues.getInputValue(i);
             Value outputValue = fieldDataValues.getOutputValue(i);
-            newValues.add(postProcessValue(field, inputValue, outputValue, fields));
+            newValues.add(postProcessValue(context, field, inputValue, outputValue, fields));
         }
         fieldData.setValues(newValues);
         
         return fieldData;
     }
 
-    private FieldDataValues setFieldDataValues(PrestoTopic topic, PrestoFieldUsage field, FieldData fieldData) {
-        boolean readOnlyMode = false; // ISSUE: Presto should know this?
-        boolean isNewTopic = false;
+    private FieldDataValues setFieldDataValues(PrestoContext context, PrestoFieldUsage field, FieldData fieldData) {
         int offset = 0;
         int limit = Presto.DEFAULT_LIMIT;
-        return getPresto().setFieldDataValues(isNewTopic, readOnlyMode, offset, limit, topic, field, fieldData);
+        return getPresto().setFieldDataValues(offset, limit, context, field, fieldData);
     }
     
-    private Value postProcessValue(PrestoFieldUsage field, Object inputValue, Value outputValue, List<PrestoFieldUsage> fields) {
+    private Value postProcessValue(PrestoContext context, PrestoFieldUsage field, Object inputValue, Value outputValue, List<PrestoFieldUsage> fields) {
 
         if (field.isReferenceField()) {
             List<Value> values = new ArrayList<Value>();
             PrestoTopic valueTopic = (PrestoTopic)inputValue;
+            PrestoContext subcontext = PrestoContext.create(getPresto(), valueTopic, context.isReadOnly());
             
             for (PrestoFieldUsage valueField : fields) {
-                FieldDataValues fieldDataValues = setFieldDataValues(valueTopic, valueField, null);
+                FieldDataValues fieldDataValues = setFieldDataValues(subcontext, valueField, null);
                 if  (fieldDataValues.size() > 0) {
                     Value v = fieldDataValues.getOutputValue(0);
                     values.add(v);
