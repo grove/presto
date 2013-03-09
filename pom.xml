@@ -164,6 +164,7 @@
           <version>2.4</version>
           <configuration>
             <pushChanges>false</pushChanges>
+            <localCheckout>true</localCheckout> 
           </configuration>
         </plugin>
       </plugins>
