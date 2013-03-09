@@ -5,7 +5,7 @@
   <groupId>net.ontopia.presto</groupId>
   <artifactId>presto</artifactId>
   <packaging>pom</packaging>
-  <version>0.6.3</version>
+  <version>0.6.4-SNAPSHOT</version>
 
   <developers>
     <developer>
@@ -36,7 +36,7 @@
     <connection>scm:git:git://github.com/grove/presto.git</connection>
     <developerConnection>scm:git:git://github.com/grove/presto.git</developerConnection>
     <url>git@github.com:grove/presto.git</url>
-    <tag>presto-0.6.3</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <url>https://github.com/grove/presto</url>
