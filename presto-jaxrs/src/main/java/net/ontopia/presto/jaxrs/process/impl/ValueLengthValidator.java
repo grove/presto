@@ -2,9 +2,9 @@ package net.ontopia.presto.jaxrs.process.impl;
 
 import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxb.Value;
+import net.ontopia.presto.jaxrs.PrestoContext;
 import net.ontopia.presto.jaxrs.process.FieldDataProcessor;
 import net.ontopia.presto.spi.PrestoFieldUsage;
-import net.ontopia.presto.spi.PrestoTopic;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;
@@ -12,7 +12,7 @@ import org.codehaus.jackson.node.ObjectNode;
 public class ValueLengthValidator extends FieldDataProcessor {
 
     @Override
-    public FieldData processFieldData(FieldData fieldData, PrestoTopic topic, PrestoFieldUsage field) {
+    public FieldData processFieldData(FieldData fieldData, PrestoContext context, PrestoFieldUsage field) {
         ObjectNode processorConfig = (ObjectNode)getConfig();
         if (processorConfig != null) {
             int minLength = getInt(processorConfig, "minLength", 0);

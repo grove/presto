@@ -79,6 +79,14 @@ public class PojoSchemaModel {
                 schemaProvider.setExtra(schema.get("extra"));
             }
 
+            boolean defaultsReadOnly = false;
+            JsonNode defaultsReadOnlyNode = schema.path("defaults").path("readOnly");
+            if (defaultsReadOnlyNode.isBoolean()) {
+                defaultsReadOnly = defaultsReadOnlyNode.getBooleanValue();
+            } else if (!defaultsReadOnlyNode.isMissingNode()) {
+                throw new RuntimeException("defaults.readOnly must be a boolean: " + defaultsReadOnlyNode);
+            }
+            
             fieldsMap = createFieldsMap(schema);
             viewsMap = createViewsMap(schema);
             typesMap = createTypesMap(schema);
@@ -86,11 +94,11 @@ public class PojoSchemaModel {
             types = new HashMap<String,PojoType>();
             
             for (String typeId : typesMap.keySet()) {
-                createTypes(typeId);            
+                createTypes(typeId, defaultsReadOnly);            
             }
         }
 
-        private void createTypes(String typeId) {
+        private void createTypes(String typeId, boolean readOnlyDefault) {
             ObjectNode typeConfig = typesMap.get(typeId);
 
             PojoType type = getPojoType(typeId, types, schemaProvider);
@@ -104,12 +112,12 @@ public class PojoSchemaModel {
             // name
             String name = typeConfig.get("name").getTextValue();
             type.setName(name);
+
             // readOnly
-            boolean readOnlyType = false;
             if (typeConfig.has("readOnly")) {
-                readOnlyType = typeConfig.get("readOnly").getBooleanValue();
+                readOnlyDefault = typeConfig.get("readOnly").getBooleanValue();
             }
-            type.setReadOnly(readOnlyType);
+            
             // inline
             if (typeConfig.has("inline")) {
                 type.setInline(typeConfig.get("inline").getBooleanValue());
@@ -140,12 +148,12 @@ public class PojoSchemaModel {
                 superType.addDirectSubType(type);
             }
             if (typeConfig.has("views")) {
-                createViews(typeConfig, type);
+                createViews(typeConfig, type, readOnlyDefault);
             }
             types.put(typeId, type);
         }
 
-        private void createViews(ObjectNode typeConfig, PojoType type) {
+        private void createViews(ObjectNode typeConfig, PojoType type, boolean readOnlyDefault) {
             ArrayNode viewsNode = (ArrayNode)typeConfig.get("views");
             for (JsonNode viewNode : viewsNode) {
                 String viewId;
@@ -169,6 +177,11 @@ public class PojoSchemaModel {
                 String viewName = viewConfig.get("name").getTextValue();
                 view.setName(viewName);
 
+                // readOnly
+                if (viewConfig.has("readOnly")) {
+                    readOnlyDefault = viewConfig.get("readOnly").getBooleanValue();
+                }
+
                 // type
                 ViewType viewType = ViewType.EDIT_IN_VIEW;
                 if (viewConfig.has("type")) {
@@ -182,19 +195,19 @@ public class PojoSchemaModel {
                 }
 
                 // fields
-                createFields(type, viewConfig, view);
+                createFields(type, viewConfig, readOnlyDefault, view);
             }
         }
 
-        private void createFields(PojoType type, ObjectNode viewConfig, PojoView view) {
+        private void createFields(PojoType type, ObjectNode viewConfig, boolean readOnlyDefault, PojoView view) {
             ArrayNode fieldsArray = (ArrayNode)viewConfig.get("fields");
             for (JsonNode fieldNode : fieldsArray) {
-                PojoField field = createField(type, view, fieldNode);
+                PojoField field = createField(type, view, readOnlyDefault, fieldNode);
                 type.addField(field);
             }
         }
 
-        private PojoField createField(PojoType type, PojoView view, JsonNode fieldNode) {
+        private PojoField createField(PojoType type, PojoView view, boolean readOnlyDefault, JsonNode fieldNode) {
             String fieldId;
             ObjectNode fieldConfig;
             if (fieldNode.isTextual()) {
@@ -212,10 +225,10 @@ public class PojoSchemaModel {
             if (fieldConfig == null) {
                 throw new RuntimeException("Field declaration missing for field with id '" + fieldId + "'");
             }
-            return createField(type, view, fieldId, fieldConfig);
+            return createField(type, view, readOnlyDefault, fieldId, fieldConfig);
         }
         
-        private PojoField createField(PojoType type, PojoView view, String fieldId, ObjectNode fieldConfig) {
+        private PojoField createField(PojoType type, PojoView view, boolean readOnlyDefault, String fieldId, ObjectNode fieldConfig) {
             PojoField field = new PojoField(fieldId, schemaProvider);
             field.addDefinedInView(view);
             
@@ -287,7 +300,7 @@ public class PojoSchemaModel {
             if (fieldConfig.has("readOnly")) {
                 field.setReadOnly(fieldConfig.get("readOnly").getBooleanValue());
             } else {
-                field.setReadOnly(type.isReadOnly());
+                field.setReadOnly(readOnlyDefault);
             }
             // isSorted
             if (fieldConfig.has("sorted")) {

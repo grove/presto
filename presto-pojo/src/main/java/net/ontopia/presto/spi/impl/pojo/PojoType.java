@@ -19,7 +19,6 @@ public class PojoType implements PrestoType {
 
     private String id;
     private String name;
-    private boolean isReadOnly;
     private boolean isInline;
     private boolean isHidden;
     private boolean isCreatable = true;
@@ -74,11 +73,6 @@ public class PojoType implements PrestoType {
     @Override
     public PrestoSchemaProvider getSchemaProvider() {
         return schemaProvider;
-    }
-
-    @Override
-    public boolean isReadOnly() {
-        return isReadOnly;
     }
 
     public boolean isInline() {
@@ -168,10 +162,6 @@ public class PojoType implements PrestoType {
 
     protected void setName(String name) {
         this.name = name;
-    }
-
-    protected void setReadOnly(boolean isReadOnly) {
-        this.isReadOnly = isReadOnly;
     }
 
     protected void setInline(boolean isInline) {
