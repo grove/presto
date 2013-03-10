@@ -37,7 +37,7 @@ public class PojoSchemaProvider implements PrestoSchemaProvider {
                 if (field.isCascadingDelete()) {
                     for (PrestoType valueType : field.getAvailableFieldValueTypes()) {
                         if (!valueType.isRemovableCascadingDelete()) {
-                            throw new RuntimeException("Value type with removableCascadingDelete=false (" + valueType + ") in field with cascadingDelete=true (" + field + ").");                            
+                            throw new SchemaException("Value type with removableCascadingDelete=false (" + valueType + ") in field with cascadingDelete=true (" + field + ").");                            
                         }
                     }
                 }
