@@ -24,5 +24,15 @@
     {"_id": "1", ":type" : "c:drinking-session", "date" : ["2012-11-06"], "attendees" : ["i:john.travolta", "i:james.dean"] },
     {"_id": "2", ":type" : "c:drinking-session", "date" : ["2012-11-28"], "attendees" : ["i:james.dean"] }
   ]
+},
+{ "_id" : "i:geir.ove.gronmo",
+  ":type" : "c:person",
+  "name" : ["Geir Ove Grønmo"],
+  "ratebeer-account" : ["i:ratebeer-grove"]
+},
+{ "_id" : "i:ratebeer-grove",
+  ":type" : "c:ratebeer-account",
+  "userid" : ["Gr0ve"],
+  "last-active" : ["2013-02-10 10:20"]
 }
 ]

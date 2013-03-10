@@ -26,7 +26,7 @@ public class PojoSchemaModel {
 
     private static Logger log = LoggerFactory.getLogger(PojoSchemaModel.class);
 
-    public static PojoSchemaProvider parse(String databaseId, String schemaFilename) {
+    static PojoSchemaProvider parse(String databaseId, String schemaFilename) {
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         InputStream istream = null;
         try {
@@ -56,7 +56,7 @@ public class PojoSchemaModel {
         }
     }
     
-    public static PojoSchemaProvider createSchemaProvider(String databaseId, ObjectNode json) {
+    private static PojoSchemaProvider createSchemaProvider(String databaseId, ObjectNode json) {
         PojoSchemaParser parser = new PojoSchemaParser();
         parser.parse(databaseId, json);
         return parser.getSchemaProvider();

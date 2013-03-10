@@ -76,6 +76,7 @@
       "c:person" : { 
         "name" : "Person",
         "creatable" : true,
+        "removable" : true,
         "views": [
           { "id" : "info",
             "name": "Info",
@@ -114,7 +115,14 @@
                 "datatype": "reference",
                 "inline" : true,
                 "valueTypes" : ["c:drinking-session"]
-              }            
+              },
+              { "id" : "ratebeer-account",
+                "name" : "Ratebeer account",
+                "datatype": "reference",
+                "cascadingDelete" : true,
+                "valueTypes" : ["c:ratebeer-account"]
+              }    
+                      
             ]
           }
         ]
@@ -137,6 +145,28 @@
                 "name" : "Attendees",
                 "datatype": "reference",
                 "valueTypes" : ["c:person"]
+              }            
+            ]
+          }
+        ]
+      },
+      "c:ratebeer-account" : { 
+        "name" : "Ratebeer account",
+        "creatable" : true,
+        "removable" : false,
+        "removableCascadingDelete": true,
+        "views": [
+          { "id" : "info",
+            "name": "Info",
+            "fields" : [
+              { "id" : "userid",
+                "name" : "User id"
+              },
+              { "id" : "last-active",
+                "name" : "last-active",
+                "datatype": "http://www.w3.org/2001/XMLSchema#date",
+                "minCardinality": 0,
+                "maxCardinality": 1
               }            
             ]
           }

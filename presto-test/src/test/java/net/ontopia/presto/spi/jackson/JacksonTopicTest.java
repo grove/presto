@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import junit.framework.TestCase;
+import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
@@ -36,7 +37,7 @@ public class JacksonTopicTest extends TestCase {
                 };
             }
         };
-        this.schemaProvider = PojoSchemaModel.parse("test", "test.schema.json");
+        this.schemaProvider = PojoSchemaProvider.getSchemaProvider("test", "test.schema.json");
     }
 
     private void loadData(String filename) {
@@ -162,4 +163,42 @@ public class JacksonTopicTest extends TestCase {
             failNotEquals("Values not equal (different size)", expected, actual);
         }
     }
+    
+    @Test
+    public void testCascadingDelete() {
+        loadData("test.data.json");
+        PrestoChangeSet changeSet = dataProvider.newChangeSet();
+
+        PrestoType ratebeer_account = schemaProvider.getTypeById("c:ratebeer-account");
+        PrestoTopic ratebeer_grove = dataProvider.getTopicById("i:ratebeer-grove");
+
+        try {
+            changeSet.deleteTopic(ratebeer_grove, ratebeer_account);
+            changeSet.save();
+            
+            fail("Should not be allowed to delete topic because type is not removable.");
+        } catch (Exception e) {
+        }
+    }
+    
+    @Test
+    public void testCascadingDeleteThroughField() {
+        loadData("test.data.json");
+        PrestoChangeSet changeSet = dataProvider.newChangeSet();
+
+        PrestoTopic ratebeer_grove = dataProvider.getTopicById("i:ratebeer-grove");
+        assertNotNull("i:ratebeer-grove does not exist", ratebeer_grove);
+
+        PrestoType person = schemaProvider.getTypeById("c:person");
+        PrestoTopic grove = dataProvider.getTopicById("i:geir.ove.gronmo");
+        
+        List<? extends Object> ratebeer_account = getFieldValues(grove, "ratebeer-account");
+        assertEquals(1, ratebeer_account.size());
+        changeSet.deleteTopic(grove, person); // NOTE: should also take i:ratebeer-grove with it
+        changeSet.save();
+        
+        ratebeer_grove = dataProvider.getTopicById("i:ratebeer-grove");
+        assertNull("i:ratebeer-grove not removed", ratebeer_grove);
+    }
+
 }

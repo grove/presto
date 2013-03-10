@@ -6,8 +6,10 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoType;
+import net.ontopia.presto.spi.PrestoView;
 
 public class PojoSchemaProvider implements PrestoSchemaProvider {
 
@@ -18,7 +20,29 @@ public class PojoSchemaProvider implements PrestoSchemaProvider {
     private Object extra;
 
     public static PojoSchemaProvider getSchemaProvider(String databaseId, String schemaFile) {
-        return PojoSchemaModel.parse(databaseId, schemaFile);
+        PojoSchemaProvider schemaProvider = PojoSchemaModel.parse(databaseId, schemaFile);
+        schemaProvider.sanityCheck();
+        return schemaProvider;
+    }
+
+    private void sanityCheck() {
+        for (PrestoType type : typesMap.values()) {
+            sanityCheck(type);
+        }
+    }
+
+    private void sanityCheck(PrestoType type) {
+        for (PrestoView view : type.getViews(null)) {
+            for (PrestoFieldUsage field : type.getFields(view)) {
+                if (field.isCascadingDelete()) {
+                    for (PrestoType valueType : field.getAvailableFieldValueTypes()) {
+                        if (!valueType.isRemovableCascadingDelete()) {
+                            throw new RuntimeException("Value type with removableCascadingDelete=false (" + valueType + ") in field with cascadingDelete=true (" + field + ").");                            
+                        }
+                    }
+                }
+            }
+        }
     }
 
     @Override
