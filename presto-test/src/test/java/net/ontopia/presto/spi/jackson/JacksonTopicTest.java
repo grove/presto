@@ -55,8 +55,8 @@ public class JacksonTopicTest extends TestCase {
     private ObjectNode getPersonObjectNode() {
         ObjectMapper mapper = getObjectMapper();
         ObjectNode data = mapper.createObjectNode();
-        data.put("_id", "john.doe");
-        data.put(":type", "person");
+        data.put("_id", "i:john.doe");
+        data.put(":type", "c:person");
         data.put("name", createArray("John Doe"));
         data.put("age", createArray("26"));
         data.put("interests", createArray("sports", "beer"));
@@ -79,13 +79,13 @@ public class JacksonTopicTest extends TestCase {
     @Test
     public void testGetId() {
         PrestoTopic topic = getPerson();
-        assertEquals("john.doe", topic.getId());
+        assertEquals("i:john.doe", topic.getId());
     }
     
     @Test
     public void testGetType() {
         PrestoTopic topic = getPerson();
-        assertEquals("person", topic.getTypeId());
+        assertEquals("c:person", topic.getTypeId());
     }
     
     @Test
@@ -111,8 +111,8 @@ public class JacksonTopicTest extends TestCase {
     @Test
     public void testFavoriteBeer() {
         loadData("test.data.json");
-        PrestoTopic johndoe = dataProvider.getTopicById("john.doe");
-        PrestoTopic nogne_o_ipa = dataProvider.getTopicById("nogne-o-ipa");
+        PrestoTopic johndoe = dataProvider.getTopicById("i:john.doe");
+        PrestoTopic nogne_o_ipa = dataProvider.getTopicById("i:nogne-o-ipa");
         assertValuesEquals(Arrays.asList(nogne_o_ipa), getFieldValues(johndoe, "favorite-beer"));
     }
     
@@ -120,7 +120,7 @@ public class JacksonTopicTest extends TestCase {
     public void testInlineValues() {
         loadData("test.data.json");
 
-        PrestoTopic johndoe = dataProvider.getTopicById("john.doe");
+        PrestoTopic johndoe = dataProvider.getTopicById("i:john.doe");
         List<? extends Object> fv = getFieldValues(johndoe, "hosted-drinking-sessions");
         assertEquals(2, fv.size());
         System.out.println(fv);
@@ -135,7 +135,7 @@ public class JacksonTopicTest extends TestCase {
 
         PrestoTopic firstAttendeeFirstSession = (PrestoTopic)attendeesFirstSession.get(0);
         assertFalse("First session attendee an inline object", firstAttendeeFirstSession.isInline());
-        assertEquals("john.travolta", firstAttendeeFirstSession.getId());
+        assertEquals("i:john.travolta", firstAttendeeFirstSession.getId());
         assertEquals("John Travolta", firstAttendeeFirstSession.getName());
     }
  

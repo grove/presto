@@ -37,7 +37,7 @@ public class PrestoTest {
     
     @Test 
     public void testCreateLookupAndDelete() {
-        PrestoType personType = schemaProvider.getTypeById("person");
+        PrestoType personType = schemaProvider.getTypeById("c:person");
         
         // create new person
         PrestoChangeSet cs = dataProvider.newChangeSet();

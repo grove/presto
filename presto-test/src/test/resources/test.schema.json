@@ -2,7 +2,7 @@
   "name": "Example schema",
 
   "types": {
-      "b:brewery" : { 
+      "c:brewery" : { 
         "name" : "Brewery",
         "creatable" : true,
         "removable" : true,
@@ -40,7 +40,7 @@
           }
         ]
       },
-      "b:beer" : { 
+      "c:beer" : { 
         "name" : "Beer",
         "creatable" : true,
         "views": [
@@ -61,7 +61,7 @@
               { "id" : "brewed-by",
                 "name" : "Brewed by",
                 "datatype": "reference",
-                "valueTypes" : ["b:brewery"],
+                "valueTypes" : ["c:brewery"],
                 "maxCardinality": 1
               },
               { "id" : "abv",
@@ -73,7 +73,7 @@
           }
         ]
       },
-      "person" : { 
+      "c:person" : { 
         "name" : "Person",
         "creatable" : true,
         "views": [
@@ -106,20 +106,20 @@
               { "id" : "favorite-beer",
                 "name" : "Likes beer",
                 "datatype": "reference",
-                "valueTypes" : ["b:beer"],
+                "valueTypes" : ["c:beer"],
                 "maxCardinality": 1
               },
               { "id" : "hosted-drinking-sessions",
                 "name" : "Hosted drinking sessions",
                 "datatype": "reference",
                 "inline" : true,
-                "valueTypes" : ["drinking-session"]
+                "valueTypes" : ["c:drinking-session"]
               }            
             ]
           }
         ]
       },
-      "drinking-session" : { 
+      "c:drinking-session" : { 
         "name" : "Drinking session",
         "inline" : true,
         "creatable" : true,
@@ -136,7 +136,7 @@
               { "id" : "attendees",
                 "name" : "Attendees",
                 "datatype": "reference",
-                "valueTypes" : ["person"]
+                "valueTypes" : ["c:person"]
               }            
             ]
           }

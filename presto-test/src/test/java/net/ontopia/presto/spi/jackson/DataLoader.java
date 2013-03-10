@@ -70,7 +70,6 @@ public class DataLoader {
             } catch (IOException e) {
             }
         }
-
     }
 
     private void readData(ArrayNode data) {
