@@ -221,10 +221,11 @@ public abstract class EditorResource {
 
     @DELETE
     @Produces(APPLICATION_JSON_UTF8)
-    @Path("topic/{databaseId}/{topicId}")
+    @Path("topic-view/{databaseId}/{topicId}/{viewId}")
     public Response deleteTopic(
             @PathParam("databaseId") final String databaseId, 
-            @PathParam("topicId") final String topicId) throws Exception {
+            @PathParam("topicId") final String topicId,
+            @PathParam("viewId") final String viewId) throws Exception {
 
         Presto session = createPresto(databaseId);
 
