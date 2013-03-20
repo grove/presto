@@ -192,12 +192,13 @@ public abstract class EditorResource {
             @PathParam("fieldId") final String fieldId, 
             @PathParam("start") final int start, 
             @PathParam("limit") final int limit) throws Exception {
-
+        
         Presto session = createPresto(databaseId);
 
         try {
             boolean readOnly = false;
-            PrestoContext context = PrestoContext.create(session, topicId, readOnly);
+
+            PrestoContext context = PrestoContext.create(session,  Links.deskull(topicId), readOnly);
 
             if (context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -233,7 +234,7 @@ public abstract class EditorResource {
             PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
             PrestoDataProvider dataProvider = session.getDataProvider();
 
-            PrestoTopic topic = dataProvider.getTopicById(topicId);
+            PrestoTopic topic = dataProvider.getTopicById(Links.deskull(topicId));
 
             if (topic == null) {
                 // 404
@@ -269,7 +270,7 @@ public abstract class EditorResource {
         Presto session = createPresto(databaseId);
 
         try {
-            PrestoContext context = PrestoContext.create(session, topicId, readOnly);
+            PrestoContext context = PrestoContext.create(session, Links.deskull(topicId), readOnly);
 
             if (context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -300,7 +301,7 @@ public abstract class EditorResource {
         Presto session = createPresto(databaseId);
 
         try {
-            PrestoContext context = PrestoContext.create(session, topicId, viewId, readOnly);
+            PrestoContext context = PrestoContext.create(session, Links.deskull(topicId), viewId, readOnly);
 
             if (context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -329,7 +330,7 @@ public abstract class EditorResource {
         Presto session = createPresto(databaseId);
 
         try {
-            PrestoContext context = PrestoContext.create(session, topicId, readOnly);
+            PrestoContext context = PrestoContext.create(session, Links.deskull(topicId), readOnly);
 
             if (context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -359,7 +360,7 @@ public abstract class EditorResource {
         Presto session = createPresto(databaseId);
 
         try {
-            PrestoContext context = PrestoContext.create(session, topicId, viewId, readOnly);
+            PrestoContext context = PrestoContext.create(session, Links.deskull(topicId), viewId, readOnly);
 
             if (context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -428,7 +429,7 @@ public abstract class EditorResource {
 
         try {
             boolean readOnly = false;
-            PrestoContext context = PrestoContext.create(session, topicId, viewId, readOnly);
+            PrestoContext context = PrestoContext.create(session, Links.deskull(topicId), viewId, readOnly);
 
             if (context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -473,7 +474,7 @@ public abstract class EditorResource {
 
         try {
             boolean readOnly = false;
-            PrestoContext context = PrestoContext.create(session, topicId, viewId, readOnly);
+            PrestoContext context = PrestoContext.create(session, Links.deskull(topicId), viewId, readOnly);
 
             if (context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -543,7 +544,7 @@ public abstract class EditorResource {
 
         try {
             boolean readOnly = false;
-            PrestoContext context = PrestoContext.create(session, topicId, viewId, readOnly);
+            PrestoContext context = PrestoContext.create(session, Links.deskull(topicId), viewId, readOnly);
 
             if (context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -583,7 +584,7 @@ public abstract class EditorResource {
 
         try {
             boolean readOnly = false;
-            PrestoContext context = PrestoContext.create(session, topicId, viewId, readOnly);
+            PrestoContext context = PrestoContext.create(session, Links.deskull(topicId), viewId, readOnly);
 
             if (context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -615,7 +616,7 @@ public abstract class EditorResource {
 
         try {
             boolean readOnly = false;
-            PrestoContext context = PrestoContext.create(session, topicId, viewId, readOnly);
+            PrestoContext context = PrestoContext.create(session, Links.deskull(topicId), viewId, readOnly);
 
             if (context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();

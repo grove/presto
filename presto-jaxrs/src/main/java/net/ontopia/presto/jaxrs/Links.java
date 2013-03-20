@@ -7,8 +7,22 @@ import javax.ws.rs.core.UriBuilder;
 import net.ontopia.presto.jaxb.Link;
 
 public class Links {
-
+    
     private Links() {
+    }
+
+    // WARN: replacing all / characters with skull character to 
+    // work around http://java.net/jira/browse/JAX_RS_SPEC-70
+    private static final String SKULL_CHARACTER = "\u2620";
+
+    private static String skull(String u) {
+        // NOTE: we're only patching the ids of topics
+        return u.replaceAll("/", SKULL_CHARACTER);
+    }
+    
+    public static String deskull(String u) {
+        // NOTE: we're only patching the ids of topics
+        return u.replaceAll(SKULL_CHARACTER, "/");
     }
     
     public static Link createLabel(String name) {
@@ -28,7 +42,7 @@ public class Links {
     }
     
     public static String getTopicEditLink(URI baseUri, String databaseId, String topicId, String viewId, boolean readOnly) {
-        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/topic/").path(databaseId).path(topicId).path(viewId);
+        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/topic/").path(databaseId).path(skull(topicId)).path(viewId);
         if (readOnly) {
             builder = builder.queryParam("readOnly", "true");
         }
@@ -36,7 +50,7 @@ public class Links {
     }
     
     public static String getTopicViewHref(URI baseUri, String databaseId, String topicId, String viewId) {
-        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/topic-view/").path(databaseId).path(topicId).path(viewId);
+        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/topic-view/").path(databaseId).path(skull(topicId)).path(viewId);
         return builder.build().toString();
     }
     
@@ -51,37 +65,37 @@ public class Links {
     }
 
     public static String createFieldInstanceLink(URI baseUri, String databaseId, String topicId, String fieldId, String typeId) {
-        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/create-field-instance/").path(databaseId).path(topicId).path(fieldId).path(typeId);
+        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/create-field-instance/").path(databaseId).path(skull(topicId)).path(fieldId).path(typeId);
         return builder.build().toString();
     }
 
     public static String addFieldValuesLink(URI baseUri, String databaseId, String topicId, String parentViewId, String fieldId) {
-        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/add-field-values/").path(databaseId).path(topicId).path(parentViewId).path(fieldId);
+        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/add-field-values/").path(databaseId).path(skull(topicId)).path(parentViewId).path(fieldId);
         return builder.build().toString();
     }
 
     public static String addFieldValuesAtIndexLink(URI baseUri, String databaseId, String topicId, String parentViewId, String fieldId) {
-        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/add-field-values-at-index/").path(databaseId).path(topicId).path(parentViewId).path(fieldId).path("{index}");
+        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/add-field-values-at-index/").path(databaseId).path(skull(topicId)).path(parentViewId).path(fieldId).path("{index}");
         return builder.build().toString();
     }
 
     public static String removeFieldValuesLink(URI baseUri, String databaseId, String topicId, String parentViewId, String fieldId) {
-        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/remove-field-values/").path(databaseId).path(topicId).path(parentViewId).path(fieldId);
+        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/remove-field-values/").path(databaseId).path(skull(topicId)).path(parentViewId).path(fieldId);
         return builder.build().toString();
     }
 
     public static String moveFieldValuesToIndex(URI baseUri, String databaseId, String topicId, String parentViewId, String fieldId) {
-        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/move-field-values-to-index/").path(databaseId).path(topicId).path(parentViewId).path(fieldId).path("{index}");
+        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/move-field-values-to-index/").path(databaseId).path(skull(topicId)).path(parentViewId).path(fieldId).path("{index}");
         return builder.build().toString();
     }
 
     public static String pagingLink(URI baseUri, String databaseId, String topicId, String parentViewId, String fieldId) {
-        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/paging-field/").path(databaseId).path(topicId).path(parentViewId).path(fieldId).path("{start}").path("{limit}");
+        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/paging-field/").path(databaseId).path(skull(topicId)).path(parentViewId).path(fieldId).path("{start}").path("{limit}");
         return builder.build().toString();
     }
 
     public static String availableFieldValues(URI baseUri, String databaseId, String topicId, String parentViewId, String fieldId) {
-        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/available-field-values/").path(databaseId).path(topicId).path(parentViewId).path(fieldId);
+        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/available-field-values/").path(databaseId).path(skull(topicId)).path(parentViewId).path(fieldId);
         return builder.build().toString();
     }
 
