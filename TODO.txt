@@ -28,7 +28,7 @@ TODOs
 - Client should add Value.params['valueType']=<type-id> when adding
   "external" values to a field. This so that the server can know what
   type of value was added. This is primarily a problem when there are
-  multiple id namespaces.
+  multiple value types with non-unique id namespaces.
 
 - Add Value.errors and Value.messages, like those on FieldData.
 
@@ -44,5 +44,13 @@ TODOs
 
 - Virtual fields; useful when more than one field uses a resolver to
   do traversal down a common path. The common traversal should be done
-  just once.
+  just once. Use memoization.
 
+---------------------------------------------------------------------
+Ember.js
+---------------------------------------------------------------------
+
+- Ember Data RESTAdapter endpoint. Should serve both models and data.
+
+- Ember Data BasicAdapter implementation that one can use to implement
+  an editor with.

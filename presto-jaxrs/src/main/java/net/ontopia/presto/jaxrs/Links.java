@@ -49,8 +49,11 @@ public class Links {
         return builder.build().toString();
     }
     
-    public static String getTopicViewHref(URI baseUri, String databaseId, String topicId, String viewId) {
+    public static String getTopicViewHref(URI baseUri, String databaseId, String topicId, String viewId, boolean readOnly) {
         UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/topic-view/").path(databaseId).path(skull(topicId)).path(viewId);
+        if (readOnly) {
+            builder = builder.queryParam("readOnly", "true");
+        }
         return builder.build().toString();
     }
     

@@ -179,7 +179,7 @@ public abstract class Presto {
         result.setId(view.getId());
         result.setName(view.getName());
         result.setTopicId(topic.getId());
-        result.setHref(Links.getTopicViewHref(getBaseUri(), getDatabaseId(), topic.getId(), view.getId()));
+        result.setHref(Links.getTopicViewHref(getBaseUri(), getDatabaseId(), topic.getId(), view.getId(), context.isReadOnly()));
 
         return result;
     }
@@ -196,7 +196,7 @@ public abstract class Presto {
         result.setTopicId(topic.getId());
         result.setTopicTypeId(type.getId());
 
-        String href = Links.getTopicViewHref(getBaseUri(), getDatabaseId(), topic.getId(), view.getId());
+        String href = Links.getTopicViewHref(getBaseUri(), getDatabaseId(), topic.getId(), view.getId(), context.isReadOnly());
         result.setHref(href);
 
         List<FieldData> fields = new ArrayList<FieldData>(); 
@@ -205,7 +205,7 @@ public abstract class Presto {
             if (!field.isHidden()) {
                 fields.add(getFieldData(context, field));
 
-                if (!field.isReadOnly()) {
+                if (!field.isReadOnly() && !context.isReadOnly()) {
                     allFieldsReadOnly = false;
                 }
             }
