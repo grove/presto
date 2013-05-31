@@ -37,7 +37,7 @@ public class PrestoTest {
     
     @Test 
     public void testCreateLookupAndDelete() {
-        PrestoType personType = schemaProvider.getTypeById("person");
+        PrestoType personType = schemaProvider.getTypeById("c:person");
         
         // create new person
         PrestoChangeSet cs = dataProvider.newChangeSet();
@@ -106,7 +106,7 @@ public class PrestoTest {
         
         PrestoTopic deletedJohn = dataProvider.getTopicById(foundJohn.getId());
         Assert.assertNull(deletedJohn);
-        topicsByIds = dataProvider.getTopicsByIds(Arrays.asList(createdJohn.getId(), createdDanny.getId()));
+        topicsByIds = dataProvider.getTopicsByIds(Arrays.asList(createdJohn.getId(), createdDanny.getId(), "bogus-id"));
         Assert.assertEquals(1, topicsByIds.size());
         Assert.assertTrue(topicsByIds.contains(createdDanny));
     }

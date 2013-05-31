@@ -10,19 +10,18 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class Value {
 
-    private Boolean editable; // TODO: move to params
-    private Boolean removable; // TODO: move to params
-
-    // primitive
-    private String value;
-
-    // reference
+    private Boolean editable;
+    private Boolean removable;
+    
     private String name;
-    private Collection<Link> links;
+    private String value;
+    private Collection<Value> values; // nested values (see FieldData.valueFields)
+
     private TopicView embedded;
-    private Collection<Value> values;
 
     private Map<String,Object> params;
+
+    private Collection<Link> links;
 
     public Value() {
     }

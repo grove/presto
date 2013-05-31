@@ -1,28 +1,38 @@
 [
-{ "_id" : "nogne-o-ipa",
-  ":type" : "b:beer",
+{ "_id" : "i:nogne-o-ipa",
+  ":type" : "c:beer",
   "name" : ["Nøgne Ø IPA"],
   "abv" : ["7.5"]
 },
-{ "_id" : "john.travolta",
-  ":type" : "person",
+{ "_id" : "i:john.travolta",
+  ":type" : "c:person",
   "name" : ["John Travolta"],
   "phone" : ["55512345"]
 },
-{ "_id" : "james.dean",
-  ":type" : "person",
+{ "_id" : "i:james.dean",
+  ":type" : "c:person",
   "name" : ["James Dean"],
   "phone" : ["55512346"]
 },
-{ "_id" : "john.doe",
-  ":type" : "person",
+{ "_id" : "i:john.doe",
+  ":type" : "c:person",
   "name" : ["John Doe"],
   "age" : ["26"],
   "interests" : ["sports", "beer"],
-  "favorite-beer" : ["nogne-o-ipa"],
+  "favorite-beer" : ["i:nogne-o-ipa"],
   "hosted-drinking-sessions" : [
-    {"_id": "1", ":type" : "drinking-session", "date" : ["2012-11-06"], "attendees" : ["john.travolta","james.dean"] },
-    {"_id": "2", ":type" : "drinking-session", "date" : ["2012-11-28"], "attendees" : ["james.dean"] }
+    {"_id": "1", ":type" : "c:drinking-session", "date" : ["2012-11-06"], "attendees" : ["i:john.travolta", "i:james.dean"] },
+    {"_id": "2", ":type" : "c:drinking-session", "date" : ["2012-11-28"], "attendees" : ["i:james.dean"] }
   ]
+},
+{ "_id" : "i:geir.ove.gronmo",
+  ":type" : "c:person",
+  "name" : ["Geir Ove Grønmo"],
+  "ratebeer-account" : ["i:ratebeer-grove"]
+},
+{ "_id" : "i:ratebeer-grove",
+  ":type" : "c:ratebeer-account",
+  "userid" : ["Gr0ve"],
+  "last-active" : ["2013-02-10 10:20"]
 }
 ]

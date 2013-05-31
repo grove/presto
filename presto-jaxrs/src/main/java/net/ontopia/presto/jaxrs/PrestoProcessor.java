@@ -6,11 +6,13 @@ import java.util.Collections;
 import java.util.List;
 
 import net.ontopia.presto.jaxb.FieldData;
+import net.ontopia.presto.jaxb.Topic;
 import net.ontopia.presto.jaxb.TopicView;
 import net.ontopia.presto.jaxb.Value;
 import net.ontopia.presto.jaxrs.process.AbstractProcessor;
 import net.ontopia.presto.jaxrs.process.FieldDataProcessor;
 import net.ontopia.presto.jaxrs.process.TopicProcessor;
+import net.ontopia.presto.jaxrs.process.TopicViewProcessor;
 import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
@@ -61,46 +63,84 @@ public class PrestoProcessor {
         return presto.getDataProvider();
     }
     
-    public TopicView preProcessTopicView(TopicView topicView, PrestoTopic topic, PrestoType type, PrestoView view, Status status) {
-        return processTopicView(topicView, topic, type, view, Type.PRE_PROCESS, status);
+    public Topic preProcessTopic(Topic topicData, PrestoContext context, Status status) {
+        return processTopic(topicData, context, Type.PRE_PROCESS, status);
     }
 
-    public TopicView postProcessTopicView(TopicView topicView, PrestoTopic topic, PrestoType type, PrestoView view, Status status) {
-        return processTopicView(topicView, topic, type, view, Type.POST_PROCESS, status);
+    public Topic postProcessTopic(Topic topicData, PrestoContext context, Status status) {
+        return processTopic(topicData, context, Type.POST_PROCESS, status);
     }
     
-    private TopicView processTopicView(TopicView topicView, PrestoTopic topic, PrestoType type, PrestoView view, Type processType, Status status) {
-
-        // TODO: add errors on topic data?
-//        // reset errors when pre-process
-//        if (processType == Type.PRE_PROCESS) {
-//            topicData.setErrors(null);
-//        }
+    private Topic processTopic(Topic topicData, PrestoContext context, Type processType, Status status) {
 
         // process the topic
         ObjectNode schemaExtra = presto.getSchemaExtraNode(presto.getSchemaProvider());
-        topicView = processTopicExtra(topicView, topic, type, view, schemaExtra, processType, status);
+        topicData = processTopicExtra(topicData, context, schemaExtra, processType, status);
+        
+        PrestoTopic topic = context.getTopic();
+        PrestoType type = context.getType();
         
         ObjectNode topicExtra = presto.getTypeExtraNode(type);
-        topicView = processTopicExtra(topicView, topic, type, view, topicExtra, processType, status);
+        topicData = processTopicExtra(topicData, context, topicExtra, processType, status);
+
+        // process the topic views
+        Collection<TopicView> views = topicData.getViews();
+        Collection<TopicView> newViews = new ArrayList<TopicView>(views.size());
+
+        for (TopicView topicView : views) {
+            String viewId = topicView.getId();
+            PrestoView specificView = type.getViewById(viewId);
+            PrestoContext subcontext = PrestoContext.create(presto, topic, type, specificView, context.isReadOnly());
+            
+            TopicView newView = processTopicView(topicView, subcontext, processType, status);
+            if (newView != null) {
+                newViews.add(newView);
+            }
+        }            
+        topicData.setViews(newViews);
+
+        return topicData;
+    }
+    
+    public TopicView preProcessTopicView(TopicView topicView, PrestoContext context, Status status) {
+        return processTopicView(topicView, context, Type.PRE_PROCESS, status);
+    }
+
+    public TopicView postProcessTopicView(TopicView topicView, PrestoContext context, Status status) {
+        return processTopicView(topicView, context, Type.POST_PROCESS, status);
+    }
+    
+    private TopicView processTopicView(TopicView topicView, PrestoContext context, Type processType, Status status) {
+
+        // process the topic
+        ObjectNode schemaExtra = presto.getSchemaExtraNode(presto.getSchemaProvider());
+        topicView = processTopicViewExtra(topicView, context, schemaExtra, processType, status);
         
-        ObjectNode viewExtra = presto.getViewExtraNode(view);
-        topicView = processTopicExtra(topicView, topic, type, view, viewExtra, processType, status);
+        ObjectNode topicExtra = presto.getTypeExtraNode(context.getType());
+        topicView = processTopicViewExtra(topicView, context, topicExtra, processType, status);
+        
+        ObjectNode viewExtra = presto.getViewExtraNode(context.getView());
+        topicView = processTopicViewExtra(topicView, context, viewExtra, processType, status);
 
         // process the field data
         Collection<FieldData> fields = topicView.getFields();
-        Collection<FieldData> newFields = new ArrayList<FieldData>(fields.size());
-
-        for (FieldData fieldData : fields) {
-
-            String fieldId = fieldData.getId();
-            PrestoFieldUsage field = type.getFieldById(fieldId, view);
-
-            // process field            
-            FieldData newFieldData = processFieldData(fieldData, topic, field, processType, status);
-            newFields.add(newFieldData);
-        }            
-        topicView.setFields(newFields);
+        if (fields != null) {
+            Collection<FieldData> newFields = new ArrayList<FieldData>(fields.size());
+            
+            for (FieldData fieldData : fields) {
+    
+                String fieldId = fieldData.getId();
+                PrestoFieldUsage field = context.getFieldById(fieldId);
+    
+                // process field            
+                FieldData newField = processFieldData(fieldData, context, field, processType, status);
+                if (newField != null) {
+                    newFields.add(newField);
+                }
+            
+            }
+            topicView.setFields(newFields);
+        }
 
         return topicView;
     }
@@ -113,7 +153,7 @@ public class PrestoProcessor {
 //        return processFieldData(fieldData, topic, field, Type.POST_PROCESS, status);
 //    }
     
-    public FieldData processFieldData(FieldData fieldData, PrestoTopic topic, PrestoFieldUsage field, Type processType, Status status) {
+    public FieldData processFieldData(FieldData fieldData, PrestoContext context, PrestoFieldUsage field, Type processType, Status status) {
         // process nested data first
         PrestoSchemaProvider schemaProvider = getSchemaProvider();
         PrestoDataProvider dataProvider = getDataProvider();
@@ -139,7 +179,9 @@ public class PrestoProcessor {
                             valueType = schemaProvider.getTypeById(valueTopic.getTypeId());
                         }
                         
-                        embeddedTopic = processTopicView(embeddedTopic, valueTopic, valueType, valueView, processType, status);
+                        PrestoContext subcontext = PrestoContext.create(presto, valueTopic, valueType, valueView, context.isReadOnly());
+                        
+                        embeddedTopic = processTopicView(embeddedTopic, subcontext, processType, status);
                         value.setEmbedded(embeddedTopic);
                     }
                 }
@@ -154,38 +196,50 @@ public class PrestoProcessor {
 
         // process field
         ObjectNode schemaExtra = presto.getSchemaExtraNode(presto.getSchemaProvider());
-        fieldData = processFieldDataExtra(fieldData, topic, field, schemaExtra, processType, status);
+        fieldData = processFieldDataExtra(fieldData, context, field, schemaExtra, processType, status);
         
-        ObjectNode topicExtra = presto.getTypeExtraNode(field.getType());
-        fieldData = processFieldDataExtra(fieldData, topic, field, topicExtra, processType, status);
+        ObjectNode topicExtra = presto.getTypeExtraNode(context.getType());
+        fieldData = processFieldDataExtra(fieldData, context, field, topicExtra, processType, status);
         
-        ObjectNode viewExtra = presto.getViewExtraNode(field.getView());
-        fieldData = processFieldDataExtra(fieldData, topic, field, viewExtra, processType, status);
+        ObjectNode viewExtra = presto.getViewExtraNode(context.getView());
+        fieldData = processFieldDataExtra(fieldData, context, field, viewExtra, processType, status);
 
         ObjectNode fieldExtra = presto.getFieldExtraNode(field);
-        fieldData = processFieldDataExtra(fieldData, topic, field, fieldExtra, processType, status);
+        fieldData = processFieldDataExtra(fieldData, context, field, fieldExtra, processType, status);
         
         return fieldData;
     }
 
-    private TopicView processTopicExtra(TopicView topicView, PrestoTopic topic, PrestoType type, PrestoView view, ObjectNode extraNode, Type processType, Status status) {
+    private Topic processTopicExtra(Topic topicData, PrestoContext context, ObjectNode extraNode, Type processType, Status status) {
         if (extraNode != null) {
             JsonNode processorsNode = getTopicProcessorsNode(extraNode, processType);
             if (!processorsNode.isMissingNode()) {
                 for (TopicProcessor processor : getProcessors(TopicProcessor.class, processorsNode, processType, status)) {
-                    topicView = processor.processTopicView(topicView, topic, type, view);
+                    topicData = processor.processTopic(topicData, context);
+                }
+            }
+        }
+        return topicData;
+    }
+
+    private TopicView processTopicViewExtra(TopicView topicView, PrestoContext context, ObjectNode extraNode, Type processType, Status status) {
+        if (extraNode != null) {
+            JsonNode processorsNode = getTopicViewProcessorsNode(extraNode, processType);
+            if (!processorsNode.isMissingNode()) {
+                for (TopicViewProcessor processor : getProcessors(TopicViewProcessor.class, processorsNode, processType, status)) {
+                    topicView = processor.processTopicView(topicView, context);
                 }
             }
         }
         return topicView;
     }
     
-    private FieldData processFieldDataExtra(FieldData fieldData, PrestoTopic topic, PrestoFieldUsage field, ObjectNode extraNode, Type processType, Status status) {
+    private FieldData processFieldDataExtra(FieldData fieldData, PrestoContext context, PrestoFieldUsage field, ObjectNode extraNode, Type processType, Status status) {
         if (extraNode != null) {
             JsonNode processorsNode = getFieldDataProcessorsNode(extraNode, processType);
             if (!processorsNode.isMissingNode()) {
                 for (FieldDataProcessor processor : getProcessors(FieldDataProcessor.class, processorsNode, processType, status)) {
-                    fieldData = processor.processFieldData(fieldData, topic, field);                
+                    fieldData = processor.processFieldData(fieldData, context, field);                
                 }
             }
         }
@@ -197,6 +251,14 @@ public class PrestoProcessor {
             return extraNode.path("topicPreProcessors");            
         } else {
             return extraNode.path("topicPostProcessors");
+        }
+    }
+    
+    private JsonNode getTopicViewProcessorsNode(ObjectNode extraNode, Type processType) {
+        if (processType == Type.PRE_PROCESS) {
+            return extraNode.path("topicViewPreProcessors");            
+        } else {
+            return extraNode.path("topicViewPostProcessors");
         }
     }
     

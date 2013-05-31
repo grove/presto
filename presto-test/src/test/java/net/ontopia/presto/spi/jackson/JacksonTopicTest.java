@@ -4,10 +4,10 @@ import java.util.Arrays;
 import java.util.List;
 
 import junit.framework.TestCase;
+import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
-import net.ontopia.presto.spi.impl.pojo.PojoSchemaModel;
 import net.ontopia.presto.spi.impl.pojo.PojoSchemaProvider;
 
 import org.codehaus.jackson.map.ObjectMapper;
@@ -36,7 +36,7 @@ public class JacksonTopicTest extends TestCase {
                 };
             }
         };
-        this.schemaProvider = PojoSchemaModel.parse("test", "test.schema.json");
+        this.schemaProvider = PojoSchemaProvider.getSchemaProvider("test", "test.schema.json");
     }
 
     private void loadData(String filename) {
@@ -55,8 +55,8 @@ public class JacksonTopicTest extends TestCase {
     private ObjectNode getPersonObjectNode() {
         ObjectMapper mapper = getObjectMapper();
         ObjectNode data = mapper.createObjectNode();
-        data.put("_id", "john.doe");
-        data.put(":type", "person");
+        data.put("_id", "i:john.doe");
+        data.put(":type", "c:person");
         data.put("name", createArray("John Doe"));
         data.put("age", createArray("26"));
         data.put("interests", createArray("sports", "beer"));
@@ -79,13 +79,13 @@ public class JacksonTopicTest extends TestCase {
     @Test
     public void testGetId() {
         PrestoTopic topic = getPerson();
-        assertEquals("john.doe", topic.getId());
+        assertEquals("i:john.doe", topic.getId());
     }
     
     @Test
     public void testGetType() {
         PrestoTopic topic = getPerson();
-        assertEquals("person", topic.getTypeId());
+        assertEquals("c:person", topic.getTypeId());
     }
     
     @Test
@@ -111,8 +111,8 @@ public class JacksonTopicTest extends TestCase {
     @Test
     public void testFavoriteBeer() {
         loadData("test.data.json");
-        PrestoTopic johndoe = dataProvider.getTopicById("john.doe");
-        PrestoTopic nogne_o_ipa = dataProvider.getTopicById("nogne-o-ipa");
+        PrestoTopic johndoe = dataProvider.getTopicById("i:john.doe");
+        PrestoTopic nogne_o_ipa = dataProvider.getTopicById("i:nogne-o-ipa");
         assertValuesEquals(Arrays.asList(nogne_o_ipa), getFieldValues(johndoe, "favorite-beer"));
     }
     
@@ -120,13 +120,13 @@ public class JacksonTopicTest extends TestCase {
     public void testInlineValues() {
         loadData("test.data.json");
 
-        PrestoTopic johndoe = dataProvider.getTopicById("john.doe");
+        PrestoTopic johndoe = dataProvider.getTopicById("i:john.doe");
         List<? extends Object> fv = getFieldValues(johndoe, "hosted-drinking-sessions");
         assertEquals(2, fv.size());
         System.out.println(fv);
 
         PrestoTopic firstSession = (PrestoTopic)fv.get(0);
-        assertTrue("First session not an inline object", firstSession.isInline());
+        assertTrue("First session is not an inline object", firstSession.isInline());
         assertEquals("1", firstSession.getId());
         
         List<? extends Object> attendeesFirstSession = getFieldValues(firstSession, "attendees");
@@ -134,8 +134,8 @@ public class JacksonTopicTest extends TestCase {
         System.out.println(attendeesFirstSession);
 
         PrestoTopic firstAttendeeFirstSession = (PrestoTopic)attendeesFirstSession.get(0);
-        assertFalse("First session attendee an inline object", firstAttendeeFirstSession.isInline());
-        assertEquals("john.travolta", firstAttendeeFirstSession.getId());
+        assertFalse("First session attendee is an inline object", firstAttendeeFirstSession.isInline());
+        assertEquals("i:john.travolta", firstAttendeeFirstSession.getId());
         assertEquals("John Travolta", firstAttendeeFirstSession.getName());
     }
  
@@ -162,4 +162,46 @@ public class JacksonTopicTest extends TestCase {
             failNotEquals("Values not equal (different size)", expected, actual);
         }
     }
+    
+    @Test
+    public void testCascadingDelete() {
+        loadData("test.data.json");
+        PrestoChangeSet changeSet = dataProvider.newChangeSet();
+
+        PrestoType ratebeer_account = schemaProvider.getTypeById("c:ratebeer-account");
+        PrestoTopic ratebeer_grove = dataProvider.getTopicById("i:ratebeer-grove");
+
+        try {
+            changeSet.deleteTopic(ratebeer_grove, ratebeer_account);
+            changeSet.save();
+            
+            fail("Should not be allowed to delete topic because type is not removable.");
+        } catch (Exception e) {
+        }
+    }
+    
+    @Test
+    public void testCascadingDeleteThroughField() {
+        loadData("test.data.json");
+        PrestoChangeSet changeSet = dataProvider.newChangeSet();
+
+        PrestoTopic ratebeer_grove = dataProvider.getTopicById("i:ratebeer-grove");
+        assertNotNull("i:ratebeer-grove does not exist", ratebeer_grove);
+
+        PrestoType person = schemaProvider.getTypeById("c:person");
+        PrestoTopic grove = dataProvider.getTopicById("i:geir.ove.gronmo");
+        assertNotNull("i:geir.ove.gronmo does not exist", grove);
+        
+        List<? extends Object> ratebeer_account = getFieldValues(grove, "ratebeer-account");
+        assertEquals(1, ratebeer_account.size());
+        changeSet.deleteTopic(grove, person); // NOTE: should also take i:ratebeer-grove with it
+        changeSet.save();
+
+        grove = dataProvider.getTopicById("i:geir.ove.gronmo");
+        assertNull("i:geir.ove.gronmo not removed", grove);
+
+        ratebeer_grove = dataProvider.getTopicById("i:ratebeer-grove");
+        assertNull("i:ratebeer-grove not removed", ratebeer_grove);
+    }
+
 }

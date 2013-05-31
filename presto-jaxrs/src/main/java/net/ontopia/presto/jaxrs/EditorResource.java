@@ -43,7 +43,6 @@ import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
-import net.ontopia.presto.spi.PrestoView;
 
 @Path("/editor")
 public abstract class EditorResource {
@@ -135,9 +134,11 @@ public abstract class EditorResource {
             if (type == null) {
                 return Response.status(Status.NOT_FOUND).build();
             }
-            PrestoView view = type.getDefaultView();
 
-            TopicView result = session.getNewTopicView(type, view);
+            boolean readOnly = false;
+            PrestoContext context = PrestoContext.create(session, type, readOnly);
+
+            TopicView result = session.getNewTopicView(context);
             return Response.ok(result).build();
 
         } catch (Exception e) {
@@ -166,9 +167,11 @@ public abstract class EditorResource {
             if (type == null) {
                 return Response.status(Status.NOT_FOUND).build();
             }
-            PrestoView view = type.getDefaultView();
 
-            TopicView result = session.getNewTopicView(type, view, parentTopicId, parentFieldId);
+            boolean readOnly = false;
+            PrestoContext context = PrestoContext.create(session, type, readOnly);
+
+            TopicView result = session.getNewTopicView(context, parentTopicId, parentFieldId);
             return Response.ok(result).build();
 
         } catch (Exception e) {
@@ -189,29 +192,24 @@ public abstract class EditorResource {
             @PathParam("fieldId") final String fieldId, 
             @PathParam("start") final int start, 
             @PathParam("limit") final int limit) throws Exception {
-
+        
         Presto session = createPresto(databaseId);
 
         try {
-            PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
-            PrestoDataProvider dataProvider = session.getDataProvider();
+            boolean readOnly = false;
 
-            PrestoTopic topic = dataProvider.getTopicById(topicId);
-            if (topic == null) {
+            PrestoContext context = PrestoContext.create(session,  Links.deskull(topicId), readOnly);
+
+            if (context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
             }
 
-            PrestoType type = schemaProvider.getTypeById(topic.getTypeId());
-            PrestoView view = type.getViewById(viewId);
-
-            PrestoFieldUsage field = type.getFieldById(fieldId, view);
+            PrestoFieldUsage field = context.getFieldById(fieldId);
             if (field == null) {
                 return Response.status(Status.NOT_FOUND).build();
             }
             
-            boolean readOnlyMode = false;
-            
-            FieldData result = session.getFieldData(topic, field, readOnlyMode, start, limit, true);
+            FieldData result = session.getFieldData(context, field, start, limit, true);
             return Response.ok(result).build();
 
         } catch (Exception e) {
@@ -222,42 +220,13 @@ public abstract class EditorResource {
         } 
     }
 
-//    @GET
-//    @Produces(APPLICATION_JSON_UTF8)
-//    @Path("topic-data/{databaseId}/{topicId}")
-//    public Response getTopicData(
-//            @PathParam("databaseId") final String databaseId, 
-//            @PathParam("topicId") final String topicId) throws Exception {
-//
-//        Presto session = createPresto(databaseId);
-//
-//        try {
-//            PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
-//            PrestoDataProvider dataProvider = session.getDataProvider();
-//
-//            PrestoTopic topic = dataProvider.getTopicById(topicId);
-//            if (topic == null) {
-//                return Response.status(Status.NOT_FOUND).build();
-//            }
-//            PrestoType type = schemaProvider.getTypeById(topic.getTypeId());
-//
-//            Map<String,Object> result = session.getTopicAsMap(topic, type);
-//            return Response.ok(result).build();
-//
-//        } catch (Exception e) {
-//            session.abort();
-//            throw e;
-//        } finally {
-//            session.close();      
-//        }
-//    }
-
     @DELETE
     @Produces(APPLICATION_JSON_UTF8)
-    @Path("topic/{databaseId}/{topicId}")
+    @Path("topic-view/{databaseId}/{topicId}/{viewId}")
     public Response deleteTopic(
             @PathParam("databaseId") final String databaseId, 
-            @PathParam("topicId") final String topicId) throws Exception {
+            @PathParam("topicId") final String topicId,
+            @PathParam("viewId") final String viewId) throws Exception {
 
         Presto session = createPresto(databaseId);
 
@@ -265,7 +234,7 @@ public abstract class EditorResource {
             PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
             PrestoDataProvider dataProvider = session.getDataProvider();
 
-            PrestoTopic topic = dataProvider.getTopicById(topicId);
+            PrestoTopic topic = dataProvider.getTopicById(Links.deskull(topicId));
 
             if (topic == null) {
                 // 404
@@ -301,17 +270,13 @@ public abstract class EditorResource {
         Presto session = createPresto(databaseId);
 
         try {
-            PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
-            PrestoDataProvider dataProvider = session.getDataProvider();
+            PrestoContext context = PrestoContext.create(session, Links.deskull(topicId), readOnly);
 
-            PrestoTopic topic = dataProvider.getTopicById(topicId);
-            if (topic == null) {
+            if (context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
             }
-            PrestoType type = schemaProvider.getTypeById(topic.getTypeId());
-            PrestoView view = type.getDefaultView();
 
-            Topic result = session.getTopicAndProcess(topic, type, view, readOnly);
+            Topic result = session.getTopicAndProcess(context);
             
             return Response.ok(result).build();
 
@@ -336,17 +301,13 @@ public abstract class EditorResource {
         Presto session = createPresto(databaseId);
 
         try {
-            PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
-            PrestoDataProvider dataProvider = session.getDataProvider();
+            PrestoContext context = PrestoContext.create(session, Links.deskull(topicId), viewId, readOnly);
 
-            PrestoTopic topic = dataProvider.getTopicById(topicId);
-            if (topic == null) {
+            if (context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
             }
-            PrestoType type = schemaProvider.getTypeById(topic.getTypeId());
-            PrestoView view = type.getViewById(viewId);
 
-            Topic result = session.getTopicAndProcess(topic, type, view, readOnly);
+            Topic result = session.getTopicAndProcess(context);
             
             return Response.ok(result).build();
 
@@ -369,17 +330,13 @@ public abstract class EditorResource {
         Presto session = createPresto(databaseId);
 
         try {
-            PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
-            PrestoDataProvider dataProvider = session.getDataProvider();
+            PrestoContext context = PrestoContext.create(session, Links.deskull(topicId), readOnly);
 
-            PrestoTopic topic = dataProvider.getTopicById(topicId);
-            if (topic == null) {
+            if (context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
             }
-            PrestoType type = schemaProvider.getTypeById(topic.getTypeId());
-            PrestoView view = type.getDefaultView();
 
-            TopicView result = session.getTopicViewAndProcess(topic, type, view, readOnly);
+            TopicView result = session.getTopicViewAndProcess(context);
             
             return Response.ok(result).build();
 
@@ -403,17 +360,13 @@ public abstract class EditorResource {
         Presto session = createPresto(databaseId);
 
         try {
-            PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
-            PrestoDataProvider dataProvider = session.getDataProvider();
+            PrestoContext context = PrestoContext.create(session, Links.deskull(topicId), viewId, readOnly);
 
-            PrestoTopic topic = dataProvider.getTopicById(topicId);
-            if (topic == null) {
+            if (context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
             }
-            PrestoType type = schemaProvider.getTypeById(topic.getTypeId());
-            PrestoView view = type.getViewById(viewId);
 
-            TopicView result = session.getTopicViewAndProcess(topic, type, view, readOnly);
+            TopicView result = session.getTopicViewAndProcess(context);
             
             return Response.ok(result).build();
 
@@ -437,24 +390,19 @@ public abstract class EditorResource {
         Presto session = createPresto(databaseId);
 
         try {
-            PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
-            PrestoDataProvider dataProvider = session.getDataProvider();
+            // NOTE: the topicId is the topic that requested the validation, but the 
+            // validation needs to start with the topicId of the received topicView. The 
+            // former is a descendant of the latter.
+            String topicViewTopicId = topicView.getTopicId();
+            
+            boolean readOnly = false;
+            PrestoContext context = PrestoContext.create(session, topicViewTopicId, viewId, readOnly);
 
-            PrestoTopic topic = null;
-            PrestoType type;
-            if (topicId.startsWith("_")) {
-                type = schemaProvider.getTypeById(topicId.substring(1));
-            } else {
-                topic = dataProvider.getTopicById(topicId);
-                if (topic == null) {
-                    return Response.status(Status.NOT_FOUND).build();
-                }
-                type = schemaProvider.getTypeById(topic.getTypeId());
+            if (context.isMissingTopic()) {
+                return Response.status(Status.NOT_FOUND).build();
             }
-
-            PrestoView view = type.getViewById(viewId);
-
-            TopicView result = session.validateTopic(topic, type, view, topicView);
+            
+            TopicView result = session.validateTopic(context, topicView);
 
             session.commit();
 
@@ -480,29 +428,29 @@ public abstract class EditorResource {
         Presto session = createPresto(databaseId);
 
         try {
-            PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
-            PrestoDataProvider dataProvider = session.getDataProvider();
+            boolean readOnly = false;
+            PrestoContext context = PrestoContext.create(session, Links.deskull(topicId), viewId, readOnly);
 
-            PrestoTopic topic = null;
-            PrestoType type;
-            if (topicId.startsWith("_")) {
-                type = schemaProvider.getTypeById(topicId.substring(1));
-            } else {
-                topic = dataProvider.getTopicById(topicId);
-                if (topic == null) {
-                    return Response.status(Status.NOT_FOUND).build();
-                }
-                type = schemaProvider.getTypeById(topic.getTypeId());
+            if (context.isMissingTopic()) {
+                return Response.status(Status.NOT_FOUND).build();
             }
 
-            PrestoView view = type.getViewById(viewId);
-
-            TopicView result = session.updateTopic(topic, type, view, topicView);
-
+            TopicView result = session.updateTopic(context, topicView);
             session.commit();
 
-            return Response.ok(result).build();
-
+            if (context.isNewTopic()) {
+                // return Topic if new, otherwise TopicView
+                String newTopicId = result.getTopicId();
+                if (newTopicId == null) {
+                    // WARN: probably means that the topic was not valid
+                    return Response.ok(result).build();
+                } else {
+                    return getTopicInDefaultView(databaseId, newTopicId, readOnly);
+                }
+            } else {
+                return Response.ok(result).build();
+            }
+            
         } catch (Exception e) {
             session.abort();
             throw e;
@@ -525,21 +473,17 @@ public abstract class EditorResource {
         Presto session = createPresto(databaseId);
 
         try {
-            PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
-            PrestoDataProvider dataProvider = session.getDataProvider();
+            boolean readOnly = false;
+            PrestoContext context = PrestoContext.create(session, Links.deskull(topicId), viewId, readOnly);
 
-            PrestoTopic topic = dataProvider.getTopicById(topicId);
-            if (topic == null) {
+            if (context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
             }
 
-            PrestoType type = schemaProvider.getTypeById(topic.getTypeId());
-            PrestoView view = type.getViewById(viewId);
-
-            PrestoFieldUsage field = type.getFieldById(fieldId, view);
+            PrestoFieldUsage field = context.getFieldById(fieldId);
 
             if (field.isAddable() || field.isCreatable()) {
-                FieldData result = session.addFieldValues(topic, type, field, index, fieldData);
+                FieldData result = session.addFieldValues(context, field, index, fieldData);
     
                 session.commit();
     
@@ -599,21 +543,17 @@ public abstract class EditorResource {
         Presto session = createPresto(databaseId);
 
         try {
-            PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
-            PrestoDataProvider dataProvider = session.getDataProvider();
+            boolean readOnly = false;
+            PrestoContext context = PrestoContext.create(session, Links.deskull(topicId), viewId, readOnly);
 
-            PrestoTopic topic = dataProvider.getTopicById(topicId);
-            if (topic == null) {
+            if (context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
             }
 
-            PrestoType type = schemaProvider.getTypeById(topic.getTypeId());
-            PrestoView view = type.getViewById(viewId);
-
-            PrestoFieldUsage field = type.getFieldById(fieldId, view);
+            PrestoFieldUsage field = context.getFieldById(fieldId);
 
             if (field.isRemovable()) {
-                FieldData result =  session.removeFieldValues(topic, type, field, fieldData);
+                FieldData result =  session.removeFieldValues(context, field, fieldData);
     
                 session.commit();
     
@@ -643,26 +583,16 @@ public abstract class EditorResource {
         Presto session = createPresto(databaseId);
 
         try {
-            PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
-            PrestoDataProvider dataProvider = session.getDataProvider();
+            boolean readOnly = false;
+            PrestoContext context = PrestoContext.create(session, Links.deskull(topicId), viewId, readOnly);
 
-            PrestoTopic topic = null;
-            PrestoType type;
-            if (topicId.startsWith("_")) {
-                type = schemaProvider.getTypeById(topicId.substring(1));
-            } else {
-                topic = dataProvider.getTopicById(topicId);
-                if (topic == null) {
-                    return Response.status(Status.NOT_FOUND).build();
-                }
-                type = schemaProvider.getTypeById(topic.getTypeId());
+            if (context.isMissingTopic()) {
+                return Response.status(Status.NOT_FOUND).build();
             }
 
-            PrestoView view = type.getViewById(viewId);
-
-            PrestoFieldUsage field = type.getFieldById(fieldId, view);
-
-            AvailableFieldValues result = session.getAvailableFieldValuesInfo(topic, field);
+            PrestoFieldUsage field = context.getFieldById(fieldId);
+            
+            AvailableFieldValues result = session.getAvailableFieldValuesInfo(context, field);
             return Response.ok(result).build();
             
         } catch (Exception e) {
@@ -672,7 +602,7 @@ public abstract class EditorResource {
             session.close();      
         }
     }
-
+    
     @GET
     @Produces(APPLICATION_JSON_UTF8)
     @Path("available-field-types/{databaseId}/{topicId}/{viewId}/{fieldId}")
@@ -685,26 +615,16 @@ public abstract class EditorResource {
         Presto session = createPresto(databaseId);
 
         try {
-            PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
-            PrestoDataProvider dataProvider = session.getDataProvider();
+            boolean readOnly = false;
+            PrestoContext context = PrestoContext.create(session, Links.deskull(topicId), viewId, readOnly);
 
-            PrestoTopic topic = null;
-            PrestoType type;
-            if (topicId.startsWith("_")) {
-                type = schemaProvider.getTypeById(topicId.substring(1));
-            } else {
-                topic = dataProvider.getTopicById(topicId);
-                if (topic == null) {
-                    return Response.status(Status.NOT_FOUND).build();
-                }
-                type = schemaProvider.getTypeById(topic.getTypeId());
+            if (context.isMissingTopic()) {
+                return Response.status(Status.NOT_FOUND).build();
             }
 
-            PrestoView view = type.getViewById(viewId);
-            PrestoFieldUsage field = type.getFieldById(fieldId, view);
-            
-//            LinkList result = session.getAvailableFieldTypesInfo(topic, field); 
-            AvailableFieldTypes result = session.getAvailableFieldTypesInfo(topic, field);
+            PrestoFieldUsage field = context.getFieldById(fieldId);
+
+            AvailableFieldTypes result = session.getAvailableFieldTypesInfo(context, field);
             return Response.ok(result).build();
 
         } catch (Exception e) {

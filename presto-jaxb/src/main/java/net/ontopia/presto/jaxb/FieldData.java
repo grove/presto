@@ -17,31 +17,28 @@ public class FieldData extends Document {
     private String name;
     
     private Boolean readOnly;
-    private Boolean creatable;
-    private Boolean editable;
+    private Boolean editable; // whether or not its values are editable (TODO: use Value.editable instead?)
 
-    private Boolean embeddable;
-    private Boolean pageable;
+    private Boolean embeddable; // if to expect embeddable values 
 
     private String datatype;
-    private String validation; // TODO: move to params
     private String interfaceControl;
+
+    private Integer minCardinality;
+    private Integer maxCardinality;
+    
+    private Collection<FieldData> valueFields;
+    
+    private Map<String,Object> params;
+
+    private Collection<Link> links;
     
     private Integer valuesLimit;
     private Integer valuesOffset;
     private Integer valuesTotal;
-    
-    private Map<String,Object> params;
 
-    private Integer minCardinality;
-    private Integer maxCardinality;
-
-    private Collection<Link> links;
     private Collection<Value> values;
-    
     private Collection<Value> availableValues;
-    
-    private Collection<FieldData> valueFields;
 
     private Collection<Message> messages;
     private Collection<String> errors;
@@ -116,14 +113,6 @@ public class FieldData extends Document {
         return readOnly;
     }
 
-    public void setCreatable(Boolean creatable) {
-        this.creatable = creatable;
-    }
-
-    public Boolean isCreatable() {
-        return creatable;
-    }
-
     public void setEditable(Boolean editable) {
         this.editable = editable;
     }
@@ -140,28 +129,12 @@ public class FieldData extends Document {
         this.embeddable = embeddable;
     }
 
-    public Boolean isPageable() {
-        return pageable;
-    }
-
-    public void setPageable(Boolean pageable) {
-        this.pageable = pageable;
-    }
-
     public void setDatatype(String datatype) {
         this.datatype = datatype;
     }
 
     public String getDatatype() {
         return datatype;
-    }
-
-    public void setValidation(String validation) {
-        this.validation = validation;
-    }
-
-    public String getValidation() {
-        return validation;
     }
 
     public void setInterfaceControl(String interfaceControl) {
@@ -259,4 +232,5 @@ public class FieldData extends Document {
     public void setAvailableValues(Collection<Value> availableValues) {
         this.availableValues = availableValues;
     }
+    
 }

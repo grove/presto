@@ -11,6 +11,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TopicViewPartial {
+    
     private String format = "topic-view-partial";
     private Collection<FieldData> fields;
 

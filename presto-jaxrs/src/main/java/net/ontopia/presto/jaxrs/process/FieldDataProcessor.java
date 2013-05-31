@@ -2,16 +2,16 @@ package net.ontopia.presto.jaxrs.process;
 
 import java.text.MessageFormat;
 
+import net.ontopia.presto.jaxb.FieldData;
+import net.ontopia.presto.jaxrs.PrestoContext;
+import net.ontopia.presto.spi.PrestoFieldUsage;
+
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;
 
-import net.ontopia.presto.jaxb.FieldData;
-import net.ontopia.presto.spi.PrestoFieldUsage;
-import net.ontopia.presto.spi.PrestoTopic;
-
 public abstract class FieldDataProcessor extends AbstractProcessor {
     
-    public abstract FieldData processFieldData(FieldData fieldData, PrestoTopic topic, PrestoFieldUsage field);
+    public abstract FieldData processFieldData(FieldData fieldData, PrestoContext context, PrestoFieldUsage field);
 
     protected String getErrorMessage(String errorId, PrestoFieldUsage field, String defaultErrorMessage, Object... args) {
         String errorMessage = getErrorMessageConfig(errorId, field, defaultErrorMessage);

@@ -135,14 +135,17 @@ public abstract class PrestoDefaultChangeSet implements PrestoChangeSet {
 
     @Override
     public void deleteTopic(PrestoTopic topic, PrestoType type) {
-        deleteTopic(topic, type, true);
+        deleteTopic(topic, type, true, false);
     }
 
-    private void deleteTopic(PrestoTopic topic, PrestoType type, boolean removeDependencies) {
+    private void deleteTopic(PrestoTopic topic, PrestoType type, boolean removeDependencies, boolean isRemovableDependency) {
         if (deleted.contains(topic)) {
             return;
         }
 
+        if (!isRemovableDependency && !type.isRemovable()) {
+            throw new RuntimeException("Cannot delete topic " + topic + " because type is not removable");
+        }
         changes.add(new ChangeDelete(topic));
         deleted.add(topic);
 
@@ -161,23 +164,23 @@ public abstract class PrestoDefaultChangeSet implements PrestoChangeSet {
 
     private void removeDependencies(PrestoTopic topic, PrestoType type) {
         PrestoSchemaProvider schemaProvider = type.getSchemaProvider();
-        for (PrestoTopic dependency : findDependencies(topic, type)) {
+        for (PrestoTopic dependency : findRemovableDependencies(topic, type)) {
             if (!dependency.equals(topic)) {
                 PrestoType dependencyType = schemaProvider.getTypeById(dependency.getTypeId());
-                deleteTopic(dependency, dependencyType, false);
+                deleteTopic(dependency, dependencyType, false, true);
             }
         }
     }
 
     // dependent topics / cascading deletes
 
-    private Collection<PrestoTopic> findDependencies(PrestoTopic topic, PrestoType type) {
+    private Collection<PrestoTopic> findRemovableDependencies(PrestoTopic topic, PrestoType type) {
         Collection<PrestoTopic> dependencies = new HashSet<PrestoTopic>();
-        findDependencies(topic, type, dependencies);
+        findRemovableDependencies(topic, type, dependencies);
         return dependencies;
     }
 
-    private void findDependencies(PrestoTopic topic, PrestoType type, Collection<PrestoTopic> dependencies) {
+    private void findRemovableDependencies(PrestoTopic topic, PrestoType type, Collection<PrestoTopic> dependencies) {
 
         for (PrestoField field : type.getFields()) {
             if (field.isReferenceField() && field.isCascadingDelete()) { 
@@ -189,8 +192,10 @@ public abstract class PrestoDefaultChangeSet implements PrestoChangeSet {
                     if (valueType.isRemovableCascadingDelete()) {
                         if (!dependencies.contains(valueTopic)) {
                             dependencies.add(valueTopic);
-                            findDependencies(valueTopic, valueType, dependencies);
+                            findRemovableDependencies(valueTopic, valueType, dependencies);
                         }
+                    } else {
+                        log.warn("Value type with removableCascadingDelete=false in field with cascadingDelete=true.");
                     }
                 }
             }

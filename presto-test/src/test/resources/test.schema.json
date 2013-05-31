@@ -2,7 +2,7 @@
   "name": "Example schema",
 
   "types": {
-      "b:brewery" : { 
+      "c:brewery" : { 
         "name" : "Brewery",
         "creatable" : true,
         "removable" : true,
@@ -40,7 +40,7 @@
           }
         ]
       },
-      "b:beer" : { 
+      "c:beer" : { 
         "name" : "Beer",
         "creatable" : true,
         "views": [
@@ -61,7 +61,7 @@
               { "id" : "brewed-by",
                 "name" : "Brewed by",
                 "datatype": "reference",
-                "valueTypes" : ["b:brewery"],
+                "valueTypes" : ["c:brewery"],
                 "maxCardinality": 1
               },
               { "id" : "abv",
@@ -73,9 +73,10 @@
           }
         ]
       },
-      "person" : { 
+      "c:person" : { 
         "name" : "Person",
         "creatable" : true,
+        "removable" : true,
         "views": [
           { "id" : "info",
             "name": "Info",
@@ -106,20 +107,27 @@
               { "id" : "favorite-beer",
                 "name" : "Likes beer",
                 "datatype": "reference",
-                "valueTypes" : ["b:beer"],
+                "valueTypes" : ["c:beer"],
                 "maxCardinality": 1
               },
               { "id" : "hosted-drinking-sessions",
                 "name" : "Hosted drinking sessions",
                 "datatype": "reference",
                 "inline" : true,
-                "valueTypes" : ["drinking-session"]
-              }            
+                "valueTypes" : ["c:drinking-session"]
+              },
+              { "id" : "ratebeer-account",
+                "name" : "Ratebeer account",
+                "datatype": "reference",
+                "cascadingDelete" : true,
+                "valueTypes" : ["c:ratebeer-account"]
+              }    
+                      
             ]
           }
         ]
       },
-      "drinking-session" : { 
+      "c:drinking-session" : { 
         "name" : "Drinking session",
         "inline" : true,
         "creatable" : true,
@@ -136,7 +144,29 @@
               { "id" : "attendees",
                 "name" : "Attendees",
                 "datatype": "reference",
-                "valueTypes" : ["person"]
+                "valueTypes" : ["c:person"]
+              }            
+            ]
+          }
+        ]
+      },
+      "c:ratebeer-account" : { 
+        "name" : "Ratebeer account",
+        "creatable" : true,
+        "removable" : false,
+        "removableCascadingDelete": true,
+        "views": [
+          { "id" : "info",
+            "name": "Info",
+            "fields" : [
+              { "id" : "userid",
+                "name" : "User id"
+              },
+              { "id" : "last-active",
+                "name" : "last-active",
+                "datatype": "http://www.w3.org/2001/XMLSchema#date",
+                "minCardinality": 0,
+                "maxCardinality": 1
               }            
             ]
           }
