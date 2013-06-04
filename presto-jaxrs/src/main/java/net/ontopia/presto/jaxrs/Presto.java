@@ -382,7 +382,8 @@ public abstract class Presto {
         if (!isReadOnly && field.isAddable()) {
             // ISSUE: should add-values and remove-values be links on list result instead?
             if (!field.isReferenceField() || !getAvailableFieldValueTypes(context, field).isEmpty()) {
-                fieldLinks.add(new Link("available-field-values", Links.availableFieldValues(getBaseUri(), databaseId, topicId, parentViewId, fieldId)));
+                boolean query = isCustomAvailableValuesQuery(context, field);
+                fieldLinks.add(new Link("available-field-values", Links.availableFieldValues(getBaseUri(), databaseId, topicId, parentViewId, fieldId, query)));
             }
         }
 
@@ -579,25 +580,36 @@ public abstract class Presto {
         return result;
     }
 
-    public AvailableFieldValues getAvailableFieldValuesInfo(PrestoContext context, PrestoFieldUsage field) {
+    public AvailableFieldValues getAvailableFieldValuesInfo(PrestoContext context, PrestoFieldUsage field, String query) {
 
         AvailableFieldValues result = new AvailableFieldValues();
         result.setId(field.getId());
         result.setName(field.getName());
-        result.setValues(getAllowedFieldValues(context, field));
+        result.setValues(getAllowedFieldValues(context, field, query));
 
         return result;
     }
     
-    protected Collection<? extends Object> getAvailableFieldValues(PrestoContext context, PrestoFieldUsage field) {
-        Collection<? extends Object> result = getCustomAvailableValues(context, field);
+    protected Collection<? extends Object> getAvailableFieldValues(PrestoContext context, PrestoFieldUsage field, String query) {
+        Collection<? extends Object> result = getCustomAvailableValues(context, field, query);
         if (result != null) {
             return result;
         }
-        return dataProvider.getAvailableFieldValues(context.getTopic(), field);
+        return dataProvider.getAvailableFieldValues(context.getTopic(), field, query);
     }
 
-    private Collection<? extends Object> getCustomAvailableValues(PrestoContext context, PrestoFieldUsage field) {
+    private boolean isCustomAvailableValuesQuery(PrestoContext context, PrestoFieldUsage field) {
+        ObjectNode extra = getFieldExtraNode(field);
+        if (extra != null) {
+            JsonNode availableValuesNode = extra.path("availableValues");
+            if (availableValuesNode.isObject()) {
+                return availableValuesNode.path("query").getBooleanValue();
+            }
+        }
+        return false;
+    }
+    
+    private Collection<? extends Object> getCustomAvailableValues(PrestoContext context, PrestoFieldUsage field, String query) {
         // TODO: shouldn't this be a PrestoFunction
         ObjectNode extra = getFieldExtraNode(field);
         if (extra != null) {
@@ -625,7 +637,7 @@ public abstract class Presto {
                         AvailableFieldValuesResolver processor = Utils.newInstanceOf(className, AvailableFieldValuesResolver.class);
                         if (processor != null) {
                             processor.setPresto(this);
-                            return processor.getAvailableFieldValues(context, field);
+                            return processor.getAvailableFieldValues(context, field, query);
                         }
                     }
                 }
@@ -637,8 +649,8 @@ public abstract class Presto {
         return null;
     }
 
-    protected List<Value> getAllowedFieldValues(PrestoContext context, PrestoFieldUsage field) {
-        Collection<? extends Object> availableFieldValues = getAvailableFieldValues(context, field);
+    protected List<Value> getAllowedFieldValues(PrestoContext context, PrestoFieldUsage field, String query) {
+        Collection<? extends Object> availableFieldValues = getAvailableFieldValues(context, field, query);
         
         List<Value> result = new ArrayList<Value>(availableFieldValues.size());
         for (Object value : availableFieldValues) {

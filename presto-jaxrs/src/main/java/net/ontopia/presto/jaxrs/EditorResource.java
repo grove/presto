@@ -579,6 +579,18 @@ public abstract class EditorResource {
             @PathParam("topicId") final String topicId, 
             @PathParam("viewId") final String viewId,
             @PathParam("fieldId") final String fieldId) throws Exception {
+        return getAvailableFieldValues(databaseId, topicId, viewId, fieldId, null);
+    }
+
+    @GET
+    @Produces(APPLICATION_JSON_UTF8)
+    @Path("available-field-values/{databaseId}/{topicId}/{viewId}/{fieldId}/{query}")
+    public Response getAvailableFieldValues( 
+            @PathParam("databaseId") final String databaseId, 
+            @PathParam("topicId") final String topicId, 
+            @PathParam("viewId") final String viewId,
+            @PathParam("fieldId") final String fieldId,
+            @PathParam("query") final String query) throws Exception {
 
         Presto session = createPresto(databaseId);
 
@@ -592,7 +604,7 @@ public abstract class EditorResource {
 
             PrestoFieldUsage field = context.getFieldById(fieldId);
             
-            AvailableFieldValues result = session.getAvailableFieldValuesInfo(context, field);
+            AvailableFieldValues result = session.getAvailableFieldValuesInfo(context, field, query);
             return Response.ok(result).build();
             
         } catch (Exception e) {

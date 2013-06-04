@@ -77,7 +77,7 @@ public abstract class InMemoryJacksonDataProvider extends JacksonDataProvider {
     }
 
     @Override
-    public Collection<? extends Object> getAvailableFieldValues(PrestoTopic topic, PrestoFieldUsage field) {
+    public Collection<? extends Object> getAvailableFieldValues(PrestoTopic topic, PrestoFieldUsage field, String query) {
         return Collections.emptyList();
     }
 
