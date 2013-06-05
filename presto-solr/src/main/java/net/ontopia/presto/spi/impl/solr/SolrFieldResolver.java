@@ -51,6 +51,11 @@ public abstract class SolrFieldResolver extends PrestoFieldResolver {
         
         SolrQuery solrQuery = new SolrQuery();
 
+        String qt = getStringValue("qt", config, null);
+        if (qt != null) {
+            solrQuery.setQueryType(qt);
+        }
+        
         CharSequence q_query = expandQuery(variableResolver, " AND ", objects, config.path("q"));
         if (isEmpty(q_query)) {
             return new PrestoPagedValues(Collections.emptyList(), paging, 0);
@@ -62,6 +67,11 @@ public abstract class SolrFieldResolver extends PrestoFieldResolver {
             solrQuery.setFilterQueries(fq_query.toString());
         }
 
+        String qf = getStringValue("qf", config, null);
+        if (qf != null) {
+            solrQuery.setParam("qf", qf);
+        }
+        
         String idField = getStringValue("idField", config, "id");
         solrQuery.setFields(idField);
 
@@ -73,7 +83,8 @@ public abstract class SolrFieldResolver extends PrestoFieldResolver {
             solrQuery.setStart(paging.getOffset());
             solrQuery.setRows(paging.getLimit());
         } else {
-            solrQuery.setRows(100);
+            int rows = getIntValue("rows", config, 100);
+            solrQuery.setRows(rows);
         }
         try {
             QueryResponse qr;
@@ -140,39 +151,8 @@ public abstract class SolrFieldResolver extends PrestoFieldResolver {
                 }
 
             } else {
-                Collection<JsonNode> qvalues = getVariableContext().replaceVariables(variableResolver, objects, qo);
-                if (qvalues.isEmpty()) {
+                if (!expandVariable(sb, variableResolver, sep, objects, qo)) {
                     return null;
-                }
-                Iterator<JsonNode> qviter = qvalues.iterator();
-                if (qvalues.size() > 1) {
-                    sb.append('(');
-                }
-                boolean foundItems = false;
-                while (qviter.hasNext()) {
-                    ObjectNode qv = (ObjectNode)qviter.next();
-                    if (foundItems) {
-                        sb.append(sep);
-                    }
-                    Iterator<String> fieldNames = qv.getFieldNames();
-                    if (qv.size() > 1) {
-                        sb.append('(');
-                    }
-                    while (fieldNames.hasNext()) {
-                        String fieldName = fieldNames.next();
-                        String fieldValue = qv.get(fieldName).getTextValue();
-                        sb.append(fieldName).append(':').append(ClientUtils.escapeQueryChars(fieldValue));
-                        foundItems = true;
-                        if (fieldNames.hasNext()) {
-                            sb.append(" AND ");
-                        }
-                    }
-                    if (qv.size() > 1) {
-                        sb.append(')');
-                    }
-                }
-                if (qvalues.size() > 1) {
-                    sb.append(')');
                 }
             }
         } else if (q.isArray()) {
@@ -195,12 +175,61 @@ public abstract class SolrFieldResolver extends PrestoFieldResolver {
                     foundItems = true;
                 }
             }
+        } else if (q.isTextual()) {
+            if (!expandVariable(sb, variableResolver, sep, objects, q)) {
+                return null;
+            }
         } else if (q.isMissingNode()) {
             // ignore
         } else {
             log.warn("Unknown query node: " + q);
         }
         return sb;
+    }
+
+    private boolean expandVariable(StringBuilder sb, PrestoVariableResolver variableResolver, String sep, Collection<? extends Object> objects, JsonNode qo) {
+        Collection<JsonNode> qvalues = getVariableContext().replaceVariables(variableResolver, objects, qo);
+        if (qvalues.isEmpty()) {
+            return false;
+        }
+        Iterator<JsonNode> qviter = qvalues.iterator();
+        if (qvalues.size() > 1) {
+            sb.append('(');
+        }
+        boolean foundItems = false;
+        while (qviter.hasNext()) {
+            JsonNode jn = qviter.next();
+            if (foundItems) {
+                sb.append(sep);
+            }
+            if (jn.isObject()) {
+                ObjectNode qv = (ObjectNode)jn;
+                Iterator<String> fieldNames = qv.getFieldNames();
+                if (qv.size() > 1) {
+                    sb.append('(');
+                }
+                while (fieldNames.hasNext()) {
+                    String fieldName = fieldNames.next();
+                    String fieldValue = qv.get(fieldName).getTextValue();
+                    sb.append(fieldName).append(':').append(ClientUtils.escapeQueryChars(fieldValue));
+                    foundItems = true;
+                    if (fieldNames.hasNext()) {
+                        sb.append(" AND ");
+                    }
+                }
+                if (qv.size() > 1) {
+                    sb.append(')');
+                }
+            } else if (jn.isTextual()) {
+                sb.append(jn.getTextValue());
+            } else {
+                log.warn("Unknown node: {}", jn);
+            }
+        }
+        if (qvalues.size() > 1) {
+            sb.append(')');
+        }
+        return true;
     }
 
     @SuppressWarnings("unused")
@@ -217,6 +246,15 @@ public abstract class SolrFieldResolver extends PrestoFieldResolver {
         JsonNode fieldNode = config.path(field);
         if (fieldNode.isTextual()) {
             return fieldNode.getTextValue();
+        } else {
+            return default_;
+        }
+    }
+
+    private int getIntValue(String field, ObjectNode config, int default_) {
+        JsonNode fieldNode = config.path(field);
+        if (fieldNode.isNumber()) {
+            return fieldNode.getIntValue();
         } else {
             return default_;
         }

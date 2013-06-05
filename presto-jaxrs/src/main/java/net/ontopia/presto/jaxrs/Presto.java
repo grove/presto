@@ -637,6 +637,7 @@ public abstract class Presto {
                         AvailableFieldValuesResolver processor = Utils.newInstanceOf(className, AvailableFieldValuesResolver.class);
                         if (processor != null) {
                             processor.setPresto(this);
+                            processor.setConfig((ObjectNode)availableValuesNode);
                             return processor.getAvailableFieldValues(context, field, query);
                         }
                     }
@@ -1124,6 +1125,7 @@ public abstract class Presto {
                         AvailableFieldCreateTypesResolver processor = Utils.newInstanceOf(className, AvailableFieldCreateTypesResolver.class);
                         if (processor != null) {
                             processor.setPresto(this);
+                            processor.setConfig((ObjectNode)createTypesNode);
                             return processor.getAvailableFieldCreateTypes(context, field);
                         }
                     }

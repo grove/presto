@@ -30,7 +30,7 @@ public class DefaultAvailableFieldValuesResolver extends AvailableFieldValuesRes
 
             if (dataProvider instanceof JacksonDataProvider) {
                 JacksonDataProvider jacksonDataProvider = (JacksonDataProvider)dataProvider;
-                Paging paging = new PrestoPaging(0, 100);
+//                Paging paging = new PrestoPaging(0, 100);
                 
                 PrestoVariableResolver variableResolver = new QueryFilterVariableResolver(field.getSchemaProvider(), query);
                 
@@ -40,7 +40,7 @@ public class DefaultAvailableFieldValuesResolver extends AvailableFieldValuesRes
                 
                 Collection<? extends Object> objects = Collections.singleton(topic);
                 
-                PagedValues result = jacksonDataProvider.resolveValues(objects, field, paging, resolveConfig, variableResolver);
+                PagedValues result = jacksonDataProvider.resolveValues(objects, field, null, resolveConfig, variableResolver);
                 return result.getValues();
             }
         }
