@@ -183,8 +183,12 @@ public abstract class Presto {
 
         return result;
     }
-
+    
     public TopicView getTopicView(PrestoContext context) {
+        return getTopicView(context, null);
+    }
+    
+    public TopicView getTopicView(PrestoContext context, TopicView oldTopicView) {
         PrestoTopic topic = context.getTopic();
         PrestoType type = context.getType();
         PrestoView view = context.getView();
@@ -222,11 +226,24 @@ public abstract class Presto {
             if (type.isRemovable()) {
                 links.add(new Link("delete", href));
             }
-            if (type.isCreatable()) {
+            if (type.isCreatable() && !type.isInline()) {
                 links.add(new Link("create-instance", Links.createInstanceLink(getBaseUri(), getDatabaseId(), type.getId())));
             }
-            if (type.isInline() && topic.getId() != null) {
-                links.add(new Link("update-parent", "blah"));
+            // get 'parent' link from old topic view
+            if (type.isInline() && topic.getId() != null && oldTopicView != null) {
+                boolean foundParent = false;
+                Collection<Link> oldLinks = oldTopicView.getLinks();
+                if (oldLinks != null) {
+                    for (Link oldLink : oldLinks) {
+                        if (oldLink.getRel().equals("parent")) {
+                            links.add(new Link("update-parent", oldLink.getHref()));
+                            foundParent = true;
+                        }
+                    }
+                }
+                if (!foundParent) {
+                    throw new RuntimeException("Could not find parent link in oldTopicView.");
+                }
             }
         }
         
@@ -238,10 +255,10 @@ public abstract class Presto {
     public abstract URI getBaseUri();
     
     public TopicView getNewTopicView(PrestoContext context) {
-        return getNewTopicView(context, null, null);
+        return getNewTopicView(context, null, null, null);
     }
 
-    public TopicView getNewTopicView(PrestoContext context, String parentId, String parentFieldId) {
+    public TopicView getNewTopicView(PrestoContext context, String parentTopicId, String parentViewId, String parentFieldId) {
         PrestoType type = context.getType();
         PrestoView view = context.getView();
 
@@ -252,8 +269,8 @@ public abstract class Presto {
         result.setTopicTypeId(type.getId());
         
         String href;
-        if (parentId != null) {
-            href = Links.createFieldInstanceLink(getBaseUri(), getDatabaseId(), parentId, parentFieldId, type.getId());
+        if (parentTopicId != null) {
+            href = Links.createFieldInstanceLink(getBaseUri(), getDatabaseId(), parentTopicId, parentViewId, parentFieldId, type.getId());
         } else {
             href = Links.createInstanceLink(getBaseUri(), getDatabaseId(), type.getId());
         }
@@ -270,6 +287,10 @@ public abstract class Presto {
         List<Link> links = new ArrayList<Link>();
         links.add(Links.createLabel(type.getName()));
         links.add(new Link("create", Links.createNewTopicViewLink(getBaseUri(), getDatabaseId(), type.getId(), view.getId())));
+        
+        if (type.isInline()) {
+            links.add(new Link("parent", Links.getTopicEditLink(getBaseUri(), getDatabaseId(), parentTopicId, parentViewId)));
+        }
         result.setLinks(links);
         
 //        Status status = new Status();
@@ -784,7 +805,7 @@ public abstract class Presto {
             topicId = context.getTopic().getId();
         }
         
-        Link result = new Link("create-field-instance", Links.createFieldInstanceLink(getBaseUri(), getDatabaseId(), topicId, field.getId(), createType.getId()));
+        Link result = new Link("create-field-instance", Links.createFieldInstanceLink(getBaseUri(), getDatabaseId(), topicId, field.getView().getId(), field.getId(), createType.getId()));
         result.setName(createType.getName());
         return result;
     }
@@ -856,7 +877,7 @@ public abstract class Presto {
         if (status.isValid()) {
             PrestoTopic result = updatePrestoTopic(context, topicView);
             PrestoContext newContext = PrestoContext.create(this, result, context.getType(), context.getView(), context.isReadOnly());
-            TopicView newTopicView = getTopicView(newContext);
+            TopicView newTopicView = getTopicView(newContext, topicView);
             return processor.postProcessTopicView(newTopicView, context, null);
                 
         } else {
@@ -1068,7 +1089,7 @@ public abstract class Presto {
             typeMap.setName(type.getName());
 
             List<Link> links = new ArrayList<Link>();
-            if (type.isCreatable()) {
+            if (type.isCreatable() && !type.isInline()) {
                 links.add(new Link("create-instance", Links.createInstanceLink(getBaseUri(), getDatabaseId(), type.getId())));
             }
 

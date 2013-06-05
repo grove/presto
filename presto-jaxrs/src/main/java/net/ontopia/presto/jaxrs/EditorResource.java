@@ -151,10 +151,11 @@ public abstract class EditorResource {
 
     @GET
     @Produces(APPLICATION_JSON_UTF8)
-    @Path("create-field-instance/{databaseId}/{parentTopicId}/{parentFieldId}/{playerTypeId}")
+    @Path("create-field-instance/{databaseId}/{parentTopicId}/{parentViewId}/{parentFieldId}/{playerTypeId}")
     public Response createFieldInstance(
             @PathParam("databaseId") final String databaseId,
             @PathParam("parentTopicId") final String parentTopicId,
+            @PathParam("parentViewId") final String parentViewId,
             @PathParam("parentFieldId") final String parentFieldId, 
             @PathParam("playerTypeId") final String playerTypeId) throws Exception {
 
@@ -171,7 +172,7 @@ public abstract class EditorResource {
             boolean readOnly = false;
             PrestoContext context = PrestoContext.create(session, type, readOnly);
 
-            TopicView result = session.getNewTopicView(context, parentTopicId, parentFieldId);
+            TopicView result = session.getNewTopicView(context, parentTopicId, parentViewId, parentFieldId);
             return Response.ok(result).build();
 
         } catch (Exception e) {

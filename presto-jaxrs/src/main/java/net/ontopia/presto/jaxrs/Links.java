@@ -67,8 +67,8 @@ public class Links {
         return builder.build().toString();
     }
 
-    public static String createFieldInstanceLink(URI baseUri, String databaseId, String topicId, String fieldId, String typeId) {
-        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/create-field-instance/").path(databaseId).path(skull(topicId)).path(fieldId).path(typeId);
+    public static String createFieldInstanceLink(URI baseUri, String databaseId, String topicId, String parentViewId, String fieldId, String typeId) {
+        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/create-field-instance/").path(databaseId).path(skull(topicId)).path(parentViewId).path(fieldId).path(typeId);
         return builder.build().toString();
     }
 
