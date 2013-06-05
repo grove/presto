@@ -40,9 +40,7 @@ public class UniqueValuesValidator extends FieldDataProcessor {
                 
                 PrestoTopic topic = context.getTopic();
                 
-                // ISSUE: what if topic is null?
-                
-                Collection<? extends Object> objects = Collections.singleton(topic);
+                Collection<? extends Object> objects = (topic == null ? Collections.emptyList() : Collections.singleton(topic));
                 
                 PagedValues result = jacksonDataProvider.resolveValues(objects, field, paging, resolveConfig, variableResolver);
                 if (result.getValues().size() > 0) {
