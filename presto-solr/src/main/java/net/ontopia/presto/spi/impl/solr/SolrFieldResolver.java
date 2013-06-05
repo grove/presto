@@ -53,7 +53,7 @@ public abstract class SolrFieldResolver extends PrestoFieldResolver {
 
         String qt = getStringValue("qt", config, null);
         if (qt != null) {
-            solrQuery.setQueryType(qt);
+            solrQuery.setRequestHandler(qt);
         }
         
         CharSequence q_query = expandQuery(variableResolver, " AND ", objects, config.path("q"));
@@ -92,7 +92,7 @@ public abstract class SolrFieldResolver extends PrestoFieldResolver {
                 long start = System.currentTimeMillis();
                 qr = solrServer.query(solrQuery, METHOD.POST);
                 long numFound = qr.getResults().getNumFound();
-                log.debug("Q: {}ms {} {}/select?{}", new Object[] { System.currentTimeMillis()-start, numFound, solrServerUrl, solrQuery });
+                log.debug("Q: {}ms {} {}/select?{}&echoParams=explicit", new Object[] { System.currentTimeMillis()-start, numFound, solrServerUrl, solrQuery });
             } else {
                 qr = solrServer.query(solrQuery);
             }
@@ -117,7 +117,7 @@ public abstract class SolrFieldResolver extends PrestoFieldResolver {
             return new PrestoPagedValues(result, paging, total);
 
         } catch (SolrServerException e) {
-            log.error("QE: " + solrServerUrl + "/select?" + solrQuery, e);
+            log.error("QE: " + solrServerUrl + "/select?" + solrQuery + "&echoParams=explicit", e);
             return new PrestoPagedValues(Collections.emptyList(), paging, 0);
         }
     }
