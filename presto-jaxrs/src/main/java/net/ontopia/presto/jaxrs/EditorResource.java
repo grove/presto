@@ -438,7 +438,10 @@ public abstract class EditorResource {
             TopicView result = session.updateTopic(context, topicView);
             session.commit();
 
-            if (context.isNewTopic()) {
+            PrestoType type = context.getType();
+            if (type.isInline()) {
+                return Response.ok(result).build();
+            } else if (context.isNewTopic()) {
                 // return Topic if new, otherwise TopicView
                 String newTopicId = result.getTopicId();
                 if (newTopicId == null) {

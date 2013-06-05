@@ -32,7 +32,7 @@ public class Links {
         return link;
     }
     
-    public static String getEditTopicById(URI baseUri, String databaseId) {
+    public static String getTopicEditLinkById(URI baseUri, String databaseId) {
         UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/topic/").path(databaseId).path("/{topicId}");
         return builder.build().toString();
     }
