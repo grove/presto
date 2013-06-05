@@ -57,10 +57,12 @@ public abstract class SolrFieldResolver extends PrestoFieldResolver {
         }
         
         CharSequence q_query = expandQuery(variableResolver, " AND ", objects, config.path("q"));
-        if (isEmpty(q_query)) {
-            return new PrestoPagedValues(Collections.emptyList(), paging, 0);
+//        if (isEmpty(q_query)) {
+//            return new PrestoPagedValues(Collections.emptyList(), paging, 0);
+//        }
+        if (!isEmpty(q_query)) {
+            solrQuery.setQuery(q_query.toString());
         }
-        solrQuery.setQuery(q_query.toString());
 
         CharSequence fq_query = expandQuery(variableResolver, " AND ", objects, config.path("fq"));
         if (!isEmpty(fq_query)) {
@@ -202,7 +204,9 @@ public abstract class SolrFieldResolver extends PrestoFieldResolver {
             if (foundItems) {
                 sb.append(sep);
             }
-            if (jn.isObject()) {
+            if (jn == null || jn.isNull()) {
+                continue;
+            } else if (jn.isObject()) {
                 ObjectNode qv = (ObjectNode)jn;
                 Iterator<String> fieldNames = qv.getFieldNames();
                 if (qv.size() > 1) {
