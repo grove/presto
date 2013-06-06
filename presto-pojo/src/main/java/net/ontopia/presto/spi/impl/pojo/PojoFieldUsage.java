@@ -79,6 +79,11 @@ public class PojoFieldUsage implements PrestoFieldUsage {
     }
 
     @Override
+    public PrestoView getCreateView() {
+        return field.getCreateView();
+    }
+
+    @Override
     public int getMinCardinality() {
         return field.getMinCardinality();
     }

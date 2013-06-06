@@ -147,6 +147,26 @@ public class PojoSchemaModel {
                 //                type.setSuperType(superType);
                 superType.addDirectSubType(type);
             }
+            // defaultView
+            PojoView defaultView;
+            if (typeConfig.has("defaultView")) {
+                String defaultViewId = typeConfig.get("defaultView").getTextValue();
+                defaultView = new PojoView(defaultViewId);
+                type.setDefaultView(defaultView);
+            } else {
+                defaultView = new PojoView("info"); // TODO: should 'info' or the first view be default?
+                type.setDefaultView(defaultView);
+            } 
+            // createView
+            if (typeConfig.has("createView")) {
+                String createViewId = typeConfig.get("createView").getTextValue();
+                PojoView createView = new PojoView(createViewId);
+                type.setCreateView(createView);
+            } else {
+                PojoView createView = defaultView;
+                type.setCreateView(createView);
+            } 
+
             if (typeConfig.has("views")) {
                 createViews(typeConfig, type, readOnlyDefault);
             }
@@ -265,6 +285,14 @@ public class PojoSchemaModel {
                 field.setValueView(valueView);
             } else {
                 field.setValueView(type.getDefaultView());
+            } 
+            // createView (using current view for now)
+            if (fieldConfig.has("createView")) {
+                String createViewId = fieldConfig.get("createView").getTextValue();
+                PojoView createView = new PojoView(createViewId);
+                field.setCreateView(createView);
+            } else {
+                field.setCreateView(type.getDefaultView());
             } 
 
             // minCardinality

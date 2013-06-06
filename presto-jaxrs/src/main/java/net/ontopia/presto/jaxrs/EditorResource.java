@@ -136,7 +136,7 @@ public abstract class EditorResource {
             }
 
             boolean readOnly = false;
-            PrestoContext context = PrestoContext.create(session, type, readOnly);
+            PrestoContext context = PrestoContext.create(session, type, type.getDefaultView(), readOnly);
 
             TopicView result = session.getNewTopicView(context);
             return Response.ok(result).build();
@@ -170,7 +170,7 @@ public abstract class EditorResource {
             }
 
             boolean readOnly = false;
-            PrestoContext context = PrestoContext.create(session, type, readOnly);
+            PrestoContext context = PrestoContext.create(session, type, type.getDefaultView(), readOnly);
 
             TopicView result = session.getNewTopicView(context, parentTopicId, parentViewId, parentFieldId);
             return Response.ok(result).build();

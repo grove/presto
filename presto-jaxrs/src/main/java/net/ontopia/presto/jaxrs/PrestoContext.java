@@ -73,10 +73,6 @@ public class PrestoContext {
         PrestoType type = schemaProvider.getTypeById(typeId);
         return new PrestoContext(session, topic, type, type.getDefaultView(), readOnly);
     }
-
-    public static PrestoContext create(Presto session, PrestoType type, boolean readOnly) {
-        return new PrestoContext(session, type, type.getDefaultView(), readOnly);
-    }
     
     public static PrestoContext create(Presto session, PrestoType type, PrestoView view, boolean readOnly) {
         return new PrestoContext(session, type, view, readOnly);

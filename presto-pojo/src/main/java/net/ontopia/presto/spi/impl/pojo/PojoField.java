@@ -20,6 +20,7 @@ public class PojoField implements PrestoField {
     private String name;
     private boolean isNameField;
     private PrestoView valueView;
+    private PrestoView createView;
     private int minCardinality;
     private int maxCardinality;
     private String dataType;
@@ -85,6 +86,10 @@ public class PojoField implements PrestoField {
 
     public PrestoView getValueView() {
         return valueView;
+    }
+
+    public PrestoView getCreateView() {
+        return createView;
     }
 
     @Override
@@ -220,6 +225,10 @@ public class PojoField implements PrestoField {
 
     public void setValueView(PrestoView valueView) {
         this.valueView = valueView;
+    }
+
+    public void setCreateView(PrestoView createView) {
+        this.createView = createView;
     }
 
     public void setMinCardinality(int minCardinality) {
