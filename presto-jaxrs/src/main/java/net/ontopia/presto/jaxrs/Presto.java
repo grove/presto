@@ -894,7 +894,7 @@ public abstract class Presto {
         PrestoView view = context.getView();
 
         if (type.isInline()) {
-            PrestoTopic inlineTopic = buildInlineTopic(context, changeSet, view, topicView);
+            PrestoTopic inlineTopic = buildInlineTopic(context, changeSet, topicView);
             return inlineTopic;
         } else {
             PrestoUpdate update;
@@ -932,8 +932,7 @@ public abstract class Presto {
                 if (field.isInline()) {
                     for (Value value : values) {
                         TopicView embeddedTopic = getEmbeddedTopic(value);
-                        PrestoView view = field.getValueView();
-                        result.add(buildInlineTopic(context, changeSet, view, embeddedTopic));
+                        result.add(buildInlineTopic(context, changeSet, embeddedTopic));
                     }                    
                 } else {
                     List<String> valueIds = new ArrayList<String>(values.size());
@@ -959,7 +958,7 @@ public abstract class Presto {
         return result;
     }
 
-    private PrestoTopic buildInlineTopic(PrestoContext context, PrestoChangeSet changeSet, PrestoView view, TopicView embeddedTopic) {
+    private PrestoTopic buildInlineTopic(PrestoContext context, PrestoChangeSet changeSet, TopicView embeddedTopic) {
 
         PrestoSchemaProvider schemaProvider = getSchemaProvider();
 
@@ -973,6 +972,8 @@ public abstract class Presto {
         String topicId = embeddedTopic.getTopicId();
         PrestoInlineTopicBuilder builder = changeSet.createInlineTopic(type, topicId);
 
+        String viewId = embeddedTopic.getId();
+        PrestoView view = type.getViewById(viewId);
         for (FieldData fieldData : embeddedTopic.getFields()) {
 
             String fieldId = fieldData.getId();
