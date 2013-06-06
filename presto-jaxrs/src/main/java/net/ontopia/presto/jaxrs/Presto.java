@@ -581,6 +581,7 @@ public abstract class Presto {
         Value result = new Value();
         result.setValue(value.getId());
         result.setName(value.getName(field));
+        result.setType(value.getTypeId());
 
         if (field.isEmbedded()) { // ISSUE: embed inline topics?
             PrestoType valueType = getSchemaProvider().getTypeById(value.getTypeId());
@@ -706,6 +707,7 @@ public abstract class Presto {
         Value result = new Value();
         result.setValue(value.getId());
         result.setName(value.getName(field));
+        result.setType(value.getTypeId());
 
         List<Link> links = new ArrayList<Link>();
         if (field.isTraversable()) {
@@ -821,7 +823,7 @@ public abstract class Presto {
         PrestoChangeSet changeSet = dataProvider.newChangeSet(getChangeSetHandler());
         PrestoUpdate update = changeSet.updateTopic(topic, type);        
 
-        Collection<? extends Object> addableValues = updateAndExtractValuesFromFieldData(context, changeSet, field, fieldData, true);
+        Collection<? extends Object> addableValues = updateAndExtractValuesFromFieldData(context, field, fieldData, true);
 
         if (index == null) {
             update.addValues(field, addableValues);
@@ -850,7 +852,7 @@ public abstract class Presto {
         PrestoChangeSet changeSet = dataProvider.newChangeSet(getChangeSetHandler());
         PrestoUpdate update = changeSet.updateTopic(topic, type);        
         
-        Collection<? extends Object> removeableValues = updateAndExtractValuesFromFieldData(context, changeSet, field, fieldData, false);
+        Collection<? extends Object> removeableValues = updateAndExtractValuesFromFieldData(context, field, fieldData, false);
 
         update.removeValues(field, removeableValues);
 
@@ -897,7 +899,7 @@ public abstract class Presto {
         PrestoView view = context.getView();
 
         if (type.isInline()) {
-            PrestoTopic inlineTopic = buildInlineTopic(context, changeSet, topicView);
+            PrestoTopic inlineTopic = buildInlineTopic(context, topicView);
             return inlineTopic;
         } else {
             PrestoUpdate update;
@@ -915,7 +917,7 @@ public abstract class Presto {
     
                 // ignore read-only or pageable fields 
                 if (!field.isReadOnly() && !field.isPageable()) {
-                    update.setValues(field, updateAndExtractValuesFromFieldData(context, changeSet, field, fieldData, true));
+                    update.setValues(field, updateAndExtractValuesFromFieldData(context, field, fieldData, true));
                 }
             }
     
@@ -925,7 +927,7 @@ public abstract class Presto {
         }
     }
 
-    private Collection<? extends Object> updateAndExtractValuesFromFieldData(PrestoContext context, PrestoChangeSet changeSet, PrestoFieldUsage field, FieldData fieldData, boolean resolveEmbedded) {
+    private Collection<? extends Object> updateAndExtractValuesFromFieldData(PrestoContext context, PrestoFieldUsage field, FieldData fieldData, boolean resolveEmbedded) {
         Collection<Value> values = fieldData.getValues();
         Collection<Object> result = new ArrayList<Object>(values.size());
 
@@ -935,7 +937,14 @@ public abstract class Presto {
                 if (field.isInline()) {
                     for (Value value : values) {
                         TopicView embeddedTopic = getEmbeddedTopic(value);
-                        result.add(buildInlineTopic(context, changeSet, embeddedTopic));
+                        if (embeddedTopic != null) {
+                            result.add(buildInlineTopic(context, embeddedTopic));
+                        } else {
+                            String typeId = value.getType();
+                            PrestoType type = schemaProvider.getTypeById(typeId);
+                            result.add(buildInlineTopic(context, type, value.getValue()));                            
+//                            throw new RuntimeException("Expected embedded topic for field '" + field.getId() + "'");
+                        }
                     }                    
                 } else {
                     List<String> valueIds = new ArrayList<String>(values.size());
@@ -961,7 +970,12 @@ public abstract class Presto {
         return result;
     }
 
-    private PrestoTopic buildInlineTopic(PrestoContext context, PrestoChangeSet changeSet, TopicView embeddedTopic) {
+    protected PrestoTopic buildInlineTopic(PrestoContext context, PrestoType type, String topicId) {
+        PrestoInlineTopicBuilder builder = dataProvider.createInlineTopic(type, topicId);
+        return builder.build();
+    }
+    
+    protected PrestoTopic buildInlineTopic(PrestoContext context, TopicView embeddedTopic) {
 
         PrestoSchemaProvider schemaProvider = getSchemaProvider();
 
@@ -972,8 +986,11 @@ public abstract class Presto {
             throw new RuntimeException("Type " + type.getId() + " is not an inline type.");
         }
 
+        PrestoDataProvider dataProvider = getDataProvider();
+        
         String topicId = embeddedTopic.getTopicId();
-        PrestoInlineTopicBuilder builder = changeSet.createInlineTopic(type, topicId);
+        
+        PrestoInlineTopicBuilder builder = dataProvider.createInlineTopic(type, topicId);
 
         String viewId = embeddedTopic.getId();
         PrestoView view = type.getViewById(viewId);
@@ -982,7 +999,7 @@ public abstract class Presto {
             String fieldId = fieldData.getId();
             PrestoFieldUsage field = type.getFieldById(fieldId, view);
 
-            builder.setValues(field, updateAndExtractValuesFromFieldData(context, changeSet, field, fieldData, true));
+            builder.setValues(field, updateAndExtractValuesFromFieldData(context, field, fieldData, true));
         }
         
         return builder.build();

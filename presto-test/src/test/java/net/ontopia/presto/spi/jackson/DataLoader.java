@@ -115,7 +115,7 @@ public class DataLoader {
 
         PrestoType type = schemaProvider.getTypeById(typeId);
 
-        PrestoInlineTopicBuilder builder = changeSet.createInlineTopic(type, topicId);
+        PrestoInlineTopicBuilder builder = dataProvider.createInlineTopic(type, topicId);
 
         Iterator<String> fieldIds = doc.getFieldNames();
         while (fieldIds.hasNext()) {

@@ -158,7 +158,7 @@ public class PrestoProcessor {
         PrestoSchemaProvider schemaProvider = getSchemaProvider();
         PrestoDataProvider dataProvider = getDataProvider();
         
-        if (field.isEmbedded() || field.isInline()) { 
+        if (field.isEmbedded()) { 
 
             PrestoView valueView = field.getValueView();
 
@@ -176,7 +176,8 @@ public class PrestoProcessor {
                             valueType = schemaProvider.getTypeById(topicTypeId);
                         } else {
                             if (field.isInline()) {
-                                valueTopic = presto.findInlineTopicById(context.getTopic(), field, topicId);
+                                valueTopic = presto.buildInlineTopic(context, embeddedTopic);
+//                                valueTopic = presto.findInlineTopicById(context.getTopic(), field, topicId);
                             } else {
                                 valueTopic = dataProvider.getTopicById(topicId);
                             }
@@ -187,6 +188,8 @@ public class PrestoProcessor {
                         
                         embeddedTopic = processTopicView(embeddedTopic, subcontext, processType, status);
                         value.setEmbedded(embeddedTopic);
+                    } else {
+                        throw new RuntimeException("Expected embedded topic for field '" + field.getId() + "'");
                     }
                 }
             }

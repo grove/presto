@@ -98,18 +98,16 @@ public abstract class JacksonDataProvider implements DefaultDataProvider {
         return new JacksonChangeSet(this, handler);
     }
 
-    private static final class JacksonChangeSet extends PrestoDefaultChangeSet {
 
-        private JacksonDataProvider nativeDataProvider;
+    @Override
+    public PrestoInlineTopicBuilder createInlineTopic(PrestoType type, String topicId) {
+        return new JacksonInlineTopicBuilder(this, type, topicId);
+    }
+
+    private static final class JacksonChangeSet extends PrestoDefaultChangeSet {
         
         public JacksonChangeSet(JacksonDataProvider dataProvider, ChangeSetHandler handler) {
             super(dataProvider, handler);
-            this.nativeDataProvider = dataProvider;
-        }
-
-        @Override
-        public PrestoInlineTopicBuilder createInlineTopic(PrestoType type, String topicId) {
-            return new JacksonInlineTopicBuilder(nativeDataProvider, type, topicId);
         }
 
     }

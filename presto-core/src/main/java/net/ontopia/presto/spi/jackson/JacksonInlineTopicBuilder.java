@@ -20,6 +20,15 @@ public class JacksonInlineTopicBuilder implements PrestoInlineTopicBuilder {
     private Map<PrestoField,Collection<?>> fields = new HashMap<PrestoField,Collection<?>>();
     
     public JacksonInlineTopicBuilder(JacksonDataProvider dataProvider, PrestoType type, String topicId) {
+        if (dataProvider == null) {
+            throw new RuntimeException("dataProvider is null");
+        }
+        if (type == null) {
+            throw new RuntimeException("type is null");
+        }
+//        if (topicId == null) {
+//            throw new RuntimeException("topicId is null");
+//        }
         this.dataProvider = dataProvider;
         this.type = type;
         this.topicId = topicId;

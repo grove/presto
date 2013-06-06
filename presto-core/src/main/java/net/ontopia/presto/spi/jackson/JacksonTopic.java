@@ -304,6 +304,7 @@ public class JacksonTopic implements DefaultTopic {
                     existing.add(convertInternalToNeutralValue(item));
                 }
                 for (Object value : values) {
+                    // TODO: internal topics will not be exactly the same, but share id
                     existing.remove(convertExternalToNeutral(value));
                 }
                 ArrayNode arrayNode  = dataProvider.getObjectMapper().createArrayNode();

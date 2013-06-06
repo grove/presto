@@ -15,7 +15,9 @@ public interface PrestoDataProvider {
     PrestoChangeSet newChangeSet();
 
     PrestoChangeSet newChangeSet(ChangeSetHandler handler);
-    
+
+    PrestoInlineTopicBuilder createInlineTopic(PrestoType type, String topicId);
+
     void close();
 
     public static interface ChangeSetHandler {
