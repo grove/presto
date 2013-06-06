@@ -145,13 +145,13 @@ public class PrestoProcessor {
         return topicView;
     }
     
-//    public FieldData preProcessFieldData(FieldData fieldData, PrestoTopic topic, PrestoFieldUsage field, Status status) {
-//        return processFieldData(fieldData, topic, field, Type.PRE_PROCESS, status);
+//    public FieldData preProcessFieldData(FieldData fieldData, PrestoContext context, PrestoFieldUsage field, Status status) {
+//        return processFieldData(fieldData, context, field, Type.PRE_PROCESS, status);
 //    }
-//
-//    public FieldData postProcessFieldData(FieldData fieldData, PrestoTopic topic, PrestoFieldUsage field, Status status) {
-//        return processFieldData(fieldData, topic, field, Type.POST_PROCESS, status);
-//    }
+
+    public FieldData postProcessFieldData(FieldData fieldData, PrestoContext context, PrestoFieldUsage field, Status status) {
+        return processFieldData(fieldData, context, field, Type.POST_PROCESS, status);
+    }
     
     public FieldData processFieldData(FieldData fieldData, PrestoContext context, PrestoFieldUsage field, Type processType, Status status) {
         // process nested data first
@@ -175,7 +175,11 @@ public class PrestoProcessor {
                             String topicTypeId = embeddedTopic.getTopicTypeId();
                             valueType = schemaProvider.getTypeById(topicTypeId);
                         } else {
-                            valueTopic = dataProvider.getTopicById(topicId);
+                            if (field.isInline()) {
+                                valueTopic = presto.findInlineTopicById(context.getTopic(), field, topicId);
+                            } else {
+                                valueTopic = dataProvider.getTopicById(topicId);
+                            }
                             valueType = schemaProvider.getTypeById(valueTopic.getTypeId());
                         }
                         

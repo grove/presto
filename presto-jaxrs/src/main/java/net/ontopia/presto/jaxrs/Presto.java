@@ -582,7 +582,7 @@ public abstract class Presto {
         result.setValue(value.getId());
         result.setName(value.getName(field));
 
-        if (field.isEmbedded()) {
+        if (field.isEmbedded()) { // ISSUE: embed inline topics?
             PrestoType valueType = getSchemaProvider().getTypeById(value.getTypeId());
             
             PrestoContext subcontext = PrestoContext.create(this, value, valueType, field.getValueView(), context.isReadOnly());
@@ -835,7 +835,9 @@ public abstract class Presto {
 
         PrestoContext subcontext = PrestoContext.create(this, topicAfterSave, type, view, context.isReadOnly());
 
-        return getFieldData(subcontext, field);
+        FieldData result = getFieldData(subcontext, field);
+        return processor.postProcessFieldData(result, context, field, null);
+
     }
 
     public FieldData removeFieldValues(PrestoContext context, PrestoFieldUsage field, FieldData fieldData) {
@@ -858,7 +860,8 @@ public abstract class Presto {
 
         PrestoContext subcontext = PrestoContext.create(this, topicAfterSave, type, view, context.isReadOnly());
         
-        return getFieldData(subcontext, field);
+        FieldData result = getFieldData(subcontext, field);
+        return processor.postProcessFieldData(result, context, field, null);
     }
 
     public TopicView validateTopic(PrestoContext context, TopicView topicView) {
@@ -1167,6 +1170,18 @@ public abstract class Presto {
             }
         }
         return null;
+    }
+
+    protected PrestoTopic findInlineTopicById(PrestoTopic topic, PrestoFieldUsage field, String topicId) {
+        for (Object value : topic.getValues(field)) {
+            if (value instanceof PrestoTopic) {
+                PrestoTopic valueTopic = (PrestoTopic)value;
+                if (topicId.equals(valueTopic.getId())) {
+                    return valueTopic;
+                }
+            }
+        }
+        throw new RuntimeException("Could not find inline topic '" + topicId + "'");
     }
 
 }
