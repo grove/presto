@@ -253,9 +253,7 @@ public class JacksonTopic implements DefaultTopic {
             ArrayNode jsonNode = getFieldValue(field);
             if (jsonNode != null) {
                 for (JsonNode existing : jsonNode) {
-                    if (existing.isTextual()) {
-                        existingValues.add(existing.getTextValue());
-                    }
+                    existingValues.add(convertInternalToNeutralValue(existing));
                 }
             }
 

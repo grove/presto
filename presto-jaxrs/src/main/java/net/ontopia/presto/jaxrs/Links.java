@@ -98,9 +98,14 @@ public class Links {
     }
 
     public static String availableFieldValues(URI baseUri, String databaseId, String topicId, String parentViewId, String fieldId, boolean query) {
-        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/available-field-values/").path(databaseId).path(skull(topicId)).path(parentViewId).path(fieldId);
+        UriBuilder builder = UriBuilder.fromUri(baseUri);
         if (query) {
-            builder = builder.path("{query}");
+            builder = builder.path("editor/available-field-values-query/");
+            builder = builder.path(databaseId).path(skull(topicId)).path(parentViewId).path(fieldId);
+            builder = builder.queryParam("query", "{query}");
+        } else {
+            builder = builder.path("editor/available-field-values/");
+            builder = builder.path(databaseId).path(skull(topicId)).path(parentViewId).path(fieldId);
         }
         return builder.build().toString();
     }

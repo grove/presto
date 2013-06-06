@@ -199,7 +199,7 @@ public abstract class EditorResource {
         try {
             boolean readOnly = false;
 
-            PrestoContext context = PrestoContext.create(session,  Links.deskull(topicId), readOnly);
+            PrestoContext context = PrestoContext.create(session, Links.deskull(topicId), readOnly);
 
             if (context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -588,13 +588,13 @@ public abstract class EditorResource {
 
     @GET
     @Produces(APPLICATION_JSON_UTF8)
-    @Path("available-field-values/{databaseId}/{topicId}/{viewId}/{fieldId}/{query}")
+    @Path("available-field-values-query/{databaseId}/{topicId}/{viewId}/{fieldId}")
     public Response getAvailableFieldValues( 
             @PathParam("databaseId") final String databaseId, 
             @PathParam("topicId") final String topicId, 
             @PathParam("viewId") final String viewId,
             @PathParam("fieldId") final String fieldId,
-            @PathParam("query") final String query) throws Exception {
+            @QueryParam("query") final String query) throws Exception {
 
         Presto session = createPresto(databaseId);
 
