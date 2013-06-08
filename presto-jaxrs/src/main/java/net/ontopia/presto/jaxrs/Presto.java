@@ -1021,7 +1021,7 @@ public abstract class Presto {
         PrestoInlineTopicBuilder builder = dataProvider.createInlineTopic(type, topicId);
         
         //    n{ "a" : 1, "b" : 2, "c" : {"_" : 11, "x" : 1}          }  
-        //  + e{ "a" : 3,          "c" : {"_" : 11, "x" : 2, "y" : 3} } 
+        //    e{ "a" : 3,          "c" : {"_" : 11, "x" : 2, "y" : 3} } 
         // =>  { "a" : 1, "b" : 2, "c" : {"_" : 11, "x" : 1, "y" : 3} }
 
         for (PrestoField field : type.getFields()) {
@@ -1029,9 +1029,12 @@ public abstract class Presto {
             boolean hasValue2 = t2.hasValue(field);
             
             if (hasValue1 && hasValue2) {
-                List<? extends Object> merged = mergeInlineTopics(t1.getValues(field), t2.getValues(field));
-                builder.setValues(field, merged);
-
+                if (field.isInline()) {
+                    List<? extends Object> merged = mergeInlineTopics(t1.getValues(field), t2.getValues(field));
+                    builder.setValues(field, merged);
+                } else {
+                    builder.setValues(field, t1.getValues(field));
+                }
             } else if (hasValue1) {
                 builder.setValues(field, t1.getValues(field));
             } else if (hasValue2) {
@@ -1050,10 +1053,14 @@ public abstract class Presto {
         for (String topicId : map1.keySet()) {
             PrestoTopic t1 = (PrestoTopic)map1.get(topicId);
             PrestoTopic t2 = (PrestoTopic)map2.get(topicId);
-            if (t2 == null) {
-                result.add(t1);
-            } else {
+            if (t1 != null && t2 != null) {
                 result.add(mergeInlineTopics(t1, t2));
+            } else if (t1 != null){
+                result.add(t1);
+            } else if (t2 != null) {
+                result.add(t2);
+            } else {
+                throw new RuntimeException("Woot! Both t1 and t2 were null.");
             }
         }
         return result;
