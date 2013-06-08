@@ -955,7 +955,7 @@ public abstract class Presto {
                         } else {
                             String valueId = getReferenceValue(value);
                             if (valueId != null) {
-                                valueIds.add(getReferenceValue(value));
+                                valueIds.add(valueId);
                             }
                         }
                     }
