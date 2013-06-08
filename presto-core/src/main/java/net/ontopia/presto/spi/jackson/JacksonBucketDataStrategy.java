@@ -55,6 +55,13 @@ public abstract class JacksonBucketDataStrategy implements JacksonDataStrategy {
     }
 
     @Override
+    public boolean hasFieldValue(ObjectNode doc, PrestoField field) {
+        String fieldId = field.getActualId();
+        ObjectNode readBucket = getReadBucket(doc, fieldId, true);
+        return getBucketFieldValue(fieldId, readBucket) != null;
+    }
+
+    @Override
     public ArrayNode getFieldValue(ObjectNode doc, PrestoField field) {
         String fieldId = field.getActualId();
         ObjectNode extra = (ObjectNode)field.getExtra();

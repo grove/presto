@@ -104,6 +104,11 @@ public class JacksonTopic implements DefaultTopic {
     // methods for retrieving the state of a topic
 
     @Override
+    public boolean hasValue(PrestoField field) {
+        return getDataStrategy().hasFieldValue(getData(), field);
+    }
+    
+    @Override
     public List<? extends Object> getValues(PrestoField field) {
         return getValues(field, null).getValues();            
     }

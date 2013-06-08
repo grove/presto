@@ -49,4 +49,9 @@ public class JacksonDefaultDataStrategy implements JacksonDataStrategy {
         doc.put(field.getActualId(), value);
     }
 
+    @Override
+    public boolean hasFieldValue(ObjectNode doc, PrestoField field) {
+        return doc.has(field.getActualId());
+    }
+
 }

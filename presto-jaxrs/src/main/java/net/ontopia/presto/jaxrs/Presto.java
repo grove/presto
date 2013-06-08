@@ -935,17 +935,22 @@ public abstract class Presto {
 
             if (field.isReferenceField()) {
                 if (field.isInline()) {
+                    // build inline topics from field data
+                    List<Object> newValues = new ArrayList<Object>();
                     for (Value value : values) {
                         TopicView embeddedTopic = getEmbeddedTopic(value);
                         if (embeddedTopic != null) {
-                            result.add(buildInlineTopic(context, embeddedTopic));
+                            newValues.add(buildInlineTopic(context, embeddedTopic));
                         } else {
                             String typeId = value.getType();
                             PrestoType type = schemaProvider.getTypeById(typeId);
-                            result.add(buildInlineTopic(context, type, value.getValue()));                            
-//                            throw new RuntimeException("Expected embedded topic for field '" + field.getId() + "'");
+                            newValues.add(buildInlineTopic(context, type, value.getValue()));                            
                         }
-                    }                    
+                    }
+                    // merge new inline topics with existing ones
+                    PrestoTopic topic = context.getTopic();
+                    List<? extends Object> existingValues = topic.getValues(field);
+                    result.addAll(mergeInlineTopics(newValues, existingValues));
                 } else {
                     List<String> valueIds = new ArrayList<String>(values.size());
                     for (Value value : values) {                
@@ -1005,6 +1010,63 @@ public abstract class Presto {
         return builder.build();
     }
 
+    protected PrestoTopic mergeInlineTopics(PrestoTopic t1, PrestoTopic t2) {
+        String topicId = t1.getId();
+        if (Utils.different(topicId, t2.getId())) {
+            throw new IllegalArgumentException("Cannot merge topics with different ids: '" + topicId + "' and '" + t2.getId() + "'");
+        }
+        PrestoSchemaProvider schemaProvider = getSchemaProvider();
+        PrestoType type = schemaProvider.getTypeById(t1.getTypeId());
+        
+        PrestoInlineTopicBuilder builder = dataProvider.createInlineTopic(type, topicId);
+        
+        //    n{ "a" : 1, "b" : 2, "c" : {"_" : 11, "x" : 1}          }  
+        //  + e{ "a" : 3,          "c" : {"_" : 11, "x" : 2, "y" : 3} } 
+        // =>  { "a" : 1, "b" : 2, "c" : {"_" : 11, "x" : 1, "y" : 3} }
+
+        for (PrestoField field : type.getFields()) {
+            boolean hasValue1 = t1.hasValue(field);
+            boolean hasValue2 = t2.hasValue(field);
+            
+            if (hasValue1 && hasValue2) {
+                List<? extends Object> merged = mergeInlineTopics(t1.getValues(field), t2.getValues(field));
+                builder.setValues(field, merged);
+
+            } else if (hasValue1) {
+                builder.setValues(field, t1.getValues(field));
+            } else if (hasValue2) {
+                builder.setValues(field, t2.getValues(field));
+            }
+        }
+        
+        return builder.build();
+    }
+    
+    protected List<? extends Object> mergeInlineTopics(List<? extends Object> v1, List<? extends Object> v2) {
+        Map<String,Object> map1 = toMapTopics(v1);
+        Map<String,Object> map2 = toMapTopics(v2);
+        
+        List<PrestoTopic> result = new ArrayList<PrestoTopic>(Math.max(v1.size(), v2.size())); 
+        for (String topicId : map1.keySet()) {
+            PrestoTopic t1 = (PrestoTopic)map1.get(topicId);
+            PrestoTopic t2 = (PrestoTopic)map2.get(topicId);
+            if (t2 == null) {
+                result.add(t1);
+            } else {
+                result.add(mergeInlineTopics(t1, t2));
+            }
+        }
+        return result;
+    }
+
+    private Map<String,Object> toMapTopics(List<? extends Object> values) {
+        Map<String,Object> result = new LinkedHashMap<String,Object>(values.size());
+        for (Object value : values) {
+            PrestoTopic topic = (PrestoTopic)value;
+            result.put(topic.getId(), topic);
+        }
+        return result;
+    }
     private PrestoTopic updateEmbeddedTopic(PrestoContext context, PrestoFieldUsage field, TopicView embeddedTopic) {
 
         PrestoDataProvider dataProvider = getDataProvider();
