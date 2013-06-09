@@ -282,13 +282,9 @@ public class JacksonTopic implements DefaultTopic {
             
             // insert new values at calculated index
             if (calculatedIndex > 0) {
-                for (Object value : addableValues) {
-                    result.add(calculatedIndex, value);
-                }
+                result.addAll(calculatedIndex, addableValues);
             } else {
-                for (Object value : addableValues) {
-                    result.add(value);
-                }
+                result.addAll(addableValues);
             }
             // create new array node
             ArrayNode arrayNode = dataProvider.getObjectMapper().createArrayNode();
