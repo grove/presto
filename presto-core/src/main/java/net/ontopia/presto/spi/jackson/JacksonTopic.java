@@ -281,7 +281,7 @@ public class JacksonTopic implements DefaultTopic {
             }
             
             // insert new values at calculated index
-            if (calculatedIndex > 0) {
+            if (calculatedIndex >= 0) {
                 result.addAll(calculatedIndex, addableValues);
             } else {
                 result.addAll(addableValues);

@@ -21,12 +21,12 @@ public class JacksonTest extends TestCase {
     private JacksonDataProvider dataProvider;
 
     protected void setUp() {
-        this.schemaProvider = createSchemaProvider();
+        this.schemaProvider = createSchemaProvider("test", "test.schema.json");
         this.dataProvider = createDataProvider();
     }
 
-    static PojoSchemaProvider createSchemaProvider() {
-        return PojoSchemaProvider.getSchemaProvider("test", "test.schema.json");
+    static PojoSchemaProvider createSchemaProvider(String databaseId, String schemaFile) {
+        return PojoSchemaProvider.getSchemaProvider(databaseId, schemaFile);
     }
 
     static InMemoryJacksonDataProvider createDataProvider() {
@@ -154,7 +154,7 @@ public class JacksonTest extends TestCase {
         return topic.getValues(field);
     }
     
-    private void assertValuesEquals(List<? extends Object> expected, List<? extends Object> actual) {
+    public static void assertValuesEquals(List<? extends Object> expected, List<? extends Object> actual) {
         if (expected.size() == actual.size()) {
             boolean equals = true;
             for (int i=0; i < actual.size(); i++) {

@@ -1,0 +1,75 @@
+{ "id": "example",
+  "name": "Example schema",
+
+  "types": {
+      "sometype" : { 
+        "name" : "Some type",
+        "creatable" : true,
+        "removable" : true,
+        "views": [
+          { "id" : "info",
+            "name": "Info",
+            "fields" : [
+              { "id" : "name",
+                "name" : "Name",
+                "nameField": true,
+                "minCardinality": 1,
+                "maxCardinality": 1
+              },
+              { "id" : "strings",
+                "name" : "Strings"
+              },
+              { "id" : "topics",
+                "name" : "Topics",
+                "datatype": "reference",
+                "valueTypes" : ["external-type"]
+              },
+              { "id" : "inline-topics",
+                "name" : "Inline topics",
+                "datatype": "reference",
+                "inline" : true,
+                "valueTypes" : ["inline-type"]
+              }
+            ]
+          }
+        ]
+      },
+      "external-type" : { 
+        "name" : "External type",
+        "creatable" : true,
+        "removable" : true,
+        "views": [
+          { "id" : "info",
+            "name": "Info",
+            "fields" : [
+              { "id" : "name",
+                "name" : "Name",
+                "nameField": true,
+                "minCardinality": 1,
+                "maxCardinality": 1
+              }
+            ]
+          }
+        ]
+      },
+      "inline-type" : { 
+        "name" : "Internal type",
+        "inline" : true,
+        "creatable" : true,
+        "removable" : true,
+        "views": [
+          { "id" : "info",
+            "name": "Info",
+            "fields" : [
+              { "id" : "name",
+                "name" : "Name",
+                "nameField": true,
+                "minCardinality": 1,
+                "maxCardinality": 1
+              }
+            ]
+          }
+        ]
+      }
+    }
+}
