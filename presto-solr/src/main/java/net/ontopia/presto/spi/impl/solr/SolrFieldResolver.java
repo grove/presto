@@ -57,10 +57,9 @@ public abstract class SolrFieldResolver extends PrestoFieldResolver {
         }
         
         CharSequence q_query = expandQuery(variableResolver, " AND ", objects, config.path("q"));
-//        if (isEmpty(q_query)) {
-//            return new PrestoPagedValues(Collections.emptyList(), paging, 0);
-//        }
-        if (!isEmpty(q_query)) {
+        if (isEmpty(q_query)) {
+            return new PrestoPagedValues(Collections.emptyList(), paging, 0);
+        } else {
             solrQuery.setQuery(q_query.toString());
         }
 
