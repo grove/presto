@@ -823,7 +823,7 @@ public abstract class Presto {
         PrestoChangeSet changeSet = dataProvider.newChangeSet(getChangeSetHandler());
         PrestoUpdate update = changeSet.updateTopic(topic, type);        
 
-        Collection<? extends Object> addableValues = updateAndExtractValuesFromFieldData(context, field, fieldData, true);
+        List<? extends Object> addableValues = updateAndExtractValuesFromFieldData(context, field, fieldData, true);
 
         if (index == null) {
             update.addValues(field, addableValues);
@@ -852,7 +852,7 @@ public abstract class Presto {
         PrestoChangeSet changeSet = dataProvider.newChangeSet(getChangeSetHandler());
         PrestoUpdate update = changeSet.updateTopic(topic, type);        
         
-        Collection<? extends Object> removeableValues = updateAndExtractValuesFromFieldData(context, field, fieldData, false);
+        List<? extends Object> removeableValues = updateAndExtractValuesFromFieldData(context, field, fieldData, false);
 
         update.removeValues(field, removeableValues);
 
@@ -927,9 +927,9 @@ public abstract class Presto {
         }
     }
 
-    private Collection<? extends Object> updateAndExtractValuesFromFieldData(PrestoContext context, PrestoFieldUsage field, FieldData fieldData, boolean resolveEmbedded) {
+    private List<? extends Object> updateAndExtractValuesFromFieldData(PrestoContext context, PrestoFieldUsage field, FieldData fieldData, boolean resolveEmbedded) {
         Collection<Value> values = fieldData.getValues();
-        Collection<Object> result = new ArrayList<Object>(values.size());
+        List<Object> result = new ArrayList<Object>(values.size());
 
         if (!values.isEmpty()) {
 
