@@ -712,7 +712,9 @@ public abstract class EditorResource {
                     if (variable.equals("now")) {
                         return Collections.singletonList(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new Date()));
                     } else if (variable.equals("username")) {
-                        return Collections.singletonList(request.getRemoteUser());
+                        if (request != null) {
+                            return Collections.singletonList(request.getRemoteUser());
+                        }
                     }
                     return Collections.emptyList();
                 }
