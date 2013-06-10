@@ -12,8 +12,7 @@ import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
 import net.ontopia.presto.spi.impl.pojo.PojoSchemaProvider;
 
-import org.codehaus.jackson.node.ObjectNode;
-import org.ektorp.util.Assert;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -35,7 +34,6 @@ public class JacksonTopicTest {
         }
         PrestoChangeSet changeSet = dataProvider.newChangeSet();
         PrestoUpdate update = changeSet.createTopic(type, topicId);
-//        update.setValues(field, values)
         changeSet.save();
         return update.getTopicAfterSave();
     }
@@ -67,10 +65,18 @@ public class JacksonTopicTest {
         return result;
     }
 
+    private void isStringField(PrestoField field) {
+        Assert.assertTrue("Field is a reference field", !field.isReferenceField());
+        Assert.assertEquals("Field is not a string field", field.getDataType(), "http://www.w3.org/2001/XMLSchema#string");
+        Assert.assertTrue("Field is an inline field", !field.isInline());
+    }
+
     @Test
     public void testStringSetValues() {
         PrestoType type = schemaProvider.getTypeById("sometype");
+        
         PrestoField field = type.getFieldById("strings");
+        isStringField(field);
         
         JacksonTopic topic = (JacksonTopic)createTopic(type, "s0");
         
@@ -86,7 +92,9 @@ public class JacksonTopicTest {
     @Test
     public void testStringAddValues() {
         PrestoType type = schemaProvider.getTypeById("sometype");
+
         PrestoField field = type.getFieldById("strings");
+        isStringField(field);
         
         JacksonTopic topic = (JacksonTopic)createTopic(type, "s1");
         
@@ -110,8 +118,10 @@ public class JacksonTopicTest {
     @Test
     public void testStringRemoveValues() {
         PrestoType type = schemaProvider.getTypeById("sometype");
+
         PrestoField field = type.getFieldById("strings");
-        
+        isStringField(field);
+       
         JacksonTopic topic = (JacksonTopic)createTopic(type, "s2");
         
         // add A, B, C, D, E, F, G, H, I (at end)
@@ -135,11 +145,19 @@ public class JacksonTopicTest {
         JacksonTest.assertValuesEquals(strings(), topic.getValues(field));
     }
 
+    private void isReferenceField(PrestoField field) {
+        Assert.assertTrue("Field is not a reference field", field.isReferenceField());
+        Assert.assertEquals("Field is not a reference field", field.getDataType(), "reference");
+        Assert.assertTrue("Field is not an inline field", !field.isInline());
+    }
+
     @Test
     public void testTopicSetValues() {
         PrestoType type = schemaProvider.getTypeById("sometype");
         PrestoType vtype = schemaProvider.getTypeById("external-type");
+
         PrestoField field = type.getFieldById("topics");
+        isReferenceField(field);
         
         JacksonTopic topic = (JacksonTopic)createTopic(type, "t0");
         
@@ -156,7 +174,9 @@ public class JacksonTopicTest {
     public void testTopicAddValues() {
         PrestoType type = schemaProvider.getTypeById("sometype");
         PrestoType vtype = schemaProvider.getTypeById("external-type");
+
         PrestoField field = type.getFieldById("topics");
+        isReferenceField(field);
         
         JacksonTopic topic = (JacksonTopic)createTopic(type, "t1");
         
@@ -181,7 +201,9 @@ public class JacksonTopicTest {
     public void testTopicRemoveValues() {
         PrestoType type = schemaProvider.getTypeById("sometype");
         PrestoType vtype = schemaProvider.getTypeById("external-type");
+
         PrestoField field = type.getFieldById("topics");
+        isReferenceField(field);
         
         JacksonTopic topic = (JacksonTopic)createTopic(type, "t2");
         
@@ -206,14 +228,19 @@ public class JacksonTopicTest {
         JacksonTest.assertValuesEquals(topics(vtype), topic.getValues(field));
     }
 
+    private void isInlineReferenceField(PrestoField field) {
+        Assert.assertTrue("Field is not a reference field", field.isReferenceField());
+        Assert.assertEquals("Field is not a reference field", field.getDataType(), "reference");
+        Assert.assertTrue("Field is not an inline field", field.isInline());
+    }
+
     @Test
     public void testInlineTopicSetValues() {
         PrestoType type = schemaProvider.getTypeById("sometype");
         PrestoType vtype = schemaProvider.getTypeById("inline-type");
-        PrestoField field = type.getFieldById("inline-topics");
 
-        Assert.isTrue(field.isReferenceField(), "Field is not a reference field");
-        Assert.isTrue(field.isInline(), "Field is not an inline field");
+        PrestoField field = type.getFieldById("inline-topics");
+        isInlineReferenceField(field);
         
         JacksonTopic topic = (JacksonTopic)createTopic(type, "it0");
         
@@ -230,10 +257,9 @@ public class JacksonTopicTest {
     public void testInlineTopicAddValues() {
         PrestoType type = schemaProvider.getTypeById("sometype");
         PrestoType vtype = schemaProvider.getTypeById("inline-type");
-        PrestoField field = type.getFieldById("inline-topics");
 
-        Assert.isTrue(field.isReferenceField(), "Field is not a reference field");
-        Assert.isTrue(field.isInline(), "Field is not an inline field");
+        PrestoField field = type.getFieldById("inline-topics");
+        isInlineReferenceField(field);
         
         JacksonTopic topic = (JacksonTopic)createTopic(type, "it1");
         
@@ -258,7 +284,9 @@ public class JacksonTopicTest {
     public void testInlineTopicRemoveValues() {
         PrestoType type = schemaProvider.getTypeById("sometype");
         PrestoType vtype = schemaProvider.getTypeById("inline-type");
+        
         PrestoField field = type.getFieldById("inline-topics");
+        isInlineReferenceField(field);
         
         JacksonTopic topic = (JacksonTopic)createTopic(type, "it2");
         
