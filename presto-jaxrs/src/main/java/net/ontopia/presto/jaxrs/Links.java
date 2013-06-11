@@ -62,6 +62,11 @@ public class Links {
         return builder.build().toString();
     }
 
+    public static String createNewTopicViewLinkParent(URI baseUri, String databaseId, String typeId, String viewId, String parentTopicId, String parentViewId, String parentFieldId) {
+        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/topic-view-parent/").path(databaseId).path("_" + typeId).path(viewId).path(parentTopicId).path(parentViewId).path(parentFieldId);
+        return builder.build().toString();
+    }
+
     public static String createInstanceLink(URI baseUri, String databaseId, String typeId) {
         UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/create-instance/").path(databaseId).path(typeId);
         return builder.build().toString();

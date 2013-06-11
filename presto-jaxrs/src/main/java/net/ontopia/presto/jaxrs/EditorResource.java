@@ -33,6 +33,7 @@ import net.ontopia.presto.jaxb.Link;
 import net.ontopia.presto.jaxb.RootInfo;
 import net.ontopia.presto.jaxb.Topic;
 import net.ontopia.presto.jaxb.TopicView;
+import net.ontopia.presto.jaxb.Value;
 import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoChanges;
 import net.ontopia.presto.spi.PrestoDataProvider;
@@ -43,6 +44,7 @@ import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
+import net.ontopia.presto.spi.PrestoView;
 
 @Path("/editor")
 public abstract class EditorResource {
@@ -170,9 +172,10 @@ public abstract class EditorResource {
             }
 
             boolean readOnly = false;
-            PrestoContext context = PrestoContext.create(session, type, type.getDefaultView(), readOnly);
+            PrestoContext childContext = PrestoContext.create(session, type, type.getDefaultView(), readOnly);
+            PrestoContext parentContext = PrestoContext.create(session, parentTopicId, parentViewId, readOnly);
 
-            TopicView result = session.getNewTopicView(context, parentTopicId, parentViewId, parentFieldId);
+            TopicView result = session.getNewTopicView(childContext, parentContext, parentFieldId);
             return Response.ok(result).build();
 
         } catch (Exception e) {
@@ -420,6 +423,73 @@ public abstract class EditorResource {
     @PUT
     @Produces(APPLICATION_JSON_UTF8)
     @Consumes(APPLICATION_JSON_UTF8)
+    @Path("topic-view-parent/{databaseId}/{topicId}/{viewId}/{parentTopicId}/{parentViewId}/{parentFieldId}")
+    public Response updateTopicViewParent(
+            @PathParam("databaseId") final String databaseId, 
+            @PathParam("topicId") final String topicId, 
+            @PathParam("viewId") final String viewId, 
+            @PathParam("parentTopicId") final String parentTopicId, 
+            @PathParam("parentViewId") final String parentViewId, 
+            @PathParam("parentFieldId") final String parentFieldId, TopicView topicView) throws Exception {
+
+        Presto session = createPresto(databaseId);
+
+        try {
+            boolean readOnly = false;
+            PrestoContext context = PrestoContext.create(session, Links.deskull(topicId), viewId, readOnly);
+
+            if (context.isMissingTopic()) {
+                return Response.status(Status.NOT_FOUND).build();
+            }
+
+            TopicView result = session.updateTopic(context, topicView);
+            session.commit();
+
+            if (context.isNewTopic()) {
+                // return Topic if new, otherwise TopicView
+                String newTopicId = result.getTopicId();
+                if (newTopicId == null) {
+                    // WARN: probably means that the topic was not valid
+                    return Response.ok(result).build();
+                }
+            }
+            PrestoContext parentContext = PrestoContext.create(session, Links.deskull(parentTopicId), parentViewId, readOnly);
+            if (parentContext.isNewTopic()) {
+                // NOTE: if parent does not exist yet then we have to return the created topic-view
+                return Response.ok(result).build();
+                
+            } else {
+                // update parent field and return it
+                FieldData fieldData = createFieldDataForParent(parentContext, parentFieldId, session, readOnly, context, result);
+                return addFieldValues(databaseId, parentTopicId, parentViewId, parentFieldId, fieldData);
+            }            
+        } catch (Exception e) {
+            session.abort();
+            throw e;
+        } finally {
+            session.close();
+        }
+        
+    }
+
+    private FieldData createFieldDataForParent(PrestoContext parentContext, String parentFieldId,
+            Presto session, boolean readOnly, PrestoContext context, TopicView topicView) {
+        PrestoType parentType = parentContext.getType();
+        PrestoView parentView = parentContext.getView();
+        PrestoFieldUsage parentField = parentType.getFieldById(parentFieldId, parentView);
+        FieldData fieldData = session.getFieldData(context, parentField);
+        Value value = new Value();
+        value.setValue(topicView.getTopicId());
+        value.setType(topicView.getTopicTypeId());
+        value.setName(topicView.getName());
+        value.setEmbedded(topicView);
+        fieldData.setValues(Collections.singleton(value));
+        return fieldData;
+    }
+    
+    @PUT
+    @Produces(APPLICATION_JSON_UTF8)
+    @Consumes(APPLICATION_JSON_UTF8)
     @Path("topic-view/{databaseId}/{topicId}/{viewId}")
     public Response updateTopicView(
             @PathParam("databaseId") final String databaseId, 
@@ -439,10 +509,7 @@ public abstract class EditorResource {
             TopicView result = session.updateTopic(context, topicView);
             session.commit();
 
-            PrestoType type = context.getType();
-            if (type.isInline()) {
-                return Response.ok(result).build();
-            } else if (context.isNewTopic()) {
+            if (context.isNewTopic()) {
                 // return Topic if new, otherwise TopicView
                 String newTopicId = result.getTopicId();
                 if (newTopicId == null) {
@@ -451,9 +518,8 @@ public abstract class EditorResource {
                 } else {
                     return getTopicInDefaultView(databaseId, newTopicId, readOnly);
                 }
-            } else {
-                return Response.ok(result).build();
             }
+            return Response.ok(result).build();
             
         } catch (Exception e) {
             session.abort();

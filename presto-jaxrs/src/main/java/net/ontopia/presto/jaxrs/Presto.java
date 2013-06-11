@@ -255,10 +255,10 @@ public abstract class Presto {
     public abstract URI getBaseUri();
     
     public TopicView getNewTopicView(PrestoContext context) {
-        return getNewTopicView(context, null, null, null);
+        return getNewTopicView(context, null, null);
     }
 
-    public TopicView getNewTopicView(PrestoContext context, String parentTopicId, String parentViewId, String parentFieldId) {
+    public TopicView getNewTopicView(PrestoContext context, PrestoContext parentContext, String parentFieldId) {
         PrestoType type = context.getType();
         PrestoView view = context.getView();
 
@@ -267,14 +267,6 @@ public abstract class Presto {
         result.setName("*" + type.getName() + "*");
 
         result.setTopicTypeId(type.getId());
-        
-        String href;
-        if (parentTopicId != null) {
-            href = Links.createFieldInstanceLink(getBaseUri(), getDatabaseId(), parentTopicId, parentViewId, parentFieldId, type.getId());
-        } else {
-            href = Links.createInstanceLink(getBaseUri(), getDatabaseId(), type.getId());
-        }
-        result.setHref(href);
 
         List<FieldData> fields = new ArrayList<FieldData>(); 
         for (PrestoFieldUsage field : type.getFields(view)) {
@@ -286,11 +278,26 @@ public abstract class Presto {
         
         List<Link> links = new ArrayList<Link>();
         links.add(Links.createLabel(type.getName()));
-        links.add(new Link("create", Links.createNewTopicViewLink(getBaseUri(), getDatabaseId(), type.getId(), view.getId())));
         
-        if (type.isInline()) {
-            links.add(new Link("parent", Links.getTopicEditLink(getBaseUri(), getDatabaseId(), parentTopicId, parentViewId)));
+        String href;
+        if (parentContext != null) {
+            
+            String parentTopicId = parentContext.getTopic().getId();
+            String parentViewId = parentContext.getView().getId();
+            
+            links.add(new Link("create", Links.createNewTopicViewLinkParent(getBaseUri(), getDatabaseId(), type.getId(), view.getId(), parentTopicId, parentViewId, parentFieldId)));
+
+            if (type.isInline()) {
+                links.add(new Link("parent", Links.getTopicEditLink(getBaseUri(), getDatabaseId(), parentTopicId, parentViewId)));
+            }
+            href = Links.createFieldInstanceLink(getBaseUri(), getDatabaseId(), parentTopicId, parentViewId, parentFieldId, type.getId());
+        } else {
+            
+            links.add(new Link("create", Links.createNewTopicViewLink(getBaseUri(), getDatabaseId(), type.getId(), view.getId())));
+            
+            href = Links.createInstanceLink(getBaseUri(), getDatabaseId(), type.getId());
         }
+        result.setHref(href);
         result.setLinks(links);
         
 //        Status status = new Status();
@@ -299,7 +306,7 @@ public abstract class Presto {
         return result;
     }
 
-    private FieldData getFieldData(PrestoContext context, PrestoFieldUsage field) {
+    public FieldData getFieldData(PrestoContext context, PrestoFieldUsage field) {
         return getFieldData(context, field, 0, -1, true);
     }
     
