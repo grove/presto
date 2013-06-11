@@ -460,7 +460,7 @@ public abstract class EditorResource {
                 
             } else {
                 // update parent field and return it
-                FieldData fieldData = createFieldDataForParent(parentContext, parentFieldId, session, readOnly, context, result);
+                FieldData fieldData = session.createFieldDataForParent(parentContext, parentFieldId, session, readOnly, context, result);
                 return addFieldValues(databaseId, parentTopicId, parentViewId, parentFieldId, fieldData);
             }            
         } catch (Exception e) {
@@ -470,21 +470,6 @@ public abstract class EditorResource {
             session.close();
         }
         
-    }
-
-    private FieldData createFieldDataForParent(PrestoContext parentContext, String parentFieldId,
-            Presto session, boolean readOnly, PrestoContext context, TopicView topicView) {
-        PrestoType parentType = parentContext.getType();
-        PrestoView parentView = parentContext.getView();
-        PrestoFieldUsage parentField = parentType.getFieldById(parentFieldId, parentView);
-        FieldData fieldData = session.getFieldData(context, parentField);
-        Value value = new Value();
-        value.setValue(topicView.getTopicId());
-        value.setType(topicView.getTopicTypeId());
-        value.setName(topicView.getName());
-        value.setEmbedded(topicView);
-        fieldData.setValues(Collections.singleton(value));
-        return fieldData;
     }
     
     @PUT

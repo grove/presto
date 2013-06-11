@@ -250,8 +250,38 @@ public class PrestoProcessor {
                 }
             }
         }
+//        fieldData.setValues(processValuesExtra(fieldData.getValues(), context, field, extraNode, processType, status));
         return fieldData;
     }
+
+//    public Collection<Value> postProcessValues(Collection<Value> values, PrestoContext context, PrestoFieldUsage field, Status status) {
+//        
+//        ObjectNode schemaExtra = presto.getSchemaExtraNode(getSchemaProvider());
+//        values = processValuesExtra(values, context, field, schemaExtra, Type.POST_PROCESS, status);
+//        
+//        ObjectNode topicExtra = presto.getTypeExtraNode(context.getType());
+//        values = processValuesExtra(values, context, field, topicExtra, Type.POST_PROCESS, status);
+//        
+//        ObjectNode viewExtra = presto.getViewExtraNode(context.getView());
+//        values = processValuesExtra(values, context, field, viewExtra, Type.POST_PROCESS, status);
+//
+//        ObjectNode fieldExtra = presto.getFieldExtraNode(field);
+//        values = processValuesExtra(values, context, field, fieldExtra, Type.POST_PROCESS, status);
+//
+//        return values;
+//    }
+    
+//    private Collection<Value> processValuesExtra(Collection<Value> values, PrestoContext context, PrestoFieldUsage field, ObjectNode extraNode, Type processType, Status status) {
+//        if (extraNode != null) {
+//            JsonNode processorsNode = getValueProcessorsNode(extraNode, processType);
+//            if (!processorsNode.isMissingNode()) {
+//                for (ValuesProcessor processor : getProcessors(ValuesProcessor.class, processorsNode, processType, status)) {
+//                    values = processor.processValues(values, context, field);
+//                }
+//            }
+//        }
+//        return values;
+//    }
     
     private JsonNode getTopicProcessorsNode(ObjectNode extraNode, Type processType) {
         if (processType == Type.PRE_PROCESS) {
@@ -276,6 +306,14 @@ public class PrestoProcessor {
             return extraNode.path("fieldPostProcessors");
         }
     }
+    
+//    private JsonNode getValueProcessorsNode(ObjectNode extraNode, Type processType) {
+//        if (processType == Type.PRE_PROCESS) {
+//            return extraNode.path("valuePreProcessors");            
+//        } else {
+//            return extraNode.path("valuePostProcessors");
+//        }
+//    }
 
     private <T extends AbstractProcessor> Iterable<T> getProcessors(Class<T> klass, JsonNode processorsNode, Type processType, Status status) {
         if (processorsNode.isArray()) {

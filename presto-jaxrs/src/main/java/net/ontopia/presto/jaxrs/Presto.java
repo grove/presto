@@ -612,6 +612,21 @@ public abstract class Presto {
         return result;
     }
 
+    FieldData createFieldDataForParent(PrestoContext parentContext, String parentFieldId,
+            Presto session, boolean readOnly, PrestoContext context, TopicView topicView) {
+        PrestoType parentType = parentContext.getType();
+        PrestoView parentView = parentContext.getView();
+        PrestoFieldUsage parentField = parentType.getFieldById(parentFieldId, parentView);
+        FieldData fieldData = session.getFieldData(context, parentField);
+        Value value = new Value();
+        value.setValue(topicView.getTopicId());
+        value.setType(topicView.getTopicTypeId());
+        value.setName(topicView.getName());
+        value.setEmbedded(topicView);
+        fieldData.setValues(Collections.singleton(value));
+        return fieldData;
+    }
+
     public AvailableFieldValues getAvailableFieldValuesInfo(PrestoContext context, PrestoFieldUsage field, String query) {
 
         AvailableFieldValues result = new AvailableFieldValues();
@@ -682,13 +697,15 @@ public abstract class Presto {
         return null;
     }
 
-    protected List<Value> getAllowedFieldValues(PrestoContext context, PrestoFieldUsage field, String query) {
+    protected Collection<Value> getAllowedFieldValues(PrestoContext context, PrestoFieldUsage field, String query) {
         Collection<? extends Object> availableFieldValues = getAvailableFieldValues(context, field, query);
         
-        List<Value> result = new ArrayList<Value>(availableFieldValues.size());
+        Collection<Value> result = new ArrayList<Value>(availableFieldValues.size());
         for (Object value : availableFieldValues) {
             result.add(getAllowedFieldValue(context, field, value));
         }
+//        result = processor.postProcessValues(result, context, field, null);
+
         return result;
     }
     
