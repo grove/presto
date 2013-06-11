@@ -6,9 +6,13 @@ import net.ontopia.presto.spi.PrestoFieldUsage;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JacksonDefaultDataStrategy implements JacksonDataStrategy {
-
+    
+    private static Logger log = LoggerFactory.getLogger(JacksonDefaultDataStrategy.class);
+    
     private static final String ID_DEFAULT_FIELD = "_id";
     private static final String TYPE_DEFAULT_FIELD = ":type";
     private static final String NAME_DEFAULT_FIELD = ":name";
@@ -29,8 +33,12 @@ public class JacksonDefaultDataStrategy implements JacksonDataStrategy {
     }
     
     protected String getSingleStringFieldValue(ObjectNode doc, String fieldId) {
-        JsonNode value = doc.get(fieldId);
-        return (value != null && value.isArray() && value.size() > 0 ? value.get(0).asText() : null); 
+        ArrayNode arrayNode = getFieldValueArrayNode(doc, fieldId);
+        if (arrayNode == null) {
+            return null;
+        } else {
+            return arrayNode.size() > 0 ? arrayNode.get(0).asText() : null;
+        }
     }
 
     @Override
@@ -40,8 +48,19 @@ public class JacksonDefaultDataStrategy implements JacksonDataStrategy {
 
     @Override
     public ArrayNode getFieldValue(ObjectNode doc, PrestoField field) {
-        JsonNode value = doc.get(field.getActualId());
-        return (ArrayNode)(value != null && value.isArray() ? value : null); 
+        return getFieldValueArrayNode(doc, field.getActualId());
+    }
+
+    private ArrayNode getFieldValueArrayNode(ObjectNode doc, String fieldId) {
+        JsonNode value = doc.path(fieldId);
+        if (value.isArray()) {
+            return (ArrayNode)value;
+        } else if (value.isMissingNode() || value.isNull()) {
+            return null;
+        } else {
+            log.warn("Value " + value + " in field '" + fieldId + "' is not an array");
+            return null;
+        }
     }
 
     @Override
