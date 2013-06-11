@@ -258,8 +258,12 @@ public class PojoSchemaModel {
             }
 
             // name
-            String fieldName = fieldConfig.get("name").getTextValue();                        
-            field.setName(fieldName);
+            if (fieldConfig.has("name")) {
+                String fieldName = fieldConfig.get("name").getTextValue();                        
+                field.setName(fieldName);
+            } else {
+                field.setName(fieldId);
+            }
             // isNameField
             if (fieldConfig.has("nameField")) {
                 field.setNameField(fieldConfig.get("nameField").getBooleanValue());
