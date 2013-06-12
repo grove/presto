@@ -290,6 +290,14 @@ public class PojoSchemaModel {
             } else {
                 field.setValueView(type.getDefaultView());
             } 
+            // editView (using current view for now)
+            if (fieldConfig.has("editView")) {
+                String editViewId = fieldConfig.get("editView").getTextValue();
+                PojoView editView = new PojoView(editViewId);
+                field.setEditView(editView);
+            } else {
+                field.setEditView(type.getDefaultView());
+            } 
             // createView (using current view for now)
             if (fieldConfig.has("createView")) {
                 String createViewId = fieldConfig.get("createView").getTextValue();
