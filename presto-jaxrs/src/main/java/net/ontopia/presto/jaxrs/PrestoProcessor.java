@@ -315,6 +315,10 @@ public class PrestoProcessor {
 //        }
 //    }
 
+    public <T extends AbstractProcessor> Iterable<T> getProcessors(Class<T> klass, JsonNode processorsNode) {
+        return getProcessors(klass, processorsNode, null, null);
+    }
+    
     private <T extends AbstractProcessor> Iterable<T> getProcessors(Class<T> klass, JsonNode processorsNode, Type processType, Status status) {
         if (processorsNode.isArray()) {
             List<T> result = new ArrayList<T>();
@@ -333,7 +337,11 @@ public class PrestoProcessor {
         }
         return Collections.emptyList();
     }
-
+    
+    public <T extends AbstractProcessor> T getProcessor(Class<T> klass, JsonNode processorNode) {
+        return getProcessor(klass, processorNode, null, null);
+    }
+    
     private <T extends AbstractProcessor> T getProcessor(Class<T> klass, JsonNode processorNode, Type processType, Status status) {
         if (processorNode.isTextual()) {
             String className = processorNode.getTextValue();

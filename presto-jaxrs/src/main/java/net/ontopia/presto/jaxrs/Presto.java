@@ -23,6 +23,7 @@ import net.ontopia.presto.jaxb.TopicTypeTree;
 import net.ontopia.presto.jaxb.TopicView;
 import net.ontopia.presto.jaxb.Value;
 import net.ontopia.presto.jaxrs.PrestoProcessor.Status;
+import net.ontopia.presto.jaxrs.process.ValueProcessor;
 import net.ontopia.presto.jaxrs.resolve.AvailableFieldCreateTypesResolver;
 import net.ontopia.presto.jaxrs.resolve.AvailableFieldValuesResolver;
 import net.ontopia.presto.spi.PrestoChangeSet;
@@ -530,6 +531,8 @@ public abstract class Presto {
                 }
             });
         }
+        
+        ValueProcessor valueProcessor = createValueProcessor(context, field);
 
         int size = fieldValues.size();
         int start = 0;
@@ -540,7 +543,7 @@ public abstract class Presto {
         for (int i=start; i < end; i++) {
             Object value = fieldValues.get(i);
             if (value != null) {
-                Value efv = getExistingFieldValue(context, field, value);
+                Value efv = getExistingFieldValue(valueProcessor, context, field, value);
                 outputValues.add(efv);
                 inputValues.add(value);
             } else {
@@ -564,33 +567,63 @@ public abstract class Presto {
         return new FieldDataValues(inputValues, outputValues);
     }
     
-    protected Value getExistingFieldValue(PrestoContext context, PrestoFieldUsage field, Object fieldValue) {
+    private ValueProcessor createValueProcessor(PrestoContext context, PrestoFieldUsage field) {
+        ObjectNode extra = getFieldExtraNode(field);
+        if (extra != null) {
+            JsonNode processorsNode = extra.path("valueProcessors");
+            if (processorsNode != null) {
+                return processor.getProcessor(ValueProcessor.class, processorsNode);
+            }
+        }
+        return null;
+    }
+    
+
+    protected Value getExistingFieldValue(ValueProcessor valueProcessor, PrestoContext context, PrestoFieldUsage field, Object fieldValue) {
         if (fieldValue instanceof PrestoTopic) {
             PrestoTopic topicValue = (PrestoTopic)fieldValue;
-            return getExistingTopicFieldValue(context, field, topicValue);
+            return getExistingTopicFieldValue(valueProcessor, context, field, topicValue);
         } else {
             String stringValue = fieldValue.toString();
-            return getExistingStringFieldValue(context, field, stringValue);
+            return getExistingStringFieldValue(valueProcessor, context, field, stringValue);
         }
     }
 
-    protected Value getExistingStringFieldValue(PrestoContext context, PrestoFieldUsage field, String fieldValue) {
+    protected Value getExistingStringFieldValue(ValueProcessor valueProcessor, PrestoContext context, PrestoFieldUsage field, String fieldValue) {
         Value result = new Value();
         result.setValue(fieldValue);
+ 
+        if (valueProcessor != null) {
+            String name = valueProcessor.getName(context, field, fieldValue);
+            if (name != null) {
+                result.setName(name);
+            }
+        }
         if (!context.isReadOnly() && !field.isReadOnly()) {
             result.setRemovable(Boolean.TRUE);
         }
         return result;
     }
 
-    protected Value getExistingTopicFieldValue(PrestoContext context, PrestoFieldUsage field, PrestoTopic value) {
-
+    protected Value getExistingTopicFieldValue(ValueProcessor valueProcessor, PrestoContext context, PrestoFieldUsage field, PrestoTopic value) {
         Value result = new Value();
         result.setValue(value.getId());
-        result.setName(value.getName(field));
+        
+        if (valueProcessor != null) {
+            String name = valueProcessor.getName(context, field, value);
+            if (name != null) {
+                result.setName(name);
+            }
+        } else {
+            String name = value.getName(field);
+            if (name != null) {
+                result.setName(name);
+            }
+        }
+
         result.setType(value.getTypeId());
 
-        if (field.isEmbedded()) { // ISSUE: embed inline topics?
+        if (field.isEmbedded()) {
             PrestoType valueType = getSchemaProvider().getTypeById(value.getTypeId());
             
             PrestoContext subcontext = PrestoContext.create(this, value, valueType, field.getValueView(), context.isReadOnly());
@@ -700,37 +733,56 @@ public abstract class Presto {
     protected Collection<Value> getAllowedFieldValues(PrestoContext context, PrestoFieldUsage field, String query) {
         Collection<? extends Object> availableFieldValues = getAvailableFieldValues(context, field, query);
         
+        ValueProcessor valueProcessor = createValueProcessor(context, field);
+
         Collection<Value> result = new ArrayList<Value>(availableFieldValues.size());
         for (Object value : availableFieldValues) {
-            result.add(getAllowedFieldValue(context, field, value));
+            result.add(getAllowedFieldValue(valueProcessor, context, field, value));
         }
 //        result = processor.postProcessValues(result, context, field, null);
 
         return result;
     }
     
-    protected Value getAllowedFieldValue(PrestoContext context, PrestoFieldUsage field, Object fieldValue) {
+    protected Value getAllowedFieldValue(ValueProcessor valueProcessor, PrestoContext context, PrestoFieldUsage field, Object fieldValue) {
         if (fieldValue instanceof PrestoTopic) {
             PrestoTopic topicValue = (PrestoTopic)fieldValue;
-            return getAllowedTopicFieldValue(context, field, topicValue);
+            return getAllowedTopicFieldValue(valueProcessor, context, field, topicValue);
         } else {
             String stringValue = fieldValue.toString();
-            return getAllowedStringFieldValue(context, field, stringValue);
+            return getAllowedStringFieldValue(valueProcessor, context, field, stringValue);
         }
     }
 
-    protected Value getAllowedStringFieldValue(PrestoContext context, PrestoFieldUsage field, String fieldValue) {
+    protected Value getAllowedStringFieldValue(ValueProcessor valueProcessor, PrestoContext context, PrestoFieldUsage field, String fieldValue) {
         Value result = new Value();
         result.setValue(fieldValue);
-        result.setName(fieldValue);
+        
+        if (valueProcessor != null) {
+            String name = valueProcessor.getName(context, field, fieldValue);
+            if (name != null) {
+                result.setName(name);
+            }
+        }
         return result;
     }
 
-    protected Value getAllowedTopicFieldValue(PrestoContext context, PrestoFieldUsage field, PrestoTopic value) {
-
+    protected Value getAllowedTopicFieldValue(ValueProcessor valueProcessor, PrestoContext context, PrestoFieldUsage field, PrestoTopic value) {
         Value result = new Value();
         result.setValue(value.getId());
-        result.setName(value.getName(field));
+
+        if (valueProcessor != null) {
+            String name = valueProcessor.getName(context, field, value);
+            if (name != null) {
+                result.setName(name);
+            }
+        } else {
+            String name = value.getName(field);
+            if (name != null) {
+                result.setName(name);
+            }
+        }
+
         result.setType(value.getTypeId());
 
         List<Link> links = new ArrayList<Link>();
