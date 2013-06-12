@@ -16,6 +16,8 @@ public class PrestoContext {
     private final boolean isNewTopic;
     private final boolean isReadOnly;
     
+    private PrestoContext parentContext;
+    
     private PrestoContext(Presto session, String topicId, String viewId, boolean readOnly) {
         PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
         PrestoDataProvider dataProvider = session.getDataProvider();
@@ -82,6 +84,20 @@ public class PrestoContext {
         return new PrestoContext(session, topic, type, view, readOnly);
     }
     
+    public static PrestoContext createSubContext(Presto session, PrestoContext parentContext, PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnly) {
+        PrestoContext context = new PrestoContext(session, topic, type, view, readOnly);
+        context.setParentContext(parentContext);
+        return context;
+    }
+    
+    public PrestoContext getParentContext() {
+        return parentContext;
+    }
+    
+    private void setParentContext(PrestoContext parentContext) {
+        this.parentContext = parentContext;
+    }
+
     public boolean isMissingTopic() {
         return topic == null && !isNewTopic;
     }

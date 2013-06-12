@@ -571,7 +571,7 @@ public abstract class Presto {
         ObjectNode extra = getFieldExtraNode(field);
         if (extra != null) {
             JsonNode processorsNode = extra.path("valueProcessors");
-            if (processorsNode != null) {
+            if (!processorsNode.isMissingNode()) {
                 return processor.getProcessor(ValueProcessor.class, processorsNode);
             }
         }
@@ -626,8 +626,7 @@ public abstract class Presto {
         if (field.isEmbedded()) {
             PrestoType valueType = getSchemaProvider().getTypeById(value.getTypeId());
             
-            PrestoContext subcontext = PrestoContext.create(this, value, valueType, field.getValueView(), context.isReadOnly());
-            
+            PrestoContext subcontext = PrestoContext.createSubContext(this, context, value, valueType, field.getValueView(), context.isReadOnly());
             result.setEmbedded(getTopicView(subcontext));
         }
 
@@ -638,6 +637,7 @@ public abstract class Presto {
         List<Link> links = new ArrayList<Link>();
         if (field.isTraversable()) {
             PrestoView fieldsView = field.getValueView();
+//            System.out.println("PC: " + field + " -> " + context.getParentContext());
             links.add(new Link("edit", Links.getTopicEditLink(getBaseUri(), getDatabaseId(), value.getId(), fieldsView.getId(), context.isReadOnly())));
         }
         result.setLinks(links);
