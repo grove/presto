@@ -5,6 +5,7 @@ import java.net.URI;
 import javax.ws.rs.core.UriBuilder;
 
 import net.ontopia.presto.jaxb.Link;
+import net.ontopia.presto.spi.PrestoField;
 
 public class Links {
     
@@ -49,12 +50,46 @@ public class Links {
         return builder.build().toString();
     }
     
+    public static String getTopicInlineEditLink(URI baseUri, String databaseId, PrestoContext parentContext, PrestoField parentField, String topicId, String viewId, boolean readOnly) {
+        String path = getInlineTopicPath(parentField, parentContext);
+        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/topic-inline/").path(databaseId).path(path).path(skull(topicId)).path(viewId);
+        if (readOnly) {
+            builder = builder.queryParam("readOnly", "true");
+        }
+        return builder.build().toString();        
+    }
+    
+    private static String getInlineTopicPath(PrestoField field, PrestoContext context) {
+        String topicId = context.getTopicId();
+        String viewId = context.getView().getId();
+        String fieldId = field.getId();
+        String localPath = skull(topicId) + Presto.FIELD_PATH_SEPARATOR + viewId + Presto.FIELD_PATH_SEPARATOR + fieldId;
+
+        PrestoContext parentContext = context.getParentContext();
+        if (parentContext != null) {
+            PrestoField parentField = parentContext.getParentField();
+            String parentPath =  getInlineTopicPath(parentField, parentContext);
+            return parentPath + Presto.FIELD_PATH_SEPARATOR + localPath;
+        } else {
+            return localPath;
+        }
+    }
+
     public static String getTopicViewHref(URI baseUri, String databaseId, String topicId, String viewId, boolean readOnly) {
         UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/topic-view/").path(databaseId).path(skull(topicId)).path(viewId);
         if (readOnly) {
             builder = builder.queryParam("readOnly", "true");
         }
         return builder.build().toString();
+    }
+    
+    public static String getTopicViewInlineHref(URI baseUri, String databaseId, PrestoContext parentContext, PrestoField parentField, String topicId, String viewId, boolean readOnly) {
+        String path = getInlineTopicPath(parentField, parentContext);
+        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/topic-view-inline/").path(databaseId).path(path).path(skull(topicId)).path(viewId);
+        if (readOnly) {
+            builder = builder.queryParam("readOnly", "true");
+        }
+        return builder.build().toString();        
     }
     
     public static String createNewTopicViewLink(URI baseUri, String databaseId, String typeId, String viewId) {

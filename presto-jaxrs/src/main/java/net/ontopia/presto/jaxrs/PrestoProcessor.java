@@ -184,7 +184,7 @@ public class PrestoProcessor {
                             valueType = schemaProvider.getTypeById(valueTopic.getTypeId());
                         }
                         
-                        PrestoContext subcontext = PrestoContext.createSubContext(presto, context, valueTopic, valueType, valueView, context.isReadOnly());
+                        PrestoContext subcontext = PrestoContext.createSubContext(presto, context, field, valueTopic, valueType, valueView, context.isReadOnly());
                         value.setEmbedded(processTopicView(embeddedTopic, subcontext, processType, status));
                         
                     } else {

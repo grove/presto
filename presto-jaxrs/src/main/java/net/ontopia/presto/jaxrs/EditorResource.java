@@ -290,7 +290,7 @@ public abstract class EditorResource {
         }
         
     }
-
+    
     @GET
     @Produces(APPLICATION_JSON_UTF8)
     @Path("topic/{databaseId}/{topicId}/{viewId}")
@@ -320,7 +320,37 @@ public abstract class EditorResource {
             session.close();      
         }
     }
-    
+
+    @GET
+    @Produces(APPLICATION_JSON_UTF8)
+    @Path("topic-inline/{databaseId}/{path}/{topicId}/{viewId}")
+    public Response getTopicInlineInView(
+            @PathParam("databaseId") final String databaseId, 
+            @PathParam("path") final String path,
+            @PathParam("topicId") final String topicId,
+            @QueryParam("readOnly") final boolean readOnly) throws Exception {
+
+        Presto session = createPresto(databaseId);
+
+        try {
+            PrestoContext context = session.getInlineTopic(path, topicId, readOnly);
+
+            if (context == null || context.isMissingTopic()) {
+                return Response.status(Status.NOT_FOUND).build();
+            }
+            
+            Topic result = session.getTopicAndProcess(context);
+            
+            return Response.ok(result).build();
+
+        } catch (Exception e) {
+            session.abort();
+            throw e;
+        } finally {
+            session.close();      
+        }
+    }
+
     @GET
     @Produces(APPLICATION_JSON_UTF8)
     @Path("topic-view/{databaseId}/{topicId}")
@@ -368,6 +398,36 @@ public abstract class EditorResource {
                 return Response.status(Status.NOT_FOUND).build();
             }
 
+            TopicView result = session.getTopicViewAndProcess(context);
+            
+            return Response.ok(result).build();
+
+        } catch (Exception e) {
+            session.abort();
+            throw e;
+        } finally {
+            session.close();      
+        }
+    }
+
+    @GET
+    @Produces(APPLICATION_JSON_UTF8)
+    @Path("topic-view-inline/{databaseId}/{path}/{topicId}/{viewId}")
+    public Response getTopicViewInlineInView(
+            @PathParam("databaseId") final String databaseId, 
+            @PathParam("path") final String path,
+            @PathParam("topicId") final String topicId,
+            @QueryParam("readOnly") final boolean readOnly) throws Exception {
+
+        Presto session = createPresto(databaseId);
+
+        try {
+            PrestoContext context = session.getInlineTopic(path, topicId, readOnly);
+
+            if (context == null || context.isMissingTopic()) {
+                return Response.status(Status.NOT_FOUND).build();
+            }
+            
             TopicView result = session.getTopicViewAndProcess(context);
             
             return Response.ok(result).build();
