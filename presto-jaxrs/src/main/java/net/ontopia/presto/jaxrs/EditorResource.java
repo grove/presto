@@ -794,17 +794,6 @@ public abstract class EditorResource {
             @PathParam("databaseId") final String databaseId, 
             @PathParam("topicId") final String topicId, 
             @PathParam("viewId") final String viewId,
-            @PathParam("fieldId") final String fieldId) throws Exception {
-        return getAvailableFieldValues(databaseId, topicId, viewId, fieldId, null);
-    }
-
-    @GET
-    @Produces(APPLICATION_JSON_UTF8)
-    @Path("available-field-values-query/{databaseId}/{topicId}/{viewId}/{fieldId}")
-    public Response getAvailableFieldValues( 
-            @PathParam("databaseId") final String databaseId, 
-            @PathParam("topicId") final String topicId, 
-            @PathParam("viewId") final String viewId,
             @PathParam("fieldId") final String fieldId,
             @QueryParam("query") final String query) throws Exception {
 
