@@ -8,11 +8,11 @@ public interface PrestoFieldUsage extends PrestoField {
 
     PrestoView getView();
 
-    PrestoView getValueView();
+    PrestoView getValueView(PrestoType type);
 
-    PrestoView getEditView();
+    PrestoView getEditView(PrestoType type);
 
-    PrestoView getCreateView();
+    PrestoView getCreateView(PrestoType type);
 
     // The types of objects that can be created and used as values of the field. Must be a subset of availableFieldValueTypes.
     Collection<PrestoType> getAvailableFieldCreateTypes();

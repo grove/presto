@@ -90,7 +90,7 @@ public class PrestoProcessor {
         for (TopicView topicView : views) {
             String viewId = topicView.getId();
             PrestoView specificView = type.getViewById(viewId);
-            PrestoContext subcontext = PrestoContext.create(presto, topic, type, specificView, context.isReadOnly());
+            PrestoContext subcontext = PrestoContext.create(topic, type, specificView, context.isReadOnly());
             
             TopicView newView = processTopicView(topicView, subcontext, processType, status);
             if (newView != null) {
@@ -160,8 +160,6 @@ public class PrestoProcessor {
         
         if (field.isEmbedded()) { 
 
-            PrestoView valueView = field.getValueView();
-
             Collection<Value> values = fieldData.getValues();
             if (values != null) {
                 for (Value value : values) {
@@ -183,8 +181,10 @@ public class PrestoProcessor {
                             }
                             valueType = schemaProvider.getTypeById(valueTopic.getTypeId());
                         }
-                        
-                        PrestoContext subcontext = PrestoContext.createSubContext(presto, context, field, valueTopic, valueType, valueView, context.isReadOnly());
+
+                        PrestoView valueView = field.getValueView(valueType);
+
+                        PrestoContext subcontext = PrestoContext.createSubContext(context, field, valueTopic, valueType, valueView, context.isReadOnly());
                         value.setEmbedded(processTopicView(embeddedTopic, subcontext, processType, status));
                         
                     } else {

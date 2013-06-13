@@ -19,14 +19,14 @@ public class ValueFieldsPostProcessor extends FieldDataProcessor {
     @Override
     public FieldData processFieldData(FieldData fieldData, PrestoContext context, PrestoFieldUsage field) {
         
-        // NOTE: use first value type
+        // ISSUE: using first value type for now
         Collection<PrestoType> availableFieldValueTypes = field.getAvailableFieldValueTypes();
         if (availableFieldValueTypes.isEmpty()) {
             throw new RuntimeException("No availableFieldValueTypes for field '" + field.getId() + "'");
         }
         PrestoType type = availableFieldValueTypes.iterator().next();
         
-        List<PrestoFieldUsage> fields = type.getFields(field.getValueView());
+        List<PrestoFieldUsage> fields = type.getFields(field.getValueView(type));
 
         // assign column value fields
         List<FieldData> valueFields = new ArrayList<FieldData>();

@@ -33,6 +33,7 @@ import net.ontopia.presto.jaxb.Link;
 import net.ontopia.presto.jaxb.RootInfo;
 import net.ontopia.presto.jaxb.Topic;
 import net.ontopia.presto.jaxb.TopicView;
+import net.ontopia.presto.jaxrs.Presto.PrestoContextField;
 import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoChanges;
 import net.ontopia.presto.spi.PrestoDataProvider;
@@ -137,7 +138,7 @@ public abstract class EditorResource {
             }
 
             boolean readOnly = false;
-            PrestoContext context = PrestoContext.create(session, type, type.getDefaultView(), readOnly);
+            PrestoContext context = PrestoContext.create(type, type.getCreateView(), readOnly);
 
             TopicView result = session.getNewTopicView(context);
             return Response.ok(result).build();
@@ -152,29 +153,27 @@ public abstract class EditorResource {
 
     @GET
     @Produces(APPLICATION_JSON_UTF8)
-    @Path("create-field-instance/{databaseId}/{parentTopicId}/{parentViewId}/{parentFieldId}/{playerTypeId}")
+    @Path("create-field-instance/{databaseId}/{path}/{typeId}")
     public Response createFieldInstance(
             @PathParam("databaseId") final String databaseId,
-            @PathParam("parentTopicId") final String parentTopicId,
-            @PathParam("parentViewId") final String parentViewId,
-            @PathParam("parentFieldId") final String parentFieldId, 
-            @PathParam("playerTypeId") final String playerTypeId) throws Exception {
+            @PathParam("path") final String path,
+            @PathParam("typeId") final String typeId) throws Exception {
 
         Presto session = createPresto(databaseId);
 
         try {
             PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
 
-            PrestoType type = schemaProvider.getTypeById(playerTypeId);
+            PrestoType type = schemaProvider.getTypeById(typeId);
             if (type == null) {
                 return Response.status(Status.NOT_FOUND).build();
             }
 
             boolean readOnly = false;
-            PrestoContext childContext = PrestoContext.create(session, type, type.getDefaultView(), readOnly);
-            PrestoContext parentContext = PrestoContext.create(session, parentTopicId, parentViewId, readOnly);
+            
+            PrestoContextField contextField = session.getContextField(path, readOnly);
 
-            TopicView result = session.getNewTopicView(childContext, parentContext, parentFieldId);
+            TopicView result = session.getNewTopicView(contextField.getContext(), contextField.getField(), type);
             return Response.ok(result).build();
 
         } catch (Exception e) {
@@ -226,7 +225,7 @@ public abstract class EditorResource {
     @DELETE
     @Produces(APPLICATION_JSON_UTF8)
     @Path("topic-view/{databaseId}/{topicId}/{viewId}")
-    public Response deleteTopic(
+    public Response deleteTopicView(
             @PathParam("databaseId") final String databaseId, 
             @PathParam("topicId") final String topicId,
             @PathParam("viewId") final String viewId) throws Exception {
@@ -265,7 +264,7 @@ public abstract class EditorResource {
     @DELETE
     @Produces(APPLICATION_JSON_UTF8)
     @Path("topic-view-inline/{databaseId}/{path}/{topicId}/{viewId}")
-    public Response deleteTopicInline(
+    public Response deleteTopicViewInline(
             @PathParam("databaseId") final String databaseId, 
             @PathParam("path") final String path,
             @PathParam("topicId") final String topicId,
@@ -275,7 +274,7 @@ public abstract class EditorResource {
 
         try {
             boolean readOnly = false;
-            PrestoContext context = session.getInlineTopic(path, topicId, readOnly);
+            PrestoContext context = session.getInlineTopic(path, topicId, viewId, readOnly);
 
             if (context == null || context.isMissingTopic()) {
                 // 404
@@ -374,12 +373,13 @@ public abstract class EditorResource {
             @PathParam("databaseId") final String databaseId, 
             @PathParam("path") final String path,
             @PathParam("topicId") final String topicId,
+            @PathParam("viewId") final String viewId,
             @QueryParam("readOnly") final boolean readOnly) throws Exception {
 
         Presto session = createPresto(databaseId);
 
         try {
-            PrestoContext context = session.getInlineTopic(path, topicId, readOnly);
+            PrestoContext context = session.getInlineTopic(path, topicId, viewId, readOnly);
 
             if (context == null || context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -463,12 +463,13 @@ public abstract class EditorResource {
             @PathParam("databaseId") final String databaseId, 
             @PathParam("path") final String path,
             @PathParam("topicId") final String topicId,
+            @PathParam("viewId") final String viewId,
             @QueryParam("readOnly") final boolean readOnly) throws Exception {
 
         Presto session = createPresto(databaseId);
 
         try {
-            PrestoContext context = session.getInlineTopic(path, topicId, readOnly);
+            PrestoContext context = session.getInlineTopic(path, topicId, viewId, readOnly);
 
             if (context == null || context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -644,25 +645,26 @@ public abstract class EditorResource {
 
         try {
             boolean readOnly = false;
-            PrestoContext context = session.getInlineTopic(path, topicId, readOnly);
+            PrestoContext context = session.getInlineTopic(path, topicId, viewId, readOnly);
 
             if (context == null || context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
             }
 
-            TopicView result = session.updateTopicInline(context, topicView);
+            boolean returnParent = true;
+            TopicView result = session.updateTopicInline(context, topicView, returnParent);
             session.commit();
 
-            if (context.isNewTopic()) {
-                // return Topic if new, otherwise TopicView
-                String newTopicId = result.getTopicId();
-                if (newTopicId == null) {
-                    // WARN: probably means that the topic was not valid
-                    return Response.ok(result).build();
-                } else {
-                    return getTopicInDefaultView(databaseId, newTopicId, readOnly);
-                }
-            }
+//            if (context.isNewTopic()) {
+//                // return Topic if new, otherwise TopicView
+//                String newTopicId = result.getTopicId();
+//                if (newTopicId == null) {
+//                    // WARN: probably means that the topic was not valid
+//                    return Response.ok(result).build();
+//                } else {
+//                    return getTopicInDefaultView(databaseId, newTopicId, readOnly);
+//                }
+//            }
             return Response.ok(result).build();
             
         } catch (Exception e) {

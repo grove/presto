@@ -85,16 +85,28 @@ public class PojoField implements PrestoField {
         return dataType != null && dataType.equals("reference");
     }
 
-    public PrestoView getValueView() {
-        return valueView;
+    public PrestoView getValueView(PrestoType type) {
+        if (valueView != null) {
+            return valueView;
+        } else {
+            return type.getDefaultView();
+        }
     }
 
-    public PrestoView getEditView() {
-        return editView;
+    public PrestoView getEditView(PrestoType type) {
+        if (editView != null) {
+            return editView;
+        } else {
+            return type.getDefaultView();
+        }
     }
 
-    public PrestoView getCreateView() {
-        return createView;
+    public PrestoView getCreateView(PrestoType type) {
+        if (createView != null) {
+            return createView;
+        } else {
+            return type.getCreateView();
+        }
     }
 
     @Override
