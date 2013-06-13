@@ -261,6 +261,51 @@ public abstract class EditorResource {
             session.close();      
         }
     }
+
+    @DELETE
+    @Produces(APPLICATION_JSON_UTF8)
+    @Path("topic-view-inline/{databaseId}/{path}/{topicId}/{viewId}")
+    public Response deleteTopicInline(
+            @PathParam("databaseId") final String databaseId, 
+            @PathParam("path") final String path,
+            @PathParam("topicId") final String topicId,
+            @PathParam("viewId") final String viewId) throws Exception {
+
+        Presto session = createPresto(databaseId);
+
+        try {
+            boolean readOnly = false;
+            PrestoContext context = session.getInlineTopic(path, topicId, readOnly);
+
+            if (context == null || context.isMissingTopic()) {
+                // 404
+                return Response.status(Status.NOT_FOUND).build();        
+            } else {
+                PrestoType type = context.getType();
+                if (type.isRemovable()) {
+                    PrestoTopic topic = context.getTopic();
+                    PrestoContext parentContext = context.getParentContext();
+                    PrestoFieldUsage parentField = context.getParentField();
+                    PrestoTopic parentTopicAfterSave = session.removeFieldValues(parentContext, parentField, Collections.singletonList(topic));
+
+                    FieldData fieldData = session.getFieldData(parentTopicAfterSave, parentField, readOnly);
+                    return Response.ok(fieldData).build();
+
+//                    // 204
+//                    return Response.noContent().build();
+                } else {
+                    // 403
+                    return Response.status(Status.FORBIDDEN).build();
+                }
+            }
+
+        } catch (Exception e) {
+            session.abort();
+            throw e;
+        } finally {
+            session.close();      
+        }
+    }
     
     @GET
     @Produces(APPLICATION_JSON_UTF8)
@@ -491,6 +536,8 @@ public abstract class EditorResource {
             @PathParam("parentViewId") final String parentViewId, 
             @PathParam("parentFieldId") final String parentFieldId, TopicView topicView) throws Exception {
 
+        // TODO: replace this method with updateTopicViewInline :)
+        
         Presto session = createPresto(databaseId);
 
         try {
@@ -511,7 +558,7 @@ public abstract class EditorResource {
             if (context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
             }
-
+                    
             TopicView result = session.updateTopic(context, topicView);
             session.commit();
 
@@ -529,7 +576,7 @@ public abstract class EditorResource {
                 
             } else {
                 // update parent field and return it
-                FieldData fieldData = session.createFieldDataForParent(parentContext, parentFieldId, session, readOnly, context, result);
+                FieldData fieldData = session.createFieldDataForParent(parentContext, parentFieldId, readOnly, context, result);
                 return addFieldValues(databaseId, parentTopicId, parentViewId, parentFieldId, fieldData);
             }            
         } catch (Exception e) {
@@ -561,6 +608,49 @@ public abstract class EditorResource {
             }
 
             TopicView result = session.updateTopic(context, topicView);
+            session.commit();
+
+            if (context.isNewTopic()) {
+                // return Topic if new, otherwise TopicView
+                String newTopicId = result.getTopicId();
+                if (newTopicId == null) {
+                    // WARN: probably means that the topic was not valid
+                    return Response.ok(result).build();
+                } else {
+                    return getTopicInDefaultView(databaseId, newTopicId, readOnly);
+                }
+            }
+            return Response.ok(result).build();
+            
+        } catch (Exception e) {
+            session.abort();
+            throw e;
+        } finally {
+            session.close();
+        }
+    }
+    
+    @PUT
+    @Produces(APPLICATION_JSON_UTF8)
+    @Consumes(APPLICATION_JSON_UTF8)
+    @Path("topic-view-inline/{databaseId}/{path}/{topicId}/{viewId}")
+    public Response updateTopicViewInline(
+            @PathParam("databaseId") final String databaseId, 
+            @PathParam("path") final String path, 
+            @PathParam("topicId") final String topicId, 
+            @PathParam("viewId") final String viewId, TopicView topicView) throws Exception {
+
+        Presto session = createPresto(databaseId);
+
+        try {
+            boolean readOnly = false;
+            PrestoContext context = session.getInlineTopic(path, topicId, readOnly);
+
+            if (context == null || context.isMissingTopic()) {
+                return Response.status(Status.NOT_FOUND).build();
+            }
+
+            TopicView result = session.updateTopicInline(context, topicView);
             session.commit();
 
             if (context.isNewTopic()) {

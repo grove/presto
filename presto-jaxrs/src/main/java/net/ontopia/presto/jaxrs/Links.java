@@ -96,6 +96,12 @@ public class Links {
         UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/topic-view/").path(databaseId).path("_" + typeId).path(viewId);
         return builder.build().toString();
     }
+    
+    public static String createNewTopicViewInlineLink(URI baseUri, String databaseId, PrestoContext parentContext, PrestoField parentField, String typeId, String viewId) {
+        String path = getInlineTopicPath(parentField, parentContext);
+        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/topic-view-inline/").path(databaseId).path(path).path("_" + typeId).path(viewId);
+        return builder.build().toString();
+    }
 
     public static String createNewTopicViewLinkParent(URI baseUri, String databaseId, String typeId, String viewId, String parentTopicId, String parentViewId, String parentFieldId) {
         UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/topic-view-parent/").path(databaseId).path("_" + typeId).path(viewId).path(parentTopicId).path(parentViewId).path(parentFieldId);

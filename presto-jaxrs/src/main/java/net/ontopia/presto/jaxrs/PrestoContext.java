@@ -1,7 +1,6 @@
 package net.ontopia.presto.jaxrs;
 
 import net.ontopia.presto.spi.PrestoDataProvider;
-import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
@@ -20,7 +19,7 @@ public class PrestoContext {
     private final boolean isReadOnly;
     
     private PrestoContext parentContext;
-    private PrestoField parentField;
+    private PrestoFieldUsage parentField;
     
     private PrestoContext(Presto session, String topicId, String viewId, boolean readOnly) {
         PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
@@ -90,7 +89,7 @@ public class PrestoContext {
         return new PrestoContext(session, topic, type, view, readOnly);
     }
     
-    public static PrestoContext createSubContext(Presto session, PrestoContext parentContext, PrestoField parentField, PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnly) {
+    public static PrestoContext createSubContext(Presto session, PrestoContext parentContext, PrestoFieldUsage parentField, PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnly) {
         PrestoContext context = new PrestoContext(session, topic, type, view, readOnly);
         context.setParentContext(parentContext, parentField);
         return context;
@@ -106,11 +105,11 @@ public class PrestoContext {
         return parentContext;
     }
     
-    public PrestoField getParentField() {
+    public PrestoFieldUsage getParentField() {
         return parentField;
     }
     
-    private void setParentContext(PrestoContext parentContext, PrestoField parentField) {
+    private void setParentContext(PrestoContext parentContext, PrestoFieldUsage parentField) {
         this.parentContext = parentContext;
         this.parentField = parentField;
     }
