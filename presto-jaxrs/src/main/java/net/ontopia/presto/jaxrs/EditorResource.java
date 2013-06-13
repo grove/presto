@@ -43,6 +43,7 @@ import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
+import net.ontopia.presto.spi.PrestoView;
 
 @Path("/editor")
 public abstract class EditorResource {
@@ -494,7 +495,18 @@ public abstract class EditorResource {
 
         try {
             boolean readOnly = false;
-            PrestoContext context = PrestoContext.create(session, Links.deskull(topicId), viewId, readOnly);
+            PrestoContext parentContext = PrestoContext.create(session, Links.deskull(parentTopicId), parentViewId, readOnly);
+
+            PrestoDataProvider dataProvider = session.getDataProvider();
+            PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
+            PrestoTopic parentTopic = dataProvider.getTopicById(parentTopicId);
+            String parentTypeId = parentTopic.getTypeId();
+            PrestoType parentType = schemaProvider.getTypeById(parentTypeId);
+            PrestoView parentView = parentType.getViewById(parentViewId);
+            PrestoFieldUsage parentField = parentType.getFieldById(parentFieldId, parentView);
+            
+            PrestoContext context = PrestoContext.createSubContext(session, parentContext, parentField, topicId, viewId, readOnly);
+//                    (session, Links.deskull(topicId), viewId, readOnly);
 
             if (context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -511,7 +523,6 @@ public abstract class EditorResource {
                     return Response.ok(result).build();
                 }
             }
-            PrestoContext parentContext = PrestoContext.create(session, Links.deskull(parentTopicId), parentViewId, readOnly);
             if (parentContext.isNewTopic()) {
                 // NOTE: if parent does not exist yet then we have to return the created topic-view
                 return Response.ok(result).build();

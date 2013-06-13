@@ -982,7 +982,10 @@ public abstract class Presto {
 
         if (status.isValid()) {
             PrestoTopic result = updatePrestoTopic(context, topicView);
-            PrestoContext newContext = PrestoContext.create(this, result, context.getType(), context.getView(), context.isReadOnly());
+//            PrestoContext newContext = PrestoContext.create(this, result, context.getType(), context.getView(), context.isReadOnly());
+            PrestoContext parentContext = context.getParentContext();
+            PrestoField parentField = context.getParentField();
+            PrestoContext newContext = PrestoContext.createSubContext(this, parentContext, parentField, result, context.getType(), context.getView(), context.isReadOnly());
             TopicView newTopicView = getTopicView(newContext, topicView);
             return processor.postProcessTopicView(newTopicView, context, null);
                 

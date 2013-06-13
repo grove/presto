@@ -96,6 +96,12 @@ public class PrestoContext {
         return context;
     }
     
+    public static PrestoContext createSubContext(Presto session, PrestoContext parentContext, PrestoField parentField, String topicId, String viewId, boolean readOnly) {
+        PrestoContext context = new PrestoContext(session, topicId, viewId, readOnly);
+        context.setParentContext(parentContext, parentField);
+        return context;
+    }
+    
     public PrestoContext getParentContext() {
         return parentContext;
     }
