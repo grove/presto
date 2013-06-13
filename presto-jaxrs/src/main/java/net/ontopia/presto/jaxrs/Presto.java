@@ -599,7 +599,6 @@ public abstract class Presto {
         }
         return null;
     }
-    
 
     protected Value getExistingFieldValue(ValueProcessor valueProcessor, PrestoContext context, PrestoFieldUsage field, Object fieldValue) {
         if (fieldValue instanceof PrestoTopic) {

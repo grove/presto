@@ -6,7 +6,7 @@ import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.utils.PrestoTopicFieldVariableResolver;
 
-public class PatternValueNameProcessor extends ValueProcessor {
+public class ValueNamePatternProcessor extends ValueProcessor {
 
     @Override
     public String getName(PrestoContext context, PrestoFieldUsage field, String value) {
