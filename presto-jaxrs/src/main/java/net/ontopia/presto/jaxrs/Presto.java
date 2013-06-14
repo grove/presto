@@ -1036,26 +1036,26 @@ public abstract class Presto {
         return processor.postProcessTopicView(topicView, context, null);
     }
 
-    public TopicView updateTopic(PrestoContext context, TopicView topicView) {
-        Status status = new Status();
-        
-        topicView = processor.preProcessTopicView(topicView, context, status);
-
-        if (status.isValid()) {
-            PrestoTopic result = updatePrestoTopic(context, topicView);
-//            PrestoContext newContext = PrestoContext.create(this, result, context.getType(), context.getView(), context.isReadOnly());
-            PrestoContext parentContext = context.getParentContext();
-            PrestoFieldUsage parentField = context.getParentField();
-            PrestoContext newContext = PrestoContext.createSubContext(parentContext, parentField, result, context.getType(), context.getView(), context.isReadOnly());
-            TopicView newTopicView = getTopicView(newContext, topicView);
-            return processor.postProcessTopicView(newTopicView, context, null);
-                
-        } else {
-            return processor.postProcessTopicView(topicView, context, null);
-        }
-    }
+//    public TopicView updateTopic(PrestoContext context, TopicView topicView) {
+//        Status status = new Status();
+//        
+//        topicView = processor.preProcessTopicView(topicView, context, status);
+//
+//        if (status.isValid()) {
+//            PrestoTopic result = updatePrestoTopic(context, topicView);
+//
+//            PrestoContext parentContext = context.getParentContext();
+//            PrestoFieldUsage parentField = context.getParentField();
+//            PrestoContext newContext = PrestoContext.createSubContext(parentContext, parentField, result, context.getType(), context.getView(), context.isReadOnly());
+//            TopicView newTopicView = getTopicView(newContext, topicView);
+//            return processor.postProcessTopicView(newTopicView, context, null);
+//                
+//        } else {
+//            return processor.postProcessTopicView(topicView, context, null);
+//        }
+//    }
     
-    public TopicView updateTopicInline(PrestoContext context, TopicView topicView, boolean returnParent) {
+    public TopicView updateTopic(PrestoContext context, TopicView topicView, boolean returnParent) {
         Status status = new Status();
         
         topicView = processor.preProcessTopicView(topicView, context, status);
@@ -1067,15 +1067,13 @@ public abstract class Presto {
             // update inline topic in field of parent
             PrestoContext parentContext = context.getParentContext();
             PrestoFieldUsage parentField = context.getParentField();
-            
-            PrestoTopic updatedParent = updateFieldValues(parentContext, parentField, Collections.singletonList(result));
-            
             PrestoContext newContext;
-            if (returnParent) {
+            if (parentContext != null && returnParent) {
+                PrestoTopic updatedParent = updateFieldValues(parentContext, parentField, Collections.singletonList(result));
                 newContext = PrestoContext.newContext(parentContext, updatedParent);
             } else {            
                 newContext = PrestoContext.createSubContext(parentContext, parentField, result, context.getType(), context.getView(), context.isReadOnly());
-            }                
+            }
             TopicView newTopicView = getTopicView(newContext, topicView);
             return processor.postProcessTopicView(newTopicView, newContext, null);
         } else {
