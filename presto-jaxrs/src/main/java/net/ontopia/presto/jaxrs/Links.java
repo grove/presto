@@ -51,7 +51,7 @@ public class Links {
     }
     
     public static String getTopicInlineEditLink(URI baseUri, String databaseId, PrestoContext parentContext, PrestoField parentField, String topicId, String viewId, boolean readOnly) {
-        String path = getInlineTopicPath(parentField, parentContext);
+        String path = getInlineTopicPath(parentContext, parentField);
         UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/topic-inline/").path(databaseId).path(path).path(skull(topicId)).path(viewId);
         if (readOnly) {
             builder = builder.queryParam("readOnly", "true");
@@ -59,7 +59,7 @@ public class Links {
         return builder.build().toString();        
     }
     
-    private static String getInlineTopicPath(PrestoField field, PrestoContext context) {
+    private static String getInlineTopicPath(PrestoContext context, PrestoField field) {
         String topicId = context.getTopicId();
         String viewId = context.getView().getId();
         String fieldId = field.getId();
@@ -68,7 +68,7 @@ public class Links {
         PrestoContext parentContext = context.getParentContext();
         if (parentContext != null) {
             PrestoField parentField = parentContext.getParentField();
-            String parentPath =  getInlineTopicPath(parentField, parentContext);
+            String parentPath =  getInlineTopicPath(parentContext, parentField);
             return parentPath + Presto.FIELD_PATH_SEPARATOR + localPath;
         } else {
             return localPath;
@@ -84,7 +84,7 @@ public class Links {
     }
     
     public static String getTopicViewInlineHref(URI baseUri, String databaseId, PrestoContext parentContext, PrestoField parentField, String topicId, String viewId, boolean readOnly) {
-        String path = getInlineTopicPath(parentField, parentContext);
+        String path = getInlineTopicPath(parentContext, parentField);
         UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/topic-view-inline/").path(databaseId).path(path).path(skull(topicId)).path(viewId);
         if (readOnly) {
             builder = builder.queryParam("readOnly", "true");
@@ -98,13 +98,8 @@ public class Links {
     }
     
     public static String createNewTopicViewInlineLink(URI baseUri, String databaseId, PrestoContext parentContext, PrestoField parentField, String typeId, String viewId) {
-        String path = getInlineTopicPath(parentField, parentContext);
+        String path = getInlineTopicPath(parentContext, parentField);
         UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/topic-view-inline/").path(databaseId).path(path).path("_" + typeId).path(viewId);
-        return builder.build().toString();
-    }
-
-    public static String createNewTopicViewLinkParent(URI baseUri, String databaseId, String typeId, String viewId, String parentTopicId, String parentViewId, String parentFieldId) {
-        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/topic-view-parent/").path(databaseId).path("_" + typeId).path(viewId).path(parentTopicId).path(parentViewId).path(parentFieldId);
         return builder.build().toString();
     }
 
@@ -113,13 +108,8 @@ public class Links {
         return builder.build().toString();
     }
 
-//    public static String createFieldInstanceLink(URI baseUri, String databaseId, String topicId, String parentViewId, String fieldId, String typeId) {
-//        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/create-field-instance/").path(databaseId).path(skull(topicId)).path(parentViewId).path(fieldId).path(typeId);
-//        return builder.build().toString();
-//    }
-
     public static String createFieldInstanceLink(URI baseUri, String databaseId, PrestoContext parentContext, PrestoField parentField, String typeId) {
-        String path = getInlineTopicPath(parentField, parentContext);
+        String path = getInlineTopicPath(parentContext, parentField);
         UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/create-field-instance/").path(databaseId).path(path).path(typeId);
         return builder.build().toString();
     }
@@ -146,6 +136,16 @@ public class Links {
 
     public static String pagingLink(URI baseUri, String databaseId, String topicId, String parentViewId, String fieldId) {
         UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/paging-field/").path(databaseId).path(skull(topicId)).path(parentViewId).path(fieldId).path("{start}").path("{limit}");
+        return builder.build().toString();
+    }
+
+    public static String availableFieldValuesInline(URI baseUri, String databaseId, PrestoContext parentContext, PrestoField parentField, String topicId, String parentViewId, String fieldId, boolean query) {
+        String path = getInlineTopicPath(parentContext, parentField);
+        UriBuilder builder = UriBuilder.fromUri(baseUri);
+        builder = builder.path("editor/available-field-values-inline/").path(databaseId).path(path).path(skull(topicId)).path(parentViewId).path(fieldId);
+        if (query) {
+            builder = builder.queryParam("query", "{query}");
+        }
         return builder.build().toString();
     }
 

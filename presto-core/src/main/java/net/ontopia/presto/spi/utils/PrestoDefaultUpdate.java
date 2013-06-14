@@ -153,7 +153,7 @@ public class PrestoDefaultUpdate implements PrestoUpdate, PrestoDefaultChangeSet
                     PrestoTopic rtopic = (PrestoTopic)value;
                     PrestoType rtype = getSchemaProvider().getTypeById(rtopic.getTypeId());
                     if (rtype.isRemovableCascadingDelete()) {
-                        changeSet.deleteTopic(rtopic, rtype);
+                        changeSet.deleteTopic(rtopic, rtype, field);
                     }
                 }
             } else {

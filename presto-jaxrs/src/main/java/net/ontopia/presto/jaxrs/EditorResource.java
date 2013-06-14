@@ -44,7 +44,6 @@ import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
-import net.ontopia.presto.spi.PrestoView;
 
 @Path("/editor")
 public abstract class EditorResource {
@@ -274,19 +273,20 @@ public abstract class EditorResource {
 
         try {
             boolean readOnly = false;
-            PrestoContext context = session.getInlineTopic(path, topicId, viewId, readOnly);
+            PrestoContext context = session.getNestedTopic(path, topicId, viewId, readOnly);
 
             if (context == null || context.isMissingTopic()) {
-                // 404
                 return Response.status(Status.NOT_FOUND).build();        
             } else {
                 PrestoType type = context.getType();
                 if (type.isRemovable()) {
+
                     PrestoTopic topic = context.getTopic();
                     PrestoContext parentContext = context.getParentContext();
                     PrestoFieldUsage parentField = context.getParentField();
                     PrestoTopic parentTopicAfterSave = session.removeFieldValues(parentContext, parentField, Collections.singletonList(topic));
 
+                    // return field data of parent field
                     FieldData fieldData = session.getFieldData(parentTopicAfterSave, parentField, readOnly);
                     return Response.ok(fieldData).build();
 
@@ -379,7 +379,7 @@ public abstract class EditorResource {
         Presto session = createPresto(databaseId);
 
         try {
-            PrestoContext context = session.getInlineTopic(path, topicId, viewId, readOnly);
+            PrestoContext context = session.getNestedTopic(path, topicId, viewId, readOnly);
 
             if (context == null || context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -469,7 +469,7 @@ public abstract class EditorResource {
         Presto session = createPresto(databaseId);
 
         try {
-            PrestoContext context = session.getInlineTopic(path, topicId, viewId, readOnly);
+            PrestoContext context = session.getNestedTopic(path, topicId, viewId, readOnly);
 
             if (context == null || context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -523,70 +523,6 @@ public abstract class EditorResource {
         } finally {
             session.close();
         }
-    }
-
-    @PUT
-    @Produces(APPLICATION_JSON_UTF8)
-    @Consumes(APPLICATION_JSON_UTF8)
-    @Path("topic-view-parent/{databaseId}/{topicId}/{viewId}/{parentTopicId}/{parentViewId}/{parentFieldId}")
-    public Response updateTopicViewParent(
-            @PathParam("databaseId") final String databaseId, 
-            @PathParam("topicId") final String topicId, 
-            @PathParam("viewId") final String viewId, 
-            @PathParam("parentTopicId") final String parentTopicId, 
-            @PathParam("parentViewId") final String parentViewId, 
-            @PathParam("parentFieldId") final String parentFieldId, TopicView topicView) throws Exception {
-
-        // TODO: replace this method with updateTopicViewInline :)
-        
-        Presto session = createPresto(databaseId);
-
-        try {
-            boolean readOnly = false;
-            PrestoContext parentContext = PrestoContext.create(session, Links.deskull(parentTopicId), parentViewId, readOnly);
-
-            PrestoDataProvider dataProvider = session.getDataProvider();
-            PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
-            PrestoTopic parentTopic = dataProvider.getTopicById(parentTopicId);
-            String parentTypeId = parentTopic.getTypeId();
-            PrestoType parentType = schemaProvider.getTypeById(parentTypeId);
-            PrestoView parentView = parentType.getViewById(parentViewId);
-            PrestoFieldUsage parentField = parentType.getFieldById(parentFieldId, parentView);
-            
-            PrestoContext context = PrestoContext.createSubContext(session, parentContext, parentField, topicId, viewId, readOnly);
-//                    (session, Links.deskull(topicId), viewId, readOnly);
-
-            if (context.isMissingTopic()) {
-                return Response.status(Status.NOT_FOUND).build();
-            }
-                    
-            TopicView result = session.updateTopic(context, topicView);
-            session.commit();
-
-            if (context.isNewTopic()) {
-                // return Topic if new, otherwise TopicView
-                String newTopicId = result.getTopicId();
-                if (newTopicId == null) {
-                    // WARN: probably means that the topic was not valid
-                    return Response.ok(result).build();
-                }
-            }
-            if (parentContext.isNewTopic()) {
-                // NOTE: if parent does not exist yet then we have to return the created topic-view
-                return Response.ok(result).build();
-                
-            } else {
-                // update parent field and return it
-                FieldData fieldData = session.createFieldDataForParent(parentContext, parentFieldId, readOnly, context, result);
-                return addFieldValues(databaseId, parentTopicId, parentViewId, parentFieldId, fieldData);
-            }            
-        } catch (Exception e) {
-            session.abort();
-            throw e;
-        } finally {
-            session.close();
-        }
-        
     }
     
     @PUT
@@ -645,7 +581,7 @@ public abstract class EditorResource {
 
         try {
             boolean readOnly = false;
-            PrestoContext context = session.getInlineTopic(path, topicId, viewId, readOnly);
+            PrestoContext context = session.getNestedTopic(path, topicId, viewId, readOnly);
 
             if (context == null || context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -804,6 +740,40 @@ public abstract class EditorResource {
             PrestoContext context = PrestoContext.create(session, Links.deskull(topicId), viewId, readOnly);
 
             if (context.isMissingTopic()) {
+                return Response.status(Status.NOT_FOUND).build();
+            }
+
+            PrestoFieldUsage field = context.getFieldById(fieldId);
+            
+            AvailableFieldValues result = session.getAvailableFieldValuesInfo(context, field, query);
+            return Response.ok(result).build();
+            
+        } catch (Exception e) {
+            session.abort();
+            throw e;
+        } finally {
+            session.close();      
+        }
+    }
+
+    @GET
+    @Produces(APPLICATION_JSON_UTF8)
+    @Path("available-field-values-inline/{databaseId}/{path}/{topicId}/{viewId}/{fieldId}")
+    public Response getAvailableFieldValuesInline( 
+            @PathParam("databaseId") final String databaseId, 
+            @PathParam("path") final String path, 
+            @PathParam("topicId") final String topicId, 
+            @PathParam("viewId") final String viewId,
+            @PathParam("fieldId") final String fieldId,
+            @QueryParam("query") final String query) throws Exception {
+
+        Presto session = createPresto(databaseId);
+
+        try {
+            boolean readOnly = false;
+            PrestoContext context = session.getNestedTopic(path, topicId, viewId, readOnly);
+
+            if (context == null || context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
             }
 
