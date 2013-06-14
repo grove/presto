@@ -423,6 +423,9 @@ public abstract class Presto {
             fieldData.setReadOnly(Boolean.TRUE);
         }
 
+        PrestoContext parentContext = context.getParentContext();
+        PrestoFieldUsage parentField = context.getParentField();
+
         Collection<Link> fieldLinks = new LinkedHashSet<Link>();      
         if (field.isReferenceField()) {
             fieldData.setDatatype("reference");
@@ -435,18 +438,18 @@ public abstract class Presto {
 
                 if (allowAdd || allowCreate) {
                     if (!isNewTopic) {
-                        fieldLinks.add(new Link("add-field-values", Links.addFieldValuesLink(getBaseUri(), databaseId, topicId, parentViewId, fieldId, false)));
+                        fieldLinks.add(new Link("add-field-values", Links.addFieldValuesLink(getBaseUri(), databaseId, parentContext, parentField, topicId, parentViewId, fieldId, false)));
                         if (!field.isSorted()) {
-                            fieldLinks.add(new Link("add-field-values-at-index", Links.addFieldValuesLink(getBaseUri(), databaseId, topicId, parentViewId, fieldId, true)));
+                            fieldLinks.add(new Link("add-field-values-at-index", Links.addFieldValuesLink(getBaseUri(), databaseId, parentContext, parentField, topicId, parentViewId, fieldId, true)));
                         }
                     }
                 }
                 if (allowRemove && !isNewTopic) {
-                    fieldLinks.add(new Link("remove-field-values", Links.removeFieldValuesLink(getBaseUri(), databaseId, topicId, parentViewId, fieldId)));
+                    fieldLinks.add(new Link("remove-field-values", Links.removeFieldValuesLink(getBaseUri(), databaseId, parentContext, parentField, topicId, parentViewId, fieldId)));
                 }      
 
                 if (allowMove && !isNewTopic) {
-                    fieldLinks.add(new Link("move-field-values-to-index", Links.moveFieldValuesToIndex(getBaseUri(), databaseId, topicId, parentViewId, fieldId)));
+                    fieldLinks.add(new Link("move-field-values-to-index", Links.moveFieldValuesToIndex(getBaseUri(), databaseId, parentContext, parentField, topicId, parentViewId, fieldId)));
                 }
             }
         } else {
@@ -456,11 +459,11 @@ public abstract class Presto {
             }
             if (!isReadOnly) {
                 if (!isNewTopic) {
-                    fieldLinks.add(new Link("add-field-values", Links.addFieldValuesLink(getBaseUri(), databaseId, topicId, parentViewId, fieldId, false)));
-                    fieldLinks.add(new Link("remove-field-values", Links.removeFieldValuesLink(getBaseUri(), databaseId, topicId, parentViewId, fieldId)));
+                    fieldLinks.add(new Link("add-field-values", Links.addFieldValuesLink(getBaseUri(), databaseId, parentContext, parentField, topicId, parentViewId, fieldId, false)));
+                    fieldLinks.add(new Link("remove-field-values", Links.removeFieldValuesLink(getBaseUri(), databaseId, parentContext, parentField, topicId, parentViewId, fieldId)));
                     if (!field.isSorted()) {
-                        fieldLinks.add(new Link("add-field-values-at-index", Links.addFieldValuesLink(getBaseUri(), databaseId, topicId, parentViewId, fieldId, true)));
-                        fieldLinks.add(new Link("move-field-values-to-index", Links.moveFieldValuesToIndex(getBaseUri(), databaseId, topicId, parentViewId, fieldId)));
+                        fieldLinks.add(new Link("add-field-values-at-index", Links.addFieldValuesLink(getBaseUri(), databaseId, parentContext, parentField, topicId, parentViewId, fieldId, true)));
+                        fieldLinks.add(new Link("move-field-values-to-index", Links.moveFieldValuesToIndex(getBaseUri(), databaseId, parentContext, parentField, topicId, parentViewId, fieldId)));
                     }
                 }
             }
@@ -469,16 +472,12 @@ public abstract class Presto {
             // ISSUE: should add-values and remove-values be links on list result instead?
             if (!field.isReferenceField() || !getAvailableFieldValueTypes(context, field).isEmpty()) {
                 boolean query = isCustomAvailableValuesQuery(context, field);
-                if (type.isInline()) {
-                    fieldLinks.add(new Link("available-field-values", Links.availableFieldValues(getBaseUri(), databaseId, context.getParentContext(), context.getParentField(), topicId, parentViewId, fieldId, query)));
-                } else {
-                    fieldLinks.add(new Link("available-field-values", Links.availableFieldValues(getBaseUri(), databaseId, topicId, parentViewId, fieldId, query)));
-                }
+                fieldLinks.add(new Link("available-field-values", Links.availableFieldValues(getBaseUri(), databaseId, parentContext, parentField, topicId, parentViewId, fieldId, query)));
             }
         }
 
         if (field.isPageable()) {
-            fieldLinks.add(new Link("paging", Links.pagingLink(getBaseUri(), databaseId, topicId, parentViewId, fieldId)));    
+            fieldLinks.add(new Link("paging", Links.pagingLink(getBaseUri(), databaseId, parentContext, parentField, topicId, parentViewId, fieldId)));    
         }
 
         fieldLinks.addAll(getCreateFieldInstanceLinks(context, field));
@@ -1581,10 +1580,10 @@ public abstract class Presto {
             for (Object value : currentTopic.getValues(currentField)) {
                 PrestoTopic valueTopic = (PrestoTopic)value;
                 if (topicId.equals(valueTopic.getId())) {
-                    System.out.println("** " + valueTopic);
+//                    System.out.println("** " + valueTopic);
                     return valueTopic;
                 } else {
-                    System.out.println("t: " + valueTopic);
+//                    System.out.println("t: " + valueTopic);
                 }
             }
         }

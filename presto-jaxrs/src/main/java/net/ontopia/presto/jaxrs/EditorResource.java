@@ -193,15 +193,29 @@ public abstract class EditorResource {
             @PathParam("fieldId") final String fieldId, 
             @PathParam("start") final int start, 
             @PathParam("limit") final int limit) throws Exception {
+        String path = null;
+        return getFieldPaging(databaseId, path, topicId, viewId, fieldId, start, limit);
+    }
+    
+    @GET
+    @Produces(APPLICATION_JSON_UTF8)
+    @Path("paging-field/{databaseId}/{path}/{topicId}/{viewId}/{fieldId}/{start}/{limit}")
+    public Response getFieldPaging(
+            @PathParam("databaseId") final String databaseId, 
+            @PathParam("path") final String path, 
+            @PathParam("topicId") final String topicId, 
+            @PathParam("viewId") final String viewId,
+            @PathParam("fieldId") final String fieldId, 
+            @PathParam("start") final int start, 
+            @PathParam("limit") final int limit) throws Exception {
         
         Presto session = createPresto(databaseId);
 
         try {
             boolean readOnly = false;
+            PrestoContext context = session.getTopicByPath(path, topicId, viewId, readOnly);
 
-            PrestoContext context = PrestoContext.create(session, Links.deskull(topicId), readOnly);
-
-            if (context.isMissingTopic()) {
+            if (context == null || context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
             }
 
