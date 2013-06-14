@@ -656,7 +656,8 @@ public abstract class Presto {
         PrestoType valueType = getSchemaProvider().getTypeById(value.getTypeId());
         if (field.isEmbedded()) {
             
-            PrestoContext subcontext = PrestoContext.createSubContext(context, field, value, valueType, field.getValueView(valueType), context.isReadOnly());
+            PrestoView valueView = field.getValueView(valueType);
+            PrestoContext subcontext = PrestoContext.createSubContext(context, field, value, valueType, valueView, context.isReadOnly());
             result.setEmbedded(getTopicView(subcontext));
         }
 
@@ -1250,9 +1251,8 @@ public abstract class Presto {
             type = schemaProvider.getTypeById(topic.getTypeId());
         }
 
-        PrestoView view = field.getValueView(type);
-
-        PrestoContext subcontext = PrestoContext.create(topic, type, view, context.isReadOnly());
+        PrestoView valueView = field.getValueView(type);
+        PrestoContext subcontext = PrestoContext.create(topic, type, valueView, context.isReadOnly());
 
         return updatePrestoTopic(subcontext, embeddedTopic);
     }

@@ -13,6 +13,7 @@ import net.ontopia.presto.jaxrs.process.FieldDataProcessor;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
+import net.ontopia.presto.spi.PrestoView;
 
 public class ValueFieldsPostProcessor extends FieldDataProcessor {
 
@@ -26,7 +27,8 @@ public class ValueFieldsPostProcessor extends FieldDataProcessor {
         }
         PrestoType type = availableFieldValueTypes.iterator().next();
         
-        List<PrestoFieldUsage> fields = type.getFields(field.getValueView(type));
+        PrestoView valueView = field.getValueView(type);
+        List<PrestoFieldUsage> fields = type.getFields(valueView);
 
         // assign column value fields
         List<FieldData> valueFields = new ArrayList<FieldData>();
