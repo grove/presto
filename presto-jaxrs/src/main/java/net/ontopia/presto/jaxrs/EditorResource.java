@@ -228,42 +228,14 @@ public abstract class EditorResource {
             @PathParam("databaseId") final String databaseId, 
             @PathParam("topicId") final String topicId,
             @PathParam("viewId") final String viewId) throws Exception {
-
-        Presto session = createPresto(databaseId);
-
-        try {
-            PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
-            PrestoDataProvider dataProvider = session.getDataProvider();
-
-            PrestoTopic topic = dataProvider.getTopicById(Links.deskull(topicId));
-
-            if (topic == null) {
-                // 404
-                return Response.status(Status.NOT_FOUND).build();        
-            } else {
-                PrestoType type = schemaProvider.getTypeById(topic.getTypeId());
-                if (type.isRemovable()) {
-                    session.deleteTopic(topic, type);          
-                    // 204
-                    return Response.noContent().build();
-                } else {
-                    // 403
-                    return Response.status(Status.FORBIDDEN).build();
-                }
-            }
-
-        } catch (Exception e) {
-            session.abort();
-            throw e;
-        } finally {
-            session.close();      
-        }
+        String path = null;
+        return deleteTopicView(databaseId, path, topicId, viewId);
     }
 
     @DELETE
     @Produces(APPLICATION_JSON_UTF8)
-    @Path("topic-view-inline/{databaseId}/{path}/{topicId}/{viewId}")
-    public Response deleteTopicViewInline(
+    @Path("topic-view/{databaseId}/{path}/{topicId}/{viewId}")
+    public Response deleteTopicView(
             @PathParam("databaseId") final String databaseId, 
             @PathParam("path") final String path,
             @PathParam("topicId") final String topicId,
@@ -273,7 +245,7 @@ public abstract class EditorResource {
 
         try {
             boolean readOnly = false;
-            PrestoContext context = session.getNestedTopic(path, topicId, viewId, readOnly);
+            PrestoContext context = session.getTopicByPath(path, topicId, viewId, readOnly);
 
             if (context == null || context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();        
@@ -313,63 +285,27 @@ public abstract class EditorResource {
             @PathParam("databaseId") final String databaseId, 
             @PathParam("topicId") final String topicId,
             @QueryParam("readOnly") final boolean readOnly) throws Exception {
-
-        Presto session = createPresto(databaseId);
-
-        try {
-            PrestoContext context = PrestoContext.create(session, Links.deskull(topicId), readOnly);
-
-            if (context.isMissingTopic()) {
-                return Response.status(Status.NOT_FOUND).build();
-            }
-
-            Topic result = session.getTopicAndProcess(context);
-            
-            return Response.ok(result).build();
-
-        } catch (Exception e) {
-            session.abort();
-            throw e;
-        } finally {
-            session.close();      
-        }
-        
+        String path = null;
+        String viewId = null;
+        return getTopicInView(databaseId, path, topicId, viewId, readOnly);
     }
     
     @GET
     @Produces(APPLICATION_JSON_UTF8)
-    @Path("topic/{databaseId}/{topicId}/{viewId}")
-    public Response getTopicInView(
+    @Path("topic/{databaseId}/{topicId}{view}")
+    public Response getTopicInDefaultView(
             @PathParam("databaseId") final String databaseId, 
             @PathParam("topicId") final String topicId,
             @PathParam("viewId") final String viewId,
             @QueryParam("readOnly") final boolean readOnly) throws Exception {
-
-        Presto session = createPresto(databaseId);
-
-        try {
-            PrestoContext context = PrestoContext.create(session, Links.deskull(topicId), viewId, readOnly);
-
-            if (context.isMissingTopic()) {
-                return Response.status(Status.NOT_FOUND).build();
-            }
-
-            Topic result = session.getTopicAndProcess(context);
-            
-            return Response.ok(result).build();
-
-        } catch (Exception e) {
-            session.abort();
-            throw e;
-        } finally {
-            session.close();      
-        }
+        String path = null;
+        return getTopicInView(databaseId, path, topicId, viewId, readOnly);
     }
 
     @GET
     @Produces(APPLICATION_JSON_UTF8)
-    @Path("topic-inline/{databaseId}/{path}/{topicId}/{viewId}")
-    public Response getTopicInlineInView(
+    @Path("topic/{databaseId}/{path}/{topicId}/{viewId}")
+    public Response getTopicInView(
             @PathParam("databaseId") final String databaseId, 
             @PathParam("path") final String path,
             @PathParam("topicId") final String topicId,
@@ -379,7 +315,7 @@ public abstract class EditorResource {
         Presto session = createPresto(databaseId);
 
         try {
-            PrestoContext context = session.getNestedTopic(path, topicId, viewId, readOnly);
+            PrestoContext context = session.getTopicByPath(path, topicId, viewId, readOnly);
 
             if (context == null || context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -404,26 +340,9 @@ public abstract class EditorResource {
             @PathParam("databaseId") final String databaseId, 
             @PathParam("topicId") final String topicId,
             @QueryParam("readOnly") final boolean readOnly) throws Exception {
-
-        Presto session = createPresto(databaseId);
-
-        try {
-            PrestoContext context = PrestoContext.create(session, Links.deskull(topicId), readOnly);
-
-            if (context.isMissingTopic()) {
-                return Response.status(Status.NOT_FOUND).build();
-            }
-
-            TopicView result = session.getTopicViewAndProcess(context);
-            
-            return Response.ok(result).build();
-
-        } catch (Exception e) {
-            session.abort();
-            throw e;
-        } finally {
-            session.close();      
-        }
+        String path = null;
+        String viewId = null;
+        return getTopicViewInView(databaseId, path, topicId, viewId, readOnly);
     }
 
     @GET
@@ -434,32 +353,14 @@ public abstract class EditorResource {
             @PathParam("topicId") final String topicId,
             @PathParam("viewId") final String viewId,
             @QueryParam("readOnly") final boolean readOnly) throws Exception {
-
-        Presto session = createPresto(databaseId);
-
-        try {
-            PrestoContext context = PrestoContext.create(session, Links.deskull(topicId), viewId, readOnly);
-
-            if (context.isMissingTopic()) {
-                return Response.status(Status.NOT_FOUND).build();
-            }
-
-            TopicView result = session.getTopicViewAndProcess(context);
-            
-            return Response.ok(result).build();
-
-        } catch (Exception e) {
-            session.abort();
-            throw e;
-        } finally {
-            session.close();      
-        }
+        String path = null;
+        return getTopicViewInView(databaseId, path, topicId, viewId, readOnly);
     }
 
     @GET
     @Produces(APPLICATION_JSON_UTF8)
-    @Path("topic-view-inline/{databaseId}/{path}/{topicId}/{viewId}")
-    public Response getTopicViewInlineInView(
+    @Path("topic-view/{databaseId}/{path}/{topicId}/{viewId}")
+    public Response getTopicViewInView(
             @PathParam("databaseId") final String databaseId, 
             @PathParam("path") final String path,
             @PathParam("topicId") final String topicId,
@@ -469,7 +370,7 @@ public abstract class EditorResource {
         Presto session = createPresto(databaseId);
 
         try {
-            PrestoContext context = session.getNestedTopic(path, topicId, viewId, readOnly);
+            PrestoContext context = session.getTopicByPath(path, topicId, viewId, readOnly);
 
             if (context == null || context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -533,45 +434,15 @@ public abstract class EditorResource {
             @PathParam("databaseId") final String databaseId, 
             @PathParam("topicId") final String topicId, 
             @PathParam("viewId") final String viewId, TopicView topicView) throws Exception {
-
-        Presto session = createPresto(databaseId);
-
-        try {
-            boolean readOnly = false;
-            PrestoContext context = PrestoContext.create(session, Links.deskull(topicId), viewId, readOnly);
-
-            if (context.isMissingTopic()) {
-                return Response.status(Status.NOT_FOUND).build();
-            }
-
-            TopicView result = session.updateTopic(context, topicView);
-            session.commit();
-
-            if (context.isNewTopic()) {
-                // return Topic if new, otherwise TopicView
-                String newTopicId = result.getTopicId();
-                if (newTopicId == null) {
-                    // WARN: probably means that the topic was not valid
-                    return Response.ok(result).build();
-                } else {
-                    return getTopicInDefaultView(databaseId, newTopicId, readOnly);
-                }
-            }
-            return Response.ok(result).build();
-            
-        } catch (Exception e) {
-            session.abort();
-            throw e;
-        } finally {
-            session.close();
-        }
+        String path = null;
+        return updateTopicView(databaseId, path, topicId, viewId, topicView);
     }
     
     @PUT
     @Produces(APPLICATION_JSON_UTF8)
     @Consumes(APPLICATION_JSON_UTF8)
-    @Path("topic-view-inline/{databaseId}/{path}/{topicId}/{viewId}")
-    public Response updateTopicViewInline(
+    @Path("topic-view/{databaseId}/{path}/{topicId}/{viewId}")
+    public Response updateTopicView(
             @PathParam("databaseId") final String databaseId, 
             @PathParam("path") final String path, 
             @PathParam("topicId") final String topicId, 
@@ -581,14 +452,19 @@ public abstract class EditorResource {
 
         try {
             boolean readOnly = false;
-            PrestoContext context = session.getNestedTopic(path, topicId, viewId, readOnly);
+            PrestoContext context = session.getTopicByPath(path, topicId, viewId, readOnly);
 
             if (context == null || context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
             }
 
-            boolean returnParent = true;
-            TopicView result = session.updateTopicInline(context, topicView, returnParent);
+            TopicView result;
+            if (context.getType().isInline()) {
+                boolean returnParent = true;
+                result = session.updateTopicInline(context, topicView, returnParent);
+            } else {
+                result = session.updateTopic(context, topicView);
+            }
             session.commit();
 
 //            if (context.isNewTopic()) {
@@ -614,21 +490,36 @@ public abstract class EditorResource {
     @POST
     @Produces(APPLICATION_JSON_UTF8)
     @Consumes(APPLICATION_JSON_UTF8)
-    @Path("add-field-values-at-index/{databaseId}/{topicId}/{viewId}/{fieldId}/{index}")
-    public Response addFieldValuesAtIndex( 
+    @Path("add-field-values/{databaseId}/{topicId}/{viewId}/{fieldId}")
+    public Response addFieldValues( 
             @PathParam("databaseId") final String databaseId, 
             @PathParam("topicId") final String topicId, 
             @PathParam("viewId") final String viewId,
             @PathParam("fieldId") final String fieldId, 
-            @PathParam("index") final Integer index, FieldData fieldData) throws Exception {
+            @QueryParam("index") final Integer index, FieldData fieldData) throws Exception {
 
+        String path = null;
+        return addFieldValues(databaseId, path, topicId, viewId, fieldId, index, fieldData);
+    }
+
+    @POST
+    @Produces(APPLICATION_JSON_UTF8)
+    @Consumes(APPLICATION_JSON_UTF8)
+    @Path("add-field-values/{databaseId}/{path}/{topicId}/{viewId}/{fieldId}")
+    public Response addFieldValues( 
+            @PathParam("databaseId") final String databaseId, 
+            @PathParam("path") final String path, 
+            @PathParam("topicId") final String topicId, 
+            @PathParam("viewId") final String viewId,
+            @PathParam("fieldId") final String fieldId, 
+            @QueryParam("index") final Integer index, FieldData fieldData) throws Exception {
         Presto session = createPresto(databaseId);
 
         try {
             boolean readOnly = false;
-            PrestoContext context = PrestoContext.create(session, Links.deskull(topicId), viewId, readOnly);
+            PrestoContext context = session.getTopicByPath(path, topicId, viewId, readOnly);
 
-            if (context.isMissingTopic()) {
+            if (context == null || context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
             }
 
@@ -652,34 +543,6 @@ public abstract class EditorResource {
         } finally {
             session.close();      
         } 
-    }
-
-    @POST
-    @Produces(APPLICATION_JSON_UTF8)
-    @Consumes(APPLICATION_JSON_UTF8)
-    @Path("move-field-values-to-index/{databaseId}/{topicId}/{viewId}/{fieldId}/{index}")
-    public Response moveFieldValuesToIndex( 
-            @PathParam("databaseId") final String databaseId, 
-            @PathParam("topicId") final String topicId, 
-            @PathParam("viewId") final String viewId,
-            @PathParam("fieldId") final String fieldId, 
-            @PathParam("index") final Integer index, FieldData fieldData) throws Exception {
-
-        return addFieldValuesAtIndex(databaseId, topicId, viewId, fieldId, index, fieldData);
-    }
-
-    @POST
-    @Produces(APPLICATION_JSON_UTF8)
-    @Consumes(APPLICATION_JSON_UTF8)
-    @Path("add-field-values/{databaseId}/{topicId}/{viewId}/{fieldId}")
-    public Response addFieldValues(
-            @PathParam("databaseId") final String databaseId, 
-            @PathParam("topicId") final String topicId, 
-            @PathParam("viewId") final String viewId,
-            @PathParam("fieldId") final String fieldId, FieldData fieldData) throws Exception {
-
-        Integer index = null;
-        return addFieldValuesAtIndex(databaseId, topicId, viewId, fieldId, index, fieldData);
     }
 
     @POST
@@ -723,6 +586,20 @@ public abstract class EditorResource {
         } 
     }
 
+    @POST
+    @Produces(APPLICATION_JSON_UTF8)
+    @Consumes(APPLICATION_JSON_UTF8)
+    @Path("move-field-values-to-index/{databaseId}/{topicId}/{viewId}/{fieldId}")
+    public Response moveFieldValuesToIndex( 
+            @PathParam("databaseId") final String databaseId, 
+            @PathParam("topicId") final String topicId, 
+            @PathParam("viewId") final String viewId,
+            @PathParam("fieldId") final String fieldId, 
+            @QueryParam("index") final Integer index, FieldData fieldData) throws Exception {
+
+        return addFieldValues(databaseId, topicId, viewId, fieldId, index, fieldData);
+    }
+
     @GET
     @Produces(APPLICATION_JSON_UTF8)
     @Path("available-field-values/{databaseId}/{topicId}/{viewId}/{fieldId}")
@@ -732,34 +609,14 @@ public abstract class EditorResource {
             @PathParam("viewId") final String viewId,
             @PathParam("fieldId") final String fieldId,
             @QueryParam("query") final String query) throws Exception {
-
-        Presto session = createPresto(databaseId);
-
-        try {
-            boolean readOnly = false;
-            PrestoContext context = PrestoContext.create(session, Links.deskull(topicId), viewId, readOnly);
-
-            if (context.isMissingTopic()) {
-                return Response.status(Status.NOT_FOUND).build();
-            }
-
-            PrestoFieldUsage field = context.getFieldById(fieldId);
-            
-            AvailableFieldValues result = session.getAvailableFieldValuesInfo(context, field, query);
-            return Response.ok(result).build();
-            
-        } catch (Exception e) {
-            session.abort();
-            throw e;
-        } finally {
-            session.close();      
-        }
+        String path = null;
+        return getAvailableFieldValues(databaseId, path, topicId, viewId, fieldId, query);
     }
 
     @GET
     @Produces(APPLICATION_JSON_UTF8)
-    @Path("available-field-values-inline/{databaseId}/{path}/{topicId}/{viewId}/{fieldId}")
-    public Response getAvailableFieldValuesInline( 
+    @Path("available-field-values/{databaseId}/{path}/{topicId}/{viewId}/{fieldId}")
+    public Response getAvailableFieldValues( 
             @PathParam("databaseId") final String databaseId, 
             @PathParam("path") final String path, 
             @PathParam("topicId") final String topicId, 
@@ -771,7 +628,7 @@ public abstract class EditorResource {
 
         try {
             boolean readOnly = false;
-            PrestoContext context = session.getNestedTopic(path, topicId, viewId, readOnly);
+            PrestoContext context = session.getTopicByPath(path, topicId, viewId, readOnly);
 
             if (context == null || context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();

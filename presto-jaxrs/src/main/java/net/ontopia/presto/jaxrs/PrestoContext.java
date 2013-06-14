@@ -150,4 +150,19 @@ public class PrestoContext {
         return type.getFieldById(fieldId, view);
     }
     
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        if (parentContext != null) {
+            sb.append(parentContext.toString());
+            sb.append("$");
+        }
+        if (parentField != null) {
+            sb.append(parentField.getId());
+            sb.append("$");
+        }
+        sb.append(topic.getId());
+        sb.append("$");
+        sb.append(view.getId());
+        return sb.toString();
+    }
 }
