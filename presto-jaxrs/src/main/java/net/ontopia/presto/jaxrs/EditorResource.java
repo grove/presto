@@ -476,16 +476,6 @@ public abstract class EditorResource {
             TopicView result = session.updateTopic(context, topicView, returnParent);
             session.commit();
 
-//            if (context.isNewTopic()) {
-//                // return Topic if new, otherwise TopicView
-//                String newTopicId = result.getTopicId();
-//                if (newTopicId == null) {
-//                    // WARN: probably means that the topic was not valid
-//                    return Response.ok(result).build();
-//                } else {
-//                    return getTopicInDefaultView(databaseId, newTopicId, readOnly);
-//                }
-//            }
             return Response.ok(result).build();
             
         } catch (Exception e) {
