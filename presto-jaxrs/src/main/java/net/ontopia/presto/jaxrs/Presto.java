@@ -470,7 +470,7 @@ public abstract class Presto {
             if (!field.isReferenceField() || !getAvailableFieldValueTypes(context, field).isEmpty()) {
                 boolean query = isCustomAvailableValuesQuery(context, field);
                 if (type.isInline()) {
-                    fieldLinks.add(new Link("available-field-values", Links.availableFieldValuesInline(getBaseUri(), databaseId, context.getParentContext(), field, topicId, parentViewId, fieldId, query)));
+                    fieldLinks.add(new Link("available-field-values", Links.availableFieldValuesInline(getBaseUri(), databaseId, context.getParentContext(), context.getParentField(), topicId, parentViewId, fieldId, query)));
                 } else {
                     fieldLinks.add(new Link("available-field-values", Links.availableFieldValues(getBaseUri(), databaseId, topicId, parentViewId, fieldId, query)));
                 }
@@ -1555,16 +1555,16 @@ public abstract class Presto {
         return new PrestoContextField(currentContext, currentField);
     }
     
-    public PrestoContext getNestedTopic(String path, String inlineTopicId, String viewId, boolean readOnly) {
+    public PrestoContext getNestedTopic(String path, String topicId, String viewId, boolean readOnly) {
         PrestoContextField contextField = getContextField(path, readOnly);
         
         PrestoContext currentContext = contextField.getContext();
         PrestoTopic currentTopic = currentContext.getTopic();
         PrestoFieldUsage currentField = contextField.getField();
         
-        PrestoTopic resultTopic = findInParentField(currentTopic, currentField, inlineTopicId);
+        PrestoTopic resultTopic = findInParentField(currentTopic, currentField, topicId);
         if (resultTopic == null) {
-            return PrestoContext.createSubContext(this, currentContext, currentField, Links.deskull(inlineTopicId), viewId, readOnly);
+            return PrestoContext.createSubContext(this, currentContext, currentField, Links.deskull(topicId), viewId, readOnly);
         } else {
 //            if (resultTopic.isInline()) {
                 String resultTypeId = resultTopic.getTypeId();
