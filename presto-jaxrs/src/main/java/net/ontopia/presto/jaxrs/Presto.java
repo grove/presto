@@ -945,8 +945,6 @@ public abstract class Presto {
     public PrestoTopic updateFieldValues(PrestoContext context, PrestoFieldUsage field, List<? extends Object> updateableValues) {
         PrestoTopic topic = context.getTopic();
         PrestoType type = context.getType();
-
-        // TODO: if topic is inline; then build inline topic, add to parent, and then update parent instead
         
         PrestoDataProvider dataProvider = getDataProvider();
         PrestoChangeSet changeSet = dataProvider.newChangeSet(getChangeSetHandler());
@@ -962,8 +960,6 @@ public abstract class Presto {
     public PrestoTopic addFieldValues(PrestoContext context, PrestoFieldUsage field, List<? extends Object> addableValues, Integer index) {
         PrestoTopic topic = context.getTopic();
         PrestoType type = context.getType();
-
-        // TODO: if topic is inline; then build inline topic, add to parent, and then update parent instead
         
         PrestoDataProvider dataProvider = getDataProvider();
         PrestoChangeSet changeSet = dataProvider.newChangeSet(getChangeSetHandler());
@@ -982,8 +978,6 @@ public abstract class Presto {
     public PrestoTopic removeFieldValues(PrestoContext context, PrestoFieldUsage field, List<? extends Object> removeableValues) {
         PrestoTopic topic = context.getTopic();
         PrestoType type = context.getType();
-
-        // TODO: if topic is inline; then build inline topic, remove from parent, and then update parent instead
  
         PrestoDataProvider dataProvider = getDataProvider();
         PrestoChangeSet changeSet = dataProvider.newChangeSet(getChangeSetHandler());

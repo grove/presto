@@ -268,16 +268,19 @@ public abstract class EditorResource {
                 if (type.isRemovable()) {
 
                     PrestoTopic topic = context.getTopic();
-                    PrestoContext parentContext = context.getParentContext();
-                    PrestoFieldUsage parentField = context.getParentField();
-                    PrestoTopic parentTopicAfterSave = session.removeFieldValues(parentContext, parentField, Collections.singletonList(topic));
-
-                    // return field data of parent field
-                    FieldData fieldData = session.getFieldData(parentTopicAfterSave, parentField, readOnly);
-                    return Response.ok(fieldData).build();
-
-//                    // 204
-//                    return Response.noContent().build();
+                    if (type.isInline()) {
+                        PrestoContext parentContext = context.getParentContext();
+                        PrestoFieldUsage parentField = context.getParentField();
+                        PrestoTopic parentTopicAfterSave = session.removeFieldValues(parentContext, parentField, Collections.singletonList(topic));
+    
+                        // return field data of parent field
+                        FieldData fieldData = session.getFieldData(parentTopicAfterSave, parentField, readOnly);
+                        return Response.ok(fieldData).build();
+                    } else {
+                        session.deleteTopic(topic, type);
+                        // 204
+                        return Response.noContent().build();
+                    }
                 } else {
                     // 403
                     return Response.status(Status.FORBIDDEN).build();
