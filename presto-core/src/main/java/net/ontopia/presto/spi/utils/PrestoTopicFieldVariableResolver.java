@@ -27,8 +27,12 @@ public class PrestoTopicFieldVariableResolver implements PrestoVariableResolver 
             PrestoType type = schemaProvider.getTypeById(typeId);
             if (variable.equals(":id")) {
                 result.add(topic.getId());                
+            } else if (variable.equals(":name")) {
+                result.add(topic.getName());                
             } else if (variable.equals(":type")) {
-                result.add(topic.getTypeId());                
+                result.add(typeId);                
+            } else if (variable.equals(":type-name")) {
+                result.add(type.getName());                
             } else {
                 PrestoField valueField = type.getFieldById(variable);
                 Collection<? extends Object> values = topic.getValues(valueField);
