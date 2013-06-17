@@ -7,6 +7,14 @@ public class Utils {
 
     private static Logger log = LoggerFactory.getLogger(Utils.class);
 
+    public static boolean different(Object o1, Object o2) {
+        return !(o1 == null ? o2 == null : o1.equals(o2));
+    }
+
+    public static boolean equals(Object o1, Object o2) {
+        return (o1 == null ? o2 == null : o1.equals(o2));
+    }
+
     public static final <T> T newInstanceOf(String className, Class<T> type) {
         return newInstanceOf(className, type, true);
     }

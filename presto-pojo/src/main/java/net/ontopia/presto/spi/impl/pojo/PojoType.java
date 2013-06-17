@@ -25,16 +25,18 @@ public class PojoType implements PrestoType {
     private boolean isRemovable;
     private boolean isRemovableCascadingDelete;
 
+    private PojoView defaultView;
+    private PojoView createView;
+
     private Collection<PrestoType> directSubTypes = new HashSet<PrestoType>();
 
     private List<PrestoField> fields = new ArrayList<PrestoField>();
     private Map<String,PojoField> fieldsMap = new HashMap<String,PojoField>();
 
-    private Collection<PrestoView> views = new ArrayList<PrestoView>();
+    private List<PrestoView> views = new ArrayList<PrestoView>();
     private Map<String,PrestoView> viewsMap = new HashMap<String,PrestoView>();
 
     private Object extra;
-
 
     PojoType(String id, PrestoSchemaProvider schemaProvider) {
         this.id = id;
@@ -143,9 +145,14 @@ public class PojoType implements PrestoType {
 
     @Override
     public PrestoView getDefaultView() {
-        return getViewById("info");
+        return defaultView;
     }
 
+    @Override
+    public PrestoView getCreateView() {
+        return createView;
+    }
+    
     @Override
     public PrestoView getViewById(String viewId) {
         PrestoView view = viewsMap.get(viewId);
@@ -216,4 +223,12 @@ public class PojoType implements PrestoType {
         this.extra = extra;
     }
 
+    public void setDefaultView(PojoView defaultView) {
+        this.defaultView = defaultView;
+    }
+
+    public void setCreateView(PojoView createView) {
+        this.createView = createView;
+    }
+    
 }

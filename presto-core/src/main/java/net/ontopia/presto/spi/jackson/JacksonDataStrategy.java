@@ -15,6 +15,8 @@ public interface JacksonDataStrategy {
     String getName(ObjectNode doc);
 
     String getName(ObjectNode doc, PrestoFieldUsage field);
+
+    boolean hasFieldValue(ObjectNode data, PrestoField field);
     
     ArrayNode getFieldValue(ObjectNode doc, PrestoField field);
 

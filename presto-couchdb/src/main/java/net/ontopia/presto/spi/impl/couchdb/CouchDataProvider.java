@@ -89,7 +89,7 @@ public abstract class CouchDataProvider extends JacksonDataProvider {
     }
 
     @Override
-    public Collection<? extends Object> getAvailableFieldValues(PrestoTopic topic, final PrestoFieldUsage field) {
+    public Collection<? extends Object> getAvailableFieldValues(PrestoTopic topic, final PrestoFieldUsage field, String query) {
         if (field.isAddable()) {
             Collection<PrestoType> types = field.getAvailableFieldValueTypes();
             if (types.isEmpty()) {
@@ -99,14 +99,14 @@ public abstract class CouchDataProvider extends JacksonDataProvider {
             for (PrestoType type : types) {
                 typeIds.add(type.getId());
             }
-            ViewQuery query = new ViewQuery()
+            ViewQuery vquery = new ViewQuery()
             .designDocId(designDocId)
             .viewName("by-type")
             .staleOk(true)
             .includeDocs(true).keys(typeIds);
     
             List<PrestoTopic> result = new ArrayList<PrestoTopic>(typeIds.size());
-            ViewResult viewResult = getCouchConnector().queryView(query);
+            ViewResult viewResult = getCouchConnector().queryView(vquery);
             for (Row row : viewResult.getRows()) {
                 ObjectNode docNode = (ObjectNode)row.getDocAsNode();
                 if (docNode.isObject()) {

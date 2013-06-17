@@ -25,7 +25,10 @@ public class Topic extends Document {
     private Collection<Link> links;
     
     private Collection<TopicView> views;
-       
+    
+    public Topic() {
+    }
+    
     @Override
     public String getFormat() {
         return "topic";

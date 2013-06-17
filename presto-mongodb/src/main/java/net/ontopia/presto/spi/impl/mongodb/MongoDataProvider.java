@@ -79,7 +79,7 @@ public abstract class MongoDataProvider extends JacksonDataProvider {
     }
 
     @Override
-    public Collection<? extends Object> getAvailableFieldValues(PrestoTopic topic, final PrestoFieldUsage field) {
+    public Collection<? extends Object> getAvailableFieldValues(PrestoTopic topic, final PrestoFieldUsage field, String query) {
         if (field.isAddable()) {
             Collection<PrestoType> types = field.getAvailableFieldValueTypes();
             if (!types.isEmpty()) {

@@ -14,6 +14,8 @@ public interface PrestoTopic {
 
     String getTypeId();
 
+    boolean hasValue(PrestoField field);
+    
     List<? extends Object> getValues(PrestoField field);
 
     PagedValues getValues(PrestoField field, int offset, int limit);

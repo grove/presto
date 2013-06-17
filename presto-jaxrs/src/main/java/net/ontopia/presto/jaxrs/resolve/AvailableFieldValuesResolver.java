@@ -8,6 +8,6 @@ import net.ontopia.presto.spi.PrestoFieldUsage;
 
 public abstract class AvailableFieldValuesResolver extends AbstractProcessor {
 
-    public abstract Collection<? extends Object> getAvailableFieldValues(PrestoContext context,PrestoFieldUsage field);
+    public abstract Collection<? extends Object> getAvailableFieldValues(PrestoContext context,PrestoFieldUsage field, String query);
 
 }

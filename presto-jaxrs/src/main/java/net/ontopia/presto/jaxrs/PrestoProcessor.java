@@ -90,7 +90,7 @@ public class PrestoProcessor {
         for (TopicView topicView : views) {
             String viewId = topicView.getId();
             PrestoView specificView = type.getViewById(viewId);
-            PrestoContext subcontext = PrestoContext.create(presto, topic, type, specificView, context.isReadOnly());
+            PrestoContext subcontext = PrestoContext.create(topic, type, specificView, context.isReadOnly());
             
             TopicView newView = processTopicView(topicView, subcontext, processType, status);
             if (newView != null) {
@@ -145,22 +145,20 @@ public class PrestoProcessor {
         return topicView;
     }
     
-//    public FieldData preProcessFieldData(FieldData fieldData, PrestoTopic topic, PrestoFieldUsage field, Status status) {
-//        return processFieldData(fieldData, topic, field, Type.PRE_PROCESS, status);
+//    public FieldData preProcessFieldData(FieldData fieldData, PrestoContext context, PrestoFieldUsage field, Status status) {
+//        return processFieldData(fieldData, context, field, Type.PRE_PROCESS, status);
 //    }
-//
-//    public FieldData postProcessFieldData(FieldData fieldData, PrestoTopic topic, PrestoFieldUsage field, Status status) {
-//        return processFieldData(fieldData, topic, field, Type.POST_PROCESS, status);
-//    }
+
+    public FieldData postProcessFieldData(FieldData fieldData, PrestoContext context, PrestoFieldUsage field, Status status) {
+        return processFieldData(fieldData, context, field, Type.POST_PROCESS, status);
+    }
     
     public FieldData processFieldData(FieldData fieldData, PrestoContext context, PrestoFieldUsage field, Type processType, Status status) {
         // process nested data first
         PrestoSchemaProvider schemaProvider = getSchemaProvider();
         PrestoDataProvider dataProvider = getDataProvider();
         
-        if (field.isEmbedded() || field.isInline()) { 
-
-            PrestoView valueView = field.getValueView();
+        if (field.isEmbedded()) { 
 
             Collection<Value> values = fieldData.getValues();
             if (values != null) {
@@ -175,14 +173,22 @@ public class PrestoProcessor {
                             String topicTypeId = embeddedTopic.getTopicTypeId();
                             valueType = schemaProvider.getTypeById(topicTypeId);
                         } else {
-                            valueTopic = dataProvider.getTopicById(topicId);
+                            if (field.isInline()) {
+                                valueTopic = presto.buildInlineTopic(context, embeddedTopic);
+//                                valueTopic = presto.findInlineTopicById(context.getTopic(), field, topicId);
+                            } else {
+                                valueTopic = dataProvider.getTopicById(topicId);
+                            }
                             valueType = schemaProvider.getTypeById(valueTopic.getTypeId());
                         }
+
+                        PrestoView valueView = field.getValueView(valueType);
+
+                        PrestoContext subcontext = PrestoContext.createSubContext(context, field, valueTopic, valueType, valueView, context.isReadOnly());
+                        value.setEmbedded(processTopicView(embeddedTopic, subcontext, processType, status));
                         
-                        PrestoContext subcontext = PrestoContext.create(presto, valueTopic, valueType, valueView, context.isReadOnly());
-                        
-                        embeddedTopic = processTopicView(embeddedTopic, subcontext, processType, status);
-                        value.setEmbedded(embeddedTopic);
+                    } else {
+                        throw new RuntimeException("Expected embedded topic for field '" + field.getId() + "'");
                     }
                 }
             }
@@ -243,8 +249,38 @@ public class PrestoProcessor {
                 }
             }
         }
+//        fieldData.setValues(processValuesExtra(fieldData.getValues(), context, field, extraNode, processType, status));
         return fieldData;
     }
+
+//    public Collection<Value> postProcessValues(Collection<Value> values, PrestoContext context, PrestoFieldUsage field, Status status) {
+//        
+//        ObjectNode schemaExtra = presto.getSchemaExtraNode(getSchemaProvider());
+//        values = processValuesExtra(values, context, field, schemaExtra, Type.POST_PROCESS, status);
+//        
+//        ObjectNode topicExtra = presto.getTypeExtraNode(context.getType());
+//        values = processValuesExtra(values, context, field, topicExtra, Type.POST_PROCESS, status);
+//        
+//        ObjectNode viewExtra = presto.getViewExtraNode(context.getView());
+//        values = processValuesExtra(values, context, field, viewExtra, Type.POST_PROCESS, status);
+//
+//        ObjectNode fieldExtra = presto.getFieldExtraNode(field);
+//        values = processValuesExtra(values, context, field, fieldExtra, Type.POST_PROCESS, status);
+//
+//        return values;
+//    }
+    
+//    private Collection<Value> processValuesExtra(Collection<Value> values, PrestoContext context, PrestoFieldUsage field, ObjectNode extraNode, Type processType, Status status) {
+//        if (extraNode != null) {
+//            JsonNode processorsNode = getValueProcessorsNode(extraNode, processType);
+//            if (!processorsNode.isMissingNode()) {
+//                for (ValuesProcessor processor : getProcessors(ValuesProcessor.class, processorsNode, processType, status)) {
+//                    values = processor.processValues(values, context, field);
+//                }
+//            }
+//        }
+//        return values;
+//    }
     
     private JsonNode getTopicProcessorsNode(ObjectNode extraNode, Type processType) {
         if (processType == Type.PRE_PROCESS) {
@@ -269,7 +305,19 @@ public class PrestoProcessor {
             return extraNode.path("fieldPostProcessors");
         }
     }
+    
+//    private JsonNode getValueProcessorsNode(ObjectNode extraNode, Type processType) {
+//        if (processType == Type.PRE_PROCESS) {
+//            return extraNode.path("valuePreProcessors");            
+//        } else {
+//            return extraNode.path("valuePostProcessors");
+//        }
+//    }
 
+    public <T extends AbstractProcessor> Iterable<T> getProcessors(Class<T> klass, JsonNode processorsNode) {
+        return getProcessors(klass, processorsNode, null, null);
+    }
+    
     private <T extends AbstractProcessor> Iterable<T> getProcessors(Class<T> klass, JsonNode processorsNode, Type processType, Status status) {
         if (processorsNode.isArray()) {
             List<T> result = new ArrayList<T>();
@@ -288,7 +336,11 @@ public class PrestoProcessor {
         }
         return Collections.emptyList();
     }
-
+    
+    public <T extends AbstractProcessor> T getProcessor(Class<T> klass, JsonNode processorNode) {
+        return getProcessor(klass, processorNode, null, null);
+    }
+    
     private <T extends AbstractProcessor> T getProcessor(Class<T> klass, JsonNode processorNode, Type processType, Status status) {
         if (processorNode.isTextual()) {
             String className = processorNode.getTextValue();

@@ -67,7 +67,7 @@ public abstract class RiakDataProvider extends JacksonDataProvider {
     }
 
     @Override
-    public Collection<? extends Object> getAvailableFieldValues(PrestoTopic topic, PrestoFieldUsage field) {
+    public Collection<? extends Object> getAvailableFieldValues(PrestoTopic topic, PrestoFieldUsage field, String query) {
         // TODO: implement. use secondary indexes? or just leave it up to the users of this data provider.
         return Collections.emptyList();
     }

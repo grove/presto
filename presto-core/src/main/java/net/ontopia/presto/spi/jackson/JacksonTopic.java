@@ -104,6 +104,11 @@ public class JacksonTopic implements DefaultTopic {
     // methods for retrieving the state of a topic
 
     @Override
+    public boolean hasValue(PrestoField field) {
+        return getDataStrategy().hasFieldValue(getData(), field);
+    }
+    
+    @Override
     public List<? extends Object> getValues(PrestoField field) {
         return getValues(field, null).getValues();            
     }
@@ -143,7 +148,6 @@ public class JacksonTopic implements DefaultTopic {
 
         if (fieldNode != null) { 
             if (field.isReferenceField()) {
-                // TODO: inline-topic: if ObjectNode then PrestoInlineTopic
                 if (field.isInline()) {
                     for (int i=start; i < end; i ++) {
                         JsonNode value = fieldNode.get(i);
@@ -253,9 +257,7 @@ public class JacksonTopic implements DefaultTopic {
             ArrayNode jsonNode = getFieldValue(field);
             if (jsonNode != null) {
                 for (JsonNode existing : jsonNode) {
-                    if (existing.isTextual()) {
-                        existingValues.add(existing.getTextValue());
-                    }
+                    existingValues.add(convertInternalToNeutralValue(existing));
                 }
             }
 
@@ -279,14 +281,10 @@ public class JacksonTopic implements DefaultTopic {
             }
             
             // insert new values at calculated index
-            if (calculatedIndex > 0) {
-                for (Object value : addableValues) {
-                    result.add(calculatedIndex, value);
-                }
+            if (calculatedIndex >= 0) {
+                result.addAll(calculatedIndex, addableValues);
             } else {
-                for (Object value : addableValues) {
-                    result.add(value);
-                }
+                result.addAll(addableValues);
             }
             // create new array node
             ArrayNode arrayNode = dataProvider.getObjectMapper().createArrayNode();
@@ -307,6 +305,7 @@ public class JacksonTopic implements DefaultTopic {
                     existing.add(convertInternalToNeutralValue(item));
                 }
                 for (Object value : values) {
+                    // TODO: internal topics will not be exactly the same, but share id
                     existing.remove(convertExternalToNeutral(value));
                 }
                 ArrayNode arrayNode  = dataProvider.getObjectMapper().createArrayNode();

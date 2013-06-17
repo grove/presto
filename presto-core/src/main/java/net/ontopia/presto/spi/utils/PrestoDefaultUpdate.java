@@ -92,20 +92,22 @@ public class PrestoDefaultUpdate implements PrestoUpdate, PrestoDefaultChangeSet
 
     @Override
     public void setValues(PrestoField field, Collection<?> values) {
-        Collection<? extends Object> existingValues = topic.getValues(field);
-        Collection<Object> remValues = new HashSet<Object>(existingValues);          
-        Collection<Object> addValues = new HashSet<Object>();
-
-        for (Object value : values) {
-            remValues.remove(value);
-            if (!existingValues.contains(value)) {
-                addValues.add(value);
+        if (values != null) {
+            Collection<? extends Object> existingValues = topic.getValues(field);
+            Collection<Object> remValues = new HashSet<Object>(existingValues);          
+            Collection<Object> addValues = new HashSet<Object>();
+    
+            for (Object value : values) {
+                remValues.remove(value);
+                if (!existingValues.contains(value)) {
+                    addValues.add(value);
+                }
             }
-        }
-
-        if (!remValues.isEmpty() || !addValues.isEmpty()) {
-            topic.setValue(field, values);
-            handleFieldUpdated(field, addValues, remValues);
+    
+            if (Utils.different(values, existingValues)) {
+                topic.setValue(field, values);
+                handleFieldUpdated(field, addValues, remValues);
+            }
         }
     }
 
@@ -151,7 +153,7 @@ public class PrestoDefaultUpdate implements PrestoUpdate, PrestoDefaultChangeSet
                     PrestoTopic rtopic = (PrestoTopic)value;
                     PrestoType rtype = getSchemaProvider().getTypeById(rtopic.getTypeId());
                     if (rtype.isRemovableCascadingDelete()) {
-                        changeSet.deleteTopic(rtopic, rtype);
+                        changeSet.deleteTopic(rtopic, rtype, field);
                     }
                 }
             } else {

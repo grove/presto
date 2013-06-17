@@ -10,12 +10,14 @@ public interface PrestoDataProvider {
 
     Collection<PrestoTopic> getTopicsByIds(Collection<String> topicIds);
 
-    Collection<? extends Object> getAvailableFieldValues(PrestoTopic topic, PrestoFieldUsage field);
+    Collection<? extends Object> getAvailableFieldValues(PrestoTopic topic, PrestoFieldUsage field, String query);
 
     PrestoChangeSet newChangeSet();
 
     PrestoChangeSet newChangeSet(ChangeSetHandler handler);
-    
+
+    PrestoInlineTopicBuilder createInlineTopic(PrestoType type, String topicId);
+
     void close();
 
     public static interface ChangeSetHandler {

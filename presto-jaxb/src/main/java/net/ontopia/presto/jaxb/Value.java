@@ -13,8 +13,10 @@ public class Value {
     private Boolean editable;
     private Boolean removable;
     
-    private String name;
     private String value;
+    private String name;
+    private String type;
+    
     private Collection<Value> values; // nested values (see FieldData.valueFields)
 
     private TopicView embedded;
@@ -64,6 +66,14 @@ public class Value {
     public String getName() {
         return name;
     }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
     
     public void setLinks(Collection<Link> links) {
         if (links.isEmpty()) {
@@ -100,7 +110,5 @@ public class Value {
     public void setParams(Map<String,Object> params) {
         this.params = params;
     }
-    
-    
 
 }

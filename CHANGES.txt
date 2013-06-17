@@ -1,0 +1,15 @@
+----------------------------------------------------------------------
+Changes
+---------------------------------------------------------------------
+
+0.6.5
+
+- Client side filtering with 'available-field-values' links. Uses URI
+  template to do this.
+
+- Now possible to PUT inline topics to server using 'create' link'.
+  Topic will be assigned an id and an 'update-parent' link, but the
+  topic will not be created on server.
+
+- Now able to explicitly specify type.defaultView, and type.createView,
+  and field.editView and field.createView.

@@ -11,8 +11,12 @@ import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class JacksonBucketDataStrategy implements JacksonDataStrategy {
+    
+    private static Logger log = LoggerFactory.getLogger(JacksonBucketDataStrategy.class);
 
     protected static final String ID_DEFAULT_FIELD = "_id";
     protected static final String TYPE_DEFAULT_FIELD = ":type";
@@ -52,6 +56,13 @@ public abstract class JacksonBucketDataStrategy implements JacksonDataStrategy {
     @Override
     public String getName(ObjectNode doc, PrestoFieldUsage field) {
         return getName(doc);
+    }
+
+    @Override
+    public boolean hasFieldValue(ObjectNode doc, PrestoField field) {
+        String fieldId = field.getActualId();
+        ObjectNode readBucket = getReadBucket(doc, fieldId, true);
+        return getBucketFieldValue(fieldId, readBucket) != null;
     }
 
     @Override
@@ -131,10 +142,21 @@ public abstract class JacksonBucketDataStrategy implements JacksonDataStrategy {
     
     protected ArrayNode getBucketFieldValue(String fieldId, ObjectNode bucketData) {
         if (bucketData != null) {
-            JsonNode value = bucketData.get(fieldId);
-            return (ArrayNode)(value != null && value.isArray() ? value : null);
+            return getFieldValueArrayNode(bucketData, fieldId);
         }
         return null;
+    }
+    
+    private ArrayNode getFieldValueArrayNode(ObjectNode doc, String fieldId) {
+        JsonNode value = doc.path(fieldId);
+        if (value.isArray()) {
+            return (ArrayNode)value;
+        } else if (value.isMissingNode() || value.isNull()) {
+            return null;
+        } else {
+            log.warn("Value " + value + " in field '" + fieldId + "' is not an array");
+            return null;
+        }
     }
     
     protected ObjectNode getReadBucket(ObjectNode doc, PrestoField field, boolean includeWriteBucket) {

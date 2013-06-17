@@ -35,14 +35,19 @@ public class PrestoVariableContext {
         if (key.isMissingNode()) {
             return Collections.emptyList();
         }
-        Collection<JsonNode> result = new ArrayList<JsonNode>();
-        for (Object value : values) {
-            result.addAll(replaceVariables(variableResolver, value, key));
+        if (values.isEmpty()) {
+            return replaceVariablesValue(variableResolver, null, key);
+               
+        } else {
+            Collection<JsonNode> result = new ArrayList<JsonNode>();
+            for (Object value : values) {
+                result.addAll(replaceVariablesValue(variableResolver, value, key));
+            }
+            return result;
         }
-        return result;
     }
 
-    private Collection<JsonNode> replaceVariables(PrestoVariableResolver variableResolver, Object value, JsonNode key) {
+    private Collection<JsonNode> replaceVariablesValue(PrestoVariableResolver variableResolver, Object value, JsonNode key) {
         // find set of variables
         Collection<String> varNames = new HashSet<String>();
         findVariables(key, varNames);
