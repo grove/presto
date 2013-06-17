@@ -2,14 +2,16 @@
 Changes
 ---------------------------------------------------------------------
 
-0.6.5
+0.7.0
+
+- The major change in this release is full support for inline topics.
+  Inline topics are stored in the same document as their ancestors.
+  They implement the PrestoTopic interface just like ordinary topics.
 
 - Client side filtering with 'available-field-values' links. Uses URI
-  template to do this.
-
-- Now possible to PUT inline topics to server using 'create' link'.
-  Topic will be assigned an id and an 'update-parent' link, but the
-  topic will not be created on server.
+  template to do this. This can be used to implement autosuggest fields.
 
 - Now able to explicitly specify type.defaultView, and type.createView,
-  and field.editView and field.createView.
+  and field.editView and field.createView. This makes it easier to
+  customize which view to use in different scenarios.
+
