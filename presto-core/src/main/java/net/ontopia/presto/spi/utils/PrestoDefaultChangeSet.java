@@ -138,6 +138,12 @@ public abstract class PrestoDefaultChangeSet implements PrestoChangeSet {
         deleteTopic(topic, type, true, false);
     }
 
+    @Override
+    public void deleteTopic(PrestoTopic topic, PrestoType type, PrestoField field) {
+        boolean isRemovableDependency = field.isCascadingDelete() && type.isRemovableCascadingDelete();
+        deleteTopic(topic, type, true, isRemovableDependency);
+    }
+
     private void deleteTopic(PrestoTopic topic, PrestoType type, boolean removeDependencies, boolean isRemovableDependency) {
         if (deleted.contains(topic)) {
             return;
@@ -267,7 +273,7 @@ public abstract class PrestoDefaultChangeSet implements PrestoChangeSet {
                     if (!topic.equals(valueTopic)) {
                         PrestoType valueType = field.getSchemaProvider().getTypeById(valueTopic.getTypeId());
                         if (field.isCascadingDelete() && valueType.isRemovableCascadingDelete()) {
-                            deleteTopic(valueTopic, valueType);
+                            deleteTopic(valueTopic, valueType, field);
                         } else {          
                             PrestoField inverseField = valueType.getFieldById(inverseFieldId);
                             PrestoUpdate inverseUpdate = updateTopic(valueTopic, valueType);

@@ -1,7 +1,6 @@
 package net.ontopia.presto.jaxrs;
 
 import net.ontopia.presto.spi.PrestoDataProvider;
-import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
@@ -20,7 +19,7 @@ public class PrestoContext {
     private final boolean isReadOnly;
     
     private PrestoContext parentContext;
-    private PrestoField parentField;
+    private PrestoFieldUsage parentField;
     
     private PrestoContext(Presto session, String topicId, String viewId, boolean readOnly) {
         PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
@@ -50,15 +49,15 @@ public class PrestoContext {
         this.isReadOnly = readOnly;
     }
 
-    private PrestoContext(Presto session, PrestoType type, PrestoView view, boolean readOnly) {
-        this(session, null, type, view, true, readOnly);
+    private PrestoContext(PrestoType type, PrestoView view, boolean readOnly) {
+        this(null, type, view, true, readOnly);
     }
 
-    private PrestoContext(Presto session, PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnly) {
-        this(session, topic, type, view, false, readOnly);
+    private PrestoContext(PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnly) {
+        this(topic, type, view, false, readOnly);
     }
     
-    private PrestoContext(Presto session, PrestoTopic topic, PrestoType type, PrestoView view, boolean isNewTopic, boolean readOnly) {
+    private PrestoContext(PrestoTopic topic, PrestoType type, PrestoView view, boolean isNewTopic, boolean readOnly) {
         this.topic = topic;
         this.topicId = (topic == null ? null :topic.getId());
         this.type = type;
@@ -79,24 +78,28 @@ public class PrestoContext {
         PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
         String typeId = topic.getTypeId();
         PrestoType type = schemaProvider.getTypeById(typeId);
-        return new PrestoContext(session, topic, type, type.getDefaultView(), readOnly);
+        return new PrestoContext(topic, type, type.getDefaultView(), readOnly);
     }
     
-    public static PrestoContext create(Presto session, PrestoType type, PrestoView view, boolean readOnly) {
-        return new PrestoContext(session, type, view, readOnly);
+    public static PrestoContext create(PrestoType type, PrestoView view, boolean readOnly) {
+        return new PrestoContext(type, view, readOnly);
     }
     
-    public static PrestoContext create(Presto session, PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnly) {
-        return new PrestoContext(session, topic, type, view, readOnly);
+    public static PrestoContext newContext(PrestoContext context, PrestoTopic topic) {
+        return PrestoContext.create(topic, context.getType(), context.getView(), context.isReadOnly());
     }
     
-    public static PrestoContext createSubContext(Presto session, PrestoContext parentContext, PrestoField parentField, PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnly) {
-        PrestoContext context = new PrestoContext(session, topic, type, view, readOnly);
+    public static PrestoContext create(PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnly) {
+        return new PrestoContext(topic, type, view, readOnly);
+    }
+    
+    public static PrestoContext createSubContext(PrestoContext parentContext, PrestoFieldUsage parentField, PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnly) {
+        PrestoContext context = new PrestoContext(topic, type, view, readOnly);
         context.setParentContext(parentContext, parentField);
         return context;
     }
     
-    public static PrestoContext createSubContext(Presto session, PrestoContext parentContext, PrestoField parentField, String topicId, String viewId, boolean readOnly) {
+    public static PrestoContext createSubContext(Presto session, PrestoContext parentContext, PrestoFieldUsage parentField, String topicId, String viewId, boolean readOnly) {
         PrestoContext context = new PrestoContext(session, topicId, viewId, readOnly);
         context.setParentContext(parentContext, parentField);
         return context;
@@ -106,11 +109,11 @@ public class PrestoContext {
         return parentContext;
     }
     
-    public PrestoField getParentField() {
+    public PrestoFieldUsage getParentField() {
         return parentField;
     }
     
-    private void setParentContext(PrestoContext parentContext, PrestoField parentField) {
+    private void setParentContext(PrestoContext parentContext, PrestoFieldUsage parentField) {
         this.parentContext = parentContext;
         this.parentField = parentField;
     }
@@ -147,4 +150,19 @@ public class PrestoContext {
         return type.getFieldById(fieldId, view);
     }
     
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        if (parentContext != null) {
+            sb.append(parentContext.toString());
+            sb.append("$");
+        }
+        if (parentField != null) {
+            sb.append(parentField.getId());
+            sb.append("$");
+        }
+        sb.append(topic.getId());
+        sb.append("$");
+        sb.append(view.getId());
+        return sb.toString();
+    }
 }

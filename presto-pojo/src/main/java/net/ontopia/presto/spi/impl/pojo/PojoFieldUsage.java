@@ -74,18 +74,18 @@ public class PojoFieldUsage implements PrestoFieldUsage {
     }
 
     @Override
-    public PrestoView getValueView() {
-        return field.getValueView();
+    public PrestoView getValueView(PrestoType type) {
+        return field.getValueView(type);
     }
 
     @Override
-    public PrestoView getEditView() {
-        return field.getEditView();
+    public PrestoView getEditView(PrestoType type) {
+        return field.getEditView(type);
     }
 
     @Override
-    public PrestoView getCreateView() {
-        return field.getCreateView();
+    public PrestoView getCreateView(PrestoType type) {
+        return field.getCreateView(type);
     }
 
     @Override

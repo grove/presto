@@ -287,24 +287,18 @@ public class PojoSchemaModel {
                 String valueViewId = fieldConfig.get("valueView").getTextValue();
                 PojoView valueView = new PojoView(valueViewId);
                 field.setValueView(valueView);
-            } else {
-                field.setValueView(type.getDefaultView());
             } 
             // editView (using current view for now)
             if (fieldConfig.has("editView")) {
                 String editViewId = fieldConfig.get("editView").getTextValue();
                 PojoView editView = new PojoView(editViewId);
                 field.setEditView(editView);
-            } else {
-                field.setEditView(type.getDefaultView());
             } 
             // createView (using current view for now)
             if (fieldConfig.has("createView")) {
                 String createViewId = fieldConfig.get("createView").getTextValue();
                 PojoView createView = new PojoView(createViewId);
                 field.setCreateView(createView);
-            } else {
-                field.setCreateView(type.getDefaultView());
             } 
 
             // minCardinality

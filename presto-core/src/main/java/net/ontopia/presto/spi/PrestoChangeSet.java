@@ -10,6 +10,8 @@ public interface PrestoChangeSet {
 
     void deleteTopic(PrestoTopic topic, PrestoType type);
 
+    void deleteTopic(PrestoTopic topic, PrestoType type, PrestoField field);
+
     void save();
 
 }

@@ -13,20 +13,22 @@ import net.ontopia.presto.jaxrs.process.FieldDataProcessor;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
+import net.ontopia.presto.spi.PrestoView;
 
 public class ValueFieldsPostProcessor extends FieldDataProcessor {
 
     @Override
     public FieldData processFieldData(FieldData fieldData, PrestoContext context, PrestoFieldUsage field) {
         
-        // NOTE: use first value type
+        // ISSUE: using first value type for now
         Collection<PrestoType> availableFieldValueTypes = field.getAvailableFieldValueTypes();
         if (availableFieldValueTypes.isEmpty()) {
             throw new RuntimeException("No availableFieldValueTypes for field '" + field.getId() + "'");
         }
         PrestoType type = availableFieldValueTypes.iterator().next();
         
-        List<PrestoFieldUsage> fields = type.getFields(field.getValueView());
+        PrestoView valueView = field.getValueView(type);
+        List<PrestoFieldUsage> fields = type.getFields(valueView);
 
         // assign column value fields
         List<FieldData> valueFields = new ArrayList<FieldData>();

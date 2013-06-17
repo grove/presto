@@ -11,5 +11,5 @@ Changes
   Topic will be assigned an id and an 'update-parent' link, but the
   topic will not be created on server.
 
-- Now able to explicitly specify type.defaultView and type.createView
-  and field.createView.
+- Now able to explicitly specify type.defaultView, and type.createView,
+  and field.editView and field.createView.
