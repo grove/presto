@@ -148,23 +148,20 @@ public class PojoSchemaModel {
                 superType.addDirectSubType(type);
             }
             // defaultView
-            PojoView defaultView;
+            String defaultViewId;
             if (typeConfig.has("defaultView")) {
-                String defaultViewId = typeConfig.get("defaultView").getTextValue();
-                defaultView = new PojoView(defaultViewId);
-                type.setDefaultView(defaultView);
+                defaultViewId = typeConfig.get("defaultView").getTextValue();
+                type.setDefaultViewId(defaultViewId);
             } else {
-                defaultView = new PojoView("info"); // TODO: should 'info' or the first view be default?
-                type.setDefaultView(defaultView);
+                defaultViewId = "info"; // TODO: should 'info' or the first view be default?
+                type.setDefaultViewId(defaultViewId);
             } 
             // createView
             if (typeConfig.has("createView")) {
                 String createViewId = typeConfig.get("createView").getTextValue();
-                PojoView createView = new PojoView(createViewId);
-                type.setCreateView(createView);
+                type.setCreateViewId(createViewId);
             } else {
-                PojoView createView = defaultView;
-                type.setCreateView(createView);
+                type.setCreateViewId(defaultViewId);
             } 
 
             if (typeConfig.has("views")) {
@@ -285,20 +282,17 @@ public class PojoSchemaModel {
             // valueView (using current view for now)
             if (fieldConfig.has("valueView")) {
                 String valueViewId = fieldConfig.get("valueView").getTextValue();
-                PojoView valueView = new PojoView(valueViewId);
-                field.setValueView(valueView);
+                field.setValueViewId(valueViewId);
             } 
             // editView (using current view for now)
             if (fieldConfig.has("editView")) {
                 String editViewId = fieldConfig.get("editView").getTextValue();
-                PojoView editView = new PojoView(editViewId);
-                field.setEditView(editView);
+                field.setEditViewId(editViewId);
             } 
             // createView (using current view for now)
             if (fieldConfig.has("createView")) {
                 String createViewId = fieldConfig.get("createView").getTextValue();
-                PojoView createView = new PojoView(createViewId);
-                field.setCreateView(createView);
+                field.setCreateViewId(createViewId);
             } 
 
             // minCardinality
