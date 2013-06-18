@@ -28,6 +28,11 @@ public class Value {
     public Value() {
     }
     
+    @Override
+    public String toString() {
+        return "[Value: " + value + " " + name + " " + type + "]";
+    }
+    
     public static Value getNullValue() {
         Value result = new Value();
         result.setValue(null);
