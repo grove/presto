@@ -23,14 +23,15 @@ public abstract class JacksonDataProvider implements DefaultDataProvider {
 
     protected final ObjectMapper mapper;
     protected final JacksonDataStrategy dataStrategy;
+    protected final JacksonDataStrategy inlineDataStrategy;
     protected final IdentityStrategy identityStrategy;
     protected final JacksonResolver resolver;
     
-    private static final JacksonDataStrategy inlineDataStrategy = new JacksonDefaultDataStrategy();
     
     protected JacksonDataProvider() {
         this.mapper = createObjectMapper();
         this.dataStrategy = createDataStrategy(mapper);
+        this.inlineDataStrategy = createInlineDataStrategy(mapper);
         this.identityStrategy = createIdentityStrategy();
         this.resolver = createResolver();
     }
@@ -40,16 +41,20 @@ public abstract class JacksonDataProvider implements DefaultDataProvider {
     }
 
     abstract protected JacksonDataStrategy createDataStrategy(ObjectMapper mapper);
+
+    protected JacksonDataStrategy createInlineDataStrategy(ObjectMapper mapper) {
+        return new JacksonDefaultDataStrategy();
+    }
+
+    protected JacksonDataStrategy getInlineDataStrategy() {
+        return inlineDataStrategy;
+    }
     
     protected IdentityStrategy getIdentityStrategy() {
         return identityStrategy;
     }
     
     protected abstract IdentityStrategy createIdentityStrategy();
-
-    protected JacksonDataStrategy getInlineDataStrategy() {
-        return inlineDataStrategy;
-    }
     
     protected JacksonResolver createResolver() {
         return new JacksonResolver() {
