@@ -679,21 +679,6 @@ public abstract class Presto {
         return result;
     }
 
-    FieldData createFieldDataForParent(PrestoContext parentContext, String parentFieldId,
-            boolean readOnly, PrestoContext context, TopicView topicView) {
-        PrestoType parentType = parentContext.getType();
-        PrestoView parentView = parentContext.getView();
-        PrestoFieldUsage parentField = parentType.getFieldById(parentFieldId, parentView);
-        FieldData fieldData = getFieldData(context, parentField);
-        Value value = new Value();
-        value.setValue(topicView.getTopicId());
-        value.setType(topicView.getTopicTypeId());
-        value.setName(topicView.getName());
-        value.setEmbedded(topicView);
-        fieldData.setValues(Collections.singleton(value));
-        return fieldData;
-    }
-
     public AvailableFieldValues getAvailableFieldValuesInfo(PrestoContext context, PrestoFieldUsage field, String query) {
 
         AvailableFieldValues result = new AvailableFieldValues();
@@ -1098,7 +1083,9 @@ public abstract class Presto {
                             }
                         }
                     }
-                    result.addAll(getDataProvider().getTopicsByIds(valueIds));
+                    if (!valueIds.isEmpty()) {
+                        result.addAll(getDataProvider().getTopicsByIds(valueIds));
+                    }
                 }
             } else {
                 for (Value value : values) {
@@ -1441,7 +1428,9 @@ public abstract class Presto {
         String startTopicId = Links.deskull(traverse[0]);
         String startViewId = traverse[1];
         String startFieldId = traverse[2];
-        
+
+//        PrestoContext currentContext = PrestoContext.create(this, startTopicId, startViewId, readOnly);
+
         PrestoTopic currentTopic = dataProvider.getTopicById(startTopicId);
         if (currentTopic == null) {
             return null;
@@ -1461,14 +1450,21 @@ public abstract class Presto {
             String fieldId = traverse[i*3+2];
             
             // find topic amongst parent field values
-            currentTopic = findInParentField(currentTopic, currentField, topicId);
-            if (currentTopic == null) {
-                return null;
+            if (PrestoContext.isNewTopic(topicId)) {
+                currentContext = PrestoContext.createSubContext(this, currentContext, currentField, topicId, viewId, readOnly);
+                currentTopic = null;
+                currentType = currentContext.getType();
+                currentView = currentContext.getView();
+            } else {
+                currentTopic = findInParentField(currentTopic, currentField, topicId);
+                if (currentTopic == null) {
+                    return null;
+                }
+                String typeId = currentTopic.getTypeId();
+                currentType = schemaProvider.getTypeById(typeId);
+                currentView = currentType.getViewById(viewId);
+                currentContext = PrestoContext.createSubContext(currentContext, currentField, currentTopic, currentType, currentView, readOnly);
             }
-            String typeId = currentTopic.getTypeId();
-            currentType = schemaProvider.getTypeById(typeId);
-            currentView = currentType.getViewById(viewId);
-            currentContext = PrestoContext.createSubContext(currentContext, currentField, currentTopic, currentType, currentView, readOnly);
             currentField = currentType.getFieldById(fieldId, currentView);
             System.out.println("T0: " + topicId + " V: " + viewId + " F: " + fieldId);
         }

@@ -9,9 +9,6 @@ TODOs
 
 - Flexible and compact server-side API for building HTTP representations
 
-- Ability to edit inline topics as if they were standalone topics. Or,
-  perhaps this should be a client-only feature.
-
 - Server-side sorting of field sets
 
 - Optional lazy-loading of field values by adding 'field-values' link to

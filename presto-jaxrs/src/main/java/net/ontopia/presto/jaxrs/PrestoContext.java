@@ -27,8 +27,8 @@ public class PrestoContext {
 
         if (topicId == null) {
             throw new RuntimeException("topicId cannot be null");
-        } else if (topicId.startsWith("_")) {
-            type = schemaProvider.getTypeById(topicId.substring(1));
+        } else if (isNewTopic(topicId)) {
+            type = getType(topicId, schemaProvider);
             topic = null;
             isNewTopic = true;
         } else {
@@ -49,6 +49,14 @@ public class PrestoContext {
         this.isReadOnly = readOnly;
     }
 
+    public static boolean isNewTopic(String topicId) {
+        return topicId.startsWith("_");
+    }
+ 
+    public static PrestoType getType(String topicId, PrestoSchemaProvider schemaProvider) {
+        return schemaProvider.getTypeById(topicId.substring(1));
+    }
+    
     private PrestoContext(PrestoType type, PrestoView view, boolean readOnly) {
         this(null, type, view, true, readOnly);
     }
@@ -165,4 +173,5 @@ public class PrestoContext {
         sb.append(view.getId());
         return sb.toString();
     }
+
 }
