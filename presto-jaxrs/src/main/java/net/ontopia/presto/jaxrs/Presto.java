@@ -974,7 +974,7 @@ public abstract class Presto {
         PrestoUpdate update = changeSet.updateTopic(topic, type);        
 
         List<? extends Object> existingValues = topic.getValues(field);
-        update.setValues(field, mergeInlineTopics(updateableValues, existingValues, true));
+        update.setValues(field, mergeInlineTopics(updateableValues, existingValues, true)); // TODO: check if inline field first?
         changeSet.save();
 
         return update.getTopicAfterSave();
@@ -1212,7 +1212,8 @@ public abstract class Presto {
             
             if (hasValue1 && hasValue2) {
                 if (field.isInline()) {
-                    Collection<? extends Object> merged = mergeInlineTopics(t1.getValues(field), t2.getValues(field), true);
+                    boolean includeExisting = false;
+                    Collection<? extends Object> merged = mergeInlineTopics(t1.getValues(field), t2.getValues(field), includeExisting);
                     builder.setValues(field, merged);
                 } else {
                     builder.setValues(field, t1.getValues(field));
