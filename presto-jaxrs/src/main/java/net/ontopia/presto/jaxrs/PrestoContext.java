@@ -9,6 +9,8 @@ import net.ontopia.presto.spi.PrestoView;
 
 public class PrestoContext {
 
+    private static final String NEW_TOPICID_PREFIX = "_";
+
     private final String topicId;
     
     private final PrestoTopic topic;
@@ -50,7 +52,7 @@ public class PrestoContext {
     }
 
     public static boolean isNewTopic(String topicId) {
-        return topicId.startsWith("_");
+        return topicId.startsWith(NEW_TOPICID_PREFIX);
     }
  
     public static PrestoType getType(String topicId, PrestoSchemaProvider schemaProvider) {
@@ -58,19 +60,15 @@ public class PrestoContext {
     }
     
     private PrestoContext(PrestoType type, PrestoView view, boolean readOnly) {
-        this(null, type, view, true, readOnly);
-    }
-
-    private PrestoContext(PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnly) {
-        this(topic, type, view, false, readOnly);
+        this(null, type, view, readOnly);
     }
     
-    private PrestoContext(PrestoTopic topic, PrestoType type, PrestoView view, boolean isNewTopic, boolean readOnly) {
+    private PrestoContext(PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnly) {
         this.topic = topic;
-        this.topicId = (topic == null ? null :topic.getId());
+        this.topicId = (topic == null ? NEW_TOPICID_PREFIX + type.getId() : topic.getId());
         this.type = type;
         this.view = view;
-        this.isNewTopic = isNewTopic;
+        this.isNewTopic = (topic == null);
         this.isReadOnly = readOnly;
     }
 
