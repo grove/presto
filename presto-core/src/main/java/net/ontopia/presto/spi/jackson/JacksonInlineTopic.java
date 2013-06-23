@@ -33,7 +33,7 @@ public class JacksonInlineTopic extends JacksonTopic {
 
     @Override
     public String toString() {
-        return "InlineTopic[" + getId() + "]";
+        return "InlineTopic[" + getId() + " " + getName() + "]";
     }
 
 }
