@@ -26,6 +26,7 @@ import net.ontopia.presto.jaxrs.PrestoProcessor.Status;
 import net.ontopia.presto.jaxrs.process.ValueProcessor;
 import net.ontopia.presto.jaxrs.resolve.AvailableFieldCreateTypesResolver;
 import net.ontopia.presto.jaxrs.resolve.AvailableFieldValuesResolver;
+import net.ontopia.presto.jaxrs.sort.SortKeyGenerator;
 import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoDataProvider.ChangeSetHandler;
@@ -554,13 +555,7 @@ public abstract class Presto {
 
         // sort the result
         if (field.isSorted()) {
-            Collections.sort(fieldValues, new Comparator<Object>() {
-                public int compare(Object o1, Object o2) {
-                    String n1 = (o1 instanceof PrestoTopic) ? ((PrestoTopic)o1).getName(field) : (o1 == null ? null : o1.toString());
-                    String n2 = (o2 instanceof PrestoTopic) ? ((PrestoTopic)o2).getName(field) : (o2 == null ? null : o2.toString());
-                    return compareComparables(n1, n2);
-                }
-            });
+            sortFieldValues(field, fieldValues);
         }
         
         ValueProcessor valueProcessor = createValueProcessor(context, field);
@@ -596,6 +591,49 @@ public abstract class Presto {
             }
         }
         return new FieldDataValues(inputValues, outputValues);
+    }
+
+    private void sortFieldValues(final PrestoFieldUsage field, List<? extends Object> fieldValues) {
+        SortKeyGenerator skg = null;
+        ObjectNode extra = getFieldExtraNode(field);
+        if (extra != null) {
+            JsonNode sortKeyNode = extra.path("sortKeyGenerator");
+            if (sortKeyNode.isObject()) {
+                JsonNode classNode = sortKeyNode.path("class");
+                if (classNode.isTextual()) {
+                    String className = classNode.getTextValue();
+                    if (className != null) {
+                        skg = Utils.newInstanceOf(className, SortKeyGenerator.class);
+                        if (skg != null) {
+                            skg.setPresto(this);
+                            skg.setConfig((ObjectNode)sortKeyNode);
+                        }
+                    }
+                }
+                log.warn("Not able to extract extra.sortKeyGenerator.class from field " + field.getId() + ": " + extra);                    
+            } else if (!sortKeyNode.isMissingNode()) {
+                log.warn("Field " + field.getId() + " extra.sortKeyGenerator is not an object: " + extra);
+            }
+        }
+        if (skg == null) {
+            Collections.sort(fieldValues, new Comparator<Object>() {
+                public int compare(Object o1, Object o2) {
+                    String n1 = (o1 instanceof PrestoTopic) ? ((PrestoTopic)o1).getName(field) : (o1 == null ? null : o1.toString());
+                    String n2 = (o2 instanceof PrestoTopic) ? ((PrestoTopic)o2).getName(field) : (o2 == null ? null : o2.toString());
+                    return compareComparables(n1, n2);
+                }
+            });
+        } else {
+            final SortKeyGenerator sortKeyGenerator = skg;
+            Collections.sort(fieldValues, new Comparator<Object>() {
+                public int compare(Object o1, Object o2) {
+                    String n1 = sortKeyGenerator.getSortKey(field, ((PrestoTopic)o1));
+                    String n2 = sortKeyGenerator.getSortKey(field, ((PrestoTopic)o2));
+                    return compareComparables(n1, n2);
+                }
+            });
+            
+        }
     }
     
     private ValueProcessor createValueProcessor(PrestoContext context, PrestoFieldUsage field) {
