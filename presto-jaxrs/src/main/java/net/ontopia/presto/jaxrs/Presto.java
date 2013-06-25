@@ -594,28 +594,8 @@ public abstract class Presto {
     }
 
     private void sortFieldValues(final PrestoFieldUsage field, List<? extends Object> fieldValues) {
-        SortKeyGenerator skg = null;
-        ObjectNode extra = getFieldExtraNode(field);
-        if (extra != null) {
-            JsonNode sortKeyNode = extra.path("sortKeyGenerator");
-            if (sortKeyNode.isObject()) {
-                JsonNode classNode = sortKeyNode.path("class");
-                if (classNode.isTextual()) {
-                    String className = classNode.getTextValue();
-                    if (className != null) {
-                        skg = Utils.newInstanceOf(className, SortKeyGenerator.class);
-                        if (skg != null) {
-                            skg.setPresto(this);
-                            skg.setConfig((ObjectNode)sortKeyNode);
-                        }
-                    }
-                }
-                log.warn("Not able to extract extra.sortKeyGenerator.class from field " + field.getId() + ": " + extra);                    
-            } else if (!sortKeyNode.isMissingNode()) {
-                log.warn("Field " + field.getId() + " extra.sortKeyGenerator is not an object: " + extra);
-            }
-        }
-        if (skg == null) {
+        final SortKeyGenerator sortKeyGenerator = createSortKeyGenerator(field);
+        if (sortKeyGenerator == null) {
             Collections.sort(fieldValues, new Comparator<Object>() {
                 public int compare(Object o1, Object o2) {
                     String n1 = (o1 instanceof PrestoTopic) ? ((PrestoTopic)o1).getName(field) : (o1 == null ? null : o1.toString());
@@ -624,7 +604,6 @@ public abstract class Presto {
                 }
             });
         } else {
-            final SortKeyGenerator sortKeyGenerator = skg;
             Collections.sort(fieldValues, new Comparator<Object>() {
                 public int compare(Object o1, Object o2) {
                     String n1 = sortKeyGenerator.getSortKey(field, ((PrestoTopic)o1));
@@ -634,6 +613,31 @@ public abstract class Presto {
             });
             
         }
+    }
+
+    private SortKeyGenerator createSortKeyGenerator(final PrestoFieldUsage field) {
+        ObjectNode extra = getFieldExtraNode(field);
+        if (extra != null) {
+            JsonNode sortKeyNode = extra.path("sortKeyGenerator");
+            if (sortKeyNode.isObject()) {
+                JsonNode classNode = sortKeyNode.path("class");
+                if (classNode.isTextual()) {
+                    String className = classNode.getTextValue();
+                    if (className != null) {
+                        SortKeyGenerator skg = Utils.newInstanceOf(className, SortKeyGenerator.class);
+                        if (skg != null) {
+                            skg.setPresto(this);
+                            skg.setConfig((ObjectNode)sortKeyNode);
+                            return skg;
+                        }
+                    }
+                }
+                log.warn("Not able to extract extra.sortKeyGenerator.class from field " + field.getId() + ": " + extra);                    
+            } else if (!sortKeyNode.isMissingNode()) {
+                log.warn("Field " + field.getId() + " extra.sortKeyGenerator is not an object: " + extra);
+            }
+        }
+        return null;
     }
     
     private ValueProcessor createValueProcessor(PrestoContext context, PrestoFieldUsage field) {
