@@ -55,7 +55,7 @@ public class JacksonTopic implements DefaultTopic {
 
     @Override
     public String toString() {
-        return "Topic[" + getId() + "]";
+        return "Topic[" + getId() + " " + getName() + "]";
     }
 
     public ObjectNode getData() {

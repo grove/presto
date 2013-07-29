@@ -174,7 +174,7 @@ public class PrestoProcessor {
                             valueType = schemaProvider.getTypeById(topicTypeId);
                         } else {
                             if (field.isInline()) {
-                                valueTopic = presto.buildInlineTopic(context, embeddedTopic);
+                                valueTopic = presto.buildInlineTopic(context, field, embeddedTopic);
 //                                valueTopic = presto.findInlineTopicById(context.getTopic(), field, topicId);
                             } else {
                                 valueTopic = dataProvider.getTopicById(topicId);
