@@ -73,6 +73,11 @@ public class FieldData extends Document {
     }
     
     @Override
+    public String toString() {
+        return "[FieldData: " + id + " " + name + "]";
+    }
+
+    @Override
     public String getFormat() {
         return "field";
     }

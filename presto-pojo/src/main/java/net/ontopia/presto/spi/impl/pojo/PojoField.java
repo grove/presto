@@ -19,9 +19,9 @@ public class PojoField implements PrestoField {
     private PrestoSchemaProvider schemaProvider;
     private String name;
     private boolean isNameField;
-    private PrestoView valueView;
-    private PrestoView editView;
-    private PrestoView createView;
+    private String valueViewId;
+    private String editViewId;
+    private String createViewId;
     private int minCardinality;
     private int maxCardinality;
     private String dataType;
@@ -86,24 +86,24 @@ public class PojoField implements PrestoField {
     }
 
     public PrestoView getValueView(PrestoType type) {
-        if (valueView != null) {
-            return valueView;
+        if (valueViewId != null) {
+            return type.getViewById(valueViewId);
         } else {
             return type.getDefaultView();
         }
     }
 
     public PrestoView getEditView(PrestoType type) {
-        if (editView != null) {
-            return editView;
+        if (editViewId != null) {
+            return type.getViewById(editViewId);
         } else {
             return type.getDefaultView();
         }
     }
 
     public PrestoView getCreateView(PrestoType type) {
-        if (createView != null) {
-            return createView;
+        if (createViewId != null) {
+            return type.getViewById(createViewId);
         } else {
             return type.getCreateView();
         }
@@ -240,16 +240,16 @@ public class PojoField implements PrestoField {
         this.isNameField = isNameField;
     }
 
-    public void setValueView(PrestoView valueView) {
-        this.valueView = valueView;
+    public void setValueViewId(String valueViewId) {
+        this.valueViewId = valueViewId;
     }
 
-    public void setEditView(PrestoView editView) {
-        this.editView = editView;
+    public void setEditViewId(String editViewId) {
+        this.editViewId = editViewId;
     }
 
-    public void setCreateView(PrestoView createView) {
-        this.createView = createView;
+    public void setCreateViewId(String createViewId) {
+        this.createViewId = createViewId;
     }
 
     public void setMinCardinality(int minCardinality) {

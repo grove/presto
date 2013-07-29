@@ -25,6 +25,7 @@ Then open http://localhost:9999/presto/editor in your web browser. You can now f
 
 == News ==
 
+* 2013-06-17: Version 0.7
 * 2013-02-26: Version 0.6
 * 2012-10-22: Version 0.5
 

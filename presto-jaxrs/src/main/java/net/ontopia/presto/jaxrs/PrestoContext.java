@@ -9,6 +9,8 @@ import net.ontopia.presto.spi.PrestoView;
 
 public class PrestoContext {
 
+    private static final String NEW_TOPICID_PREFIX = "_";
+
     private final String topicId;
     
     private final PrestoTopic topic;
@@ -27,8 +29,8 @@ public class PrestoContext {
 
         if (topicId == null) {
             throw new RuntimeException("topicId cannot be null");
-        } else if (topicId.startsWith("_")) {
-            type = schemaProvider.getTypeById(topicId.substring(1));
+        } else if (isNewTopic(topicId)) {
+            type = getType(topicId, schemaProvider);
             topic = null;
             isNewTopic = true;
         } else {
@@ -49,20 +51,24 @@ public class PrestoContext {
         this.isReadOnly = readOnly;
     }
 
-    private PrestoContext(PrestoType type, PrestoView view, boolean readOnly) {
-        this(null, type, view, true, readOnly);
+    public static boolean isNewTopic(String topicId) {
+        return topicId.startsWith(NEW_TOPICID_PREFIX);
     }
-
-    private PrestoContext(PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnly) {
-        this(topic, type, view, false, readOnly);
+ 
+    public static PrestoType getType(String topicId, PrestoSchemaProvider schemaProvider) {
+        return schemaProvider.getTypeById(topicId.substring(1));
     }
     
-    private PrestoContext(PrestoTopic topic, PrestoType type, PrestoView view, boolean isNewTopic, boolean readOnly) {
+    private PrestoContext(PrestoType type, PrestoView view, boolean readOnly) {
+        this(null, type, view, readOnly);
+    }
+    
+    private PrestoContext(PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnly) {
         this.topic = topic;
-        this.topicId = (topic == null ? null :topic.getId());
+        this.topicId = (topic == null ? NEW_TOPICID_PREFIX + type.getId() : topic.getId());
         this.type = type;
         this.view = view;
-        this.isNewTopic = isNewTopic;
+        this.isNewTopic = (topic == null);
         this.isReadOnly = readOnly;
     }
 
@@ -85,12 +91,18 @@ public class PrestoContext {
         return new PrestoContext(type, view, readOnly);
     }
     
+    public static PrestoContext create(PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnly) {
+        return new PrestoContext(topic, type, view, readOnly);
+    }
+    
     public static PrestoContext newContext(PrestoContext context, PrestoTopic topic) {
         return PrestoContext.create(topic, context.getType(), context.getView(), context.isReadOnly());
     }
     
-    public static PrestoContext create(PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnly) {
-        return new PrestoContext(topic, type, view, readOnly);
+    public static PrestoContext createSubContext(Presto session, PrestoContext parentContext, PrestoFieldUsage parentField, PrestoTopic topic, boolean readOnly) {
+        PrestoContext context = create(session, topic, readOnly);
+        context.setParentContext(parentContext, parentField);
+        return context;
     }
     
     public static PrestoContext createSubContext(PrestoContext parentContext, PrestoFieldUsage parentField, PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnly) {
@@ -165,4 +177,5 @@ public class PrestoContext {
         sb.append(view.getId());
         return sb.toString();
     }
+
 }
