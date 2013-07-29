@@ -72,7 +72,8 @@ public class ValueFieldsPostProcessor extends FieldDataProcessor {
         if (field.isReferenceField()) {
             List<Value> values = new ArrayList<Value>();
             PrestoTopic valueTopic = (PrestoTopic)inputValue;
-            PrestoContext subcontext = PrestoContext.create(getPresto(), valueTopic, context.isReadOnly());
+//            PrestoContext subcontext = PrestoContext.create(getPresto(), valueTopic, context.isReadOnly());
+            PrestoContext subcontext = PrestoContext.createSubContext(getPresto(), context, field, valueTopic, context.isReadOnly());
             
             for (PrestoFieldUsage valueField : fields) {
                 FieldDataValues fieldDataValues = setFieldDataValues(subcontext, valueField, null);

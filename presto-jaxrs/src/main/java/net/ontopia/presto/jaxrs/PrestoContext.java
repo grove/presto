@@ -91,12 +91,18 @@ public class PrestoContext {
         return new PrestoContext(type, view, readOnly);
     }
     
+    public static PrestoContext create(PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnly) {
+        return new PrestoContext(topic, type, view, readOnly);
+    }
+    
     public static PrestoContext newContext(PrestoContext context, PrestoTopic topic) {
         return PrestoContext.create(topic, context.getType(), context.getView(), context.isReadOnly());
     }
     
-    public static PrestoContext create(PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnly) {
-        return new PrestoContext(topic, type, view, readOnly);
+    public static PrestoContext createSubContext(Presto session, PrestoContext parentContext, PrestoFieldUsage parentField, PrestoTopic topic, boolean readOnly) {
+        PrestoContext context = create(session, topic, readOnly);
+        context.setParentContext(parentContext, parentField);
+        return context;
     }
     
     public static PrestoContext createSubContext(PrestoContext parentContext, PrestoFieldUsage parentField, PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnly) {

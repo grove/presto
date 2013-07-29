@@ -24,7 +24,7 @@ public class PatternValueUtils {
 
     public static String getValueByPattern(PrestoVariableResolver variableResolver, Object value, String pattern) {
         String result = pattern;
-        Matcher matcher = Pattern.compile("\\$\\{([\\:\\-\\w]+)\\}").matcher(pattern);
+        Matcher matcher = Pattern.compile("\\$\\{([\\:\\.\\-\\w]+)\\}").matcher(pattern);
         while (matcher.find()) {
             String variable = matcher.group(1);
             String replacement = getValue(variableResolver, value, variable);

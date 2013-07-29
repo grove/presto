@@ -145,9 +145,9 @@ public class PrestoProcessor {
         return topicView;
     }
     
-//    public FieldData preProcessFieldData(FieldData fieldData, PrestoContext context, PrestoFieldUsage field, Status status) {
-//        return processFieldData(fieldData, context, field, Type.PRE_PROCESS, status);
-//    }
+    public FieldData preProcessFieldData(FieldData fieldData, PrestoContext context, PrestoFieldUsage field, Status status) {
+        return processFieldData(fieldData, context, field, Type.PRE_PROCESS, status);
+    }
 
     public FieldData postProcessFieldData(FieldData fieldData, PrestoContext context, PrestoFieldUsage field, Status status) {
         return processFieldData(fieldData, context, field, Type.POST_PROCESS, status);
