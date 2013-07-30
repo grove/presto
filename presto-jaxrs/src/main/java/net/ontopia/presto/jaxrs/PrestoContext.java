@@ -56,9 +56,10 @@ public class PrestoContext {
     }
  
     public static PrestoType getType(String topicId, PrestoSchemaProvider schemaProvider) {
-        return schemaProvider.getTypeById(topicId.substring(1));
+        String typeId = topicId.substring(1);
+        return schemaProvider.getTypeById(typeId);
     }
-    
+
     private PrestoContext(PrestoType type, PrestoView view, boolean readOnly) {
         this(null, type, view, readOnly);
     }

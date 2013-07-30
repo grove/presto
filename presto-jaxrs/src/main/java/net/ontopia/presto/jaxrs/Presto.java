@@ -1155,8 +1155,8 @@ public abstract class Presto {
         PrestoSchemaProvider schemaProvider = getSchemaProvider();
 
         String topicId = embeddedTopic.getTopicId();
-        String viewId = embeddedTopic.getId();
         String topicTypeId = embeddedTopic.getTopicTypeId();
+        String viewId = embeddedTopic.getId();
 
         PrestoType type = schemaProvider.getTypeById(topicTypeId);
 
@@ -1174,10 +1174,6 @@ public abstract class Presto {
         }
         PrestoView view = type.getViewById(viewId);
         subcontext = PrestoContext.createSubContext(parentContext, parentField, topic, type, view, parentContext.isReadOnly());
-//        if (topic == null) {
-//        } else {
-//            subcontext = PrestoContext.createSubContext(parentContext, parentField, topic, type, view, parentContext.isReadOnly());
-//        }
         
         PrestoDataProvider dataProvider = getDataProvider();
         
