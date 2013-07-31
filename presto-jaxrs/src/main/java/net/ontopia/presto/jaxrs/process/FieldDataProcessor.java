@@ -11,6 +11,8 @@ import org.codehaus.jackson.node.ObjectNode;
 
 public abstract class FieldDataProcessor extends AbstractProcessor {
     
+    private SubmittedState sstate;
+    
     public abstract FieldData processFieldData(FieldData fieldData, PrestoContext context, PrestoFieldUsage field);
 
     protected String getErrorMessage(String errorId, PrestoFieldUsage field, String defaultErrorMessage, Object... args) {
@@ -33,4 +35,12 @@ public abstract class FieldDataProcessor extends AbstractProcessor {
         return defaultErrorMessage;
     }
 
+    protected SubmittedState getSubmittedState() {
+        return sstate;
+    }
+    
+    public void setSubmittedState(SubmittedState sstate) {
+        this.sstate = sstate;
+    }
+    
 }

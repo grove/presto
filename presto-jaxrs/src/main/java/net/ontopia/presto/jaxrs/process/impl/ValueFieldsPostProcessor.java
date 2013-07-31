@@ -10,6 +10,7 @@ import net.ontopia.presto.jaxrs.Presto;
 import net.ontopia.presto.jaxrs.Presto.FieldDataValues;
 import net.ontopia.presto.jaxrs.PrestoContext;
 import net.ontopia.presto.jaxrs.process.FieldDataProcessor;
+import net.ontopia.presto.jaxrs.process.SubmittedState;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
@@ -36,7 +37,8 @@ public class ValueFieldsPostProcessor extends FieldDataProcessor {
             FieldData fd = getPresto().getFieldDataNoValues(context, valueField);
             
             // process the value field
-            fd = getPresto().getProcessor().processFieldData(fd, context, valueField, getType(), getStatus());
+            SubmittedState sstate = null;
+            fd = getPresto().getProcessor().processFieldData(sstate, fd, context, valueField, getType(), getStatus());
 
             valueFields.add(fd);
         }
