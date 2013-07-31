@@ -65,16 +65,14 @@ public class PrestoProcessor {
     }
     
     public Topic preProcessTopic(Topic topicData, PrestoContext context, Status status) {
-        SubmittedState sstate = new SubmittedState(topicData.getViews());
-        return processTopic(sstate, topicData, context, Type.PRE_PROCESS, status);
+        return processTopic(topicData, context, Type.PRE_PROCESS, status);
     }
 
     public Topic postProcessTopic(Topic topicData, PrestoContext context, Status status) {
-        SubmittedState sstate = null;
-        return processTopic(sstate, topicData, context, Type.POST_PROCESS, status);
+        return processTopic(topicData, context, Type.POST_PROCESS, status);
     }
     
-    private Topic processTopic(SubmittedState sstate, Topic topicData, PrestoContext context, Type processType, Status status) {
+    private Topic processTopic(Topic topicData, PrestoContext context, Type processType, Status status) {
 
         // process the topic
         ObjectNode schemaExtra = presto.getSchemaExtraNode(presto.getSchemaProvider());
@@ -95,7 +93,7 @@ public class PrestoProcessor {
             PrestoView specificView = type.getViewById(viewId);
             PrestoContext subcontext = PrestoContext.create(topic, type, specificView, context.isReadOnly());
             
-            TopicView newView = processTopicView(sstate, topicView, subcontext, processType, status);
+            TopicView newView = processTopicView(topicView, subcontext, processType, status);
             if (newView != null) {
                 newViews.add(newView);
             }
@@ -106,17 +104,21 @@ public class PrestoProcessor {
     }
     
     public TopicView preProcessTopicView(TopicView topicView, PrestoContext context, Status status) {
-        SubmittedState sstate = new SubmittedState(topicView);
-        return processTopicView(sstate, topicView, context, Type.PRE_PROCESS, status);
+        return processTopicView(topicView, context, Type.PRE_PROCESS, status);
     }
 
     public TopicView postProcessTopicView(TopicView topicView, PrestoContext context, Status status) {
-        SubmittedState sstate = null;
-        return processTopicView(sstate, topicView, context, Type.POST_PROCESS, status);
+        return processTopicView(topicView, context, Type.POST_PROCESS, status);
     }
     
-    private TopicView processTopicView(SubmittedState sstate, TopicView topicView, PrestoContext context, Type processType, Status status) {
-
+    private TopicView processTopicView(TopicView topicView, PrestoContext context, Type processType, Status status) {
+        SubmittedState sstate;
+        if (processType == Type.PRE_PROCESS) {
+            sstate = new SubmittedState(topicView);
+        } else {
+            sstate = null;
+        }
+        
         // process the topic
         ObjectNode schemaExtra = presto.getSchemaExtraNode(presto.getSchemaProvider());
         topicView = processTopicViewExtra(topicView, context, schemaExtra, processType, status);
@@ -191,7 +193,7 @@ public class PrestoProcessor {
                         PrestoView valueView = field.getValueView(valueType);
 
                         PrestoContext subcontext = PrestoContext.createSubContext(context, field, valueTopic, valueType, valueView, context.isReadOnly());
-                        value.setEmbedded(processTopicView(sstate, embeddedTopic, subcontext, processType, status));
+                        value.setEmbedded(processTopicView(embeddedTopic, subcontext, processType, status));
                         
                     } else {
                         throw new RuntimeException("Expected embedded topic for field '" + field.getId() + "'");
