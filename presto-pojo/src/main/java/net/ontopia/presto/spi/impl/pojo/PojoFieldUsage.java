@@ -139,6 +139,11 @@ public class PojoFieldUsage implements PrestoFieldUsage {
     }
 
     @Override
+    public boolean isSortedAscending() {
+        return field.isSortedAscending();
+    }
+
+    @Override
     public boolean isPageable() {
         return field.isPageable();
     }

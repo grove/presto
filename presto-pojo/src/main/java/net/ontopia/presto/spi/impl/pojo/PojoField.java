@@ -32,6 +32,7 @@ public class PojoField implements PrestoField {
     private boolean isTraversable = true;
     private boolean isReadOnly;
     private boolean isSorted;
+    private boolean isSortedAscending = true;
     private boolean isPageable;
     private int limit;
     private boolean isCascadingDelete;
@@ -157,6 +158,11 @@ public class PojoField implements PrestoField {
     @Override
     public boolean isSorted() {
         return isSorted;
+    }
+
+    @Override
+    public boolean isSortedAscending() {
+        return isSortedAscending;
     }
 
     @Override
@@ -290,6 +296,10 @@ public class PojoField implements PrestoField {
 
     public void setSorted(boolean isSorted) {
         this.isSorted = isSorted;
+    }
+
+    public void setSortAscending(boolean isSortAscending) {
+        this.isSortedAscending = isSortAscending;
     }
 
     public void setPageable(boolean isPageable) {

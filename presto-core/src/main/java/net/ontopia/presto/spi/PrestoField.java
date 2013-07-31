@@ -1,6 +1,5 @@
 package net.ontopia.presto.spi;
 
-
 public interface PrestoField {
 
     String getId();
@@ -40,6 +39,8 @@ public interface PrestoField {
     boolean isTraversable();
 
     boolean isSorted();
+
+    boolean isSortedAscending();
 
     boolean isPageable();
 

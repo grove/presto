@@ -551,7 +551,7 @@ public abstract class Presto {
 
         // sort the result
         if (field.isSorted()) {
-            sortFieldValues(context, field, fieldValues);
+            sortFieldValues(context, field, fieldValues, field.isSortedAscending());
         }
         
         ValueProcessor valueProcessor = createValueProcessor(context, field);
@@ -589,7 +589,7 @@ public abstract class Presto {
         return new FieldDataValues(inputValues, outputValues);
     }
 
-    private void sortFieldValues(final PrestoContext context, final PrestoFieldUsage field, List<? extends Object> fieldValues) {
+    private void sortFieldValues(final PrestoContext context, final PrestoFieldUsage field, List<? extends Object> fieldValues, final boolean ascending) {
         final SortKeyGenerator sortKeyGenerator = createSortKeyGenerator(field);
         if (sortKeyGenerator == null) {
             Collections.sort(fieldValues, new Comparator<Object>() {
@@ -604,7 +604,11 @@ public abstract class Presto {
                 public int compare(Object o1, Object o2) {
                     String n1 = sortKeyGenerator.getSortKey(context, field, ((PrestoTopic)o1));
                     String n2 = sortKeyGenerator.getSortKey(context, field, ((PrestoTopic)o2));
-                    return compareComparables(n1, n2);
+                    if (ascending) {
+                        return compareComparables(n1, n2);
+                    } else {
+                        return compareComparables(n1, n2) * -1;
+                    }
                 }
             });
             

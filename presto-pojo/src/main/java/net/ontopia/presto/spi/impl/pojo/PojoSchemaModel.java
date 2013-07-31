@@ -334,6 +334,10 @@ public class PojoSchemaModel {
             if (fieldConfig.has("sorted")) {
                 field.setSorted(fieldConfig.get("sorted").getBooleanValue());
             }
+            // isSortOrderAscending
+            if (fieldConfig.has("sortedAscending")) {
+                field.setSortAscending(fieldConfig.get("sortedAscending").getBooleanValue());
+            }
             // isPageable
             if (fieldConfig.has("pageable")) {
                 field.setPageable(fieldConfig.get("pageable").getBooleanValue());
