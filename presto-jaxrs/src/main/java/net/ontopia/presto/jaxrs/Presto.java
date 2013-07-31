@@ -201,10 +201,6 @@ public abstract class Presto {
     }
     
     public TopicView getTopicView(PrestoContext context) {
-        return getTopicView(context, null);
-    }
-    
-    public TopicView getTopicView(PrestoContext context, TopicView oldTopicView) {
         PrestoTopic topic = context.getTopic();
         PrestoType type = context.getType();
         PrestoView view = context.getView();
@@ -1043,7 +1039,7 @@ public abstract class Presto {
             } else {            
                 newContext = PrestoContext.createSubContext(parentContext, parentField, result, context.getType(), context.getView(), context.isReadOnly());
             }
-            TopicView newTopicView = getTopicView(newContext, topicView);
+            TopicView newTopicView = getTopicView(newContext); // NOTE: used to pass in old view, but no longer neccessary.
             return processor.postProcessTopicView(newTopicView, newContext, null);
         } else {
             return processor.postProcessTopicView(topicView, context, null);

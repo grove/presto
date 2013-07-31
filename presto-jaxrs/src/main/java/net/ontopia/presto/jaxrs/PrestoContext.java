@@ -51,19 +51,10 @@ public class PrestoContext {
         this.isReadOnly = readOnly;
     }
 
-    public static boolean isNewTopic(String topicId) {
-        return topicId.startsWith(NEW_TOPICID_PREFIX);
-    }
- 
-    public static PrestoType getType(String topicId, PrestoSchemaProvider schemaProvider) {
-        String typeId = topicId.substring(1);
-        return schemaProvider.getTypeById(typeId);
-    }
-
     private PrestoContext(PrestoType type, PrestoView view, boolean readOnly) {
         this(null, type, view, readOnly);
     }
-    
+
     private PrestoContext(PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnly) {
         this.topic = topic;
         this.topicId = (topic == null ? NEW_TOPICID_PREFIX + type.getId() : topic.getId());
@@ -72,10 +63,8 @@ public class PrestoContext {
         this.isNewTopic = (topic == null);
         this.isReadOnly = readOnly;
     }
-
-    public static PrestoContext create(Presto session, String topicId, boolean readOnly) {
-        return new PrestoContext(session, topicId, null, readOnly);
-    }
+    
+    // create new contexts
     
     public static PrestoContext create(Presto session, String topicId, String viewId, boolean readOnly) {
         return new PrestoContext(session, topicId, viewId, readOnly);
@@ -100,6 +89,8 @@ public class PrestoContext {
         return PrestoContext.create(topic, context.getType(), context.getView(), context.isReadOnly());
     }
     
+    // create subcontexts
+    
     public static PrestoContext createSubContext(Presto session, PrestoContext parentContext, PrestoFieldUsage parentField, PrestoTopic topic, boolean readOnly) {
         PrestoContext context = create(session, topic, readOnly);
         context.setParentContext(parentContext, parentField);
@@ -117,7 +108,18 @@ public class PrestoContext {
         context.setParentContext(parentContext, parentField);
         return context;
     }
+
+    // methods
     
+    public static boolean isNewTopic(String topicId) {
+        return topicId.startsWith(NEW_TOPICID_PREFIX);
+    }
+ 
+    public static PrestoType getType(String topicId, PrestoSchemaProvider schemaProvider) {
+        String typeId = topicId.substring(1);
+        return schemaProvider.getTypeById(typeId);
+    }
+
     public PrestoContext getParentContext() {
         return parentContext;
     }
