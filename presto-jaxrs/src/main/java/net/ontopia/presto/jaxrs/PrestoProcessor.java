@@ -91,7 +91,7 @@ public class PrestoProcessor {
         for (TopicView topicView : views) {
             String viewId = topicView.getId();
             PrestoView specificView = type.getViewById(viewId);
-            PrestoContext subcontext = PrestoContext.create(topic, type, specificView, context.isReadOnly());
+            PrestoContext subcontext = PrestoContext.create(topic, type, specificView);
             
             TopicView newView = processTopicView(topicView, subcontext, processType, status);
             if (newView != null) {
@@ -192,7 +192,7 @@ public class PrestoProcessor {
 
                         PrestoView valueView = field.getValueView(valueType);
 
-                        PrestoContext subcontext = PrestoContext.createSubContext(context, field, valueTopic, valueType, valueView, context.isReadOnly());
+                        PrestoContext subcontext = PrestoContext.createSubContext(context, field, valueTopic, valueType, valueView);
                         value.setEmbedded(processTopicView(embeddedTopic, subcontext, processType, status));
                         
                     } else {

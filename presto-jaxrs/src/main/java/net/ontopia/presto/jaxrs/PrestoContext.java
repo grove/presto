@@ -18,12 +18,11 @@ public class PrestoContext {
     private final PrestoView view;
 
     private final boolean isNewTopic;
-    private final boolean isReadOnly;
     
     private PrestoContext parentContext;
     private PrestoFieldUsage parentField;
     
-    private PrestoContext(Presto session, String topicId, String viewId, boolean readOnly) {
+    private PrestoContext(Presto session, String topicId, String viewId) {
         PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
         PrestoDataProvider dataProvider = session.getDataProvider();
 
@@ -48,63 +47,61 @@ public class PrestoContext {
             view = null;
         }
         this.topicId = topicId;
-        this.isReadOnly = readOnly;
     }
 
-    private PrestoContext(PrestoType type, PrestoView view, boolean readOnly) {
-        this(null, type, view, readOnly);
+    private PrestoContext(PrestoType type, PrestoView view) {
+        this(null, type, view);
     }
 
-    private PrestoContext(PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnly) {
+    private PrestoContext(PrestoTopic topic, PrestoType type, PrestoView view) {
         this.topic = topic;
         this.topicId = (topic == null ? NEW_TOPICID_PREFIX + type.getId() : topic.getId());
         this.type = type;
         this.view = view;
         this.isNewTopic = (topic == null);
-        this.isReadOnly = readOnly;
     }
     
     // create new contexts
     
-    public static PrestoContext create(Presto session, String topicId, String viewId, boolean readOnly) {
-        return new PrestoContext(session, topicId, viewId, readOnly);
+    public static PrestoContext create(Presto session, String topicId, String viewId) {
+        return new PrestoContext(session, topicId, viewId);
     }
     
-    public static PrestoContext create(Presto session, PrestoTopic topic, boolean readOnly) {
+    public static PrestoContext create(Presto session, PrestoTopic topic) {
         PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
         String typeId = topic.getTypeId();
         PrestoType type = schemaProvider.getTypeById(typeId);
-        return new PrestoContext(topic, type, type.getDefaultView(), readOnly);
+        return new PrestoContext(topic, type, type.getDefaultView());
     }
     
-    public static PrestoContext create(PrestoType type, PrestoView view, boolean readOnly) {
-        return new PrestoContext(type, view, readOnly);
+    public static PrestoContext create(PrestoType type, PrestoView view) {
+        return new PrestoContext(type, view);
     }
     
-    public static PrestoContext create(PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnly) {
-        return new PrestoContext(topic, type, view, readOnly);
+    public static PrestoContext create(PrestoTopic topic, PrestoType type, PrestoView view) {
+        return new PrestoContext(topic, type, view);
     }
     
     public static PrestoContext newContext(PrestoContext context, PrestoTopic topic) {
-        return PrestoContext.create(topic, context.getType(), context.getView(), context.isReadOnly());
+        return PrestoContext.create(topic, context.getType(), context.getView());
     }
     
     // create subcontexts
     
-    public static PrestoContext createSubContext(Presto session, PrestoContext parentContext, PrestoFieldUsage parentField, PrestoTopic topic, boolean readOnly) {
-        PrestoContext context = create(session, topic, readOnly);
+    public static PrestoContext createSubContext(Presto session, PrestoContext parentContext, PrestoFieldUsage parentField, PrestoTopic topic) {
+        PrestoContext context = create(session, topic);
         context.setParentContext(parentContext, parentField);
         return context;
     }
     
-    public static PrestoContext createSubContext(PrestoContext parentContext, PrestoFieldUsage parentField, PrestoTopic topic, PrestoType type, PrestoView view, boolean readOnly) {
-        PrestoContext context = new PrestoContext(topic, type, view, readOnly);
+    public static PrestoContext createSubContext(PrestoContext parentContext, PrestoFieldUsage parentField, PrestoTopic topic, PrestoType type, PrestoView view) {
+        PrestoContext context = new PrestoContext(topic, type, view);
         context.setParentContext(parentContext, parentField);
         return context;
     }
     
-    public static PrestoContext createSubContext(Presto session, PrestoContext parentContext, PrestoFieldUsage parentField, String topicId, String viewId, boolean readOnly) {
-        PrestoContext context = new PrestoContext(session, topicId, viewId, readOnly);
+    public static PrestoContext createSubContext(Presto session, PrestoContext parentContext, PrestoFieldUsage parentField, String topicId, String viewId) {
+        PrestoContext context = new PrestoContext(session, topicId, viewId);
         context.setParentContext(parentContext, parentField);
         return context;
     }
@@ -139,10 +136,6 @@ public class PrestoContext {
     
     public boolean isNewTopic() {
         return isNewTopic;
-    }
-    
-    public boolean isReadOnly() {
-        return isReadOnly;
     }
     
     public PrestoTopic getTopic() {

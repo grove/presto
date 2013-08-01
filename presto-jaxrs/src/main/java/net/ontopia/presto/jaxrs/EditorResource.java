@@ -105,7 +105,8 @@ public abstract class EditorResource {
     public Response getDatabaseInfo(
             @PathParam("databaseId") final String databaseId) throws Exception {
 
-        Presto session = createPresto(databaseId);
+        boolean readOnly = false;
+        Presto session = createPresto(databaseId, readOnly);
 
         try {
             Database result = session.getDatabaseInfo();
@@ -126,7 +127,8 @@ public abstract class EditorResource {
             @PathParam("databaseId") final String databaseId, 
             @PathParam("typeId") final String typeId) throws Exception {
 
-        Presto session = createPresto(databaseId);
+        boolean readOnly = false;
+        Presto session = createPresto(databaseId, readOnly);
 
         try {
             PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
@@ -136,8 +138,7 @@ public abstract class EditorResource {
                 return Response.status(Status.NOT_FOUND).build();
             }
 
-            boolean readOnly = false;
-            PrestoContext context = PrestoContext.create(type, type.getCreateView(), readOnly);
+            PrestoContext context = PrestoContext.create(type, type.getCreateView());
 
             TopicView result = session.getNewTopicView(context);
             return Response.ok(result).build();
@@ -158,7 +159,8 @@ public abstract class EditorResource {
             @PathParam("path") final String path,
             @PathParam("typeId") final String typeId) throws Exception {
 
-        Presto session = createPresto(databaseId);
+        boolean readOnly = false;
+        Presto session = createPresto(databaseId, readOnly);
 
         try {
             PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
@@ -168,8 +170,7 @@ public abstract class EditorResource {
                 return Response.status(Status.NOT_FOUND).build();
             }
 
-            boolean readOnly = false;
-            PrestoContextField contextField = session.getContextField(path, readOnly);
+            PrestoContextField contextField = session.getContextField(path);
 
             TopicView result = session.getNewTopicView(contextField.getContext(), contextField.getField(), type);
             return Response.ok(result).build();
@@ -208,11 +209,11 @@ public abstract class EditorResource {
             @PathParam("start") final int start, 
             @PathParam("limit") final int limit) throws Exception {
         
-        Presto session = createPresto(databaseId);
+        boolean readOnly = false;
+        Presto session = createPresto(databaseId, readOnly);
 
         try {
-            boolean readOnly = false;
-            PrestoContext context = session.getTopicByPath(path, topicId, viewId, readOnly);
+            PrestoContext context = session.getTopicByPath(path, topicId, viewId);
 
             if (context == null || context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -254,11 +255,11 @@ public abstract class EditorResource {
             @PathParam("topicId") final String topicId,
             @PathParam("viewId") final String viewId) throws Exception {
 
-        Presto session = createPresto(databaseId);
+        boolean readOnly = false;
+        Presto session = createPresto(databaseId, readOnly);
 
         try {
-            boolean readOnly = false;
-            PrestoContext context = session.getTopicByPath(path, topicId, viewId, readOnly);
+            PrestoContext context = session.getTopicByPath(path, topicId, viewId);
 
             if (context == null || context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();        
@@ -273,7 +274,7 @@ public abstract class EditorResource {
                         PrestoTopic parentTopicAfterSave = session.removeFieldValues(parentContext, parentField, Collections.singletonList(topic));
     
                         // return field data of parent field
-                        FieldData fieldData = session.getFieldData(parentTopicAfterSave, parentField, readOnly);
+                        FieldData fieldData = session.getFieldData(parentTopicAfterSave, parentField);
                         return Response.ok(fieldData).build();
                     } else {
                         session.deleteTopic(topic, type);
@@ -328,10 +329,10 @@ public abstract class EditorResource {
             @PathParam("viewId") final String viewId,
             @QueryParam("readOnly") final boolean readOnly) throws Exception {
 
-        Presto session = createPresto(databaseId);
+        Presto session = createPresto(databaseId, readOnly);
 
         try {
-            PrestoContext context = session.getTopicByPath(path, topicId, viewId, readOnly);
+            PrestoContext context = session.getTopicByPath(path, topicId, viewId);
 
             if (context == null || context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -383,10 +384,10 @@ public abstract class EditorResource {
             @PathParam("viewId") final String viewId,
             @QueryParam("readOnly") final boolean readOnly) throws Exception {
 
-        Presto session = createPresto(databaseId);
+        Presto session = createPresto(databaseId, readOnly);
 
         try {
-            PrestoContext context = session.getTopicByPath(path, topicId, viewId, readOnly);
+            PrestoContext context = session.getTopicByPath(path, topicId, viewId);
 
             if (context == null || context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -413,7 +414,8 @@ public abstract class EditorResource {
             @PathParam("topicId") final String topicId, 
             @PathParam("viewId") final String viewId, TopicView topicView) throws Exception {
 
-        Presto session = createPresto(databaseId);
+        boolean readOnly = false;
+        Presto session = createPresto(databaseId, readOnly);
 
         try {
             // NOTE: the topicId is the topic that requested the validation, but the 
@@ -421,8 +423,7 @@ public abstract class EditorResource {
             // former is a descendant of the latter.
             String topicViewTopicId = topicView.getTopicId();
             
-            boolean readOnly = false;
-            PrestoContext context = PrestoContext.create(session, topicViewTopicId, viewId, readOnly);
+            PrestoContext context = PrestoContext.create(session, topicViewTopicId, viewId);
 
             if (context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -464,11 +465,11 @@ public abstract class EditorResource {
             @PathParam("topicId") final String topicId, 
             @PathParam("viewId") final String viewId, TopicView topicView) throws Exception {
 
-        Presto session = createPresto(databaseId);
+        boolean readOnly = false;
+        Presto session = createPresto(databaseId, readOnly);
 
         try {
-            boolean readOnly = false;
-            PrestoContext context = session.getTopicByPath(path, topicId, viewId, readOnly);
+            PrestoContext context = session.getTopicByPath(path, topicId, viewId);
 
             if (context == null || context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -514,11 +515,12 @@ public abstract class EditorResource {
             @PathParam("viewId") final String viewId,
             @PathParam("fieldId") final String fieldId, 
             @QueryParam("index") final Integer index, FieldData fieldData) throws Exception {
-        Presto session = createPresto(databaseId);
+
+        boolean readOnly = false;
+        Presto session = createPresto(databaseId, readOnly);
 
         try {
-            boolean readOnly = false;
-            PrestoContext context = session.getTopicByPath(path, topicId, viewId, readOnly);
+            PrestoContext context = session.getTopicByPath(path, topicId, viewId);
 
             if (context == null || context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -570,11 +572,11 @@ public abstract class EditorResource {
             @PathParam("viewId") final String viewId,
             @PathParam("fieldId") final String fieldId, FieldData fieldData) throws Exception {
 
-        Presto session = createPresto(databaseId);
+        boolean readOnly = false;
+        Presto session = createPresto(databaseId, readOnly);
 
         try {
-            boolean readOnly = false;
-            PrestoContext context = session.getTopicByPath(path, topicId, viewId, readOnly);
+            PrestoContext context = session.getTopicByPath(path, topicId, viewId);
 
             if (context == null || context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -654,11 +656,11 @@ public abstract class EditorResource {
             @PathParam("fieldId") final String fieldId,
             @QueryParam("query") final String query) throws Exception {
 
-        Presto session = createPresto(databaseId);
+        boolean readOnly = false;
+        Presto session = createPresto(databaseId, readOnly);
 
         try {
-            boolean readOnly = false;
-            PrestoContext context = session.getTopicByPath(path, topicId, viewId, readOnly);
+            PrestoContext context = session.getTopicByPath(path, topicId, viewId);
 
             if (context == null || context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -686,11 +688,11 @@ public abstract class EditorResource {
             @PathParam("viewId") final String viewId,
             @PathParam("fieldId") final String fieldId) throws Exception {
 
-        Presto session = createPresto(databaseId);
+        boolean readOnly = false;
+        Presto session = createPresto(databaseId, readOnly);
 
         try {
-            boolean readOnly = false;
-            PrestoContext context = PrestoContext.create(session, Links.deskull(topicId), viewId, readOnly);
+            PrestoContext context = PrestoContext.create(session, Links.deskull(topicId), viewId);
 
             if (context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -714,7 +716,7 @@ public abstract class EditorResource {
     @Path("available-types-tree/{databaseId}")
     public Response getAvailableTypesTree(@PathParam("databaseId") final String databaseId) throws Exception {
 
-        Presto session = createPresto(databaseId);
+        Presto session = createPresto(databaseId, false);
 
         try {
             AvailableTopicTypes result = session.getAvailableTypesInfo(true);
@@ -730,7 +732,7 @@ public abstract class EditorResource {
 
     // overridable methods
 
-    public class EditorResourcePresto extends Presto {
+    public abstract class EditorResourcePresto extends Presto {
         
         public EditorResourcePresto(String databaseId, String databaseName, PrestoSchemaProvider schemaProvider, PrestoDataProvider dataProvider) {
             super(databaseId, databaseName, schemaProvider, dataProvider);
@@ -783,7 +785,7 @@ public abstract class EditorResource {
         }
     }
     
-    protected abstract Presto createPresto(String databaseId);
+    protected abstract Presto createPresto(String databaseId, boolean readOnlyMode);
     
     protected abstract Collection<String> getDatabaseIds();
 
