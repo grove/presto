@@ -169,7 +169,6 @@ public abstract class EditorResource {
             }
 
             boolean readOnly = false;
-            
             PrestoContextField contextField = session.getContextField(path, readOnly);
 
             TopicView result = session.getNewTopicView(contextField.getContext(), contextField.getField(), type);

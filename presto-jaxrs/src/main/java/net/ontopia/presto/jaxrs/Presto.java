@@ -671,7 +671,8 @@ public abstract class Presto {
                 result.setName(name);
             }
         }
-        if (!context.isReadOnly() && !field.isReadOnly()) {
+        boolean isReadOnly = context.isReadOnly() || field.isReadOnly();
+        if (!isReadOnly) {
             result.setRemovable(Boolean.TRUE);
         }
         return result;
@@ -703,7 +704,8 @@ public abstract class Presto {
             result.setEmbedded(getTopicView(subcontext));
         }
 
-        if (!context.isReadOnly() && !field.isReadOnly()) {
+        boolean isReadOnly = context.isReadOnly() || field.isReadOnly();
+        if (!isReadOnly) {
             result.setRemovable(Boolean.TRUE);
         }
 
@@ -1491,8 +1493,6 @@ public abstract class Presto {
         String startViewId = traverse[1];
         String startFieldId = traverse[2];
 
-//        PrestoContext currentContext = PrestoContext.create(this, startTopicId, startViewId, readOnly);
-
         PrestoTopic currentTopic = dataProvider.getTopicById(startTopicId);
         if (currentTopic == null) {
             return null;
@@ -1503,7 +1503,7 @@ public abstract class Presto {
         PrestoFieldUsage currentField = currentType.getFieldById(startFieldId, currentView);
         PrestoContext currentContext = PrestoContext.create(currentTopic, currentType, currentView, readOnly);
         
-        System.out.println("T1: " + startTopicId + " V: " + startViewId + " F: " + startFieldId);
+//        System.out.println("T1: " + startTopicId + " V: " + startViewId + " F: " + startFieldId);
         
         // traverse children
         for (int i=1; i < steps; i++) {
@@ -1528,7 +1528,7 @@ public abstract class Presto {
                 currentContext = PrestoContext.createSubContext(currentContext, currentField, currentTopic, currentType, currentView, readOnly);
             }
             currentField = currentType.getFieldById(fieldId, currentView);
-            System.out.println("T0: " + topicId + " V: " + viewId + " F: " + fieldId);
+//            System.out.println("T0: " + topicId + " V: " + viewId + " F: " + fieldId);
         }
         return new PrestoContextField(currentContext, currentField);
     }
