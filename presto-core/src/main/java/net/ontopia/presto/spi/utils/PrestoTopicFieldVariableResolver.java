@@ -1,7 +1,6 @@
 package net.ontopia.presto.spi.utils;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -19,7 +18,7 @@ public class PrestoTopicFieldVariableResolver implements PrestoVariableResolver 
     }
     
     @Override
-    public List<String> getValues(Object value, String variable) {
+    public List<? extends Object> getValues(Object value, String variable) {
         if (value instanceof PrestoTopic) {
             List<String> result = new ArrayList<String>();
             PrestoTopic topic = (PrestoTopic)value;
@@ -35,14 +34,7 @@ public class PrestoTopicFieldVariableResolver implements PrestoVariableResolver 
                 result.add(type.getName());                
             } else {
                 PrestoField valueField = type.getFieldById(variable);
-                Collection<? extends Object> values = topic.getValues(valueField);
-                for (Object v : values) {
-                    if (v instanceof PrestoTopic) {
-                        result.add((((PrestoTopic)v).getId()));
-                    } else {
-                        result.add(v == null ? null : v.toString());
-                    }
-                }
+                return topic.getValues(valueField);
             }
             return result;
         } else {
