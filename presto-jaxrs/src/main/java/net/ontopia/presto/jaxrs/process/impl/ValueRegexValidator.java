@@ -16,7 +16,7 @@ public class ValueRegexValidator extends FieldDataProcessor {
 
     @Override
     public FieldData processFieldData(FieldData fieldData, PrestoContext context, PrestoFieldUsage field) {
-        ObjectNode processorConfig = (ObjectNode)getConfig();
+        ObjectNode processorConfig = getConfig();
         if (processorConfig != null) {
             String regexp = getString(processorConfig, "regexp", null);
             Pattern pattern = Pattern.compile(regexp);

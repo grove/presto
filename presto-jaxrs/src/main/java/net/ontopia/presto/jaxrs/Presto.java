@@ -561,6 +561,11 @@ public abstract class Presto {
             }
         }
 
+        return setFieldDataValues(offset, limit, context, field, fieldData, fieldValues);
+    }
+
+    public FieldDataValues setFieldDataValues(int offset, int limit,
+            PrestoContext context, final PrestoFieldUsage field, FieldData fieldData, List<? extends Object> fieldValues) {
         // sort the result
         if (field.isSorted()) {
             sortFieldValues(context, field, fieldValues, field.isSortedAscending());

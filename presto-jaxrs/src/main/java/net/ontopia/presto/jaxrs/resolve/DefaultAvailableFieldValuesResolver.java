@@ -55,7 +55,7 @@ public class DefaultAvailableFieldValuesResolver extends AvailableFieldValuesRes
         }
 
         @Override
-        public List<String> getValues(Object value, String variable) {
+        public List<? extends Object> getValues(Object value, String variable) {
             if (variable.equals(":query")) {
                 return Collections.singletonList(query);
             } else {

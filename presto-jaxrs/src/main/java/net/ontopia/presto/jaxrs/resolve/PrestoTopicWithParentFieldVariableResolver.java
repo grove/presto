@@ -18,7 +18,7 @@ public class PrestoTopicWithParentFieldVariableResolver extends PrestoTopicField
     }
     
     @Override
-    public List<String> getValues(Object value, String variable) {
+    public List<? extends Object> getValues(Object value, String variable) {
         if (variable.startsWith(PARENT_PREFIX)) {
             String parentVariable = getParentVariable(context, variable);
             Object parentTopic = getParentTopic(context, variable);

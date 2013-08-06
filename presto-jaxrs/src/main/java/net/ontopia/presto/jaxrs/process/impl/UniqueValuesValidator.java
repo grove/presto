@@ -9,15 +9,14 @@ import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxb.Value;
 import net.ontopia.presto.jaxrs.PrestoContext;
 import net.ontopia.presto.jaxrs.process.FieldDataProcessor;
+import net.ontopia.presto.jaxrs.resolve.PrestoTopicWithParentFieldVariableResolver;
 import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoFieldUsage;
-import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
 import net.ontopia.presto.spi.PrestoTopic.Paging;
 import net.ontopia.presto.spi.jackson.JacksonDataProvider;
 import net.ontopia.presto.spi.utils.PrestoPaging;
-import net.ontopia.presto.spi.utils.PrestoTopicFieldVariableResolver;
 import net.ontopia.presto.spi.utils.PrestoVariableResolver;
 
 import org.codehaus.jackson.JsonNode;
@@ -33,16 +32,18 @@ public class UniqueValuesValidator extends FieldDataProcessor {
             PrestoDataProvider dataProvider = getDataProvider();
 
             if (dataProvider instanceof JacksonDataProvider) {
-                JacksonDataProvider jacksonDataProvider = (JacksonDataProvider)dataProvider;
                 Paging paging = new PrestoPaging(0, 1);
                 
-                PrestoVariableResolver variableResolver = new FieldDataVariableResolver(field.getSchemaProvider(), fieldData);
+                PrestoVariableResolver parentResolver = new PrestoTopicWithParentFieldVariableResolver(field.getSchemaProvider(), context);
+                PrestoVariableResolver variableResolver = new FieldDataVariableResolver(parentResolver, fieldData);
                 
                 PrestoTopic topic = context.getTopic();
                 
                 Collection<? extends Object> objects = (topic == null ? Collections.emptyList() : Collections.singleton(topic));
                 
+                JacksonDataProvider jacksonDataProvider = (JacksonDataProvider)dataProvider;
                 PagedValues result = jacksonDataProvider.resolveValues(objects, field, paging, resolveConfig, variableResolver);
+
                 if (result.getValues().size() > 0) {
                     setValid(false);
                     addError(fieldData, getErrorMessage("not-unique", field, "Field value is not unique."));
@@ -57,13 +58,13 @@ public class UniqueValuesValidator extends FieldDataProcessor {
         private final PrestoVariableResolver variableResolver;
         private final FieldData fieldData;
 
-        FieldDataVariableResolver(PrestoSchemaProvider schemaProvider, FieldData fieldData) {
-            this.variableResolver = new PrestoTopicFieldVariableResolver(schemaProvider);
+        public FieldDataVariableResolver(PrestoVariableResolver variableResolver, FieldData fieldData) {
+            this.variableResolver = variableResolver;
             this.fieldData = fieldData;
         }
 
         @Override
-        public List<String> getValues(Object value, String variable) {
+        public List<? extends Object> getValues(Object value, String variable) {
             if (variable.equals(":value")) {
                 return getFieldDataValues(fieldData);
             } else {
