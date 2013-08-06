@@ -39,4 +39,10 @@ public class Utils {
         return null;
     }
 
+    public static void validateNotNull(Object o) {
+        if (o == null) {
+            throw new NullPointerException("Object cannot be null");
+        }
+    }
+    
 }

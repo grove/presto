@@ -34,7 +34,7 @@ public class TopicView {
         this("topic-view");
     }
     
-    public TopicView(String format) {
+    private TopicView(String format) {
         this.format = format;
     }
 

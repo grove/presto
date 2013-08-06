@@ -68,6 +68,18 @@ public abstract class Presto {
         this.processor = new PrestoProcessor(this);
     }
 
+    protected boolean isReadOnlyMode() {
+        return false;
+    }
+
+    protected boolean isReadOnly(PrestoContext context, PrestoFieldUsage field) {
+        return isReadOnlyMode() || field.isReadOnly();
+    }
+
+    protected boolean isReadOnly(PrestoContext context, PrestoFieldUsage field, Object fieldValue) {
+        return isReadOnlyMode() || field.isReadOnly();
+    }
+
     public String getDatabaseId() {
         return databaseId;
     }
@@ -141,7 +153,7 @@ public abstract class Presto {
                 PrestoContext parentContext = context.getParentContext();
                 PrestoFieldUsage parentField = context.getParentField();
 
-                PrestoContext subcontext = PrestoContext.createSubContext(parentContext, parentField, topic, type, v, context.isReadOnly());
+                PrestoContext subcontext = PrestoContext.createSubContext(parentContext, parentField, topic, type, v);
                 
                 if (viewId.equals(v.getId())) {
                     topicViews.add(getTopicView(subcontext));
@@ -191,9 +203,9 @@ public abstract class Presto {
             String topicId = context.getTopicId();
             PrestoContext parentContext = context.getParentContext();
             PrestoField parentField = context.getParentField();
-            href = Links.getTopicViewHref(getBaseUri(), getDatabaseId(), parentContext, parentField, topicId, view.getId(), context.isReadOnly());
+            href = Links.getTopicViewHref(getBaseUri(), getDatabaseId(), parentContext, parentField, topicId, view.getId(), isReadOnlyMode());
         } else {
-            href = Links.getTopicViewHref(getBaseUri(), getDatabaseId(), topic.getId(), view.getId(), context.isReadOnly());
+            href = Links.getTopicViewHref(getBaseUri(), getDatabaseId(), topic.getId(), view.getId(), isReadOnlyMode());
         }
         result.setHref(href);
 
@@ -201,10 +213,6 @@ public abstract class Presto {
     }
     
     public TopicView getTopicView(PrestoContext context) {
-        return getTopicView(context, null);
-    }
-    
-    public TopicView getTopicView(PrestoContext context, TopicView oldTopicView) {
         PrestoTopic topic = context.getTopic();
         PrestoType type = context.getType();
         PrestoView view = context.getView();
@@ -221,9 +229,9 @@ public abstract class Presto {
             String topicId = context.getTopicId();
             PrestoContext parentContext = context.getParentContext();
             PrestoField parentField = context.getParentField();
-            href = Links.getTopicViewHref(getBaseUri(), getDatabaseId(), parentContext, parentField, topicId, view.getId(), context.isReadOnly());
+            href = Links.getTopicViewHref(getBaseUri(), getDatabaseId(), parentContext, parentField, topicId, view.getId(), isReadOnlyMode());
         } else {
-            href = Links.getTopicViewHref(getBaseUri(), getDatabaseId(), topic.getId(), view.getId(), context.isReadOnly());
+            href = Links.getTopicViewHref(getBaseUri(), getDatabaseId(), topic.getId(), view.getId(), isReadOnlyMode());
         }
         result.setHref(href);
 
@@ -233,7 +241,7 @@ public abstract class Presto {
             if (!field.isHidden()) {
                 fields.add(getFieldData(context, field));
 
-                if (!field.isReadOnly() && !context.isReadOnly()) {
+                if (!field.isReadOnly() && !isReadOnlyMode()) {
                     allFieldsReadOnly = false;
                 }
             }
@@ -243,7 +251,7 @@ public abstract class Presto {
         List<Link> links = new ArrayList<Link>();
         links.add(Links.createLabel(type.getName()));
 
-        if (!context.isReadOnly()) {
+        if (!isReadOnlyMode()) {
             if (!allFieldsReadOnly) {
                 links.add(new Link("update", href));
             }
@@ -306,7 +314,7 @@ public abstract class Presto {
 
         String topicId = "_" + type.getId();
 
-        PrestoContext subcontext = PrestoContext.createSubContext(this, parentContext, parentField, topicId, viewId, false);
+        PrestoContext subcontext = PrestoContext.createSubContext(this, parentContext, parentField, topicId, viewId);
 
         TopicView result = TopicView.view();
         result.setId(viewId);
@@ -393,7 +401,7 @@ public abstract class Presto {
             fieldData.setEmbeddable(true);
         }
 
-        boolean isReadOnly = context.isReadOnly() || field.isReadOnly();
+        boolean isReadOnly = isReadOnly(context, field);
         if (isReadOnly) {
             fieldData.setReadOnly(Boolean.TRUE);
         }
@@ -553,9 +561,14 @@ public abstract class Presto {
             }
         }
 
+        return setFieldDataValues(offset, limit, context, field, fieldData, fieldValues);
+    }
+
+    public FieldDataValues setFieldDataValues(int offset, int limit,
+            PrestoContext context, final PrestoFieldUsage field, FieldData fieldData, List<? extends Object> fieldValues) {
         // sort the result
         if (field.isSorted()) {
-            sortFieldValues(context, field, fieldValues);
+            sortFieldValues(context, field, fieldValues, field.isSortedAscending());
         }
         
         ValueProcessor valueProcessor = createValueProcessor(context, field);
@@ -593,7 +606,7 @@ public abstract class Presto {
         return new FieldDataValues(inputValues, outputValues);
     }
 
-    private void sortFieldValues(final PrestoContext context, final PrestoFieldUsage field, List<? extends Object> fieldValues) {
+    private void sortFieldValues(final PrestoContext context, final PrestoFieldUsage field, List<? extends Object> fieldValues, final boolean ascending) {
         final SortKeyGenerator sortKeyGenerator = createSortKeyGenerator(field);
         if (sortKeyGenerator == null) {
             Collections.sort(fieldValues, new Comparator<Object>() {
@@ -608,7 +621,11 @@ public abstract class Presto {
                 public int compare(Object o1, Object o2) {
                     String n1 = sortKeyGenerator.getSortKey(context, field, ((PrestoTopic)o1));
                     String n2 = sortKeyGenerator.getSortKey(context, field, ((PrestoTopic)o2));
-                    return compareComparables(n1, n2);
+                    if (ascending) {
+                        return compareComparables(n1, n2);
+                    } else {
+                        return compareComparables(n1, n2) * -1;
+                    }
                 }
             });
             
@@ -671,7 +688,8 @@ public abstract class Presto {
                 result.setName(name);
             }
         }
-        if (!context.isReadOnly() && !field.isReadOnly()) {
+        boolean isReadOnly = isReadOnly(context, field, fieldValue);
+        if (!isReadOnly) {
             result.setRemovable(Boolean.TRUE);
         }
         return result;
@@ -699,11 +717,12 @@ public abstract class Presto {
         if (field.isEmbedded()) {
             
             PrestoView valueView = field.getValueView(valueType);
-            PrestoContext subcontext = PrestoContext.createSubContext(context, field, value, valueType, valueView, context.isReadOnly());
+            PrestoContext subcontext = PrestoContext.createSubContext(context, field, value, valueType, valueView);
             result.setEmbedded(getTopicView(subcontext));
         }
 
-        if (!context.isReadOnly() && !field.isReadOnly()) {
+        boolean isReadOnly = isReadOnly(context, field, value);
+        if (!isReadOnly) {
             result.setRemovable(Boolean.TRUE);
         }
 
@@ -711,9 +730,9 @@ public abstract class Presto {
         if (field.isTraversable()) {
             PrestoView fieldsView = field.getEditView(valueType);
             if (valueType.isInline()) {
-                links.add(new Link("edit", Links.getTopicEditLink(getBaseUri(), getDatabaseId(), context, field, value.getId(), fieldsView.getId(), context.isReadOnly())));
+                links.add(new Link("edit", Links.getTopicEditLink(getBaseUri(), getDatabaseId(), context, field, value.getId(), fieldsView.getId(), isReadOnlyMode())));
             } else {
-                links.add(new Link("edit", Links.getTopicEditLink(getBaseUri(), getDatabaseId(), value.getId(), fieldsView.getId(), context.isReadOnly())));
+                links.add(new Link("edit", Links.getTopicEditLink(getBaseUri(), getDatabaseId(), value.getId(), fieldsView.getId(), isReadOnlyMode())));
             }
         }
         result.setLinks(links);
@@ -942,10 +961,10 @@ public abstract class Presto {
         return result;
     }
 
-    public FieldData getFieldData(PrestoTopic topic, PrestoFieldUsage field, boolean readOnly) {
+    public FieldData getFieldData(PrestoTopic topic, PrestoFieldUsage field) {
         PrestoType type = field.getType();
         PrestoView view = field.getView();
-        PrestoContext context = PrestoContext.create(topic, type, view, readOnly);
+        PrestoContext context = PrestoContext.create(topic, type, view);
         
         FieldData result = getFieldData(context, field);
         return processor.postProcessFieldData(result, context, field, null);
@@ -957,7 +976,7 @@ public abstract class Presto {
         List<? extends Object> addableValues = updateAndExtractValuesFromFieldData(context, field, fieldData, resolveEmbedded, includeExisting);
         PrestoTopic topicAfterSave = addFieldValues(context, field, addableValues, index);
         
-        return getFieldData(topicAfterSave, field, context.isReadOnly());
+        return getFieldData(topicAfterSave, field);
     }
     
     public FieldData removeFieldValues(PrestoContext context, PrestoFieldUsage field, FieldData fieldData) {
@@ -966,7 +985,7 @@ public abstract class Presto {
         List<? extends Object> removeableValues = updateAndExtractValuesFromFieldData(context, field, fieldData, resolveEmbedded, includeExisting);
         PrestoTopic topicAfterSave = removeFieldValues(context, field, removeableValues);
 
-        return getFieldData(topicAfterSave, field, context.isReadOnly());
+        return getFieldData(topicAfterSave, field);
     }
     
     public PrestoTopic updateFieldValues(PrestoContext context, PrestoFieldUsage field, List<? extends Object> updateableValues) {
@@ -1041,9 +1060,9 @@ public abstract class Presto {
                 PrestoTopic updatedParent = updateFieldValues(parentContext, parentField, Collections.singletonList(result));
                 newContext = PrestoContext.newContext(parentContext, updatedParent);
             } else {            
-                newContext = PrestoContext.createSubContext(parentContext, parentField, result, context.getType(), context.getView(), context.isReadOnly());
+                newContext = PrestoContext.createSubContext(parentContext, parentField, result, context.getType(), context.getView());
             }
-            TopicView newTopicView = getTopicView(newContext, topicView);
+            TopicView newTopicView = getTopicView(newContext); // NOTE: used to pass in old view, but no longer neccessary.
             return processor.postProcessTopicView(newTopicView, newContext, null);
         } else {
             return processor.postProcessTopicView(topicView, context, null);
@@ -1155,8 +1174,8 @@ public abstract class Presto {
         PrestoSchemaProvider schemaProvider = getSchemaProvider();
 
         String topicId = embeddedTopic.getTopicId();
-        String viewId = embeddedTopic.getId();
         String topicTypeId = embeddedTopic.getTopicTypeId();
+        String viewId = embeddedTopic.getId();
 
         PrestoType type = schemaProvider.getTypeById(topicTypeId);
 
@@ -1173,11 +1192,7 @@ public abstract class Presto {
             topic = findInlineTopicById(parentTopic, parentField, topicId);
         }
         PrestoView view = type.getViewById(viewId);
-        subcontext = PrestoContext.createSubContext(parentContext, parentField, topic, type, view, parentContext.isReadOnly());
-//        if (topic == null) {
-//        } else {
-//            subcontext = PrestoContext.createSubContext(parentContext, parentField, topic, type, view, parentContext.isReadOnly());
-//        }
+        subcontext = PrestoContext.createSubContext(parentContext, parentField, topic, type, view);
         
         PrestoDataProvider dataProvider = getDataProvider();
         
@@ -1299,7 +1314,7 @@ public abstract class Presto {
         }
 
         PrestoView valueView = field.getValueView(type);
-        PrestoContext subcontext = PrestoContext.create(topic, type, valueView, context.isReadOnly());
+        PrestoContext subcontext = PrestoContext.create(topic, type, valueView);
 
         return updatePrestoTopic(subcontext, embeddedTopic);
     }
@@ -1480,7 +1495,7 @@ public abstract class Presto {
         }
     }
     
-    public PrestoContextField getContextField(String path, boolean readOnly) {
+    public PrestoContextField getContextField(String path) {
         PrestoDataProvider dataProvider = getDataProvider();
         PrestoSchemaProvider schemaProvider = getSchemaProvider();
 
@@ -1495,8 +1510,6 @@ public abstract class Presto {
         String startViewId = traverse[1];
         String startFieldId = traverse[2];
 
-//        PrestoContext currentContext = PrestoContext.create(this, startTopicId, startViewId, readOnly);
-
         PrestoTopic currentTopic = dataProvider.getTopicById(startTopicId);
         if (currentTopic == null) {
             return null;
@@ -1505,9 +1518,9 @@ public abstract class Presto {
         PrestoType currentType = schemaProvider.getTypeById(startTypeId);
         PrestoView currentView = currentType.getViewById(startViewId);
         PrestoFieldUsage currentField = currentType.getFieldById(startFieldId, currentView);
-        PrestoContext currentContext = PrestoContext.create(currentTopic, currentType, currentView, readOnly);
+        PrestoContext currentContext = PrestoContext.create(currentTopic, currentType, currentView);
         
-        System.out.println("T1: " + startTopicId + " V: " + startViewId + " F: " + startFieldId);
+//        System.out.println("T1: " + startTopicId + " V: " + startViewId + " F: " + startFieldId);
         
         // traverse children
         for (int i=1; i < steps; i++) {
@@ -1517,7 +1530,7 @@ public abstract class Presto {
             
             // find topic amongst parent field values
             if (PrestoContext.isNewTopic(topicId)) {
-                currentContext = PrestoContext.createSubContext(this, currentContext, currentField, topicId, viewId, readOnly);
+                currentContext = PrestoContext.createSubContext(this, currentContext, currentField, topicId, viewId);
                 currentTopic = null;
                 currentType = currentContext.getType();
                 currentView = currentContext.getView();
@@ -1529,21 +1542,21 @@ public abstract class Presto {
                 String typeId = currentTopic.getTypeId();
                 currentType = schemaProvider.getTypeById(typeId);
                 currentView = currentType.getViewById(viewId);
-                currentContext = PrestoContext.createSubContext(currentContext, currentField, currentTopic, currentType, currentView, readOnly);
+                currentContext = PrestoContext.createSubContext(currentContext, currentField, currentTopic, currentType, currentView);
             }
             currentField = currentType.getFieldById(fieldId, currentView);
-            System.out.println("T0: " + topicId + " V: " + viewId + " F: " + fieldId);
+//            System.out.println("T0: " + topicId + " V: " + viewId + " F: " + fieldId);
         }
         return new PrestoContextField(currentContext, currentField);
     }
     
-    public PrestoContext getTopicByPath(String path, String topicId, String viewId, boolean readOnly) {
+    public PrestoContext getTopicByPath(String path, String topicId, String viewId) {
 
         if (path == null || path.equals("_")) {
-            return PrestoContext.create(this, Links.deskull(topicId), viewId, readOnly);
+            return PrestoContext.create(this, Links.deskull(topicId), viewId);
         }
         
-        PrestoContextField contextField = getContextField(path, readOnly);
+        PrestoContextField contextField = getContextField(path);
         
         PrestoContext currentContext = contextField.getContext();
         PrestoTopic currentTopic = currentContext.getTopic();
@@ -1551,12 +1564,12 @@ public abstract class Presto {
         
         PrestoTopic resultTopic = findInParentField(currentTopic, currentField, topicId);
         if (resultTopic == null) {
-            return PrestoContext.createSubContext(this, currentContext, currentField, Links.deskull(topicId), viewId, readOnly);
+            return PrestoContext.createSubContext(this, currentContext, currentField, Links.deskull(topicId), viewId);
         } else {
             String resultTypeId = resultTopic.getTypeId();
             PrestoType resultType = schemaProvider.getTypeById(resultTypeId);
             PrestoView resultView = resultType.getViewById(viewId);
-            return PrestoContext.createSubContext(currentContext, currentField, resultTopic, resultType, resultView, readOnly);
+            return PrestoContext.createSubContext(currentContext, currentField, resultTopic, resultType, resultView);
         }
     }
 

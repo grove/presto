@@ -11,6 +11,7 @@ import net.ontopia.presto.jaxb.TopicView;
 import net.ontopia.presto.jaxb.Value;
 import net.ontopia.presto.jaxrs.process.AbstractProcessor;
 import net.ontopia.presto.jaxrs.process.FieldDataProcessor;
+import net.ontopia.presto.jaxrs.process.SubmittedState;
 import net.ontopia.presto.jaxrs.process.TopicProcessor;
 import net.ontopia.presto.jaxrs.process.TopicViewProcessor;
 import net.ontopia.presto.spi.PrestoDataProvider;
@@ -90,7 +91,7 @@ public class PrestoProcessor {
         for (TopicView topicView : views) {
             String viewId = topicView.getId();
             PrestoView specificView = type.getViewById(viewId);
-            PrestoContext subcontext = PrestoContext.create(topic, type, specificView, context.isReadOnly());
+            PrestoContext subcontext = PrestoContext.create(topic, type, specificView);
             
             TopicView newView = processTopicView(topicView, subcontext, processType, status);
             if (newView != null) {
@@ -111,7 +112,13 @@ public class PrestoProcessor {
     }
     
     private TopicView processTopicView(TopicView topicView, PrestoContext context, Type processType, Status status) {
-
+        SubmittedState sstate;
+        if (processType == Type.PRE_PROCESS) {
+            sstate = new SubmittedState(topicView);
+        } else {
+            sstate = null;
+        }
+        
         // process the topic
         ObjectNode schemaExtra = presto.getSchemaExtraNode(presto.getSchemaProvider());
         topicView = processTopicViewExtra(topicView, context, schemaExtra, processType, status);
@@ -133,7 +140,7 @@ public class PrestoProcessor {
                 PrestoFieldUsage field = context.getFieldById(fieldId);
     
                 // process field            
-                FieldData newField = processFieldData(fieldData, context, field, processType, status);
+                FieldData newField = processFieldData(sstate, fieldData, context, field, processType, status);
                 if (newField != null) {
                     newFields.add(newField);
                 }
@@ -146,14 +153,16 @@ public class PrestoProcessor {
     }
     
     public FieldData preProcessFieldData(FieldData fieldData, PrestoContext context, PrestoFieldUsage field, Status status) {
-        return processFieldData(fieldData, context, field, Type.PRE_PROCESS, status);
+        SubmittedState sstate = null;
+        return processFieldData(sstate, fieldData, context, field, Type.PRE_PROCESS, status);
     }
 
     public FieldData postProcessFieldData(FieldData fieldData, PrestoContext context, PrestoFieldUsage field, Status status) {
-        return processFieldData(fieldData, context, field, Type.POST_PROCESS, status);
+        SubmittedState sstate = null;
+        return processFieldData(sstate, fieldData, context, field, Type.POST_PROCESS, status);
     }
     
-    public FieldData processFieldData(FieldData fieldData, PrestoContext context, PrestoFieldUsage field, Type processType, Status status) {
+    public FieldData processFieldData(SubmittedState sstate, FieldData fieldData, PrestoContext context, PrestoFieldUsage field, Type processType, Status status) {
         // process nested data first
         PrestoSchemaProvider schemaProvider = getSchemaProvider();
         PrestoDataProvider dataProvider = getDataProvider();
@@ -175,7 +184,6 @@ public class PrestoProcessor {
                         } else {
                             if (field.isInline()) {
                                 valueTopic = presto.buildInlineTopic(context, field, embeddedTopic);
-//                                valueTopic = presto.findInlineTopicById(context.getTopic(), field, topicId);
                             } else {
                                 valueTopic = dataProvider.getTopicById(topicId);
                             }
@@ -184,7 +192,7 @@ public class PrestoProcessor {
 
                         PrestoView valueView = field.getValueView(valueType);
 
-                        PrestoContext subcontext = PrestoContext.createSubContext(context, field, valueTopic, valueType, valueView, context.isReadOnly());
+                        PrestoContext subcontext = PrestoContext.createSubContext(context, field, valueTopic, valueType, valueView);
                         value.setEmbedded(processTopicView(embeddedTopic, subcontext, processType, status));
                         
                     } else {
@@ -202,16 +210,16 @@ public class PrestoProcessor {
 
         // process field
         ObjectNode schemaExtra = presto.getSchemaExtraNode(presto.getSchemaProvider());
-        fieldData = processFieldDataExtra(fieldData, context, field, schemaExtra, processType, status);
+        fieldData = processFieldDataExtra(sstate, fieldData, context, field, schemaExtra, processType, status);
         
         ObjectNode topicExtra = presto.getTypeExtraNode(context.getType());
-        fieldData = processFieldDataExtra(fieldData, context, field, topicExtra, processType, status);
+        fieldData = processFieldDataExtra(sstate, fieldData, context, field, topicExtra, processType, status);
         
         ObjectNode viewExtra = presto.getViewExtraNode(context.getView());
-        fieldData = processFieldDataExtra(fieldData, context, field, viewExtra, processType, status);
+        fieldData = processFieldDataExtra(sstate, fieldData, context, field, viewExtra, processType, status);
 
         ObjectNode fieldExtra = presto.getFieldExtraNode(field);
-        fieldData = processFieldDataExtra(fieldData, context, field, fieldExtra, processType, status);
+        fieldData = processFieldDataExtra(sstate, fieldData, context, field, fieldExtra, processType, status);
         
         return fieldData;
     }
@@ -240,11 +248,12 @@ public class PrestoProcessor {
         return topicView;
     }
     
-    private FieldData processFieldDataExtra(FieldData fieldData, PrestoContext context, PrestoFieldUsage field, ObjectNode extraNode, Type processType, Status status) {
+    private FieldData processFieldDataExtra(SubmittedState sstate, FieldData fieldData, PrestoContext context, PrestoFieldUsage field, ObjectNode extraNode, Type processType, Status status) {
         if (extraNode != null) {
             JsonNode processorsNode = getFieldDataProcessorsNode(extraNode, processType);
             if (!processorsNode.isMissingNode()) {
                 for (FieldDataProcessor processor : getProcessors(FieldDataProcessor.class, processorsNode, processType, status)) {
+                    processor.setSubmittedState(sstate); // NOTE: only done on FieldProcessors for now
                     fieldData = processor.processFieldData(fieldData, context, field);                
                 }
             }

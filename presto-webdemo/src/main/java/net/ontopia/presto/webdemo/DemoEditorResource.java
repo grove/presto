@@ -47,7 +47,7 @@ public class DemoEditorResource extends EditorResource {
     }
 
     @Override
-    protected Presto createPresto(String databaseId) {
+    protected Presto createPresto(String databaseId, final boolean readOnlyMode) {
 
         // schema stored in json format
         PojoSchemaProvider schemaProvider = PojoSchemaProvider.getSchemaProvider(databaseId, databaseId + ".presto.json");
@@ -58,7 +58,12 @@ public class DemoEditorResource extends EditorResource {
         // data stored in riak
 //        final RiakDataProvider dataProvider = createRiakDataProvider();
 
-        return new EditorResourcePresto(databaseId, getDatabaseName(databaseId), schemaProvider, dataProvider);
+        return new EditorResourcePresto(databaseId, getDatabaseName(databaseId), schemaProvider, dataProvider) {
+            @Override
+            public boolean isReadOnlyMode() {
+                return readOnlyMode;
+            }
+        };
     }
 
     private CouchDataProvider createCouchDbDataProvider() {
