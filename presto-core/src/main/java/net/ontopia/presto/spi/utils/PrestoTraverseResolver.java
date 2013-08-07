@@ -40,9 +40,15 @@ public class PrestoTraverseResolver extends PrestoFieldResolver {
     private Collection<Object> traverseField(Collection<Object> objects, String fieldId, PrestoVariableResolver variableResolver) {
         
         Collection<Object> result = new HashSet<Object>();
-        for (Object object : objects) {
-            List<? extends Object> values = variableResolver.getValues(object, fieldId);
+        if (objects.isEmpty()) {
+            List<? extends Object> values = variableResolver.getValues(null, fieldId);
             result.addAll(values);
+            
+        } else {
+            for (Object object : objects) {
+                List<? extends Object> values = variableResolver.getValues(object, fieldId);
+                result.addAll(values);
+            }
         }
         return result;
     }
