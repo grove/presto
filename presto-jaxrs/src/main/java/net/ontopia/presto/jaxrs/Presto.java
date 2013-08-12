@@ -1043,7 +1043,7 @@ public abstract class Presto {
         return processor.postProcessTopicView(topicView, context, null);
     }
     
-    public TopicView updateTopic(PrestoContext context, TopicView topicView, boolean returnParent) {
+    public Object updateTopic(PrestoContext context, TopicView topicView, boolean returnParent) {
         Status status = new Status();
         
         topicView = processor.preProcessTopicView(topicView, context, status);
@@ -1062,8 +1062,12 @@ public abstract class Presto {
             } else {            
                 newContext = PrestoContext.createSubContext(parentContext, parentField, result, context.getType(), context.getView());
             }
-            TopicView newTopicView = getTopicView(newContext); // NOTE: used to pass in old view, but no longer neccessary.
-            return processor.postProcessTopicView(newTopicView, newContext, null);
+            if (context.isNewTopic() && parentContext == null) {
+                return getTopicAndProcess(newContext);
+            } else {
+                TopicView newTopicView = getTopicView(newContext); // NOTE: used to pass in old view, but no longer neccessary.
+                return processor.postProcessTopicView(newTopicView, newContext, null);
+            }
         } else {
             return processor.postProcessTopicView(topicView, context, null);
         }

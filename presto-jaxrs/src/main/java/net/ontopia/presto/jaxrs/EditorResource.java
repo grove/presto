@@ -476,7 +476,7 @@ public abstract class EditorResource {
             }
 
             boolean returnParent = true;
-            TopicView result = session.updateTopic(context, topicView, returnParent);
+            Object result = session.updateTopic(context, topicView, returnParent);
             session.commit();
 
             return Response.ok(result).build();
