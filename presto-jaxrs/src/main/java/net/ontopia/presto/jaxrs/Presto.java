@@ -1065,8 +1065,7 @@ public abstract class Presto {
             if (context.isNewTopic() && parentContext == null) {
                 return getTopicAndProcess(newContext);
             } else {
-                TopicView newTopicView = getTopicView(newContext); // NOTE: used to pass in old view, but no longer neccessary.
-                return processor.postProcessTopicView(newTopicView, newContext, null);
+                return getTopicViewAndProcess(newContext);
             }
         } else {
             return processor.postProcessTopicView(topicView, context, null);
