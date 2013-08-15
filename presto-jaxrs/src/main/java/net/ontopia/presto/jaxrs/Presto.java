@@ -1043,7 +1043,7 @@ public abstract class Presto {
         return processor.postProcessTopicView(topicView, context, null);
     }
     
-    public TopicView updateTopic(PrestoContext context, TopicView topicView, boolean returnParent) {
+    public Object updateTopic(PrestoContext context, TopicView topicView, boolean returnParent) {
         Status status = new Status();
         
         topicView = processor.preProcessTopicView(topicView, context, status);
@@ -1062,8 +1062,11 @@ public abstract class Presto {
             } else {            
                 newContext = PrestoContext.createSubContext(parentContext, parentField, result, context.getType(), context.getView());
             }
-            TopicView newTopicView = getTopicView(newContext); // NOTE: used to pass in old view, but no longer neccessary.
-            return processor.postProcessTopicView(newTopicView, newContext, null);
+            if (context.isNewTopic() && parentContext == null) {
+                return getTopicAndProcess(newContext);
+            } else {
+                return getTopicViewAndProcess(newContext);
+            }
         } else {
             return processor.postProcessTopicView(topicView, context, null);
         }
@@ -1510,16 +1513,31 @@ public abstract class Presto {
         String startViewId = traverse[1];
         String startFieldId = traverse[2];
 
-        PrestoTopic currentTopic = dataProvider.getTopicById(startTopicId);
-        if (currentTopic == null) {
-            return null;
+        boolean isNewTopic = PrestoContext.isNewTopic(startTopicId); 
+
+        PrestoTopic currentTopic;
+        String startTypeId;
+        if (isNewTopic) {
+            currentTopic = null;
+            startTypeId = PrestoContext.getTypeId(startTopicId);
+        } else {
+            currentTopic = dataProvider.getTopicById(startTopicId);
+            if (currentTopic == null) {
+                return null;
+            }
+            startTypeId = currentTopic.getTypeId();
         }
-        String startTypeId = currentTopic.getTypeId();
+        
         PrestoType currentType = schemaProvider.getTypeById(startTypeId);
         PrestoView currentView = currentType.getViewById(startViewId);
         PrestoFieldUsage currentField = currentType.getFieldById(startFieldId, currentView);
-        PrestoContext currentContext = PrestoContext.create(currentTopic, currentType, currentView);
         
+        PrestoContext currentContext;
+        if (isNewTopic) {
+            currentContext = PrestoContext.create(currentType, currentView);
+        } else {
+            currentContext = PrestoContext.create(currentTopic, currentType, currentView);
+        }
 //        System.out.println("T1: " + startTopicId + " V: " + startViewId + " F: " + startFieldId);
         
         // traverse children
@@ -1528,13 +1546,13 @@ public abstract class Presto {
             String viewId = traverse[i*3+1];
             String fieldId = traverse[i*3+2];
             
-            // find topic amongst parent field values
             if (PrestoContext.isNewTopic(topicId)) {
-                currentContext = PrestoContext.createSubContext(this, currentContext, currentField, topicId, viewId);
                 currentTopic = null;
                 currentType = currentContext.getType();
                 currentView = currentContext.getView();
+                currentContext = PrestoContext.createSubContext(this, currentContext, currentField, topicId, viewId);
             } else {
+                // find topic amongst parent field values
                 currentTopic = findInParentField(currentTopic, currentField, topicId);
                 if (currentTopic == null) {
                     return null;

@@ -116,7 +116,15 @@ public class PrestoContext {
         String typeId = topicId.substring(1);
         return schemaProvider.getTypeById(typeId);
     }
-
+    
+    public static String getTypeId(String topicId) {
+        if (topicId != null && topicId.startsWith(NEW_TOPICID_PREFIX)) {
+            String typeId = topicId.substring(1);
+            return typeId; 
+        }
+        return null;
+    }
+    
     public PrestoContext getParentContext() {
         return parentContext;
     }
