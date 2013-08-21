@@ -3,7 +3,7 @@ package net.ontopia.presto.spi.jackson;
 import java.util.Arrays;
 import java.util.List;
 
-import junit.framework.TestCase;
+import org.junit.Assert;
 import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic;
@@ -13,14 +13,16 @@ import net.ontopia.presto.spi.impl.pojo.PojoSchemaProvider;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
+import org.junit.Before;
 import org.junit.Test;
 
-public class JacksonTest extends TestCase {
+public class JacksonTest {
 
     private PojoSchemaProvider schemaProvider;
     private JacksonDataProvider dataProvider;
 
-    protected void setUp() {
+    @Before
+    public void setUp() {
         this.schemaProvider = createSchemaProvider("test", "test.schema.json");
         this.dataProvider = createDataProvider();
     }
@@ -87,19 +89,19 @@ public class JacksonTest extends TestCase {
     @Test
     public void testGetId() {
         PrestoTopic topic = getPerson();
-        assertEquals("i:john.doe", topic.getId());
+        Assert.assertEquals("i:john.doe", topic.getId());
     }
     
     @Test
     public void testGetType() {
         PrestoTopic topic = getPerson();
-        assertEquals("c:person", topic.getTypeId());
+        Assert.assertEquals("c:person", topic.getTypeId());
     }
     
     @Test
     public void testGetName() {
         PrestoTopic topic = getPerson();
-        assertEquals("John Doe", topic.getName());
+        Assert.assertEquals("John Doe", topic.getName());
     }
     
     @Test
@@ -130,21 +132,21 @@ public class JacksonTest extends TestCase {
 
         PrestoTopic johndoe = dataProvider.getTopicById("i:john.doe");
         List<? extends Object> fv = getFieldValues(johndoe, "hosted-drinking-sessions");
-        assertEquals(2, fv.size());
+        Assert.assertEquals(2, fv.size());
         System.out.println(fv);
 
         PrestoTopic firstSession = (PrestoTopic)fv.get(0);
-        assertTrue("First session is not an inline object", firstSession.isInline());
-        assertEquals("1", firstSession.getId());
+        Assert.assertTrue("First session is not an inline object", firstSession.isInline());
+        Assert.assertEquals("1", firstSession.getId());
         
         List<? extends Object> attendeesFirstSession = getFieldValues(firstSession, "attendees");
-        assertEquals(2, attendeesFirstSession.size());
+        Assert.assertEquals(2, attendeesFirstSession.size());
         System.out.println(attendeesFirstSession);
 
         PrestoTopic firstAttendeeFirstSession = (PrestoTopic)attendeesFirstSession.get(0);
-        assertFalse("First session attendee is an inline object", firstAttendeeFirstSession.isInline());
-        assertEquals("i:john.travolta", firstAttendeeFirstSession.getId());
-        assertEquals("John Travolta", firstAttendeeFirstSession.getName());
+        Assert.assertFalse("First session attendee is an inline object", firstAttendeeFirstSession.isInline());
+        Assert.assertEquals("i:john.travolta", firstAttendeeFirstSession.getId());
+        Assert.assertEquals("John Travolta", firstAttendeeFirstSession.getName());
     }
  
     private List<? extends Object> getFieldValues(PrestoTopic topic, String fieldId) {
@@ -164,10 +166,10 @@ public class JacksonTest extends TestCase {
                 }
             }
             if (!equals) {
-                failNotEquals("Values not equal", expected, actual);
+                Assert.assertEquals("Values not equal", expected, actual);
             }
         } else {
-            failNotEquals("Values not equal (different size)", expected, actual);
+            Assert.assertEquals("Values not equal (different size)", expected, actual);
         }
     }
     
@@ -183,7 +185,7 @@ public class JacksonTest extends TestCase {
             changeSet.deleteTopic(ratebeer_grove, ratebeer_account);
             changeSet.save();
             
-            fail("Should not be allowed to delete topic because type is not removable.");
+            Assert.fail("Should not be allowed to delete topic because type is not removable.");
         } catch (Exception e) {
         }
     }
@@ -194,22 +196,22 @@ public class JacksonTest extends TestCase {
         PrestoChangeSet changeSet = dataProvider.newChangeSet();
 
         PrestoTopic ratebeer_grove = dataProvider.getTopicById("i:ratebeer-grove");
-        assertNotNull("i:ratebeer-grove does not exist", ratebeer_grove);
+        Assert.assertNotNull("i:ratebeer-grove does not exist", ratebeer_grove);
 
         PrestoType person = schemaProvider.getTypeById("c:person");
         PrestoTopic grove = dataProvider.getTopicById("i:geir.ove.gronmo");
-        assertNotNull("i:geir.ove.gronmo does not exist", grove);
+        Assert.assertNotNull("i:geir.ove.gronmo does not exist", grove);
         
         List<? extends Object> ratebeer_account = getFieldValues(grove, "ratebeer-account");
-        assertEquals(1, ratebeer_account.size());
+        Assert.assertEquals(1, ratebeer_account.size());
         changeSet.deleteTopic(grove, person); // NOTE: should also take i:ratebeer-grove with it
         changeSet.save();
 
         grove = dataProvider.getTopicById("i:geir.ove.gronmo");
-        assertNull("i:geir.ove.gronmo not removed", grove);
+        Assert.assertNull("i:geir.ove.gronmo not removed", grove);
 
         ratebeer_grove = dataProvider.getTopicById("i:ratebeer-grove");
-        assertNull("i:ratebeer-grove not removed", ratebeer_grove);
+        Assert.assertNull("i:ratebeer-grove not removed", ratebeer_grove);
     }
 
 }
