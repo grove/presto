@@ -72,12 +72,16 @@ public abstract class Presto {
         return false;
     }
 
+    protected boolean isReadOnly(PrestoContext context) {
+        return isReadOnlyMode();
+    }
+
     protected boolean isReadOnly(PrestoContext context, PrestoFieldUsage field) {
-        return isReadOnlyMode() || field.isReadOnly();
+        return field.isReadOnly() || isReadOnly(context);
     }
 
     protected boolean isReadOnly(PrestoContext context, PrestoFieldUsage field, Object fieldValue) {
-        return isReadOnlyMode() || field.isReadOnly();
+        return field.isReadOnly() || isReadOnly(context);
     }
 
     public String getDatabaseId() {
@@ -241,7 +245,7 @@ public abstract class Presto {
             if (!field.isHidden()) {
                 fields.add(getFieldData(context, field));
 
-                if (!field.isReadOnly() && !isReadOnlyMode()) {
+                if (!isReadOnly(context, field)) {
                     allFieldsReadOnly = false;
                 }
             }
@@ -251,7 +255,7 @@ public abstract class Presto {
         List<Link> links = new ArrayList<Link>();
         links.add(Links.createLabel(type.getName()));
 
-        if (!isReadOnlyMode()) {
+        if (!isReadOnly(context)) {
             if (!allFieldsReadOnly) {
                 links.add(new Link("update", href));
             }
@@ -305,6 +309,11 @@ public abstract class Presto {
         return result;
     }
 
+    public TopicView getNewTopicView(String path, PrestoType type) {
+        PrestoContextField contextField = getContextField(path);
+        return getNewTopicView(contextField.getContext(), contextField.getField(), type);
+    }
+    
     public TopicView getNewTopicView(PrestoContext parentContext, PrestoFieldUsage parentField, PrestoType type) {
 
         PrestoView view = parentField.getCreateView(type);
@@ -459,11 +468,13 @@ public abstract class Presto {
             }
         }
 
+        if (!isReadOnly && field.isCreatable()) {
+            fieldLinks.addAll(getCreateFieldInstanceLinks(context, field));
+        }
+        
         if (field.isPageable()) {
             fieldLinks.add(new Link("paging", Links.pagingLink(getBaseUri(), databaseId, parentContext, parentField, topicId, parentViewId, fieldId)));    
         }
-
-        fieldLinks.addAll(getCreateFieldInstanceLinks(context, field));
 
         if (!fieldLinks.isEmpty()) {
             fieldData.setLinks(fieldLinks);
@@ -1098,7 +1109,7 @@ public abstract class Presto {
                 PrestoFieldUsage field = type.getFieldById(fieldId, view);
     
                 // ignore read-only or pageable fields 
-                if (!field.isReadOnly() && !field.isPageable()) {
+                if (!isReadOnly(context, field) && !field.isPageable()) {
                     
                     boolean resolveEmbedded = true;
                     boolean includeExisting = false;

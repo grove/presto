@@ -27,7 +27,6 @@ public abstract class JacksonDataProvider implements DefaultDataProvider {
     protected final IdentityStrategy identityStrategy;
     protected final JacksonResolver resolver;
     
-    
     protected JacksonDataProvider() {
         this.mapper = createObjectMapper();
         this.dataStrategy = createDataStrategy(mapper);

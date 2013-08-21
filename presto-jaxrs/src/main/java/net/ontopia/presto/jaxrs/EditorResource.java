@@ -33,7 +33,6 @@ import net.ontopia.presto.jaxb.Link;
 import net.ontopia.presto.jaxb.RootInfo;
 import net.ontopia.presto.jaxb.Topic;
 import net.ontopia.presto.jaxb.TopicView;
-import net.ontopia.presto.jaxrs.Presto.PrestoContextField;
 import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoChanges;
 import net.ontopia.presto.spi.PrestoDataProvider;
@@ -170,9 +169,7 @@ public abstract class EditorResource {
                 return Response.status(Status.NOT_FOUND).build();
             }
 
-            PrestoContextField contextField = session.getContextField(path);
-
-            TopicView result = session.getNewTopicView(contextField.getContext(), contextField.getField(), type);
+            TopicView result = session.getNewTopicView(path, type);
             return Response.ok(result).build();
 
         } catch (Exception e) {
