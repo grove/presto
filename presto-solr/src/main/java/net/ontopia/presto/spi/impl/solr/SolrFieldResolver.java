@@ -16,7 +16,7 @@ import net.ontopia.presto.spi.utils.PrestoVariableContext;
 import net.ontopia.presto.spi.utils.PrestoVariableResolver;
 
 import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.SolrQuery.ORDER;
+import org.apache.solr.client.solrj.SolrQuery.SortClause;
 import org.apache.solr.client.solrj.SolrRequest.METHOD;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -43,24 +43,19 @@ public abstract class SolrFieldResolver extends PrestoFieldResolver {
             PrestoField field, boolean isReference,
             Paging paging, PrestoVariableResolver variableResolver) {
 
-        PrestoVariableContext context = getVariableContext();
         ObjectNode config = getConfig();
-        
-        SolrServer solrServer = getSolrServer();
-        URL solrServerUrl = getSolrServerUrl();
-        
-        SolrQuery solrQuery = new SolrQuery();
-
-        String qt = getStringValue("qt", config, null);
-        if (qt != null) {
-            solrQuery.setRequestHandler(qt);
-        }
         
         CharSequence q_query = expandQuery(variableResolver, " AND ", objects, config.path("q"));
         if (isEmpty(q_query)) {
             return new PrestoPagedValues(Collections.emptyList(), paging, 0);
-        } else {
-            solrQuery.setQuery(q_query.toString());
+        }
+
+        SolrQuery solrQuery = new SolrQuery();
+        solrQuery.setQuery(q_query.toString());
+
+        String qt = getStringValue("qt", config, null);
+        if (qt != null) {
+            solrQuery.setRequestHandler(qt);
         }
 
         CharSequence fq_query = expandQuery(variableResolver, " AND ", objects, config.path("fq"));
@@ -78,7 +73,7 @@ public abstract class SolrFieldResolver extends PrestoFieldResolver {
 
         String orderBy = getStringValue("orderBy", config, null);
         if (orderBy != null) {
-            solrQuery.addSortField(orderBy, ORDER.asc);
+            solrQuery.addSort(SortClause.asc(orderBy));
         }
         if (paging != null) {
             solrQuery.setStart(paging.getOffset());
@@ -87,6 +82,12 @@ public abstract class SolrFieldResolver extends PrestoFieldResolver {
             int rows = getIntValue("rows", config, 100);
             solrQuery.setRows(rows);
         }
+
+        PrestoVariableContext context = getVariableContext();
+        
+        SolrServer solrServer = getSolrServer();
+        URL solrServerUrl = getSolrServerUrl();
+
         try {
             QueryResponse qr;
             if (log.isDebugEnabled()) {
