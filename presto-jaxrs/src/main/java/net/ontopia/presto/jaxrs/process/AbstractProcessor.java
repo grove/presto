@@ -36,7 +36,7 @@ public class AbstractProcessor extends AbstractHandler {
     public void setStatus(Status status) {
         this.status = status;
     }
-
+    
     protected void setValid(boolean isValid) {
         if (status != null) {
             status.setValid(isValid);

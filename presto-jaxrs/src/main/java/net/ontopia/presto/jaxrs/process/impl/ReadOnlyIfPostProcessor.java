@@ -24,17 +24,23 @@ public class ReadOnlyIfPostProcessor extends IfThenElseResolveProcessor {
     
     @Override
     public FieldData thenProcessFieldData(FieldData fieldData,  PrestoContext context, PrestoFieldUsage field) {
-        fieldData.setReadOnly(true);
-
-        // Remove mutable links
-        removeLinksByRel(fieldData, mutableLinkRels);
-        
-        // Remove Value.removable=true
-        clearRemovableValues(fieldData.getValues());
-        
-        // ISSUE: remove certain messages?
-        
+        if (isValid(fieldData)) {
+            fieldData.setReadOnly(true);
+    
+            // Remove mutable links
+            removeLinksByRel(fieldData, mutableLinkRels);
+            
+            // Remove Value.removable=true
+            clearRemovableValues(fieldData.getValues());
+            
+            // ISSUE: remove certain messages?
+        }        
         return fieldData;
+    }
+
+    private boolean isValid(FieldData fieldData) {
+        Collection<String> errors = fieldData.getErrors();
+        return errors == null || errors.isEmpty();
     }
 
     private void clearRemovableValues(Collection<Value> values) {

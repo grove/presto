@@ -26,32 +26,38 @@ public abstract class IfThenElseResolveProcessor extends FieldDataProcessor {
 
     @Override
     public FieldData processFieldData(FieldData fieldData, PrestoContext context, PrestoFieldUsage field) {
+        boolean result = getResult(fieldData, context, field);
+        if (result) {
+            return thenProcessFieldData(fieldData, context, field);
+        } else {
+            return elseProcessFieldData(fieldData, context, field);
+        }
+    }
+
+    protected boolean getResult(FieldData fieldData, PrestoContext context, PrestoFieldUsage field) {
         ObjectNode processorConfig = getConfig();
         if (processorConfig != null) {
-            JsonNode resolveConfig = processorConfig.path("resolve");
             PrestoDataProvider dataProvider = getDataProvider();
-
+    
             if (dataProvider instanceof JacksonDataProvider) {
+    
                 Paging paging = new PrestoPaging(0, 1);
-                
+    
                 PrestoVariableResolver parentResolver = new PrestoTopicWithParentFieldVariableResolver(field.getSchemaProvider(), context);
                 PrestoVariableResolver variableResolver = new FieldDataVariableResolver(parentResolver, fieldData, context);
-                
+    
                 PrestoTopic topic = context.getTopic();
-                
+    
                 Collection<? extends Object> objects = (topic == null ? Collections.emptyList() : Collections.singleton(topic));
-                
+    
                 JacksonDataProvider jacksonDataProvider = (JacksonDataProvider)dataProvider;
-                PagedValues result = jacksonDataProvider.resolveValues(objects, field, paging, resolveConfig, variableResolver);
-
-                if (result.getValues().size() > 0) {
-                    return thenProcessFieldData(fieldData, context, field);
-                } else {
-                    return elseProcessFieldData(fieldData, context, field);
-                }
+                JsonNode resolveConfig = processorConfig.path("resolve");
+                PagedValues values = jacksonDataProvider.resolveValues(objects, field, paging, resolveConfig, variableResolver);
+    
+                return !values.getValues().isEmpty();
             }
         }
-        return fieldData;
+        return false;
     }
 
     protected FieldData thenProcessFieldData(FieldData fieldData, PrestoContext context, PrestoFieldUsage field) {
@@ -61,7 +67,7 @@ public abstract class IfThenElseResolveProcessor extends FieldDataProcessor {
     protected FieldData elseProcessFieldData(FieldData fieldData, PrestoContext context, PrestoFieldUsage field) {
         return fieldData;
     }
-    
+
     private static class FieldDataVariableResolver implements PrestoVariableResolver {
 
         private final PrestoVariableResolver variableResolver;
@@ -98,7 +104,7 @@ public abstract class IfThenElseResolveProcessor extends FieldDataProcessor {
             }
             return valueIds;
         }
-        
+
     }
-    
+
 }
