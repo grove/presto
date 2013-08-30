@@ -13,6 +13,9 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class TopicView {
     
+    public static final String TOPIC_VIEW = "topic-view";
+    public static final String TOPIC_VIEW_REMOTE = "topic-view-remote";
+    
     private String id;
     private String name;
     private String href;
@@ -31,7 +34,7 @@ public class TopicView {
     private Collection<FieldData> fields;
     
     public TopicView() {
-        this("topic-view");
+        this(TOPIC_VIEW);
     }
     
     private TopicView(String format) {
@@ -39,7 +42,7 @@ public class TopicView {
     }
 
     public static TopicView remoteView() {
-        return new TopicView("topic-view-remote");
+        return new TopicView(TOPIC_VIEW_REMOTE);
     }
     
     public static TopicView view() {

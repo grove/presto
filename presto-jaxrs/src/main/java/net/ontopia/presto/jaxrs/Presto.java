@@ -162,7 +162,11 @@ public abstract class Presto {
                 if (viewId.equals(v.getId())) {
                     topicViews.add(getTopicView(subcontext));
                 } else {
-                    topicViews.add(getTopicViewRemote(subcontext));
+                    if (isRemoteLoadView(v)) {
+                        topicViews.add(getTopicViewRemote(subcontext));
+                    } else {
+                        topicViews.add(getTopicView(subcontext));
+                    }
                 }
             }
         }
@@ -173,6 +177,17 @@ public abstract class Presto {
         return result;
     }
     
+    private boolean isRemoteLoadView(PrestoView v) {
+        ObjectNode viewExtra = (ObjectNode)v.getExtra();
+        if (viewExtra != null) {
+            JsonNode remoteView = viewExtra.path("remote-view");
+            if (remoteView.isBoolean()) {
+                return remoteView.getBooleanValue();
+            }
+        }
+        return true;
+    }
+
     public TopicView getTopicViewRemoteAndProcess(PrestoContext context) {
         TopicView result = getTopicViewRemote(context);
         
