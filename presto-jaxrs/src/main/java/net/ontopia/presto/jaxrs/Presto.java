@@ -697,14 +697,14 @@ public abstract class Presto {
     protected Value getExistingFieldValue(ValueProcessor valueProcessor, PrestoContext context, PrestoFieldUsage field, Object fieldValue) {
         if (fieldValue instanceof PrestoTopic) {
             PrestoTopic topicValue = (PrestoTopic)fieldValue;
-            return getExistingTopicFieldValue(valueProcessor, context, field, topicValue);
+            return getExistingFieldValueTopic(valueProcessor, context, field, topicValue);
         } else {
             String stringValue = fieldValue.toString();
-            return getExistingStringFieldValue(valueProcessor, context, field, stringValue);
+            return getExistingFieldValueString(valueProcessor, context, field, stringValue);
         }
     }
 
-    protected Value getExistingStringFieldValue(ValueProcessor valueProcessor, PrestoContext context, PrestoFieldUsage field, String fieldValue) {
+    protected Value getExistingFieldValueString(ValueProcessor valueProcessor, PrestoContext context, PrestoFieldUsage field, String fieldValue) {
         Value result = new Value();
         result.setValue(fieldValue);
  
@@ -721,7 +721,7 @@ public abstract class Presto {
         return result;
     }
 
-    protected Value getExistingTopicFieldValue(ValueProcessor valueProcessor, PrestoContext context, PrestoFieldUsage field, PrestoTopic value) {
+    protected Value getExistingFieldValueTopic(ValueProcessor valueProcessor, PrestoContext context, PrestoFieldUsage field, PrestoTopic value) {
         Value result = new Value();
         result.setValue(value.getId());
         
