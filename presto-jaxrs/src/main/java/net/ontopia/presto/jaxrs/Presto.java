@@ -845,7 +845,6 @@ public abstract class Presto {
         for (Object value : availableFieldValues) {
             result.add(getAllowedFieldValue(valueProcessor, context, field, value));
         }
-//        result = processor.postProcessValues(result, context, field, null);
 
         return result;
     }
@@ -853,19 +852,19 @@ public abstract class Presto {
     protected Value getAllowedFieldValue(ValueProcessor valueProcessor, PrestoContext context, PrestoFieldUsage field, Object fieldValue) {
         if (fieldValue instanceof PrestoTopic) {
             PrestoTopic topicValue = (PrestoTopic)fieldValue;
-            return getAllowedTopicFieldValue(valueProcessor, context, field, topicValue);
+            return getAllowedFieldValueTopic(valueProcessor, context, field, topicValue);
         } else {
             String stringValue = fieldValue.toString();
-            return getAllowedStringFieldValue(valueProcessor, context, field, stringValue);
+            return getAllowedFieldValueString(valueProcessor, context, field, stringValue);
         }
     }
 
-    protected Value getAllowedStringFieldValue(ValueProcessor valueProcessor, PrestoContext context, PrestoFieldUsage field, String fieldValue) {
+    protected Value getAllowedFieldValueString(ValueProcessor valueProcessor, PrestoContext context, PrestoFieldUsage field, String value) {
         Value result = new Value();
-        result.setValue(fieldValue);
+        result.setValue(value);
         
         if (valueProcessor != null) {
-            String name = valueProcessor.getName(context, field, fieldValue);
+            String name = valueProcessor.getName(context, field, value);
             if (name != null) {
                 result.setName(name);
             }
@@ -873,7 +872,7 @@ public abstract class Presto {
         return result;
     }
 
-    protected Value getAllowedTopicFieldValue(ValueProcessor valueProcessor, PrestoContext context, PrestoFieldUsage field, PrestoTopic value) {
+    protected Value getAllowedFieldValueTopic(ValueProcessor valueProcessor, PrestoContext context, PrestoFieldUsage field, PrestoTopic value) {
         Value result = new Value();
         result.setValue(value.getId());
 
