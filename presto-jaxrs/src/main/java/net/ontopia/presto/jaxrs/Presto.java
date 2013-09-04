@@ -704,17 +704,21 @@ public abstract class Presto {
         }
     }
 
-    protected Value getExistingFieldValueString(ValueProcessor valueProcessor, PrestoContext context, PrestoFieldUsage field, String fieldValue) {
+    protected Value getExistingFieldValueString(ValueProcessor valueProcessor, PrestoContext context, PrestoFieldUsage field, String value) {
         Value result = new Value();
-        result.setValue(fieldValue);
- 
         if (valueProcessor != null) {
-            String name = valueProcessor.getName(context, field, fieldValue);
+            result.setValue(valueProcessor.getValue(context, field, value));
+        } else {
+            result.setValue(value);
+        }
+        
+        if (valueProcessor != null) {
+            String name = valueProcessor.getName(context, field, value);
             if (name != null) {
                 result.setName(name);
             }
         }
-        boolean isReadOnly = isReadOnly(context, field, fieldValue);
+        boolean isReadOnly = isReadOnly(context, field, value);
         if (!isReadOnly) {
             result.setRemovable(Boolean.TRUE);
         }
@@ -723,7 +727,11 @@ public abstract class Presto {
 
     protected Value getExistingFieldValueTopic(ValueProcessor valueProcessor, PrestoContext context, PrestoFieldUsage field, PrestoTopic value) {
         Value result = new Value();
-        result.setValue(value.getId());
+        if (valueProcessor != null) {
+            result.setValue(valueProcessor.getValue(context, field, value));
+        } else {
+            result.setValue(value.getId());
+        }
         
         if (valueProcessor != null) {
             String name = valueProcessor.getName(context, field, value);
@@ -861,8 +869,11 @@ public abstract class Presto {
 
     protected Value getAllowedFieldValueString(ValueProcessor valueProcessor, PrestoContext context, PrestoFieldUsage field, String value) {
         Value result = new Value();
-        result.setValue(value);
-        
+        if (valueProcessor != null) {
+            result.setValue(valueProcessor.getValue(context, field, value));
+        } else {
+            result.setValue(value);
+        }
         if (valueProcessor != null) {
             String name = valueProcessor.getName(context, field, value);
             if (name != null) {
@@ -874,8 +885,11 @@ public abstract class Presto {
 
     protected Value getAllowedFieldValueTopic(ValueProcessor valueProcessor, PrestoContext context, PrestoFieldUsage field, PrestoTopic value) {
         Value result = new Value();
-        result.setValue(value.getId());
-
+        if (valueProcessor != null) {
+            result.setValue(valueProcessor.getValue(context, field, value));
+        } else {
+            result.setValue(value.getId());
+        }
         if (valueProcessor != null) {
             String name = valueProcessor.getName(context, field, value);
             if (name != null) {
