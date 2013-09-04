@@ -9,6 +9,7 @@ import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxb.Value;
 import net.ontopia.presto.jaxrs.PrestoContext;
 import net.ontopia.presto.jaxrs.process.FieldDataProcessor;
+import net.ontopia.presto.jaxrs.process.SubmittedState;
 import net.ontopia.presto.jaxrs.resolve.PrestoTopicWithParentFieldVariableResolver;
 import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoFieldUsage;
@@ -68,8 +69,10 @@ public abstract class IfThenElseResolveProcessor extends FieldDataProcessor {
         return fieldData;
     }
 
-    private static class FieldDataVariableResolver implements PrestoVariableResolver {
+    private class FieldDataVariableResolver implements PrestoVariableResolver {
 
+        private static final String SUBMITTED_PREFIX = ":submitted.";
+        
         private final PrestoVariableResolver variableResolver;
         private final FieldData fieldData;
         private final PrestoContext context;
@@ -90,6 +93,13 @@ public abstract class IfThenElseResolveProcessor extends FieldDataProcessor {
                 } else {
                     return Collections.emptyList();
                 }
+            } else if (variable.startsWith(SUBMITTED_PREFIX)) {
+                SubmittedState submittedState = IfThenElseResolveProcessor.this.getSubmittedState();
+                if (submittedState != null) {
+                    String fieldId = variable.substring(SUBMITTED_PREFIX.length());
+                    return submittedState.getValues(fieldId);
+                }
+                return Collections.emptyList();
             } else {
                 return variableResolver.getValues(value, variable);
             }

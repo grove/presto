@@ -24,6 +24,10 @@ public class ReadOnlyIfPostProcessor extends IfThenElseResolveProcessor {
     
     @Override
     public FieldData thenProcessFieldData(FieldData fieldData,  PrestoContext context, PrestoFieldUsage field) {
+        return makeFieldReadOnly(fieldData);        
+    }
+
+    private FieldData makeFieldReadOnly(FieldData fieldData) {
         if (isValid(fieldData)) {
             fieldData.setReadOnly(true);
     
@@ -34,7 +38,7 @@ public class ReadOnlyIfPostProcessor extends IfThenElseResolveProcessor {
             clearRemovableValues(fieldData.getValues());
             
             // ISSUE: remove certain messages?
-        }        
+        }
         return fieldData;
     }
 
