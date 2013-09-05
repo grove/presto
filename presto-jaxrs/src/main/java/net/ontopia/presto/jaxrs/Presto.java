@@ -323,11 +323,6 @@ public abstract class Presto {
         result = processor.postProcessTopicView(result, context, null);
         return result;
     }
-
-    public TopicView getNewTopicView(String path, PrestoType type) {
-        PrestoContextField contextField = PrestoContextField.getContextField(this, path);
-        return getNewTopicView(contextField.getContext(), contextField.getField(), type);
-    }
     
     public TopicView getNewTopicView(PrestoContext parentContext, PrestoFieldUsage parentField, PrestoType type) {
 
