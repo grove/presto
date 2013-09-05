@@ -11,7 +11,7 @@ import net.ontopia.presto.jaxb.Value;
 import net.ontopia.presto.jaxrs.PrestoContext;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 
-public class ReadOnlyIfPostProcessor extends IfThenElseResolveProcessor {
+public class ReadOnlyIfPostProcessor extends IfThenElseResolveFieldDataProcessor {
     
     private static final Set<String> mutableLinkRels = new HashSet<String>() {{
         add("add-field-values");

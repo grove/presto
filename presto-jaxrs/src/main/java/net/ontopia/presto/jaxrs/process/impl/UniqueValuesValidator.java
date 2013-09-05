@@ -4,7 +4,7 @@ import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxrs.PrestoContext;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 
-public class UniqueValuesValidator extends IfThenElseResolveProcessor {
+public class UniqueValuesValidator extends IfThenElseResolveFieldDataProcessor {
     
     @Override
     public FieldData thenProcessFieldData(FieldData fieldData,  PrestoContext context, PrestoFieldUsage field) {

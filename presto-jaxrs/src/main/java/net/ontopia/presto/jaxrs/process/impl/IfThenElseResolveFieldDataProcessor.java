@@ -23,7 +23,7 @@ import net.ontopia.presto.spi.utils.PrestoVariableResolver;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;
 
-public abstract class IfThenElseResolveProcessor extends FieldDataProcessor {
+public abstract class IfThenElseResolveFieldDataProcessor extends FieldDataProcessor {
 
     @Override
     public FieldData processFieldData(FieldData fieldData, PrestoContext context, PrestoFieldUsage field) {
@@ -94,7 +94,7 @@ public abstract class IfThenElseResolveProcessor extends FieldDataProcessor {
                     return Collections.emptyList();
                 }
             } else if (variable.startsWith(SUBMITTED_PREFIX)) {
-                SubmittedState submittedState = IfThenElseResolveProcessor.this.getSubmittedState();
+                SubmittedState submittedState = IfThenElseResolveFieldDataProcessor.this.getSubmittedState();
                 if (submittedState != null) {
                     String fieldId = variable.substring(SUBMITTED_PREFIX.length());
                     return submittedState.getValues(fieldId);

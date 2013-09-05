@@ -60,13 +60,13 @@ public class Links {
         String topicId = context.getTopicId();
         String viewId = context.getView().getId();
         String fieldId = field.getId();
-        String localPath = skull(topicId) + Presto.FIELD_PATH_SEPARATOR + viewId + Presto.FIELD_PATH_SEPARATOR + fieldId;
+        String localPath = skull(topicId) + PrestoContextField.FIELD_PATH_SEPARATOR + viewId + PrestoContextField.FIELD_PATH_SEPARATOR + fieldId;
 
         PrestoContext parentContext = context.getParentContext();
         if (parentContext != null) {
             PrestoField parentField = context.getParentField();
             String parentPath =  getInlineTopicPath(parentContext, parentField);
-            return parentPath + Presto.FIELD_PATH_SEPARATOR + localPath;
+            return parentPath + PrestoContextField.FIELD_PATH_SEPARATOR + localPath;
         } else {
             return localPath;
         }
