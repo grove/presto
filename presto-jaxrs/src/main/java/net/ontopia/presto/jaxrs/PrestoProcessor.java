@@ -356,7 +356,9 @@ public class PrestoProcessor {
     
     public static <T extends AbstractHandler> T getHandler(Presto session, Class<T> klass, JsonNode processorNode) {
         T handler = getHandler(session.getSchemaProvider(), klass, processorNode);
-        handler.setPresto(session);
+        if (handler != null) {
+            handler.setPresto(session);
+        }
         return handler;
     }
     

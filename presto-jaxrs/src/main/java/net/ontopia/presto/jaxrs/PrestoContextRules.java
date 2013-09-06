@@ -16,16 +16,16 @@ public class PrestoContextRules {
     }
 
     public enum FieldFlag {
-        isHidden,
-        isTraverable,
-        isSorted,
-        isSortedAscending,
-        isPageable,
-        isReadOnly,
-        isEditable,
-        isCreatable,
-        isAddable,
-        isRemovable
+        isHiddenField,
+        isTraverableField,
+        isSortedField,
+        isSortedAscendingField,
+        isPageableField,
+        isReadOnlyField,
+        isEditableField,
+        isCreatableField,
+        isAddableField,
+        isRemovableField
     }
     
     public static abstract class Handler extends AbstractHandler {
@@ -112,45 +112,45 @@ public class PrestoContextRules {
 //    }
 
     public boolean isHiddenField(PrestoField field) {
-        return isFieldHandlerFlag(FieldFlag.isHidden, field, field.isHidden());
+        return isFieldHandlerFlag(FieldFlag.isHiddenField, field, field.isHidden());
     }
 
     public boolean isTraversableField(PrestoField field) {
-        return isFieldHandlerFlag(FieldFlag.isTraverable, field, field.isTraversable());
+        return isFieldHandlerFlag(FieldFlag.isTraverableField, field, field.isTraversable());
     }
 
     public boolean isSortedField(PrestoField field) {
-        return isFieldHandlerFlag(FieldFlag.isSorted, field, field.isSorted());
+        return isFieldHandlerFlag(FieldFlag.isSortedField, field, field.isSorted());
     }
 
     public boolean isSortedAscendingField(PrestoField field) {
-        return isFieldHandlerFlag(FieldFlag.isSortedAscending, field, field.isSortedAscending());
+        return isFieldHandlerFlag(FieldFlag.isSortedAscendingField, field, field.isSortedAscending());
     }
 
     public boolean isPageableField(PrestoField field) {
-        return isFieldHandlerFlag(FieldFlag.isPageable, field, field.isPageable());
+        return isFieldHandlerFlag(FieldFlag.isPageableField, field, field.isPageable());
     }
 
     // mutability
 
     public boolean isReadOnlyField(PrestoField field) {
-        return isReadOnlyType() || isFieldHandlerFlag(FieldFlag.isReadOnly, field, field.isReadOnly());
+        return isReadOnlyType() || isFieldHandlerFlag(FieldFlag.isReadOnlyField, field, field.isReadOnly());
     }
     
     public boolean isEditableField(PrestoField field) {
-        return isFieldHandlerFlag(FieldFlag.isEditable, field, field.isEditable());
+        return isFieldHandlerFlag(FieldFlag.isEditableField, field, field.isEditable());
     }
     
     public boolean isCreatableField(PrestoField field) {
-        return isFieldHandlerFlag(FieldFlag.isCreatable, field, field.isCreatable());
+        return isFieldHandlerFlag(FieldFlag.isCreatableField, field, field.isCreatable());
     }
     
     public boolean isAddableField(PrestoField field) {
-        return isFieldHandlerFlag(FieldFlag.isAddable, field, field.isAddable());
+        return isFieldHandlerFlag(FieldFlag.isAddableField, field, field.isAddable());
     }
     
     public boolean isRemovableField(PrestoField field) {
-        return isFieldHandlerFlag(FieldFlag.isRemovable, field, field.isRemovable());
+        return isFieldHandlerFlag(FieldFlag.isRemovableField, field, field.isRemovable());
     }
 
     public boolean isRemovableFieldValue(PrestoField field, Object value) {
