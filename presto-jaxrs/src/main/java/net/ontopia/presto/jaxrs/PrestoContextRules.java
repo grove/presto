@@ -52,7 +52,7 @@ public class PrestoContextRules {
         
         ObjectNode extra = (ObjectNode)type.getExtra();
         if (extra != null) {
-            JsonNode contextRules = extra.path("context-rules");
+            JsonNode contextRules = extra.path("contextRules");
             if (!contextRules.isMissingNode()) {
                 this.handler = PrestoProcessor.getHandler(session, Handler.class, contextRules);
                 this.readOnlyType = isTypeHandlerFlag(TypeFlag.isReadOnlyType, false);
