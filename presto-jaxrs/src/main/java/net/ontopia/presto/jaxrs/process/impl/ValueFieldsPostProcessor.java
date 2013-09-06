@@ -7,6 +7,7 @@ import java.util.List;
 import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxb.Value;
 import net.ontopia.presto.jaxrs.Presto;
+import net.ontopia.presto.jaxrs.PrestoContextRules;
 import net.ontopia.presto.jaxrs.Presto.FieldDataValues;
 import net.ontopia.presto.jaxrs.PrestoContext;
 import net.ontopia.presto.jaxrs.process.FieldDataProcessor;
@@ -19,7 +20,7 @@ import net.ontopia.presto.spi.PrestoView;
 public class ValueFieldsPostProcessor extends FieldDataProcessor {
 
     @Override
-    public FieldData processFieldData(FieldData fieldData, PrestoContext context, PrestoFieldUsage field) {
+    public FieldData processFieldData(FieldData fieldData, PrestoContextRules rules, PrestoFieldUsage field) {
         
         // ISSUE: using first value type for now
         Collection<PrestoType> availableFieldValueTypes = field.getAvailableFieldValueTypes();
@@ -34,11 +35,11 @@ public class ValueFieldsPostProcessor extends FieldDataProcessor {
         // assign column value fields
         List<FieldData> valueFields = new ArrayList<FieldData>();
         for (PrestoFieldUsage valueField : fields) {
-            FieldData fd = getPresto().getFieldDataNoValues(context, valueField);
+            FieldData fd = getPresto().getFieldDataNoValues(rules, valueField);
             
             // process the value field
             SubmittedState sstate = null;
-            fd = getPresto().getProcessor().processFieldData(sstate, fd, context, valueField, getType(), getStatus());
+            fd = getPresto().getProcessor().processFieldData(sstate, fd, rules, valueField, getType(), getStatus());
 
             valueFields.add(fd);
         }
@@ -47,7 +48,7 @@ public class ValueFieldsPostProcessor extends FieldDataProcessor {
         // retrieve field values
 
         // NOTE: have already done paging
-        FieldDataValues fieldDataValues = setFieldDataValues(context, field, fieldData);
+        FieldDataValues fieldDataValues = setFieldDataValues(rules, field, fieldData);
         
         // post process field values
         int size = fieldDataValues.size();
@@ -56,28 +57,30 @@ public class ValueFieldsPostProcessor extends FieldDataProcessor {
         for (int i=0; i < size; i++) {
             Object inputValue = fieldDataValues.getInputValue(i);
             Value outputValue = fieldDataValues.getOutputValue(i);
-            newValues.add(postProcessValue(context, field, inputValue, outputValue, fields));
+            newValues.add(postProcessValue(rules, field, inputValue, outputValue, fields));
         }
         fieldData.setValues(newValues);
         
         return fieldData;
     }
 
-    private FieldDataValues setFieldDataValues(PrestoContext context, PrestoFieldUsage field, FieldData fieldData) {
+    private FieldDataValues setFieldDataValues(PrestoContextRules rules, PrestoFieldUsage field, FieldData fieldData) {
         int offset = 0;
         int limit = Presto.DEFAULT_LIMIT;
-        return getPresto().setFieldDataValues(offset, limit, context, field, fieldData);
+        return getPresto().setFieldDataValues(offset, limit, rules, field, fieldData);
     }
     
-    private Value postProcessValue(PrestoContext context, PrestoFieldUsage field, Object inputValue, Value outputValue, List<PrestoFieldUsage> fields) {
+    private Value postProcessValue(PrestoContextRules rules, PrestoFieldUsage field, Object inputValue, Value outputValue, List<PrestoFieldUsage> fields) {
 
         if (field.isReferenceField()) {
             List<Value> values = new ArrayList<Value>();
             PrestoTopic valueTopic = (PrestoTopic)inputValue;
+            PrestoContext context = rules.getContext();
             PrestoContext subcontext = PrestoContext.createSubContext(getPresto(), context, field, valueTopic);
+            PrestoContextRules subrules = getPresto().getPrestoContextRules(subcontext);
             
             for (PrestoFieldUsage valueField : fields) {
-                FieldDataValues fieldDataValues = setFieldDataValues(subcontext, valueField, null);
+                FieldDataValues fieldDataValues = setFieldDataValues(subrules, valueField, null);
                 if  (fieldDataValues.size() > 0) {
                     Value v = fieldDataValues.getOutputValue(0);
                     values.add(v);

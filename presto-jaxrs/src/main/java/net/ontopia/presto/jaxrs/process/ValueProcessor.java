@@ -1,10 +1,11 @@
 package net.ontopia.presto.jaxrs.process;
 
+import net.ontopia.presto.jaxrs.AbstractHandler;
 import net.ontopia.presto.jaxrs.PrestoContext;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoTopic;
 
-public abstract class ValueProcessor extends AbstractProcessor {
+public abstract class ValueProcessor extends AbstractHandler {
 
     public String getName(PrestoContext context, PrestoFieldUsage field, String value) {
         return null;

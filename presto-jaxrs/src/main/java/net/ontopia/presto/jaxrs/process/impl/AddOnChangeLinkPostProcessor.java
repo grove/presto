@@ -9,6 +9,7 @@ import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxb.Link;
 import net.ontopia.presto.jaxrs.Presto;
 import net.ontopia.presto.jaxrs.PrestoContext;
+import net.ontopia.presto.jaxrs.PrestoContextRules;
 import net.ontopia.presto.jaxrs.process.FieldDataProcessor;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoTopic;
@@ -20,22 +21,23 @@ import org.codehaus.jackson.node.ObjectNode;
 public class AddOnChangeLinkPostProcessor extends FieldDataProcessor {
 
     @Override
-    public FieldData processFieldData(FieldData fieldData, PrestoContext context, PrestoFieldUsage field) {
+    public FieldData processFieldData(FieldData fieldData, PrestoContextRules rules, PrestoFieldUsage field) {
         
         ObjectNode processorConfig = getConfig();
         if (processorConfig != null) {
             JsonNode validateNode = processorConfig.path("validateOnChange");
             if (validateNode.isBoolean() && validateNode.asBoolean()) {
-                return addOnChangeLink(fieldData, context, field);
+                return addOnChangeLink(fieldData, rules, field);
             }
         }
         
         return fieldData;
     }
 
-    private FieldData addOnChangeLink(FieldData fieldData, PrestoContext context,
+    private FieldData addOnChangeLink(FieldData fieldData, PrestoContextRules rules,
             PrestoFieldUsage field) {
         // TODO: may want to support this for inline *new* topics as well
+        PrestoContext context = rules.getContext();
         PrestoTopic topic = context.getTopic();
         if (topic != null) {
             Collection<Link> links = fieldData.getLinks();

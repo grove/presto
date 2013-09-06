@@ -8,7 +8,7 @@ import java.util.Set;
 import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxb.Link;
 import net.ontopia.presto.jaxb.Value;
-import net.ontopia.presto.jaxrs.PrestoContext;
+import net.ontopia.presto.jaxrs.PrestoContextRules;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 
 public class ReadOnlyIfPostProcessor extends IfThenElseResolveFieldDataProcessor {
@@ -23,7 +23,7 @@ public class ReadOnlyIfPostProcessor extends IfThenElseResolveFieldDataProcessor
     }};
     
     @Override
-    public FieldData thenProcessFieldData(FieldData fieldData,  PrestoContext context, PrestoFieldUsage field) {
+    public FieldData thenProcessFieldData(FieldData fieldData, PrestoContextRules rules, PrestoFieldUsage field) {
         return makeFieldReadOnly(fieldData);        
     }
 

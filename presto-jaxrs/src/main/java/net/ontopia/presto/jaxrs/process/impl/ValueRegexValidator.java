@@ -5,7 +5,7 @@ import java.util.regex.Pattern;
 
 import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxb.Value;
-import net.ontopia.presto.jaxrs.PrestoContext;
+import net.ontopia.presto.jaxrs.PrestoContextRules;
 import net.ontopia.presto.jaxrs.process.FieldDataProcessor;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 
@@ -15,7 +15,7 @@ import org.codehaus.jackson.node.ObjectNode;
 public class ValueRegexValidator extends FieldDataProcessor {
 
     @Override
-    public FieldData processFieldData(FieldData fieldData, PrestoContext context, PrestoFieldUsage field) {
+    public FieldData processFieldData(FieldData fieldData, PrestoContextRules rules, PrestoFieldUsage field) {
         ObjectNode processorConfig = getConfig();
         if (processorConfig != null) {
             String regexp = getString(processorConfig, "regexp", null);

@@ -10,6 +10,7 @@ import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxb.Topic;
 import net.ontopia.presto.jaxb.TopicView;
 import net.ontopia.presto.jaxrs.PrestoContext;
+import net.ontopia.presto.jaxrs.PrestoContextRules;
 import net.ontopia.presto.jaxrs.process.TopicProcessor;
 
 import org.codehaus.jackson.JsonNode;
@@ -19,15 +20,15 @@ import org.codehaus.jackson.node.ObjectNode;
 public class NonEmptyViewsTopicProcessor extends TopicProcessor {
 
     @Override
-    public Topic processTopic(Topic topicData, PrestoContext context) {
-        Set<String> viewsToHide = getViewsToHide(topicData, context);
+    public Topic processTopic(Topic topicData, PrestoContextRules rules) {
+        Set<String> viewsToHide = getViewsToHide(topicData, rules);
         if (!viewsToHide.isEmpty()) {
             hideEmptyViews(topicData, viewsToHide);
         }
         return topicData;
     }
 
-    private Set<String> getViewsToHide(Topic topicData, PrestoContext context) {
+    private Set<String> getViewsToHide(Topic topicData, PrestoContextRules rules) {
         ObjectNode config = getConfig();
         if (config != null) {
             JsonNode node = config.path("hideEmptyViews");

@@ -72,18 +72,6 @@ public abstract class Presto {
         return false;
     }
 
-    protected boolean isReadOnly(PrestoContext context) {
-        return isReadOnlyMode();
-    }
-
-    protected boolean isReadOnly(PrestoContext context, PrestoFieldUsage field) {
-        return field.isReadOnly() || isReadOnly(context);
-    }
-
-    protected boolean isReadOnly(PrestoContext context, PrestoFieldUsage field, Object fieldValue) {
-        return field.isReadOnly() || isReadOnly(context);
-    }
-
     public String getDatabaseId() {
         return databaseId;
     }
@@ -107,37 +95,39 @@ public abstract class Presto {
     public PrestoProcessor getProcessor() {
         return processor;
     }
-    
-//    public Map<String,Object> getTopicAsMap(PrestoTopic topic, PrestoType type) {
-//        Map<String,Object> result = new LinkedHashMap<String,Object>();
-//
-//        result.put("_id", topic.getId());
-//        result.put(":name", topic.getName());
-//        result.put(":type", type.getId());
-//
-//        for (PrestoField field : type.getFields()) {
-//            List<Object> values = getValueData(field, topic.getValues(field));
-//            if (!values.isEmpty()) {
-//                result.put(field.getId(), values);
-//            }
-//        }
-//        return result;
-//    }
-//
-//    protected List<Object> getValueData(PrestoField field, Collection<? extends Object> fieldValues) {
-//        List<Object> result = new ArrayList<Object>(fieldValues.size());
-//        for (Object fieldValue : fieldValues) {
-//            if (fieldValue instanceof PrestoTopic) {
-//                PrestoTopic valueTopic = (PrestoTopic)fieldValue;
-//                result.add(valueTopic.getId());
-//            } else {
-//                result.add(fieldValue);
-//            }
-//        }
-//        return result;
-//    }
+
+    //    public Map<String,Object> getTopicAsMap(PrestoTopic topic, PrestoType type) {
+    //        Map<String,Object> result = new LinkedHashMap<String,Object>();
+    //
+    //        result.put("_id", topic.getId());
+    //        result.put(":name", topic.getName());
+    //        result.put(":type", type.getId());
+    //
+    //        for (PrestoField field : type.getFields()) {
+    //            List<Object> values = getValueData(field, topic.getValues(field));
+    //            if (!values.isEmpty()) {
+    //                result.put(field.getId(), values);
+    //            }
+    //        }
+    //        return result;
+    //    }
+    //
+    //    protected List<Object> getValueData(PrestoField field, Collection<? extends Object> fieldValues) {
+    //        List<Object> result = new ArrayList<Object>(fieldValues.size());
+    //        for (Object fieldValue : fieldValues) {
+    //            if (fieldValue instanceof PrestoTopic) {
+    //                PrestoTopic valueTopic = (PrestoTopic)fieldValue;
+    //                result.add(valueTopic.getId());
+    //            } else {
+    //                result.add(fieldValue);
+    //            }
+    //        }
+    //        return result;
+    //    }
 
     public Topic getTopicAndProcess(PrestoContext context) {
+        PrestoContextRules rules = getPrestoContextRules(context);
+
         PrestoTopic topic = context.getTopic();
         PrestoType type = context.getType();
         PrestoView view = context.getView();
@@ -148,7 +138,7 @@ public abstract class Presto {
 
         String viewId = view.getId();
         result.setView(viewId);
-        
+
         // create topic-views
         Collection<PrestoView> views = type.getViews(view);
         List<TopicView> topicViews = new ArrayList<TopicView>(views.size()); 
@@ -158,25 +148,26 @@ public abstract class Presto {
                 PrestoFieldUsage parentField = context.getParentField();
 
                 PrestoContext subcontext = PrestoContext.createSubContext(parentContext, parentField, topic, type, v);
-                
+                PrestoContextRules subrules = getPrestoContextRules(subcontext);
+
                 if (viewId.equals(v.getId())) {
-                    topicViews.add(getTopicView(subcontext));
+                    topicViews.add(getTopicView(subrules));
                 } else {
                     if (isRemoteLoadView(v)) {
-                        topicViews.add(getTopicViewRemote(subcontext));
+                        topicViews.add(getTopicViewRemote(subrules));
                     } else {
-                        topicViews.add(getTopicView(subcontext));
+                        topicViews.add(getTopicView(subrules));
                     }
                 }
             }
         }
         result.setViews(topicViews);
 
-        result = processor.postProcessTopic(result, context, null);
+        result = processor.postProcessTopic(result, rules, null);
 
         return result;
     }
-    
+
     private boolean isRemoteLoadView(PrestoView v) {
         ObjectNode viewExtra = (ObjectNode)v.getExtra();
         if (viewExtra != null) {
@@ -188,31 +179,37 @@ public abstract class Presto {
         return true;
     }
 
-    public TopicView getTopicViewRemoteAndProcess(PrestoContext context) {
-        TopicView result = getTopicViewRemote(context);
-        
-        result = processor.postProcessTopicView(result, context, null);
+    public TopicView getTopicViewRemoteAndProcess(PrestoContextRules rules) {
+        TopicView result = getTopicViewRemote(rules);
+
+        result = processor.postProcessTopicView(result, rules, null);
 
         return result;
     }
-    
+
     public TopicView getTopicViewAndProcess(PrestoContext context) {
-        TopicView result = getTopicView(context);
-        
-//        Status status = new Status();
-//        result = processor.preProcessTopicView(result, topic, type, view, status);
-        result = processor.postProcessTopicView(result, context, null);
-        
+        return getTopicViewAndProcess(getPrestoContextRules(context));
+    }
+
+    public TopicView getTopicViewAndProcess(PrestoContextRules rules) {
+        TopicView result = getTopicView(rules);
+
+        //        Status status = new Status();
+        //        result = processor.preProcessTopicView(result, topic, type, view, status);
+        result = processor.postProcessTopicView(result, rules, null);
+
         return result;
     }
-    
-    public TopicView getTopicViewRemote(PrestoContext context) {
+
+    public TopicView getTopicViewRemote(PrestoContextRules rules) {
+        PrestoContext context = rules.getContext();
+
         PrestoTopic topic = context.getTopic();
         PrestoType type = context.getType();
         PrestoView view = context.getView();
 
         TopicView result = TopicView.remoteView();
-        
+
         result.setId(view.getId());
         result.setName(view.getName());
         result.setTopicId(topic.getId());
@@ -230,12 +227,23 @@ public abstract class Presto {
 
         return result;
     }
-    
-    public TopicView getTopicView(PrestoContext context) {
+
+    public PrestoContextRules getPrestoContextRules(PrestoContext context) {
+        return new PrestoContextRules(this, context) {
+            @Override
+            public boolean isReadOnlyType() {
+                return isReadOnlyMode() || super.isReadOnlyType();
+            }
+        };
+    }
+
+    public TopicView getTopicView(PrestoContextRules rules) {
+        PrestoContext context = rules.getContext();
+
         PrestoTopic topic = context.getTopic();
         PrestoType type = context.getType();
         PrestoView view = context.getView();
-        
+
         TopicView result = TopicView.view();
         result.setId(view.getId());
         result.setName(view.getName());
@@ -257,10 +265,10 @@ public abstract class Presto {
         List<FieldData> fields = new ArrayList<FieldData>(); 
         boolean allFieldsReadOnly = true;
         for (PrestoFieldUsage field : type.getFields(view)) {
-            if (!field.isHidden()) {
-                fields.add(getFieldData(context, field));
+            if (!rules.isHiddenField(field)) {
+                fields.add(getFieldData(rules, field));
 
-                if (!isReadOnly(context, field)) {
+                if (!rules.isReadOnlyField(field)) {
                     allFieldsReadOnly = false;
                 }
             }
@@ -270,26 +278,28 @@ public abstract class Presto {
         List<Link> links = new ArrayList<Link>();
         links.add(Links.createLabel(type.getName()));
 
-        if (!isReadOnly(context)) {
-            if (!allFieldsReadOnly) {
+        if (!rules.isReadOnlyType()) {
+            if (!allFieldsReadOnly && rules.isUpdatableType()) {
                 links.add(new Link("update", href));
             }
-            if (type.isRemovable()) {
+            if (rules.isRemovableType()) {
                 links.add(new Link("delete", href));
             }
-            if (type.isCreatable() && !type.isInline()) {
+            if (rules.isCreatableType() && !type.isInline()) {
                 links.add(new Link("create-instance", Links.createInstanceLink(getBaseUri(), getDatabaseId(), type.getId())));
             }
         }
-        
         result.setLinks(links);
 
         return result;
     }
 
     public abstract URI getBaseUri();
-    
+
     public TopicView getNewTopicView(PrestoContext context) {
+
+        PrestoContextRules rules = getPrestoContextRules(context);
+
         PrestoType type = context.getType();
         PrestoView view = context.getView();
 
@@ -304,26 +314,26 @@ public abstract class Presto {
 
         List<FieldData> fields = new ArrayList<FieldData>(); 
         for (PrestoFieldUsage field : type.getFields(view)) {
-            if (!field.isHidden()) {
-                fields.add(getFieldData(context, field));
+            if (!rules.isHiddenField(field)) {
+                fields.add(getFieldData(rules, field));
             }
         }
         result.setFields(fields);
-        
+
         List<Link> links = new ArrayList<Link>();
         links.add(Links.createLabel(type.getName()));
-        
+
         links.add(new Link("create", Links.createNewTopicViewLink(getBaseUri(), getDatabaseId(), typeId, viewId)));
 
         result.setHref(Links.createInstanceLink(getBaseUri(), getDatabaseId(), typeId));
         result.setLinks(links);
-        
-//        Status status = new Status();
-//        result = processor.preProcessTopicView(result, context, status);
-        result = processor.postProcessTopicView(result, context, null);
+
+        //        Status status = new Status();
+        //        result = processor.preProcessTopicView(result, rules, status);
+        result = processor.postProcessTopicView(result, rules, null);
         return result;
     }
-    
+
     public TopicView getNewTopicView(PrestoContext parentContext, PrestoFieldUsage parentField, PrestoType type) {
 
         PrestoView view = parentField.getCreateView(type);
@@ -334,6 +344,7 @@ public abstract class Presto {
         String topicId = "_" + type.getId();
 
         PrestoContext subcontext = PrestoContext.createSubContext(this, parentContext, parentField, topicId, viewId);
+        PrestoContextRules subrules = getPrestoContextRules(subcontext);
 
         TopicView result = TopicView.view();
         result.setId(viewId);
@@ -343,12 +354,12 @@ public abstract class Presto {
 
         List<FieldData> fields = new ArrayList<FieldData>(); 
         for (PrestoFieldUsage field : type.getFields(view)) {
-            if (!field.isHidden()) {
-                fields.add(getFieldData(subcontext, field));
+            if (!subrules.isHiddenField(field)) {
+                fields.add(getFieldData(subrules, field));
             }
         }
         result.setFields(fields);
-        
+
         List<Link> links = new ArrayList<Link>();
         links.add(Links.createLabel(type.getName()));
 
@@ -356,23 +367,25 @@ public abstract class Presto {
 
         result.setHref(Links.createFieldInstanceLink(getBaseUri(), getDatabaseId(), parentContext, parentField, type.getId()));
         result.setLinks(links);
-     
-//        Status status = new Status();
-//        result = processor.preProcessTopicView(result, context, status);
-        result = processor.postProcessTopicView(result, subcontext, null);
+
+        //        Status status = new Status();
+        //        result = processor.preProcessTopicView(result, subrules, status);
+        result = processor.postProcessTopicView(result, subrules, null);
         return result;
     }
 
-    public FieldData getFieldData(PrestoContext context, PrestoFieldUsage field) {
-        return getFieldData(context, field, 0, -1, true);
-    }
-    
-    public FieldData getFieldDataNoValues(PrestoContext context, PrestoFieldUsage field) {
-        return getFieldData(context, field, 0, -1, false);
+    public FieldData getFieldData(PrestoContextRules rules, PrestoFieldUsage field) {
+        return getFieldData(rules, field, 0, -1, true);
     }
 
-    public FieldData getFieldData(PrestoContext context, PrestoFieldUsage field, 
+    public FieldData getFieldDataNoValues(PrestoContextRules rules, PrestoFieldUsage field) {
+        return getFieldData(rules, field, 0, -1, false);
+    }
+
+    public FieldData getFieldData(PrestoContextRules rules, PrestoFieldUsage field, 
             int offset, int limit, boolean includeValues) {
+
+        PrestoContext context = rules.getContext();
 
         PrestoTopic topic = context.getTopic();
         PrestoType type = context.getType();
@@ -388,7 +401,7 @@ public abstract class Presto {
         } else {
             topicId = topic.getId();
         }
-        
+
         String parentViewId = view.getId();
         String fieldId = field.getId();
 
@@ -420,7 +433,7 @@ public abstract class Presto {
             fieldData.setEmbeddable(true);
         }
 
-        boolean isReadOnly = isReadOnly(context, field);
+        boolean isReadOnly = rules.isReadOnlyField(field);
         if (isReadOnly) {
             fieldData.setReadOnly(Boolean.TRUE);
         }
@@ -428,20 +441,23 @@ public abstract class Presto {
         PrestoContext parentContext = context.getParentContext();
         PrestoFieldUsage parentField = context.getParentField();
 
+        boolean allowCreate = rules.isCreatableField(field);
+        boolean allowAdd = rules.isAddableField(field);
+
         Collection<Link> fieldLinks = new LinkedHashSet<Link>();      
         if (field.isReferenceField()) {
             fieldData.setDatatype("reference");
 
             if (!isReadOnly) {
-                boolean allowCreate = field.isCreatable();
-                boolean allowAdd = field.isAddable();
-                boolean allowRemove = field.isRemovable();
-                boolean allowMove = !field.isSorted();
+                boolean isSorted = rules.isSortedField(field);
+
+                boolean allowRemove = rules.isRemovableField(field);
+                boolean allowMove = !isSorted;
 
                 if (allowAdd || allowCreate) {
                     if (!isNewTopic) {
                         fieldLinks.add(new Link("add-field-values", Links.addFieldValuesLink(getBaseUri(), databaseId, parentContext, parentField, topicId, parentViewId, fieldId, false)));
-                        if (!field.isSorted()) {
+                        if (!isSorted) {
                             fieldLinks.add(new Link("add-field-values-at-index", Links.addFieldValuesLink(getBaseUri(), databaseId, parentContext, parentField, topicId, parentViewId, fieldId, true)));
                         }
                     }
@@ -463,14 +479,14 @@ public abstract class Presto {
                 if (!isNewTopic) {
                     fieldLinks.add(new Link("add-field-values", Links.addFieldValuesLink(getBaseUri(), databaseId, parentContext, parentField, topicId, parentViewId, fieldId, false)));
                     fieldLinks.add(new Link("remove-field-values", Links.removeFieldValuesLink(getBaseUri(), databaseId, parentContext, parentField, topicId, parentViewId, fieldId)));
-                    if (!field.isSorted()) {
+                    if (!rules.isSortedField(field)) {
                         fieldLinks.add(new Link("add-field-values-at-index", Links.addFieldValuesLink(getBaseUri(), databaseId, parentContext, parentField, topicId, parentViewId, fieldId, true)));
                         fieldLinks.add(new Link("move-field-values-to-index", Links.moveFieldValuesToIndex(getBaseUri(), databaseId, parentContext, parentField, topicId, parentViewId, fieldId)));
                     }
                 }
             }
         }
-        if (!isReadOnly && field.isAddable()) {
+        if (!isReadOnly && allowAdd) {
             // ISSUE: should add-values and remove-values be links on list result instead?
             if (!field.isReferenceField() || !getAvailableFieldValueTypes(context, field).isEmpty()) {
                 boolean query = isCustomAvailableValuesQuery(context, field);
@@ -478,11 +494,11 @@ public abstract class Presto {
             }
         }
 
-        if (!isReadOnly && field.isCreatable()) {
+        if (!isReadOnly && allowCreate) {
             fieldLinks.addAll(getCreateFieldInstanceLinks(context, field));
         }
-        
-        if (field.isPageable()) {
+
+        if (rules.isPageableField(field)) {
             fieldLinks.add(new Link("paging", Links.pagingLink(getBaseUri(), databaseId, parentContext, parentField, topicId, parentViewId, fieldId)));    
         }
 
@@ -492,10 +508,10 @@ public abstract class Presto {
 
         // get values (truncated if neccessary)
         if (includeValues) {
-            setFieldDataValues(offset, limit, context, field, fieldData);
+            setFieldDataValues(offset, limit, rules, field, fieldData);
         }
-        
-//        fieldData = processor.postProcessFieldData(fieldData, topic, field, null);
+
+        //        fieldData = processor.postProcessFieldData(fieldData, topic, field, null);
 
         return fieldData;
     }
@@ -511,10 +527,10 @@ public abstract class Presto {
 
     private Collection<? extends Link> getCreateFieldInstanceLinks(PrestoContext context, PrestoFieldUsage field) {
         Collection<PrestoType> availableFieldCreateTypes = getAvailableFieldCreateTypes(context, field);
-        
+
         if (availableFieldCreateTypes.isEmpty()) {
             return Collections.emptyList();
-        
+
         } else if (availableFieldCreateTypes.size() == 1) {
             PrestoType createType = availableFieldCreateTypes.iterator().next();
             Link link = getCreateFieldInstanceLink(context, field, createType);
@@ -536,7 +552,7 @@ public abstract class Presto {
     public static final class FieldDataValues {
         private List<Object> inputValues; 
         private List<Value> outputValues;
-        
+
         FieldDataValues(List<Object> inputValues, List<Value> outputValues) {
             this.inputValues = inputValues;
             this.outputValues = outputValues;
@@ -545,29 +561,30 @@ public abstract class Presto {
         public int size() {
             return inputValues.size();
         }
-        
+
         public Object getInputValue(int index) {
             return inputValues.get(index);
         }
-        
+
         public Value getOutputValue(int index) {
             return outputValues.get(index);
         }
     }
-    
+
     public FieldDataValues setFieldDataValues(int offset, int limit, 
-            PrestoContext context, final PrestoFieldUsage field, FieldData fieldData) {
+            PrestoContextRules rules, final PrestoFieldUsage field, FieldData fieldData) {
 
         // TODO: refactor to return DTO instead of mutating FieldData here
-    
+
+        PrestoContext context = rules.getContext();
         PrestoTopic topic = context.getTopic();
-        
+
         List<? extends Object> fieldValues;
         if (context.isNewTopic()) {
             fieldValues = Collections.emptyList(); // TODO: support initial values
         } else {
             // server-side paging (only if not sorting)
-            if (field.isPageable() && !field.isSorted()) {
+            if (rules.isPageableField(field) && !rules.isSortedField(field)) {
                 int actualOffset = offset >= 0 ? offset : 0;
                 int actualLimit = limit > 0 ? limit : DEFAULT_LIMIT;
                 PrestoTopic.PagedValues pagedValues = topic.getValues(field, actualOffset, actualLimit);
@@ -582,17 +599,17 @@ public abstract class Presto {
             }
         }
 
-        return setFieldDataValues(offset, limit, context, field, fieldData, fieldValues);
+        return setFieldDataValues(offset, limit, rules, field, fieldData, fieldValues);
     }
 
     public FieldDataValues setFieldDataValues(int offset, int limit,
-            PrestoContext context, final PrestoFieldUsage field, FieldData fieldData, List<? extends Object> fieldValues) {
+            PrestoContextRules rules, final PrestoFieldUsage field, FieldData fieldData, List<? extends Object> fieldValues) {
         // sort the result
-        if (field.isSorted()) {
-            sortFieldValues(context, field, fieldValues, field.isSortedAscending());
+        if (rules.isSortedField(field)) {
+            sortFieldValues(rules, field, fieldValues, rules.isSortedAscendingField(field));
         }
-        
-        ValueProcessor valueProcessor = createValueProcessor(context, field);
+
+        ValueProcessor valueProcessor = createValueProcessor(rules, field);
 
         int size = fieldValues.size();
         int start = 0;
@@ -603,7 +620,7 @@ public abstract class Presto {
         for (int i=start; i < end; i++) {
             Object value = fieldValues.get(i);
             if (value != null) {
-                Value efv = getExistingFieldValue(valueProcessor, context, field, value);
+                Value efv = getExistingFieldValue(valueProcessor, rules, field, value);
                 outputValues.add(efv);
                 inputValues.add(value);
             } else {
@@ -613,9 +630,9 @@ public abstract class Presto {
 
         if (fieldData != null) {
             fieldData.setValues(outputValues);
-                    
+
             // figure out how to truncate result (offset/limit)
-            if (field.isPageable() && field.isSorted()) {
+            if (rules.isPageableField(field) && rules.isSortedField(field)) {
                 int _limit = limit > 0 ? limit : DEFAULT_LIMIT;
                 start = Math.min(Math.max(0, offset), size);
                 end = Math.min(start+_limit, size);
@@ -627,7 +644,7 @@ public abstract class Presto {
         return new FieldDataValues(inputValues, outputValues);
     }
 
-    private void sortFieldValues(final PrestoContext context, final PrestoFieldUsage field, List<? extends Object> fieldValues, final boolean ascending) {
+    private void sortFieldValues(final PrestoContextRules rules, final PrestoFieldUsage field, List<? extends Object> fieldValues, final boolean ascending) {
         final SortKeyGenerator sortKeyGenerator = createSortKeyGenerator(field);
         if (sortKeyGenerator == null) {
             Collections.sort(fieldValues, new Comparator<Object>() {
@@ -640,6 +657,7 @@ public abstract class Presto {
         } else {
             Collections.sort(fieldValues, new Comparator<Object>() {
                 public int compare(Object o1, Object o2) {
+                    PrestoContext context = rules.getContext();
                     String n1 = sortKeyGenerator.getSortKey(context, field, ((PrestoTopic)o1));
                     String n2 = sortKeyGenerator.getSortKey(context, field, ((PrestoTopic)o2));
                     if (ascending) {
@@ -649,7 +667,7 @@ public abstract class Presto {
                     }
                 }
             });
-            
+
         }
     }
 
@@ -677,57 +695,58 @@ public abstract class Presto {
         }
         return null;
     }
-    
-    private ValueProcessor createValueProcessor(PrestoContext context, PrestoFieldUsage field) {
+
+    private ValueProcessor createValueProcessor(PrestoContextRules rules, PrestoFieldUsage field) {
         ObjectNode extra = getFieldExtraNode(field);
         if (extra != null) {
             JsonNode processorsNode = extra.path("valueProcessors");
             if (!processorsNode.isMissingNode()) {
-                return processor.getProcessor(ValueProcessor.class, processorsNode);
+                return PrestoProcessor.getHandler(this, ValueProcessor.class, processorsNode);
             }
         }
         return null;
     }
 
-    protected Value getExistingFieldValue(ValueProcessor valueProcessor, PrestoContext context, PrestoFieldUsage field, Object fieldValue) {
+    protected Value getExistingFieldValue(ValueProcessor valueProcessor, PrestoContextRules rules, PrestoFieldUsage field, Object fieldValue) {
         if (fieldValue instanceof PrestoTopic) {
             PrestoTopic topicValue = (PrestoTopic)fieldValue;
-            return getExistingFieldValueTopic(valueProcessor, context, field, topicValue);
+            return getExistingFieldValueTopic(valueProcessor, rules, field, topicValue);
         } else {
             String stringValue = fieldValue.toString();
-            return getExistingFieldValueString(valueProcessor, context, field, stringValue);
+            return getExistingFieldValueString(valueProcessor, rules, field, stringValue);
         }
     }
 
-    protected Value getExistingFieldValueString(ValueProcessor valueProcessor, PrestoContext context, PrestoFieldUsage field, String value) {
+    protected Value getExistingFieldValueString(ValueProcessor valueProcessor, PrestoContextRules rules, PrestoFieldUsage field, String value) {
         Value result = new Value();
         if (valueProcessor != null) {
-            result.setValue(valueProcessor.getValue(context, field, value));
+            result.setValue(valueProcessor.getValue(rules.getContext(), field, value));
         } else {
             result.setValue(value);
         }
-        
+
         if (valueProcessor != null) {
-            String name = valueProcessor.getName(context, field, value);
+            String name = valueProcessor.getName(rules.getContext(), field, value);
             if (name != null) {
                 result.setName(name);
             }
         }
-        boolean isReadOnly = isReadOnly(context, field, value);
-        if (!isReadOnly) {
+        boolean isRemovableValue = !rules.isReadOnlyField(field) && rules.isRemovableFieldValue(field, value);
+        if (isRemovableValue) {
             result.setRemovable(Boolean.TRUE);
         }
         return result;
     }
 
-    protected Value getExistingFieldValueTopic(ValueProcessor valueProcessor, PrestoContext context, PrestoFieldUsage field, PrestoTopic value) {
+    protected Value getExistingFieldValueTopic(ValueProcessor valueProcessor, PrestoContextRules rules, PrestoFieldUsage field, PrestoTopic value) {
         Value result = new Value();
+        PrestoContext context = rules.getContext();
         if (valueProcessor != null) {
             result.setValue(valueProcessor.getValue(context, field, value));
         } else {
             result.setValue(value.getId());
         }
-        
+
         if (valueProcessor != null) {
             String name = valueProcessor.getName(context, field, value);
             if (name != null) {
@@ -744,19 +763,21 @@ public abstract class Presto {
 
         PrestoType valueType = getSchemaProvider().getTypeById(value.getTypeId());
         if (field.isEmbedded()) {
-            
+
             PrestoView valueView = field.getValueView(valueType);
             PrestoContext subcontext = PrestoContext.createSubContext(context, field, value, valueType, valueView);
-            result.setEmbedded(getTopicView(subcontext));
+            PrestoContextRules subrules = getPrestoContextRules(subcontext);
+
+            result.setEmbedded(getTopicView(subrules));
         }
 
-        boolean isReadOnly = isReadOnly(context, field, value);
-        if (!isReadOnly) {
+        boolean isRemovableValue = !rules.isReadOnlyField(field) && rules.isRemovableFieldValue(field, value);
+        if (isRemovableValue) {
             result.setRemovable(Boolean.TRUE);
         }
 
         List<Link> links = new ArrayList<Link>();
-        if (field.isTraversable()) {
+        if (rules.isTraversableField(field)) {
             PrestoView fieldsView = field.getEditView(valueType);
             if (valueType.isInline()) {
                 links.add(new Link("edit", Links.getTopicEditLink(getBaseUri(), getDatabaseId(), context, field, value.getId(), fieldsView.getId(), isReadOnlyMode())));
@@ -769,22 +790,27 @@ public abstract class Presto {
         return result;
     }
 
-    public AvailableFieldValues getAvailableFieldValuesInfo(PrestoContext context, PrestoFieldUsage field, String query) {
+    public AvailableFieldValues getAvailableFieldValuesInfo(PrestoContextRules rules, PrestoFieldUsage field, String query) {
 
         AvailableFieldValues result = new AvailableFieldValues();
         result.setId(field.getId());
         result.setName(field.getName());
-        result.setValues(getAllowedFieldValues(context, field, query));
+        result.setValues(getAllowedFieldValues(rules, field, query));
 
         return result;
     }
-    
-    protected Collection<? extends Object> getAvailableFieldValues(PrestoContext context, PrestoFieldUsage field, String query) {
-        Collection<? extends Object> result = getCustomAvailableValues(context, field, query);
+
+    protected Collection<? extends Object> getAvailableFieldValues(PrestoContextRules rules, PrestoFieldUsage field, String query) {
+        Collection<? extends Object> result = getCustomAvailableValues(rules, field, query);
         if (result != null) {
             return result;
         }
-        return dataProvider.getAvailableFieldValues(context.getTopic(), field, query);
+        PrestoTopic topic = rules.getContext().getTopic();
+        if (!rules.isReadOnlyField(field) && rules.isAddableField(field)) {
+            return dataProvider.getAvailableFieldValues(topic, field, query);
+        } else {
+            return Collections.emptyList();
+        }
     }
 
     private boolean isCustomAvailableValuesQuery(PrestoContext context, PrestoFieldUsage field) {
@@ -797,8 +823,8 @@ public abstract class Presto {
         }
         return false;
     }
-    
-    private Collection<? extends Object> getCustomAvailableValues(PrestoContext context, PrestoFieldUsage field, String query) {
+
+    private Collection<? extends Object> getCustomAvailableValues(PrestoContextRules rules, PrestoFieldUsage field, String query) {
         // TODO: shouldn't this be a PrestoFunction
         ObjectNode extra = getFieldExtraNode(field);
         if (extra != null) {
@@ -827,7 +853,7 @@ public abstract class Presto {
                         if (processor != null) {
                             processor.setPresto(this);
                             processor.setConfig((ObjectNode)availableValuesNode);
-                            return processor.getAvailableFieldValues(context, field, query);
+                            return processor.getAvailableFieldValues(rules.getContext(), field, query);
                         }
                     }
                 }
@@ -839,38 +865,38 @@ public abstract class Presto {
         return null;
     }
 
-    protected Collection<Value> getAllowedFieldValues(PrestoContext context, PrestoFieldUsage field, String query) {
-        Collection<? extends Object> availableFieldValues = getAvailableFieldValues(context, field, query);
-        
-        ValueProcessor valueProcessor = createValueProcessor(context, field);
+    protected Collection<Value> getAllowedFieldValues(PrestoContextRules rules, PrestoFieldUsage field, String query) {
+        Collection<? extends Object> availableFieldValues = getAvailableFieldValues(rules, field, query);
+
+        ValueProcessor valueProcessor = createValueProcessor(rules, field);
 
         Collection<Value> result = new ArrayList<Value>(availableFieldValues.size());
         for (Object value : availableFieldValues) {
-            result.add(getAllowedFieldValue(valueProcessor, context, field, value));
+            result.add(getAllowedFieldValue(valueProcessor, rules, field, value));
         }
 
         return result;
     }
-    
-    protected Value getAllowedFieldValue(ValueProcessor valueProcessor, PrestoContext context, PrestoFieldUsage field, Object fieldValue) {
+
+    protected Value getAllowedFieldValue(ValueProcessor valueProcessor, PrestoContextRules rules, PrestoFieldUsage field, Object fieldValue) {
         if (fieldValue instanceof PrestoTopic) {
             PrestoTopic topicValue = (PrestoTopic)fieldValue;
-            return getAllowedFieldValueTopic(valueProcessor, context, field, topicValue);
+            return getAllowedFieldValueTopic(valueProcessor, rules, field, topicValue);
         } else {
             String stringValue = fieldValue.toString();
-            return getAllowedFieldValueString(valueProcessor, context, field, stringValue);
+            return getAllowedFieldValueString(valueProcessor, rules, field, stringValue);
         }
     }
 
-    protected Value getAllowedFieldValueString(ValueProcessor valueProcessor, PrestoContext context, PrestoFieldUsage field, String value) {
+    protected Value getAllowedFieldValueString(ValueProcessor valueProcessor, PrestoContextRules rules, PrestoFieldUsage field, String value) {
         Value result = new Value();
         if (valueProcessor != null) {
-            result.setValue(valueProcessor.getValue(context, field, value));
+            result.setValue(valueProcessor.getValue(rules.getContext(), field, value));
         } else {
             result.setValue(value);
         }
         if (valueProcessor != null) {
-            String name = valueProcessor.getName(context, field, value);
+            String name = valueProcessor.getName(rules.getContext(), field, value);
             if (name != null) {
                 result.setName(name);
             }
@@ -878,15 +904,15 @@ public abstract class Presto {
         return result;
     }
 
-    protected Value getAllowedFieldValueTopic(ValueProcessor valueProcessor, PrestoContext context, PrestoFieldUsage field, PrestoTopic value) {
+    protected Value getAllowedFieldValueTopic(ValueProcessor valueProcessor, PrestoContextRules rules, PrestoFieldUsage field, PrestoTopic value) {
         Value result = new Value();
         if (valueProcessor != null) {
-            result.setValue(valueProcessor.getValue(context, field, value));
+            result.setValue(valueProcessor.getValue(rules.getContext(), field, value));
         } else {
             result.setValue(value.getId());
         }
         if (valueProcessor != null) {
-            String name = valueProcessor.getName(context, field, value);
+            String name = valueProcessor.getName(rules.getContext(), field, value);
             if (name != null) {
                 result.setName(name);
             }
@@ -900,7 +926,7 @@ public abstract class Presto {
         result.setType(value.getTypeId());
 
         List<Link> links = new ArrayList<Link>();
-        if (field.isTraversable()) {
+        if (rules.isTraversableField(field)) {
             PrestoType valueType = getSchemaProvider().getTypeById(value.getTypeId());
             PrestoView fieldsView = field.getEditView(valueType);
             links.add(new Link("edit", Links.getTopicEditLink(getBaseUri(), getDatabaseId(), value.getId(), fieldsView.getId(), false)));
@@ -988,7 +1014,7 @@ public abstract class Presto {
         result.setLinks(links);
         return result;
     }
-    
+
     protected Link getCreateFieldInstanceLink(PrestoContext context, PrestoFieldUsage field, PrestoType createType) {
         Link result = new Link("create-field-instance", Links.createFieldInstanceLink(getBaseUri(), getDatabaseId(), context, field, createType.getId()));
         result.setName(createType.getName());
@@ -998,34 +1024,37 @@ public abstract class Presto {
     public FieldData getFieldData(PrestoTopic topic, PrestoFieldUsage field) {
         PrestoType type = field.getType();
         PrestoView view = field.getView();
+
         PrestoContext context = PrestoContext.create(topic, type, view);
-        
-        FieldData result = getFieldData(context, field);
-        return processor.postProcessFieldData(result, context, field, null);
+        PrestoContextRules rules = getPrestoContextRules(context);
+
+        FieldData result = getFieldData(rules, field);
+
+        return processor.postProcessFieldData(result, rules, field, null);
     }
 
-    public FieldData addFieldValues(PrestoContext context, PrestoFieldUsage field, Integer index, FieldData fieldData) {
+    public FieldData addFieldValues(PrestoContextRules rules, PrestoFieldUsage field, Integer index, FieldData fieldData) {
         boolean resolveEmbedded = true;
         boolean includeExisting = false;
-        List<? extends Object> addableValues = updateAndExtractValuesFromFieldData(context, field, fieldData, resolveEmbedded, includeExisting);
-        PrestoTopic topicAfterSave = addFieldValues(context, field, addableValues, index);
-        
-        return getFieldData(topicAfterSave, field);
-    }
-    
-    public FieldData removeFieldValues(PrestoContext context, PrestoFieldUsage field, FieldData fieldData) {
-        boolean resolveEmbedded = false;
-        boolean includeExisting = false;
-        List<? extends Object> removeableValues = updateAndExtractValuesFromFieldData(context, field, fieldData, resolveEmbedded, includeExisting);
-        PrestoTopic topicAfterSave = removeFieldValues(context, field, removeableValues);
+        List<? extends Object> addableValues = updateAndExtractValuesFromFieldData(rules, field, fieldData, resolveEmbedded, includeExisting);
+        PrestoTopic topicAfterSave = addFieldValues(rules, field, addableValues, index);
 
         return getFieldData(topicAfterSave, field);
     }
-    
+
+    public FieldData removeFieldValues(PrestoContextRules rules, PrestoFieldUsage field, FieldData fieldData) {
+        boolean resolveEmbedded = false;
+        boolean includeExisting = false;
+        List<? extends Object> removeableValues = updateAndExtractValuesFromFieldData(rules, field, fieldData, resolveEmbedded, includeExisting);
+        PrestoTopic topicAfterSave = removeFieldValues(rules, field, removeableValues);
+
+        return getFieldData(topicAfterSave, field);
+    }
+
     protected PrestoTopic updateFieldValues(PrestoContext context, PrestoFieldUsage field, List<? extends Object> updateableValues) {
         PrestoTopic topic = context.getTopic();
         PrestoType type = context.getType();
-        
+
         PrestoDataProvider dataProvider = getDataProvider();
         PrestoChangeSet changeSet = dataProvider.newChangeSet(getChangeSetHandler());
         PrestoUpdate update = changeSet.updateTopic(topic, type);        
@@ -1036,11 +1065,12 @@ public abstract class Presto {
 
         return update.getTopicAfterSave();
     }
-    
-    public PrestoTopic addFieldValues(PrestoContext context, PrestoFieldUsage field, List<? extends Object> addableValues, Integer index) {
+
+    public PrestoTopic addFieldValues(PrestoContextRules rules, PrestoFieldUsage field, List<? extends Object> addableValues, Integer index) {
+        PrestoContext context = rules.getContext();
         PrestoTopic topic = context.getTopic();
         PrestoType type = context.getType();
-        
+
         PrestoDataProvider dataProvider = getDataProvider();
         PrestoChangeSet changeSet = dataProvider.newChangeSet(getChangeSetHandler());
         PrestoUpdate update = changeSet.updateTopic(topic, type);        
@@ -1055,14 +1085,15 @@ public abstract class Presto {
         return update.getTopicAfterSave();
     }
 
-    public PrestoTopic removeFieldValues(PrestoContext context, PrestoFieldUsage field, List<? extends Object> removeableValues) {
+    public PrestoTopic removeFieldValues(PrestoContextRules rules, PrestoFieldUsage field, List<? extends Object> removeableValues) {
+        PrestoContext context = rules.getContext();
         PrestoTopic topic = context.getTopic();
         PrestoType type = context.getType();
- 
+
         PrestoDataProvider dataProvider = getDataProvider();
         PrestoChangeSet changeSet = dataProvider.newChangeSet(getChangeSetHandler());
         PrestoUpdate update = changeSet.updateTopic(topic, type);        
-        
+
         update.removeValues(field, removeableValues);
         changeSet.save();
 
@@ -1070,22 +1101,24 @@ public abstract class Presto {
     }
 
     public TopicView validateTopic(PrestoContext context, TopicView topicView) {
+        PrestoContextRules rules = getPrestoContextRules(context);
         Status status = new Status();
-        
-        topicView = processor.preProcessTopicView(topicView, context, status);
 
-        return processor.postProcessTopicView(topicView, context, null);
+        topicView = processor.preProcessTopicView(topicView, rules, status);
+
+        return processor.postProcessTopicView(topicView, rules, null);
     }
-    
+
     public Object updateTopic(PrestoContext context, TopicView topicView, boolean returnParent) {
+        PrestoContextRules rules = getPrestoContextRules(context);
         Status status = new Status();
-        
-        topicView = processor.preProcessTopicView(topicView, context, status);
+
+        topicView = processor.preProcessTopicView(topicView, rules, status);
 
         if (status.isValid()) {
 
-            PrestoTopic result = updatePrestoTopic(context, topicView);
-            
+            PrestoTopic result = updatePrestoTopic(rules, topicView);
+
             // update inline topic in field of parent
             PrestoContext parentContext = context.getParentContext();
             PrestoFieldUsage parentField = context.getParentField();
@@ -1096,21 +1129,23 @@ public abstract class Presto {
             } else {            
                 newContext = PrestoContext.createSubContext(parentContext, parentField, result, context.getType(), context.getView());
             }
+
             if (context.isNewTopic() && parentContext == null) {
                 return getTopicAndProcess(newContext);
             } else {
                 return getTopicViewAndProcess(newContext);
             }
         } else {
-            return processor.postProcessTopicView(topicView, context, null);
+            return processor.postProcessTopicView(topicView, rules, null);
         }
     }
 
-    protected PrestoTopic updatePrestoTopic(PrestoContext context, TopicView topicView) {
+    protected PrestoTopic updatePrestoTopic(PrestoContextRules rules, TopicView topicView) {
 
         PrestoDataProvider dataProvider = getDataProvider();
         PrestoChangeSet changeSet = dataProvider.newChangeSet(getChangeSetHandler());
 
+        PrestoContext context = rules.getContext();
         PrestoType type = context.getType();
         PrestoView view = context.getView();
 
@@ -1125,28 +1160,28 @@ public abstract class Presto {
             } else {
                 update = changeSet.updateTopic(context.getTopic(), type);
             }
-    
+
             for (FieldData fieldData : topicView.getFields()) {
-    
+
                 String fieldId = fieldData.getId();
                 PrestoFieldUsage field = type.getFieldById(fieldId, view);
-    
+
                 // ignore read-only or pageable fields 
-                if (!isReadOnly(context, field) && !field.isPageable()) {
-                    
+                if (!rules.isReadOnlyField(field) && !rules.isPageableField(field)) {
+
                     boolean resolveEmbedded = true;
                     boolean includeExisting = false;
-                    update.setValues(field, updateAndExtractValuesFromFieldData(context, field, fieldData, resolveEmbedded, includeExisting));
+                    update.setValues(field, updateAndExtractValuesFromFieldData(rules, field, fieldData, resolveEmbedded, includeExisting));
                 }
             }
-    
+
             changeSet.save();
-    
+
             return update.getTopicAfterSave();
         }
     }
 
-    private List<? extends Object> updateAndExtractValuesFromFieldData(PrestoContext context, PrestoFieldUsage field, FieldData fieldData, 
+    private List<? extends Object> updateAndExtractValuesFromFieldData(PrestoContextRules rules, PrestoFieldUsage field, FieldData fieldData, 
             boolean resolveEmbedded, boolean includeExisting) {
         Collection<Value> values = fieldData.getValues();
         List<Object> result = new ArrayList<Object>(values.size());
@@ -1154,6 +1189,7 @@ public abstract class Presto {
         if (!values.isEmpty()) {
 
             if (field.isReferenceField()) {
+                PrestoContext context = rules.getContext();
                 if (field.isInline()) {
                     // build inline topics from field data
                     List<Object> newValues = new ArrayList<Object>();
@@ -1180,7 +1216,7 @@ public abstract class Presto {
                     for (Value value : values) {                
                         TopicView embeddedTopic = getEmbeddedTopic(value);
                         if (resolveEmbedded && embeddedTopic != null) {
-                            result.add(updateEmbeddedTopic(context, field, embeddedTopic));
+                            result.add(updateEmbeddedTopic(rules, field, embeddedTopic));
                         } else {
                             String valueId = getReferenceValue(value);
                             if (valueId != null) {
@@ -1205,7 +1241,7 @@ public abstract class Presto {
         PrestoInlineTopicBuilder builder = dataProvider.createInlineTopic(type, topicId);
         return builder.build();
     }
-    
+
     protected PrestoTopic buildInlineTopic(PrestoContext parentContext, PrestoFieldUsage parentField, TopicView embeddedTopic) {
 
         PrestoSchemaProvider schemaProvider = getSchemaProvider();
@@ -1219,9 +1255,8 @@ public abstract class Presto {
         if (!type.isInline()) {
             throw new RuntimeException("Type " + type.getId() + " is not an inline type.");
         }
-        
+
         PrestoTopic topic;
-        PrestoContext subcontext;
         if (parentContext.isNewTopic() || topicId == null) {
             topic = null;
         } else {
@@ -1229,10 +1264,11 @@ public abstract class Presto {
             topic = findInlineTopicById(parentTopic, parentField, topicId);
         }
         PrestoView view = type.getViewById(viewId);
-        subcontext = PrestoContext.createSubContext(parentContext, parentField, topic, type, view);
-        
+        PrestoContext subcontext = PrestoContext.createSubContext(parentContext, parentField, topic, type, view);
+        PrestoContextRules subrules = getPrestoContextRules(subcontext);
+
         PrestoDataProvider dataProvider = getDataProvider();
-        
+
         PrestoInlineTopicBuilder builder = dataProvider.createInlineTopic(type, topicId);
 
         for (FieldData fieldData : embeddedTopic.getFields()) {
@@ -1242,9 +1278,9 @@ public abstract class Presto {
 
             boolean resolveEmbedded = true;
             boolean includeExisting = false;
-            builder.setValues(field, updateAndExtractValuesFromFieldData(subcontext, field, fieldData, resolveEmbedded, includeExisting));
+            builder.setValues(field, updateAndExtractValuesFromFieldData(subrules, field, fieldData, resolveEmbedded, includeExisting));
         }
-        
+
         return builder.build();
     }
 
@@ -1255,9 +1291,9 @@ public abstract class Presto {
         }
         PrestoSchemaProvider schemaProvider = getSchemaProvider();
         PrestoType type = schemaProvider.getTypeById(t1.getTypeId());
-        
+
         PrestoInlineTopicBuilder builder = dataProvider.createInlineTopic(type, topicId);
-        
+
         //    n{ "a" : 1, "b" : 2, "c" : {"_" : 11, "x" : 1}          }  
         //    e{ "a" : 3,          "c" : {"_" : 11, "x" : 2, "y" : 3} } 
         // =>  { "a" : 1, "b" : 2, "c" : {"_" : 11, "x" : 1, "y" : 3} }
@@ -1265,7 +1301,7 @@ public abstract class Presto {
         for (PrestoField field : type.getFields()) {
             boolean hasValue1 = t1.hasValue(field);
             boolean hasValue2 = t2.hasValue(field);
-            
+
             if (hasValue1 && hasValue2) {
                 if (field.isInline()) {
                     boolean includeExisting = false;
@@ -1280,15 +1316,15 @@ public abstract class Presto {
                 builder.setValues(field, t2.getValues(field));
             }
         }
-        
+
         return builder.build();
     }
-    
+
     protected Collection<? extends Object> mergeInlineTopics(List<? extends Object> valuesNew, List<? extends Object> valuesExisting, 
             boolean includeExisting) {
         Map<String,Object> mapNew = toMapTopics(valuesNew);
         Map<String,Object> mapExisting = toMapTopics(valuesExisting);
-        
+
         Map<String,PrestoTopic> result = new LinkedHashMap<String,PrestoTopic>(Math.max(valuesNew.size(), valuesExisting.size()));
         if (includeExisting) {
             // keep order of existing
@@ -1333,13 +1369,13 @@ public abstract class Presto {
         return result;
     }
 
-    private PrestoTopic updateEmbeddedTopic(PrestoContext context, PrestoFieldUsage field, TopicView embeddedTopic) {
+    private PrestoTopic updateEmbeddedTopic(PrestoContextRules rules, PrestoFieldUsage field, TopicView embeddedTopic) {
 
         PrestoDataProvider dataProvider = getDataProvider();
         PrestoSchemaProvider schemaProvider = getSchemaProvider();
 
         String topicId = embeddedTopic.getTopicId();
-        
+
         PrestoTopic topic = null;
         PrestoType type;
         if (topicId == null) {
@@ -1351,9 +1387,11 @@ public abstract class Presto {
         }
 
         PrestoView valueView = field.getValueView(type);
-        PrestoContext subcontext = PrestoContext.create(topic, type, valueView);
 
-        return updatePrestoTopic(subcontext, embeddedTopic);
+        PrestoContext subcontext = PrestoContext.create(topic, type, valueView);
+        PrestoContextRules subrules = getPrestoContextRules(subcontext);
+
+        return updatePrestoTopic(subrules, embeddedTopic);
     }
 
     TopicView getEmbeddedTopic(Value value) {
@@ -1374,14 +1412,15 @@ public abstract class Presto {
         changeSet.deleteTopic(topic, type);
         changeSet.save();
     }
-    
-    public AvailableFieldTypes getAvailableFieldTypesInfo(PrestoContext context, PrestoFieldUsage field) {
+
+    public AvailableFieldTypes getAvailableFieldTypesInfo(PrestoContextRules rules, PrestoFieldUsage field) {
 
         AvailableFieldTypes result = new AvailableFieldTypes();
         result.setId(field.getId());
         result.setName(field.getName());
 
-        if (field.isCreatable()) {
+        if (rules.isCreatableField(field)) {
+            PrestoContext context = rules.getContext();
             Collection<PrestoType> availableFieldCreateTypes = getAvailableFieldCreateTypes(context, field);
             List<TopicType> types = new ArrayList<TopicType>(availableFieldCreateTypes.size());
             for (PrestoType createType : availableFieldCreateTypes) {
@@ -1393,18 +1432,18 @@ public abstract class Presto {
         }
         return result;
     }
-    
+
     public AvailableTopicTypes getAvailableTypesInfo(boolean tree) {
         AvailableTopicTypes result = new AvailableTopicTypes();
         result.setTypes(getAvailableTypes(tree));
         return result;
     }
-    
+
     protected Collection<TopicTypeTree> getAvailableTypes(boolean tree) {
         Collection<PrestoType> rootTypes = schemaProvider.getRootTypes();
         return getAvailableTypes(rootTypes, tree);
     }
-    
+
     protected Collection<TopicTypeTree> getAvailableTypes(Collection<PrestoType> types, boolean tree) {
         Collection<TopicTypeTree> result = new ArrayList<TopicTypeTree>(); 
         for (PrestoType rootType : types) {
@@ -1460,14 +1499,14 @@ public abstract class Presto {
         links.add(new Link("available-types-tree", Links.getAvailableTypesTree(getBaseUri(), getDatabaseId())));
         links.add(new Link("edit-topic-by-id", Links.getTopicEditLinkById(getBaseUri(), getDatabaseId())));
         result.setLinks(links);      
-        
+
         return result;
     }
-    
+
     protected Collection<PrestoType> getAvailableFieldValueTypes(PrestoContext context, PrestoFieldUsage field) {
         return field.getAvailableFieldValueTypes();
     }
-    
+
     protected Collection<PrestoType> getAvailableFieldCreateTypes(PrestoContext context, PrestoFieldUsage field) {
         Collection<PrestoType> result = getCustomAvailableFieldCreateTypes(context, field);
         if (result != null) {

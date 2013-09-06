@@ -8,6 +8,7 @@ import java.util.List;
 import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxb.Value;
 import net.ontopia.presto.jaxrs.PrestoContext;
+import net.ontopia.presto.jaxrs.PrestoContextRules;
 import net.ontopia.presto.jaxrs.process.FieldDataProcessor;
 import net.ontopia.presto.jaxrs.process.SubmittedState;
 import net.ontopia.presto.jaxrs.resolve.PrestoTopicWithParentFieldVariableResolver;
@@ -26,24 +27,33 @@ import org.codehaus.jackson.node.ObjectNode;
 public abstract class IfThenElseResolveFieldDataProcessor extends FieldDataProcessor {
 
     @Override
-    public FieldData processFieldData(FieldData fieldData, PrestoContext context, PrestoFieldUsage field) {
-        boolean result = getResult(fieldData, context, field);
-        if (result) {
-            return thenProcessFieldData(fieldData, context, field);
+    public FieldData processFieldData(FieldData fieldData, PrestoContextRules rules, PrestoFieldUsage field) {
+        if (isShouldRun(fieldData, rules, field)) {
+            boolean result = getResult(fieldData, rules, field);
+            if (result) {
+                return thenProcessFieldData(fieldData, rules, field);
+            } else {
+                return elseProcessFieldData(fieldData, rules, field);
+            }
         } else {
-            return elseProcessFieldData(fieldData, context, field);
+            return fieldData;
         }
     }
 
-    protected boolean getResult(FieldData fieldData, PrestoContext context, PrestoFieldUsage field) {
-        ObjectNode processorConfig = getConfig();
-        if (processorConfig != null) {
+    protected boolean isShouldRun(FieldData fieldData, PrestoContextRules rules, PrestoFieldUsage field) {
+        return true;
+    }
+    
+    protected boolean getResult(FieldData fieldData, PrestoContextRules rules, PrestoFieldUsage field) {
+        ObjectNode config = getConfig();
+        if (config != null) {
             PrestoDataProvider dataProvider = getDataProvider();
     
             if (dataProvider instanceof JacksonDataProvider) {
     
                 Paging paging = new PrestoPaging(0, 1);
     
+                PrestoContext context = rules.getContext();
                 PrestoVariableResolver parentResolver = new PrestoTopicWithParentFieldVariableResolver(field.getSchemaProvider(), context);
                 PrestoVariableResolver variableResolver = new FieldDataVariableResolver(parentResolver, fieldData, context);
     
@@ -52,7 +62,7 @@ public abstract class IfThenElseResolveFieldDataProcessor extends FieldDataProce
                 Collection<? extends Object> objects = (topic == null ? Collections.emptyList() : Collections.singleton(topic));
     
                 JacksonDataProvider jacksonDataProvider = (JacksonDataProvider)dataProvider;
-                JsonNode resolveConfig = processorConfig.path("resolve");
+                JsonNode resolveConfig = config.path("resolve");
                 PagedValues values = jacksonDataProvider.resolveValues(objects, field, paging, resolveConfig, variableResolver);
     
                 return !values.getValues().isEmpty();
@@ -61,11 +71,11 @@ public abstract class IfThenElseResolveFieldDataProcessor extends FieldDataProce
         return false;
     }
 
-    protected FieldData thenProcessFieldData(FieldData fieldData, PrestoContext context, PrestoFieldUsage field) {
+    protected FieldData thenProcessFieldData(FieldData fieldData, PrestoContextRules rules, PrestoFieldUsage field) {
         return fieldData;
     }
 
-    protected FieldData elseProcessFieldData(FieldData fieldData, PrestoContext context, PrestoFieldUsage field) {
+    protected FieldData elseProcessFieldData(FieldData fieldData, PrestoContextRules rules, PrestoFieldUsage field) {
         return fieldData;
     }
 
