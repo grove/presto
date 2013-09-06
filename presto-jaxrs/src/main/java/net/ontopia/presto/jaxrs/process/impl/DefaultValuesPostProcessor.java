@@ -11,6 +11,7 @@ import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxb.Value;
 import net.ontopia.presto.jaxrs.Presto;
 import net.ontopia.presto.jaxrs.PrestoContext;
+import net.ontopia.presto.jaxrs.PrestoContextRules;
 import net.ontopia.presto.jaxrs.process.FieldDataProcessor;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoTopic;
@@ -18,7 +19,8 @@ import net.ontopia.presto.spi.PrestoTopic;
 public class DefaultValuesPostProcessor extends FieldDataProcessor {
 
     @Override
-    public FieldData processFieldData(FieldData fieldData, PrestoContext context, PrestoFieldUsage field) {
+    public FieldData processFieldData(FieldData fieldData, PrestoContextRules rules, PrestoFieldUsage field) {
+        PrestoContext context = rules.getContext();
         Collection<Value> fieldValues = fieldData.getValues();
 
         // don't add values if field already has values
@@ -43,7 +45,7 @@ public class DefaultValuesPostProcessor extends FieldDataProcessor {
                 }
                 int offset = 0;
                 int limit = Presto.DEFAULT_LIMIT;
-                getPresto().setFieldDataValues(offset, limit, context, field, fieldData, values);
+                getPresto().setFieldDataValues(offset, limit, rules, field, fieldData, values);
             }
         }
         return fieldData;

@@ -169,7 +169,9 @@ public abstract class EditorResource {
                 return Response.status(Status.NOT_FOUND).build();
             }
 
-            TopicView result = session.getNewTopicView(path, type);
+            PrestoContextField contextField = PathParser.getContextField(session, path);
+            TopicView result = session.getNewTopicView(contextField.getContext(), contextField.getField(), type);
+            
             return Response.ok(result).build();
 
         } catch (Exception e) {
@@ -210,7 +212,7 @@ public abstract class EditorResource {
         Presto session = createPresto(databaseId, readOnly);
 
         try {
-            PrestoContext context = session.getTopicByPath(path, topicId, viewId);
+            PrestoContext context = PathParser.getTopicByPath(session, path, topicId, viewId);
 
             if (context == null || context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -221,7 +223,9 @@ public abstract class EditorResource {
                 return Response.status(Status.NOT_FOUND).build();
             }
             
-            FieldData result = session.getFieldData(context, field, start, limit, true);
+            PrestoContextRules rules = session.getPrestoContextRules(context);
+
+            FieldData result = session.getFieldData(rules, field, start, limit, true);
             return Response.ok(result).build();
 
         } catch (Exception e) {
@@ -256,7 +260,7 @@ public abstract class EditorResource {
         Presto session = createPresto(databaseId, readOnly);
 
         try {
-            PrestoContext context = session.getTopicByPath(path, topicId, viewId);
+            PrestoContext context = PathParser.getTopicByPath(session, path, topicId, viewId);
 
             if (context == null || context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();        
@@ -268,7 +272,8 @@ public abstract class EditorResource {
                     if (type.isInline()) {
                         PrestoContext parentContext = context.getParentContext();
                         PrestoFieldUsage parentField = context.getParentField();
-                        PrestoTopic parentTopicAfterSave = session.removeFieldValues(parentContext, parentField, Collections.singletonList(topic));
+                        PrestoContextRules parentRules = session.getPrestoContextRules(parentContext);
+                        PrestoTopic parentTopicAfterSave = session.removeFieldValues(parentRules, parentField, Collections.singletonList(topic));
     
                         // return field data of parent field
                         FieldData fieldData = session.getFieldData(parentTopicAfterSave, parentField);
@@ -329,7 +334,7 @@ public abstract class EditorResource {
         Presto session = createPresto(databaseId, readOnly);
 
         try {
-            PrestoContext context = session.getTopicByPath(path, topicId, viewId);
+            PrestoContext context = PathParser.getTopicByPath(session, path, topicId, viewId);
 
             if (context == null || context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -384,7 +389,7 @@ public abstract class EditorResource {
         Presto session = createPresto(databaseId, readOnly);
 
         try {
-            PrestoContext context = session.getTopicByPath(path, topicId, viewId);
+            PrestoContext context = PathParser.getTopicByPath(session, path, topicId, viewId);
 
             if (context == null || context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -466,7 +471,7 @@ public abstract class EditorResource {
         Presto session = createPresto(databaseId, readOnly);
 
         try {
-            PrestoContext context = session.getTopicByPath(path, topicId, viewId);
+            PrestoContext context = PathParser.getTopicByPath(session, path, topicId, viewId);
 
             if (context == null || context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -517,16 +522,17 @@ public abstract class EditorResource {
         Presto session = createPresto(databaseId, readOnly);
 
         try {
-            PrestoContext context = session.getTopicByPath(path, topicId, viewId);
+            PrestoContext context = PathParser.getTopicByPath(session, path, topicId, viewId);
 
             if (context == null || context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
             }
 
             PrestoFieldUsage field = context.getFieldById(fieldId);
+            PrestoContextRules rules = session.getPrestoContextRules(context);
 
-            if (field.isAddable() || field.isCreatable()) {
-                FieldData result = session.addFieldValues(context, field, index, fieldData);
+            if (!rules.isReadOnlyField(field) && (rules.isAddableField(field) || rules.isCreatableField(field))) {
+                FieldData result = session.addFieldValues(rules, field, index, fieldData);
     
                 session.commit();
     
@@ -573,16 +579,17 @@ public abstract class EditorResource {
         Presto session = createPresto(databaseId, readOnly);
 
         try {
-            PrestoContext context = session.getTopicByPath(path, topicId, viewId);
+            PrestoContext context = PathParser.getTopicByPath(session, path, topicId, viewId);
 
             if (context == null || context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
             }
 
             PrestoFieldUsage field = context.getFieldById(fieldId);
+            PrestoContextRules rules = session.getPrestoContextRules(context);
 
-            if (field.isRemovable()) {
-                FieldData result =  session.removeFieldValues(context, field, fieldData);
+            if (rules.isRemovableField(field)) {
+                FieldData result =  session.removeFieldValues(rules, field, fieldData);
     
                 session.commit();
     
@@ -657,7 +664,7 @@ public abstract class EditorResource {
         Presto session = createPresto(databaseId, readOnly);
 
         try {
-            PrestoContext context = session.getTopicByPath(path, topicId, viewId);
+            PrestoContext context = PathParser.getTopicByPath(session, path, topicId, viewId);
 
             if (context == null || context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -665,7 +672,8 @@ public abstract class EditorResource {
 
             PrestoFieldUsage field = context.getFieldById(fieldId);
             
-            AvailableFieldValues result = session.getAvailableFieldValuesInfo(context, field, query);
+            PrestoContextRules rules = session.getPrestoContextRules(context);
+            AvailableFieldValues result = session.getAvailableFieldValuesInfo(rules, field, query);
             return Response.ok(result).build();
             
         } catch (Exception e) {
@@ -696,8 +704,9 @@ public abstract class EditorResource {
             }
 
             PrestoFieldUsage field = context.getFieldById(fieldId);
-
-            AvailableFieldTypes result = session.getAvailableFieldTypesInfo(context, field);
+            PrestoContextRules rules = session.getPrestoContextRules(context);
+            
+            AvailableFieldTypes result = session.getAvailableFieldTypesInfo(rules, field);
             return Response.ok(result).build();
 
         } catch (Exception e) {

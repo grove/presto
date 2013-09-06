@@ -2,6 +2,7 @@ package net.ontopia.presto.jaxrs.process.impl;
 
 import net.ontopia.presto.jaxb.Topic;
 import net.ontopia.presto.jaxrs.PrestoContext;
+import net.ontopia.presto.jaxrs.PrestoContextRules;
 import net.ontopia.presto.jaxrs.process.TopicProcessor;
 import net.ontopia.presto.jaxrs.resolve.PrestoTopicWithParentFieldVariableResolver;
 import net.ontopia.presto.spi.PrestoTopic;
@@ -10,8 +11,9 @@ import net.ontopia.presto.spi.utils.PrestoVariableResolver;
 public class TopicNamePatternProcessor extends TopicProcessor {
 
     @Override
-    public Topic processTopic(Topic topicData, PrestoContext context) {
+    public Topic processTopic(Topic topicData, PrestoContextRules rules) {
         if (topicData.getName() == null) {
+            PrestoContext context = rules.getContext();
             PrestoTopic topic = context.getTopic();
             PrestoVariableResolver variableResolver = new PrestoTopicWithParentFieldVariableResolver(getSchemaProvider(), context);
             String name = PatternValueUtils.getValueByPattern(variableResolver, topic, getConfig());

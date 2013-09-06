@@ -28,11 +28,13 @@ public interface PrestoField {
     
     String getInverseFieldId();
 
-    // characteristics
-
+    // inherent characteristics
+    
     boolean isInline();
 
     boolean isEmbedded();
+
+    // characteristics
 
     boolean isHidden();
 

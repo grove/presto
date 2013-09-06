@@ -4,6 +4,7 @@ import java.util.Map;
 
 import net.ontopia.presto.jaxb.TopicView;
 import net.ontopia.presto.jaxrs.PrestoContext;
+import net.ontopia.presto.jaxrs.PrestoContextRules;
 import net.ontopia.presto.jaxrs.process.TopicViewProcessor;
 
 import org.codehaus.jackson.node.ObjectNode;
@@ -11,7 +12,8 @@ import org.codehaus.jackson.node.ObjectNode;
 public class TopicViewParamsPostProcessor extends TopicViewProcessor {
 
     @Override
-    public TopicView processTopicView(TopicView topicView, PrestoContext context) {
+    public TopicView processTopicView(TopicView topicView, PrestoContextRules rules) {
+        PrestoContext context = rules.getContext();
         ObjectNode extraNode = getPresto().getViewExtraNode(context.getView());
         if (extraNode != null) {
             Map<String, Object> params = getPresto().getExtraParamsMap(extraNode);

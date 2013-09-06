@@ -1,13 +1,18 @@
 package net.ontopia.presto.jaxrs.process.impl;
 
 import net.ontopia.presto.jaxb.FieldData;
-import net.ontopia.presto.jaxrs.PrestoContext;
+import net.ontopia.presto.jaxrs.PrestoContextRules;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 
-public class UniqueValuesValidator extends IfThenElseResolveProcessor {
-    
+public class UniqueValuesValidator extends IfThenElseResolveFieldDataProcessor {
+
     @Override
-    public FieldData thenProcessFieldData(FieldData fieldData,  PrestoContext context, PrestoFieldUsage field) {
+    protected boolean isShouldRun(FieldData fieldData, PrestoContextRules rules, PrestoFieldUsage field) {
+        return !rules.isReadOnlyField(field);
+    }
+
+    @Override
+    public FieldData thenProcessFieldData(FieldData fieldData, PrestoContextRules rules, PrestoFieldUsage field) {
         setValid(false);
         addError(fieldData, getErrorMessage("not-unique", field, "Field value is not unique."));
         return fieldData;

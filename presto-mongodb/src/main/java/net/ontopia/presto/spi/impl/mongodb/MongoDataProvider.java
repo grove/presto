@@ -80,23 +80,20 @@ public abstract class MongoDataProvider extends JacksonDataProvider {
 
     @Override
     public Collection<? extends Object> getAvailableFieldValues(PrestoTopic topic, final PrestoFieldUsage field, String query) {
-        if (field.isAddable()) {
-            Collection<PrestoType> types = field.getAvailableFieldValueTypes();
-            if (!types.isEmpty()) {
-    
-                List<PrestoTopic> result = new ArrayList<PrestoTopic>();
-                aggregateTopicsByType(types, result);
-
-                Collections.sort(result, new Comparator<PrestoTopic>() {
-                    @Override
-                    public int compare(PrestoTopic o1, PrestoTopic o2) {
-                        return compareComparables(o1.getName(field), o2.getName(field));
-                    }
-                });
-                return result;
-            }
+        Collection<PrestoType> types = field.getAvailableFieldValueTypes();
+        if (types.isEmpty()) {
+            return Collections.emptyList();
         }
-        return Collections.emptyList();
+        List<PrestoTopic> result = new ArrayList<PrestoTopic>();
+        aggregateTopicsByType(types, result);
+
+        Collections.sort(result, new Comparator<PrestoTopic>() {
+            @Override
+            public int compare(PrestoTopic o1, PrestoTopic o2) {
+                return compareComparables(o1.getName(field), o2.getName(field));
+            }
+        });
+        return result;
     }
 
     @Override

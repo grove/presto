@@ -90,39 +90,35 @@ public abstract class CouchDataProvider extends JacksonDataProvider {
 
     @Override
     public Collection<? extends Object> getAvailableFieldValues(PrestoTopic topic, final PrestoFieldUsage field, String query) {
-        if (field.isAddable()) {
-            Collection<PrestoType> types = field.getAvailableFieldValueTypes();
-            if (types.isEmpty()) {
-                return Collections.emptyList();
-            }
-            List<String> typeIds = new ArrayList<String>();
-            for (PrestoType type : types) {
-                typeIds.add(type.getId());
-            }
-            ViewQuery vquery = new ViewQuery()
-            .designDocId(designDocId)
-            .viewName("by-type")
-            .staleOk(true)
-            .includeDocs(true).keys(typeIds);
-    
-            List<PrestoTopic> result = new ArrayList<PrestoTopic>(typeIds.size());
-            ViewResult viewResult = getCouchConnector().queryView(vquery);
-            for (Row row : viewResult.getRows()) {
-                ObjectNode docNode = (ObjectNode)row.getDocAsNode();
-                if (docNode.isObject()) {
-                    result.add(existing(docNode));
-                }
-            }
-            Collections.sort(result, new Comparator<PrestoTopic>() {
-                @Override
-                public int compare(PrestoTopic o1, PrestoTopic o2) {
-                    return compareComparables(o1.getName(field), o2.getName(field));
-                }
-            });
-            return result;
-        } else {
+        Collection<PrestoType> types = field.getAvailableFieldValueTypes();
+        if (types.isEmpty()) {
             return Collections.emptyList();
         }
+        List<String> typeIds = new ArrayList<String>();
+        for (PrestoType type : types) {
+            typeIds.add(type.getId());
+        }
+        ViewQuery vquery = new ViewQuery()
+        .designDocId(designDocId)
+        .viewName("by-type")
+        .staleOk(true)
+        .includeDocs(true).keys(typeIds);
+
+        List<PrestoTopic> result = new ArrayList<PrestoTopic>(typeIds.size());
+        ViewResult viewResult = getCouchConnector().queryView(vquery);
+        for (Row row : viewResult.getRows()) {
+            ObjectNode docNode = (ObjectNode)row.getDocAsNode();
+            if (docNode.isObject()) {
+                result.add(existing(docNode));
+            }
+        }
+        Collections.sort(result, new Comparator<PrestoTopic>() {
+            @Override
+            public int compare(PrestoTopic o1, PrestoTopic o2) {
+                return compareComparables(o1.getName(field), o2.getName(field));
+            }
+        });
+        return result;
     }
 
     @Override
