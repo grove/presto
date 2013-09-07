@@ -5,31 +5,37 @@ import net.ontopia.presto.spi.PrestoSchemaProvider;
 
 import org.codehaus.jackson.node.ObjectNode;
 
-public class AbstractHandler {
+public class AbstractHandler implements Handler {
 
     private Presto presto;
     private ObjectNode config;
     
-    protected Presto getPresto() {
+    @Override
+    public Presto getPresto() {
         return presto;
     }
 
+    @Override
     public void setPresto(Presto presto) {
         this.presto = presto;
     }
 
-    protected PrestoDataProvider getDataProvider() {
+    @Override
+    public PrestoDataProvider getDataProvider() {
         return presto.getDataProvider();
     }
 
-    protected PrestoSchemaProvider getSchemaProvider() {
+    @Override
+    public PrestoSchemaProvider getSchemaProvider() {
         return presto.getSchemaProvider();
     }
 
+    @Override
     public ObjectNode getConfig() {
         return config;
     }
 
+    @Override
     public void setConfig(ObjectNode config) {
         this.config = config;
     }

@@ -27,20 +27,33 @@ public class PrestoContextRules {
         isAddableField,
         isRemovableField
     }
+
+    public enum FieldValueFlag {
+        isRemovableFieldValue,
+    }
     
-    public static abstract class Handler extends AbstractHandler {
+    public static interface TypeRule extends Handler {
  
-        public Boolean getValue(TypeFlag flag, PrestoContext context) {
-            return null;
-        }
+        public Boolean getValue(TypeFlag flag, PrestoContext context);
+
+    }
+    
+    public static interface FieldRule extends Handler {
         
-        public Boolean getValue(FieldFlag flag, PrestoContext context, PrestoField field) {
-            return null;
-        }
+        public Boolean getValue(FieldFlag flag, PrestoContext context, PrestoField field);
         
     }
     
-    private Handler handler;
+    public static interface FieldValueRule extends Handler {
+        
+        public Boolean getValue(FieldValueFlag flag, PrestoContext context, PrestoField field, Object value);
+        
+    }
+    
+    public static abstract class ContextRulesHandler extends AbstractHandler implements TypeRule, FieldRule, FieldValueRule {
+    }
+    
+    private ContextRulesHandler handler;
     private boolean readOnlyType;
     
     private PrestoContext context;
@@ -54,7 +67,7 @@ public class PrestoContextRules {
         if (extra != null) {
             JsonNode contextRules = extra.path("contextRules");
             if (!contextRules.isMissingNode()) {
-                this.handler = PrestoProcessor.getHandler(session, Handler.class, contextRules);
+                this.handler = PrestoProcessor.getHandler(session, ContextRulesHandler.class, contextRules);
                 this.readOnlyType = isTypeHandlerFlag(TypeFlag.isReadOnlyType, false);
             }
         }
@@ -77,6 +90,16 @@ public class PrestoContextRules {
     private boolean isFieldHandlerFlag(FieldFlag flag, PrestoField field, boolean defaultValue) {
         if (handler != null) {
             Boolean result = handler.getValue(flag, context, field);
+            if (result != null) {
+                return result;
+            }
+        }
+        return defaultValue;
+    }
+    
+    private boolean isFieldValueHandlerFlag(FieldValueFlag flag, PrestoField field, Object value, boolean defaultValue) {
+        if (handler != null) {
+            Boolean result = handler.getValue(flag, context, field, value);
             if (result != null) {
                 return result;
             }
@@ -154,7 +177,7 @@ public class PrestoContextRules {
     }
 
     public boolean isRemovableFieldValue(PrestoField field, Object value) {
-        return isRemovableField(field);
+        return isFieldValueHandlerFlag(FieldValueFlag.isRemovableFieldValue, field, value, field.isRemovable());
     }
 
 //    public boolean isCascadingDeleteField(PrestoField field) {

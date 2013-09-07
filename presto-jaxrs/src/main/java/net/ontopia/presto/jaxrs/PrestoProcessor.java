@@ -335,7 +335,7 @@ public class PrestoProcessor {
 //        }
 //    }
     
-    public static <T extends AbstractHandler> Iterable<T> getHandlers(Presto session, Class<T> klass, JsonNode processorsNode) {
+    public static <T extends Handler> Iterable<T> getHandlers(Presto session, Class<T> klass, JsonNode processorsNode) {
         if (processorsNode.isArray()) {
             List<T> result = new ArrayList<T>();
             for (JsonNode processorNode : processorsNode) {
@@ -354,7 +354,7 @@ public class PrestoProcessor {
         return Collections.emptyList();
     }
     
-    public static <T extends AbstractHandler> T getHandler(Presto session, Class<T> klass, JsonNode processorNode) {
+    public static <T extends Handler> T getHandler(Presto session, Class<T> klass, JsonNode processorNode) {
         T handler = getHandler(session.getSchemaProvider(), klass, processorNode);
         if (handler != null) {
             handler.setPresto(session);
@@ -362,7 +362,7 @@ public class PrestoProcessor {
         return handler;
     }
     
-    private static <T extends AbstractHandler> T getHandler(PrestoSchemaProvider schemaProvider, Class<T> klass, JsonNode processorNode) {
+    private static <T extends Handler> T getHandler(PrestoSchemaProvider schemaProvider, Class<T> klass, JsonNode processorNode) {
         if (processorNode.isTextual()) {
             String className = processorNode.getTextValue();
             if (className != null) {
@@ -408,7 +408,7 @@ public class PrestoProcessor {
         }
     }
 
-    private static <T extends AbstractHandler> T getHandlerInstance(Class<T> klass, String className, ObjectNode processorConfig) {
+    private static <T extends Handler> T getHandlerInstance(Class<T> klass, String className, ObjectNode processorConfig) {
         T processor = Utils.newInstanceOf(className, klass);
         if (processor != null) {
             processor.setConfig(processorConfig);
