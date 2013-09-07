@@ -1,5 +1,6 @@
 package net.ontopia.presto.jaxrs;
 
+import net.ontopia.presto.jaxrs.rules.DelegatingContextRules;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoType;
 
@@ -63,14 +64,22 @@ public class PrestoContextRules {
         this.context = context;
         this.type = context.getType();
         
+        ObjectNode config = null;
+        
         ObjectNode extra = (ObjectNode)type.getExtra();
         if (extra != null) {
             JsonNode contextRules = extra.path("contextRules");
-            if (!contextRules.isMissingNode()) {
+            if (contextRules.isObject()) {
                 this.handler = PrestoProcessor.getHandler(session, ContextRulesHandler.class, contextRules);
-                this.readOnlyType = isTypeHandlerFlag(TypeFlag.isReadOnlyType, false);
+                config = (ObjectNode)contextRules;
             }
         }
+        if (this.handler == null) {
+            this.handler = new DelegatingContextRules();
+            this.handler.setPresto(session);
+            this.handler.setConfig(config);
+        }
+        this.readOnlyType = isTypeHandlerFlag(TypeFlag.isReadOnlyType, false);
     }
     
     public PrestoContext getContext() {

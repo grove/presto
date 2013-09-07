@@ -385,7 +385,7 @@ public class PrestoProcessor {
                 }
             } 
         }
-        log.warn("Could not find processor for config: {}", processorNode);
+//        log.warn("Could not find processor for config: {}", processorNode);
         return null;
     }
     
