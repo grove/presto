@@ -23,7 +23,7 @@ import net.ontopia.presto.jaxb.TopicTypeTree;
 import net.ontopia.presto.jaxb.TopicView;
 import net.ontopia.presto.jaxb.Value;
 import net.ontopia.presto.jaxrs.PrestoProcessor.Status;
-import net.ontopia.presto.jaxrs.process.ValueProcessor;
+import net.ontopia.presto.jaxrs.process.ValueFactory;
 import net.ontopia.presto.jaxrs.resolve.AvailableFieldCreateTypesResolver;
 import net.ontopia.presto.jaxrs.resolve.AvailableFieldValuesResolver;
 import net.ontopia.presto.jaxrs.sort.SortKeyGenerator;
@@ -609,7 +609,7 @@ public abstract class Presto {
             sortFieldValues(rules, field, fieldValues, rules.isSortedAscendingField(field));
         }
 
-        ValueProcessor valueProcessor = createValueProcessor(rules, field);
+        ValueFactory valueFactory = createValueFactory(rules, field);
 
         int size = fieldValues.size();
         int start = 0;
@@ -620,7 +620,7 @@ public abstract class Presto {
         for (int i=start; i < end; i++) {
             Object value = fieldValues.get(i);
             if (value != null) {
-                Value efv = getExistingFieldValue(valueProcessor, rules, field, value);
+                Value efv = getExistingFieldValue(valueFactory, rules, field, value);
                 outputValues.add(efv);
                 inputValues.add(value);
             } else {
@@ -696,40 +696,34 @@ public abstract class Presto {
         return null;
     }
 
-    private ValueProcessor createValueProcessor(PrestoContextRules rules, PrestoFieldUsage field) {
+    private ValueFactory createValueFactory(PrestoContextRules rules, PrestoFieldUsage field) {
         ObjectNode extra = getFieldExtraNode(field);
         if (extra != null) {
-            JsonNode processorsNode = extra.path("valueProcessors");
+            JsonNode processorsNode = extra.path("valueFactory");
             if (!processorsNode.isMissingNode()) {
-                return PrestoProcessor.getHandler(this, ValueProcessor.class, processorsNode);
+                return PrestoProcessor.getHandler(this, ValueFactory.class, processorsNode);
             }
         }
         return null;
     }
 
-    protected Value getExistingFieldValue(ValueProcessor valueProcessor, PrestoContextRules rules, PrestoFieldUsage field, Object fieldValue) {
+    protected Value getExistingFieldValue(ValueFactory valueFactory, PrestoContextRules rules, PrestoFieldUsage field, Object fieldValue) {
         if (fieldValue instanceof PrestoTopic) {
             PrestoTopic topicValue = (PrestoTopic)fieldValue;
-            return getExistingFieldValueTopic(valueProcessor, rules, field, topicValue);
+            return getExistingFieldValueTopic(valueFactory, rules, field, topicValue);
         } else {
             String stringValue = fieldValue.toString();
-            return getExistingFieldValueString(valueProcessor, rules, field, stringValue);
+            return getExistingFieldValueString(valueFactory, rules, field, stringValue);
         }
     }
 
-    protected Value getExistingFieldValueString(ValueProcessor valueProcessor, PrestoContextRules rules, PrestoFieldUsage field, String value) {
-        Value result = new Value();
-        if (valueProcessor != null) {
-            result.setValue(valueProcessor.getValue(rules.getContext(), field, value));
+    protected Value getExistingFieldValueString(ValueFactory valueFactory, PrestoContextRules rules, PrestoFieldUsage field, String value) {
+        Value result;
+        if (valueFactory != null) {
+            result = valueFactory.createValue(rules, field, value);
         } else {
+            result = new Value();
             result.setValue(value);
-        }
-
-        if (valueProcessor != null) {
-            String name = valueProcessor.getName(rules.getContext(), field, value);
-            if (name != null) {
-                result.setName(name);
-            }
         }
         boolean isRemovableValue = !rules.isReadOnlyField(field) && rules.isRemovableFieldValue(field, value);
         if (isRemovableValue) {
@@ -738,28 +732,18 @@ public abstract class Presto {
         return result;
     }
 
-    protected Value getExistingFieldValueTopic(ValueProcessor valueProcessor, PrestoContextRules rules, PrestoFieldUsage field, PrestoTopic value) {
-        Value result = new Value();
-        PrestoContext context = rules.getContext();
-        if (valueProcessor != null) {
-            result.setValue(valueProcessor.getValue(context, field, value));
+    protected Value getExistingFieldValueTopic(ValueFactory valueFactory, PrestoContextRules rules, PrestoFieldUsage field, PrestoTopic value) {
+        Value result;
+        if (valueFactory != null) {
+            result = valueFactory.createValue(rules, field, value);
         } else {
+            result = new Value();
             result.setValue(value.getId());
+            result.setName(value.getName(field));
         }
-
-        if (valueProcessor != null) {
-            String name = valueProcessor.getName(context, field, value);
-            if (name != null) {
-                result.setName(name);
-            }
-        } else {
-            String name = value.getName(field);
-            if (name != null) {
-                result.setName(name);
-            }
-        }
-
         result.setType(value.getTypeId());
+
+        PrestoContext context = rules.getContext();
 
         PrestoType valueType = getSchemaProvider().getTypeById(value.getTypeId());
         if (field.isEmbedded()) {
@@ -868,61 +852,46 @@ public abstract class Presto {
     protected Collection<Value> getAllowedFieldValues(PrestoContextRules rules, PrestoFieldUsage field, String query) {
         Collection<? extends Object> availableFieldValues = getAvailableFieldValues(rules, field, query);
 
-        ValueProcessor valueProcessor = createValueProcessor(rules, field);
+        ValueFactory valueFactory = createValueFactory(rules, field);
 
         Collection<Value> result = new ArrayList<Value>(availableFieldValues.size());
         for (Object value : availableFieldValues) {
-            result.add(getAllowedFieldValue(valueProcessor, rules, field, value));
+            result.add(getAllowedFieldValue(valueFactory, rules, field, value));
         }
 
         return result;
     }
 
-    protected Value getAllowedFieldValue(ValueProcessor valueProcessor, PrestoContextRules rules, PrestoFieldUsage field, Object fieldValue) {
+    protected Value getAllowedFieldValue(ValueFactory valueFactory, PrestoContextRules rules, PrestoFieldUsage field, Object fieldValue) {
         if (fieldValue instanceof PrestoTopic) {
             PrestoTopic topicValue = (PrestoTopic)fieldValue;
-            return getAllowedFieldValueTopic(valueProcessor, rules, field, topicValue);
+            return getAllowedFieldValueTopic(valueFactory, rules, field, topicValue);
         } else {
             String stringValue = fieldValue.toString();
-            return getAllowedFieldValueString(valueProcessor, rules, field, stringValue);
+            return getAllowedFieldValueString(valueFactory, rules, field, stringValue);
         }
     }
 
-    protected Value getAllowedFieldValueString(ValueProcessor valueProcessor, PrestoContextRules rules, PrestoFieldUsage field, String value) {
-        Value result = new Value();
-        if (valueProcessor != null) {
-            result.setValue(valueProcessor.getValue(rules.getContext(), field, value));
+    protected Value getAllowedFieldValueString(ValueFactory valueFactory, PrestoContextRules rules, PrestoFieldUsage field, String value) {
+        Value result;
+        if (valueFactory != null) {
+            result = valueFactory.createValue(rules, field, value);
         } else {
+            result = new Value();
             result.setValue(value);
-        }
-        if (valueProcessor != null) {
-            String name = valueProcessor.getName(rules.getContext(), field, value);
-            if (name != null) {
-                result.setName(name);
-            }
         }
         return result;
     }
 
-    protected Value getAllowedFieldValueTopic(ValueProcessor valueProcessor, PrestoContextRules rules, PrestoFieldUsage field, PrestoTopic value) {
-        Value result = new Value();
-        if (valueProcessor != null) {
-            result.setValue(valueProcessor.getValue(rules.getContext(), field, value));
+    protected Value getAllowedFieldValueTopic(ValueFactory valueFactory, PrestoContextRules rules, PrestoFieldUsage field, PrestoTopic value) {
+        Value result;
+        if (valueFactory != null) {
+            result = valueFactory.createValue(rules, field, value);
         } else {
+            result = new Value();
             result.setValue(value.getId());
+            result.setName(value.getName(field));
         }
-        if (valueProcessor != null) {
-            String name = valueProcessor.getName(rules.getContext(), field, value);
-            if (name != null) {
-                result.setName(name);
-            }
-        } else {
-            String name = value.getName(field);
-            if (name != null) {
-                result.setName(name);
-            }
-        }
-
         result.setType(value.getTypeId());
 
         List<Link> links = new ArrayList<Link>();
