@@ -24,12 +24,8 @@ import net.ontopia.presto.spi.utils.Utils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class PrestoProcessor {
-
-    private static Logger log = LoggerFactory.getLogger(PrestoProcessor.class);
 
     private static final ObjectMapper mapper = new ObjectMapper();
     
@@ -156,13 +152,16 @@ public class PrestoProcessor {
     }
     
     public FieldData preProcessFieldData(FieldData fieldData, PrestoContextRules rules, PrestoFieldUsage field, Status status) {
-        SubmittedState sstate = null;
-        return processFieldData(sstate, fieldData, rules, field, Type.PRE_PROCESS, status);
+        return processFieldData(fieldData, rules, field, Type.PRE_PROCESS, status);
     }
 
     public FieldData postProcessFieldData(FieldData fieldData, PrestoContextRules rules, PrestoFieldUsage field, Status status) {
+        return processFieldData(fieldData, rules, field, Type.POST_PROCESS, status);
+    }
+
+    public FieldData processFieldData(FieldData fieldData, PrestoContextRules rules, PrestoFieldUsage field, Type processType, Status status) {
         SubmittedState sstate = null;
-        return processFieldData(sstate, fieldData, rules, field, Type.POST_PROCESS, status);
+        return processFieldData(sstate, fieldData, rules, field, processType, status);
     }
     
     public FieldData processFieldData(SubmittedState sstate, FieldData fieldData, PrestoContextRules rules, PrestoFieldUsage field, Type processType, Status status) {
