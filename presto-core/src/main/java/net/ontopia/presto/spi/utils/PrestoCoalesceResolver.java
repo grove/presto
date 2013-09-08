@@ -29,7 +29,7 @@ public class PrestoCoalesceResolver extends PrestoFieldResolver {
                     JacksonDataProvider jacksonDataProvider = (JacksonDataProvider)getDataProvider();
                     PagedValues values = jacksonDataProvider.resolveValues(objects, field, paging, resolveConfig, variableResolver);
                     result = values.getValues();
-                    if (result != null) {
+                    if (result != null && !result.isEmpty()) {
                         break;
                     }
                 }
