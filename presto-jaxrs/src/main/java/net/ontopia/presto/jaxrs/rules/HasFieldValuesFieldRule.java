@@ -6,7 +6,9 @@ import net.ontopia.presto.jaxrs.PrestoContext;
 import net.ontopia.presto.jaxrs.PrestoContextRules.FieldFlag;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic;
+import net.ontopia.presto.spi.PrestoType;
 
+import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;
 
 public class HasFieldValuesFieldRule extends BooleanFieldRule {
@@ -17,7 +19,16 @@ public class HasFieldValuesFieldRule extends BooleanFieldRule {
             return false;
         } else {
             PrestoTopic topic = context.getTopic();
-            List<? extends Object> values = topic.getValues(field);
+            JsonNode fieldNode = config.path("field");
+            PrestoField valueField;
+            if (fieldNode.isTextual()) {
+                String fieldId = fieldNode.getTextValue();
+                PrestoType type = context.getType();
+                valueField = type.getFieldById(fieldId);
+            } else {
+                valueField = field;
+            }
+            List<? extends Object> values = topic.getValues(valueField);
             return !values.isEmpty();
         }
     }

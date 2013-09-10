@@ -16,10 +16,11 @@ public abstract class BooleanFieldValueRule extends AbstractHandler implements F
         ObjectNode config = getConfig();
         if (config != null) {
             boolean result = evaluateFieldValue(flag, context, field, value, config);
-            if (result) {
-                JsonNode valueNode = config.path("value");
-                return valueNode.isBoolean() ? valueNode.getBooleanValue() : true;
-            }
+//            if (result) {
+//                JsonNode valueNode = config.path("value");
+//                return valueNode.isBoolean() ? valueNode.getBooleanValue() : true;
+//            }
+            return result;
         }
         return null;
     }

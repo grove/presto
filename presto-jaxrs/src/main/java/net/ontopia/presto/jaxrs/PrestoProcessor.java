@@ -68,7 +68,9 @@ public class PrestoProcessor {
     }
     
     private Topic processTopic(Topic topicData, PrestoContextRules rules, Type processType, Status status) {
-
+        if (processType == Type.PRE_PROCESS) {
+            throw new UnsupportedOperationException("Cannot pre-process Topic just yet.");
+        }
         // process the topic
         ObjectNode schemaExtra = presto.getSchemaExtraNode(presto.getSchemaProvider());
         topicData = processTopicExtra(topicData, rules, schemaExtra, processType, status);
