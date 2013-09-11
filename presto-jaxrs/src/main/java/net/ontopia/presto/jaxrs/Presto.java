@@ -1006,6 +1006,9 @@ public abstract class Presto {
         boolean resolveEmbedded = true;
         boolean includeExisting = false;
         List<? extends Object> addableValues = updateAndExtractValuesFromFieldData(rules, field, fieldData, resolveEmbedded, includeExisting);
+        
+        // TODO: filter out !rules.isAddableFieldValue(field, value)
+        
         PrestoTopic topicAfterSave = addFieldValues(rules, field, addableValues, index);
 
         return getFieldData(topicAfterSave, field);
@@ -1015,6 +1018,9 @@ public abstract class Presto {
         boolean resolveEmbedded = false;
         boolean includeExisting = false;
         List<? extends Object> removeableValues = updateAndExtractValuesFromFieldData(rules, field, fieldData, resolveEmbedded, includeExisting);
+        
+        // TODO: filter out !rules.isRemovableFieldValue(field, value)
+
         PrestoTopic topicAfterSave = removeFieldValues(rules, field, removeableValues);
 
         return getFieldData(topicAfterSave, field);
@@ -1140,7 +1146,11 @@ public abstract class Presto {
 
                     boolean resolveEmbedded = true;
                     boolean includeExisting = false;
-                    update.setValues(field, updateAndExtractValuesFromFieldData(rules, field, fieldData, resolveEmbedded, includeExisting));
+                    List<? extends Object> values = updateAndExtractValuesFromFieldData(rules, field, fieldData, resolveEmbedded, includeExisting);
+
+                    // TODO: filter out !rules.isAddableFieldValue(field, value) OR updatable?
+                    
+                    update.setValues(field, values);
                 }
             }
 
@@ -1247,7 +1257,8 @@ public abstract class Presto {
 
             boolean resolveEmbedded = true;
             boolean includeExisting = false;
-            builder.setValues(field, updateAndExtractValuesFromFieldData(subrules, field, fieldData, resolveEmbedded, includeExisting));
+            List<? extends Object> values = updateAndExtractValuesFromFieldData(subrules, field, fieldData, resolveEmbedded, includeExisting);
+            builder.setValues(field, values);
         }
 
         return builder.build();
@@ -1261,6 +1272,9 @@ public abstract class Presto {
         PrestoSchemaProvider schemaProvider = getSchemaProvider();
         PrestoType type = schemaProvider.getTypeById(t1.getTypeId());
 
+        if (!type.isInline()) {
+            log.warn("Attempted to merge non-inline topics: " + t1.getId() + " and " + t2.getId());
+        }
         PrestoInlineTopicBuilder builder = dataProvider.createInlineTopic(type, topicId);
 
         //    n{ "a" : 1, "b" : 2, "c" : {"_" : 11, "x" : 1}          }  

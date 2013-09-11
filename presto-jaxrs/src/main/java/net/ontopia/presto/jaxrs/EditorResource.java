@@ -588,7 +588,7 @@ public abstract class EditorResource {
             PrestoFieldUsage field = context.getFieldById(fieldId);
             PrestoContextRules rules = session.getPrestoContextRules(context);
 
-            if (rules.isRemovableField(field)) {
+            if (!rules.isReadOnlyField(field) && rules.isRemovableField(field)) {
                 FieldData result =  session.removeFieldValues(rules, field, fieldData);
     
                 session.commit();
