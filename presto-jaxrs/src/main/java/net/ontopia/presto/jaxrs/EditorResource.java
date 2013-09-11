@@ -687,6 +687,7 @@ public abstract class EditorResource {
     @GET
     @Produces(APPLICATION_JSON_UTF8)
     @Path("available-field-types/{databaseId}/{topicId}/{viewId}/{fieldId}")
+    @Deprecated
     public Response getAvailableFieldTypes( 
             @PathParam("databaseId") final String databaseId, 
             @PathParam("topicId") final String topicId, 
@@ -720,6 +721,7 @@ public abstract class EditorResource {
     @GET
     @Produces(APPLICATION_JSON_UTF8)
     @Path("available-types-tree/{databaseId}")
+    @Deprecated
     public Response getAvailableTypesTree(@PathParam("databaseId") final String databaseId) throws Exception {
 
         Presto session = createPresto(databaseId, false);

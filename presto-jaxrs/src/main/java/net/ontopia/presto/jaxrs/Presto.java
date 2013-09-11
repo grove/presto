@@ -972,10 +972,12 @@ public abstract class Presto {
             return o1.compareTo(o2);
     }
 
+    @Deprecated
     protected TopicType getTopicTypeWithNoLinks(PrestoType type) {
         return new TopicType(type.getId(), type.getName());
     }
 
+    @Deprecated
     protected TopicType getTopicTypeWithCreateFieldInstanceLink(PrestoContext context, PrestoFieldUsage field, PrestoType createType) {
         TopicType result = new TopicType(createType.getId(), createType.getName());
         List<Link> links = new ArrayList<Link>();
@@ -1396,6 +1398,7 @@ public abstract class Presto {
         changeSet.save();
     }
 
+    @Deprecated
     public AvailableFieldTypes getAvailableFieldTypesInfo(PrestoContextRules rules, PrestoFieldUsage field) {
 
         AvailableFieldTypes result = new AvailableFieldTypes();
@@ -1416,17 +1419,20 @@ public abstract class Presto {
         return result;
     }
 
+    @Deprecated
     public AvailableTopicTypes getAvailableTypesInfo(boolean tree) {
         AvailableTopicTypes result = new AvailableTopicTypes();
         result.setTypes(getAvailableTypes(tree));
         return result;
     }
 
+    @Deprecated
     protected Collection<TopicTypeTree> getAvailableTypes(boolean tree) {
         Collection<PrestoType> rootTypes = schemaProvider.getRootTypes();
         return getAvailableTypes(rootTypes, tree);
     }
 
+    @Deprecated
     protected Collection<TopicTypeTree> getAvailableTypes(Collection<PrestoType> types, boolean tree) {
         Collection<TopicTypeTree> result = new ArrayList<TopicTypeTree>(); 
         for (PrestoType rootType : types) {
@@ -1435,6 +1441,7 @@ public abstract class Presto {
         return result;
     }
 
+    @Deprecated
     protected Collection<TopicTypeTree> getAvailableTypes(PrestoType type, boolean tree) {
         if (type.isHidden()) {
             return getAvailableTypes(type.getDirectSubTypes(), true);   

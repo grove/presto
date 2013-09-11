@@ -5,6 +5,7 @@ import java.util.Collection;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+@Deprecated
 public class TopicTypeTree {
 
     private String id;
