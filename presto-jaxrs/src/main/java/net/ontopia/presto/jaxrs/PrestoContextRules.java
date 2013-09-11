@@ -32,7 +32,8 @@ public class PrestoContextRules {
     public enum FieldValueFlag {
         isAddableFieldValue,
         isRemovableFieldValue,
-        isEditableFieldValue
+        isEditableFieldValue,
+        isIgnorableFieldValue
     }
 
     public static interface TypeRule extends Handler {
@@ -197,6 +198,10 @@ public class PrestoContextRules {
 
     public boolean isEditableFieldValue(PrestoField field, Object value) {
         return isFieldValueHandlerFlag(FieldValueFlag.isEditableFieldValue, field, value, field.isEditable());
+    }
+
+    public boolean isIgnorableFieldValue(PrestoField field, Object value) {
+        return isFieldValueHandlerFlag(FieldValueFlag.isIgnorableFieldValue, field, value, false);
     }
 
     //    public boolean isCascadingDeleteField(PrestoField field) {

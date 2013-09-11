@@ -1036,8 +1036,13 @@ public abstract class Presto {
         PrestoChangeSet changeSet = dataProvider.newChangeSet(getChangeSetHandler());
         PrestoUpdate update = changeSet.updateTopic(topic, type);        
 
+        PrestoContextRules rules = getPrestoContextRules(context);
+
         List<? extends Object> existingValues = topic.getValues(field);
-        update.setValues(field, mergeInlineTopics(updateableValues, existingValues, true)); // TODO: check if inline field first?
+        Collection<? extends Object> newValues = mergeInlineTopics(updateableValues, existingValues, true);
+        removeIgnorableFieldValues(rules, field, newValues);
+
+        update.setValues(field, newValues); // TODO: check if inline field first?
         changeSet.save();
 
         return update.getTopicAfterSave();
@@ -1180,8 +1185,12 @@ public abstract class Presto {
                             newValues.add(buildInlineTopic(context, field, embeddedTopic));
                         } else {
                             String typeId = value.getType();
-                            PrestoType type = schemaProvider.getTypeById(typeId);
-                            newValues.add(buildInlineTopic(context, type, value.getValue()));                            
+                            PrestoType type = schemaProvider.getTypeById(typeId, null);
+                            if (type != null) {
+                                newValues.add(buildInlineTopic(context, type, value.getValue()));
+                            } else {
+                                log.warn("Ignoring value because if unknown type: " + value);
+                            }
                         }
                     }
                     // merge new inline topics with existing ones
@@ -1215,9 +1224,20 @@ public abstract class Presto {
                 }
             }
         }
+        removeIgnorableFieldValues(rules, field, result);
         return result;
     }
 
+    private void removeIgnorableFieldValues(PrestoContextRules rules, PrestoFieldUsage field, Collection<? extends Object> values) {
+        // remove ignorable field values
+        Iterator<?> iter = values.iterator();
+        while (iter.hasNext()) {
+            if (rules.isIgnorableFieldValue(field, iter.next())) {
+                iter.remove();
+            }
+        }
+    }
+    
     protected PrestoTopic buildInlineTopic(PrestoContext context, PrestoType type, String topicId) {
         PrestoInlineTopicBuilder builder = dataProvider.createInlineTopic(type, topicId);
         return builder.build();
