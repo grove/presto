@@ -23,6 +23,7 @@ public interface PrestoType {
     
     // TODO: getSuperType();
 
+    @Deprecated
     Collection<PrestoType> getDirectSubTypes();
 
     List<PrestoField> getFields();

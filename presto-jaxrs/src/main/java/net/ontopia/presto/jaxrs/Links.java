@@ -158,11 +158,13 @@ public class Links {
         return builder.build().toString();
     }
 
+    @Deprecated
     public static String availableTypesTreeLazy(URI baseUri, String databaseId, String typeId) {
         UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/available-types-tree-lazy/").path(databaseId).path(typeId);
         return builder.build().toString();
     }
 
+    @Deprecated
     public static String getAvailableTypesTree(URI baseUri, String databaseId) {
         UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor/available-types-tree/").path(databaseId);
         return builder.build().toString();
