@@ -11,7 +11,7 @@ import net.ontopia.presto.spi.PrestoType;
 
 public class PrestoTopicFieldVariableResolver implements PrestoVariableResolver {
 
-    private PrestoSchemaProvider schemaProvider;
+    private final PrestoSchemaProvider schemaProvider;
 
     public PrestoTopicFieldVariableResolver(PrestoSchemaProvider schemaProvider) {
         this.schemaProvider = schemaProvider;
@@ -31,7 +31,10 @@ public class PrestoTopicFieldVariableResolver implements PrestoVariableResolver 
             } else if (variable.equals(":type")) {
                 result.add(typeId);                
             } else if (variable.equals(":type-name")) {
-                result.add(type.getName());                
+                result.add(type.getName());
+            } else if (variable.startsWith("#")) {
+                PrestoField valueField = type.getFieldById(variable.substring(1));
+                return topic.getStoredValues(valueField);
             } else {
                 PrestoField valueField = type.getFieldById(variable);
                 return topic.getValues(valueField);

@@ -1,17 +1,15 @@
-package net.ontopia.presto.spi.jackson;
+package net.ontopia.presto.spi.utils;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
+import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
 import net.ontopia.presto.spi.PrestoTopic.Paging;
-import net.ontopia.presto.spi.utils.PrestoFieldResolver;
-import net.ontopia.presto.spi.utils.PrestoPagedValues;
-import net.ontopia.presto.spi.utils.PrestoVariableContext;
-import net.ontopia.presto.spi.utils.PrestoVariableResolver;
-import net.ontopia.presto.spi.utils.Utils;
+import net.ontopia.presto.spi.jackson.JacksonDataProvider;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
@@ -19,11 +17,43 @@ import org.codehaus.jackson.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class JacksonResolver {
+public abstract class PrestoResolver {
 
-    private static Logger log = LoggerFactory.getLogger(JacksonResolver.class);
+    private static Logger log = LoggerFactory.getLogger(PrestoResolver.class);
 
     protected abstract JacksonDataProvider getDataProvider();
+
+    public List<? extends Object>  resolveValues(PrestoTopic topic, PrestoField field) {
+        // get field values from data provider
+        ObjectNode extra = (ObjectNode)field.getExtra();
+        if (extra != null && extra.has("resolve")) {
+            JsonNode resolveConfig = extra.get("resolve");
+            if (!field.isReadOnly()) {
+                log.warn("Field {} not read-only. Resolve config: {}", field.getId(), resolveConfig);
+            }
+
+            PrestoPaging paging = null;
+            PrestoVariableResolver variableResolver = new PrestoTopicFieldVariableResolver(field.getSchemaProvider());
+            return resolveValues(Collections.singleton(topic), field, paging, resolveConfig, variableResolver).getValues();
+        }
+        return topic.getStoredValues(field);
+    }
+
+    public PagedValues resolveValues(PrestoTopic topic, PrestoField field, int offset, int limit) {
+        // get field values from data provider
+        ObjectNode extra = (ObjectNode)field.getExtra();
+        if (extra != null && extra.has("resolve")) {
+            JsonNode resolveConfig = extra.get("resolve");
+            if (!field.isReadOnly()) {
+                log.warn("Field {} not read-only. Resolve config: {}", field.getId(), resolveConfig);
+            }
+
+            PrestoPaging paging = new PrestoPaging(offset, limit);
+            PrestoVariableResolver variableResolver = new PrestoTopicFieldVariableResolver(field.getSchemaProvider());
+            return resolveValues(Collections.singleton(topic), field, paging, resolveConfig, variableResolver);
+        }
+        return topic.getStoredValues(field, offset, limit);
+    }
 
     public PagedValues resolveValues(Collection<? extends Object> objects, 
             PrestoField field, Paging paging, JsonNode resolveConfig, PrestoVariableResolver variableResolver) {

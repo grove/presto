@@ -1,6 +1,13 @@
 package net.ontopia.presto.spi;
 
 import java.util.Collection;
+import java.util.List;
+
+import net.ontopia.presto.spi.PrestoTopic.PagedValues;
+import net.ontopia.presto.spi.PrestoTopic.Paging;
+import net.ontopia.presto.spi.utils.PrestoVariableResolver;
+
+import org.codehaus.jackson.JsonNode;
 
 public interface PrestoDataProvider {
 
@@ -27,5 +34,12 @@ public interface PrestoDataProvider {
         public void onAfterSave(PrestoChangeSet changeSet, PrestoChanges changes);
         
     }
+
+    List<? extends Object> resolveValues(PrestoTopic topic, PrestoField field);
+
+    PagedValues resolveValues(PrestoTopic topic, PrestoField field, int offset, int limit);
+
+    PagedValues resolveValues(Collection<? extends Object> objects,
+            PrestoField field, Paging paging, JsonNode resolveConfig, PrestoVariableResolver variableResolver);
     
 }

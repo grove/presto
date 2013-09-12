@@ -61,9 +61,8 @@ public abstract class IfThenElseResolveFieldDataProcessor extends FieldDataProce
     
                 Collection<? extends Object> objects = (topic == null ? Collections.emptyList() : Collections.singleton(topic));
     
-                JacksonDataProvider jacksonDataProvider = (JacksonDataProvider)dataProvider;
                 JsonNode resolveConfig = config.path("resolve");
-                PagedValues values = jacksonDataProvider.resolveValues(objects, field, paging, resolveConfig, variableResolver);
+                PagedValues values = dataProvider.resolveValues(objects, field, paging, resolveConfig, variableResolver);
     
                 return !values.getValues().isEmpty();
             }
