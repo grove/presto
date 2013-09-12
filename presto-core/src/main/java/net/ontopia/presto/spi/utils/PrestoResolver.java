@@ -28,10 +28,6 @@ public abstract class PrestoResolver {
         ObjectNode extra = (ObjectNode)field.getExtra();
         if (extra != null && extra.has("resolve")) {
             JsonNode resolveConfig = extra.get("resolve");
-            if (!field.isReadOnly()) {
-                log.warn("Field {} not read-only. Resolve config: {}", field.getId(), resolveConfig);
-            }
-
             PrestoPaging paging = null;
             PrestoVariableResolver variableResolver = new PrestoTopicFieldVariableResolver(field.getSchemaProvider());
             return resolveValues(Collections.singleton(topic), field, paging, resolveConfig, variableResolver).getValues();
@@ -44,10 +40,6 @@ public abstract class PrestoResolver {
         ObjectNode extra = (ObjectNode)field.getExtra();
         if (extra != null && extra.has("resolve")) {
             JsonNode resolveConfig = extra.get("resolve");
-            if (!field.isReadOnly()) {
-                log.warn("Field {} not read-only. Resolve config: {}", field.getId(), resolveConfig);
-            }
-
             PrestoPaging paging = new PrestoPaging(offset, limit);
             PrestoVariableResolver variableResolver = new PrestoTopicFieldVariableResolver(field.getSchemaProvider());
             return resolveValues(Collections.singleton(topic), field, paging, resolveConfig, variableResolver);
