@@ -188,7 +188,8 @@ public class PrestoProcessor {
                             valueType = schemaProvider.getTypeById(topicTypeId);
                         } else {
                             if (field.isInline()) {
-                                valueTopic = presto.buildInlineTopic(context, field, embeddedTopic);
+                                boolean filterNonStorable = processType == Type.PRE_PROCESS;
+                                valueTopic = presto.buildInlineTopic(context, field, embeddedTopic, filterNonStorable);
                             } else {
                                 valueTopic = dataProvider.getTopicById(topicId);
                             }

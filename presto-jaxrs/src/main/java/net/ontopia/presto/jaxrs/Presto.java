@@ -1007,9 +1007,9 @@ public abstract class Presto {
     public FieldData addFieldValues(PrestoContextRules rules, PrestoFieldUsage field, Integer index, FieldData fieldData) {
         boolean resolveEmbedded = true;
         boolean includeExisting = false;
-        List<? extends Object> addableValues = updateAndExtractValuesFromFieldData(rules, field, fieldData, resolveEmbedded, includeExisting);
-        
-        // TODO: filter out !rules.isAddableFieldValue(field, value)
+        boolean filterNonStorable = true;
+
+        List<? extends Object> addableValues = updateAndExtractValuesFromFieldData(rules, field, fieldData, resolveEmbedded, includeExisting, filterNonStorable);
         
         PrestoTopic topicAfterSave = addFieldValues(rules, field, addableValues, index);
 
@@ -1019,9 +1019,9 @@ public abstract class Presto {
     public FieldData removeFieldValues(PrestoContextRules rules, PrestoFieldUsage field, FieldData fieldData) {
         boolean resolveEmbedded = false;
         boolean includeExisting = false;
-        List<? extends Object> removeableValues = updateAndExtractValuesFromFieldData(rules, field, fieldData, resolveEmbedded, includeExisting);
-        
-        // TODO: filter out !rules.isRemovableFieldValue(field, value)
+        boolean filterNonStorable = true;
+
+        List<? extends Object> removeableValues = updateAndExtractValuesFromFieldData(rules, field, fieldData, resolveEmbedded, includeExisting, filterNonStorable);
 
         PrestoTopic topicAfterSave = removeFieldValues(rules, field, removeableValues);
 
@@ -1040,7 +1040,7 @@ public abstract class Presto {
 
         List<? extends Object> existingValues = topic.getValues(field);
         Collection<? extends Object> newValues = mergeInlineTopics(updateableValues, existingValues, true);
-        removeIgnorableFieldValues(rules, field, newValues);
+        removeNonStorableFieldValues(rules, field, newValues);
 
         update.setValues(field, newValues); // TODO: check if inline field first?
         changeSet.save();
@@ -1131,8 +1131,10 @@ public abstract class Presto {
         PrestoType type = context.getType();
         PrestoView view = context.getView();
 
+        boolean filterNonStorable = true;
+
         if (type.isInline()) {
-            PrestoTopic inlineTopic = buildInlineTopic(context.getParentContext(), context.getParentField(), topicView);
+            PrestoTopic inlineTopic = buildInlineTopic(context.getParentContext(), context.getParentField(), topicView, filterNonStorable);
             return inlineTopic;
         } else {
             PrestoUpdate update;
@@ -1153,9 +1155,8 @@ public abstract class Presto {
 
                     boolean resolveEmbedded = true;
                     boolean includeExisting = false;
-                    List<? extends Object> values = updateAndExtractValuesFromFieldData(rules, field, fieldData, resolveEmbedded, includeExisting);
 
-                    // TODO: filter out !rules.isAddableFieldValue(field, value) OR updatable?
+                    List<? extends Object> values = updateAndExtractValuesFromFieldData(rules, field, fieldData, resolveEmbedded, includeExisting, filterNonStorable);
                     
                     update.setValues(field, values);
                 }
@@ -1168,7 +1169,7 @@ public abstract class Presto {
     }
 
     private List<? extends Object> updateAndExtractValuesFromFieldData(PrestoContextRules rules, PrestoFieldUsage field, FieldData fieldData, 
-            boolean resolveEmbedded, boolean includeExisting) {
+            boolean resolveEmbedded, boolean includeExisting, boolean filterNonStorable) {
         Collection<Value> values = fieldData.getValues();
         List<Object> result = new ArrayList<Object>(values.size());
 
@@ -1182,7 +1183,7 @@ public abstract class Presto {
                     for (Value value : values) {
                         TopicView embeddedTopic = getEmbeddedTopic(value);
                         if (embeddedTopic != null) {
-                            newValues.add(buildInlineTopic(context, field, embeddedTopic));
+                            newValues.add(buildInlineTopic(context, field, embeddedTopic, filterNonStorable));
                         } else {
                             String typeId = value.getType();
                             PrestoType type = schemaProvider.getTypeById(typeId, null);
@@ -1224,15 +1225,17 @@ public abstract class Presto {
                 }
             }
         }
-        removeIgnorableFieldValues(rules, field, result);
+        if (filterNonStorable) {
+            removeNonStorableFieldValues(rules, field, result);
+        }
         return result;
     }
 
-    private void removeIgnorableFieldValues(PrestoContextRules rules, PrestoFieldUsage field, Collection<? extends Object> values) {
+    private void removeNonStorableFieldValues(PrestoContextRules rules, PrestoFieldUsage field, Collection<? extends Object> values) {
         // remove ignorable field values
         Iterator<?> iter = values.iterator();
         while (iter.hasNext()) {
-            if (rules.isIgnorableFieldValue(field, iter.next())) {
+            if (!rules.isStorableFieldValue(field, iter.next())) {
                 iter.remove();
             }
         }
@@ -1243,7 +1246,7 @@ public abstract class Presto {
         return builder.build();
     }
 
-    protected PrestoTopic buildInlineTopic(PrestoContext parentContext, PrestoFieldUsage parentField, TopicView embeddedTopic) {
+    protected PrestoTopic buildInlineTopic(PrestoContext parentContext, PrestoFieldUsage parentField, TopicView embeddedTopic, boolean filterNonStorable) {
 
         PrestoSchemaProvider schemaProvider = getSchemaProvider();
 
@@ -1279,7 +1282,7 @@ public abstract class Presto {
 
             boolean resolveEmbedded = true;
             boolean includeExisting = false;
-            List<? extends Object> values = updateAndExtractValuesFromFieldData(subrules, field, fieldData, resolveEmbedded, includeExisting);
+            List<? extends Object> values = updateAndExtractValuesFromFieldData(subrules, field, fieldData, resolveEmbedded, includeExisting, filterNonStorable);
             builder.setValues(field, values);
         }
 
