@@ -39,6 +39,9 @@ import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
 import net.ontopia.presto.spi.PrestoView;
 import net.ontopia.presto.spi.PrestoView.ViewType;
+import net.ontopia.presto.spi.utils.AbstractHandler;
+import net.ontopia.presto.spi.utils.PrestoContext;
+import net.ontopia.presto.spi.utils.PrestoContextRules;
 import net.ontopia.presto.spi.utils.Utils;
 
 import org.codehaus.jackson.JsonNode;
@@ -229,7 +232,7 @@ public abstract class Presto {
     }
 
     public PrestoContextRules getPrestoContextRules(PrestoContext context) {
-        return new PrestoContextRules(this, context) {
+        return new PrestoContextRules(getDataProvider(), getSchemaProvider(), context) {
             @Override
             public boolean isReadOnlyType() {
                 return isReadOnlyMode() || super.isReadOnlyType();
@@ -343,7 +346,7 @@ public abstract class Presto {
 
         String topicId = "_" + type.getId();
 
-        PrestoContext subcontext = PrestoContext.createSubContext(this, parentContext, parentField, topicId, viewId);
+        PrestoContext subcontext = PrestoContext.createSubContext(getDataProvider(), getSchemaProvider(), parentContext, parentField, topicId, viewId);
         PrestoContextRules subrules = getPrestoContextRules(subcontext);
 
         TopicView result = TopicView.view();
@@ -680,10 +683,8 @@ public abstract class Presto {
                 if (classNode.isTextual()) {
                     String className = classNode.getTextValue();
                     if (className != null) {
-                        SortKeyGenerator skg = Utils.newInstanceOf(className, SortKeyGenerator.class);
+                        SortKeyGenerator skg = AbstractHandler.getHandlerInstance(dataProvider, schemaProvider, SortKeyGenerator.class, className, (ObjectNode)sortKeyNode);
                         if (skg != null) {
-                            skg.setPresto(this);
-                            skg.setConfig((ObjectNode)sortKeyNode);
                             return skg;
                         }
                     }
@@ -701,7 +702,7 @@ public abstract class Presto {
         if (extra != null) {
             JsonNode processorsNode = extra.path("valueFactory");
             if (!processorsNode.isMissingNode()) {
-                return PrestoProcessor.getHandler(this, ValueFactory.class, processorsNode);
+                return AbstractHandler.getHandler(getDataProvider(), getSchemaProvider(), ValueFactory.class, processorsNode);
             }
         }
         return null;
@@ -833,10 +834,8 @@ public abstract class Presto {
                 if (classNode.isTextual()) {
                     String className = classNode.getTextValue();
                     if (className != null) {
-                        AvailableFieldValuesResolver processor = Utils.newInstanceOf(className, AvailableFieldValuesResolver.class);
+                        AvailableFieldValuesResolver processor = AbstractHandler.getHandlerInstance(dataProvider, schemaProvider, AvailableFieldValuesResolver.class, className, (ObjectNode)availableValuesNode);
                         if (processor != null) {
-                            processor.setPresto(this);
-                            processor.setConfig((ObjectNode)availableValuesNode);
                             return processor.getAvailableFieldValues(rules.getContext(), field, query);
                         }
                     }
@@ -1537,10 +1536,8 @@ public abstract class Presto {
                 if (classNode.isTextual()) {
                     String className = classNode.getTextValue();
                     if (className != null) {
-                        AvailableFieldCreateTypesResolver processor = Utils.newInstanceOf(className, AvailableFieldCreateTypesResolver.class);
+                        AvailableFieldCreateTypesResolver processor = AbstractHandler.getHandlerInstance(dataProvider, schemaProvider, AvailableFieldCreateTypesResolver.class, className, (ObjectNode)createTypesNode);
                         if (processor != null) {
-                            processor.setPresto(this);
-                            processor.setConfig((ObjectNode)createTypesNode);
                             return processor.getAvailableFieldCreateTypes(context, field);
                         }
                     }

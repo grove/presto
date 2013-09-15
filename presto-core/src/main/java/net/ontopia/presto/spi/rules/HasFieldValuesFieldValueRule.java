@@ -1,13 +1,13 @@
-package net.ontopia.presto.jaxrs.rules;
+package net.ontopia.presto.spi.rules;
 
 import java.util.List;
 
-import net.ontopia.presto.jaxrs.PrestoContext;
-import net.ontopia.presto.jaxrs.PrestoContextRules.FieldValueFlag;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
+import net.ontopia.presto.spi.utils.PrestoContext;
+import net.ontopia.presto.spi.utils.PrestoContextRules.FieldValueFlag;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;

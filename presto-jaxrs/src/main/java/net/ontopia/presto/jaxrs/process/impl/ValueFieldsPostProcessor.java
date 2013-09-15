@@ -8,13 +8,13 @@ import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxb.Value;
 import net.ontopia.presto.jaxrs.Presto;
 import net.ontopia.presto.jaxrs.Presto.FieldDataValues;
-import net.ontopia.presto.jaxrs.PrestoContext;
-import net.ontopia.presto.jaxrs.PrestoContextRules;
 import net.ontopia.presto.jaxrs.process.FieldDataProcessor;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoView;
+import net.ontopia.presto.spi.utils.PrestoContext;
+import net.ontopia.presto.spi.utils.PrestoContextRules;
 
 public class ValueFieldsPostProcessor extends FieldDataProcessor {
 
@@ -74,7 +74,7 @@ public class ValueFieldsPostProcessor extends FieldDataProcessor {
             List<Value> values = new ArrayList<Value>();
             PrestoTopic valueTopic = (PrestoTopic)inputValue;
             PrestoContext context = rules.getContext();
-            PrestoContext subcontext = PrestoContext.createSubContext(getPresto(), context, field, valueTopic);
+            PrestoContext subcontext = PrestoContext.createSubContext(getDataProvider(), getSchemaProvider(), context, field, valueTopic);
             PrestoContextRules subrules = getPresto().getPrestoContextRules(subcontext);
             
             for (PrestoFieldUsage valueField : fields) {

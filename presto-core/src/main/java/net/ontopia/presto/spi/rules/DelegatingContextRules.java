@@ -1,15 +1,15 @@
-package net.ontopia.presto.jaxrs.rules;
+package net.ontopia.presto.spi.rules;
 
-import net.ontopia.presto.jaxrs.PrestoContext;
-import net.ontopia.presto.jaxrs.PrestoContextRules.ContextRulesHandler;
-import net.ontopia.presto.jaxrs.PrestoContextRules.FieldFlag;
-import net.ontopia.presto.jaxrs.PrestoContextRules.FieldRule;
-import net.ontopia.presto.jaxrs.PrestoContextRules.FieldValueFlag;
-import net.ontopia.presto.jaxrs.PrestoContextRules.FieldValueRule;
-import net.ontopia.presto.jaxrs.PrestoContextRules.TypeFlag;
-import net.ontopia.presto.jaxrs.PrestoContextRules.TypeRule;
-import net.ontopia.presto.jaxrs.PrestoProcessor;
 import net.ontopia.presto.spi.PrestoField;
+import net.ontopia.presto.spi.utils.AbstractHandler;
+import net.ontopia.presto.spi.utils.PrestoContext;
+import net.ontopia.presto.spi.utils.PrestoContextRules.ContextRulesHandler;
+import net.ontopia.presto.spi.utils.PrestoContextRules.FieldFlag;
+import net.ontopia.presto.spi.utils.PrestoContextRules.FieldRule;
+import net.ontopia.presto.spi.utils.PrestoContextRules.FieldValueFlag;
+import net.ontopia.presto.spi.utils.PrestoContextRules.FieldValueRule;
+import net.ontopia.presto.spi.utils.PrestoContextRules.TypeFlag;
+import net.ontopia.presto.spi.utils.PrestoContextRules.TypeRule;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;
@@ -20,7 +20,7 @@ public class DelegatingContextRules extends ContextRulesHandler {
     public Boolean getValue(TypeFlag flag, PrestoContext context) {
         JsonNode flagNode = getFlagNode(flag, context);
         if (flagNode != null && !flagNode.isMissingNode()) {
-            for (TypeRule handler : PrestoProcessor.getHandlers(getPresto(), TypeRule.class, flagNode)) {
+            for (TypeRule handler : AbstractHandler.getHandlers(getDataProvider(), getSchemaProvider(), TypeRule.class, flagNode)) {
                 Boolean result = handler.getValue(flag, context);
                 if (result != null) {
                     return result;
@@ -34,7 +34,7 @@ public class DelegatingContextRules extends ContextRulesHandler {
     public Boolean getValue(FieldFlag flag, PrestoContext context, PrestoField field) {
         JsonNode flagNode = getFlagNode(flag, context, field);
         if (flagNode != null && !flagNode.isMissingNode()) {
-            for (FieldRule handler : PrestoProcessor.getHandlers(getPresto(), FieldRule.class, flagNode)) {
+            for (FieldRule handler : AbstractHandler.getHandlers(getDataProvider(), getSchemaProvider(), FieldRule.class, flagNode)) {
                 Boolean result = handler.getValue(flag, context, field);
                 if (result != null) {
                     return result;
@@ -48,7 +48,7 @@ public class DelegatingContextRules extends ContextRulesHandler {
     public Boolean getValue(FieldValueFlag flag, PrestoContext context, PrestoField field, Object value) {
         JsonNode flagNode = getFlagNode(flag, context, field, value);
         if (flagNode != null && !flagNode.isMissingNode()) {
-            for (FieldValueRule handler : PrestoProcessor.getHandlers(getPresto(), FieldValueRule.class, flagNode)) {
+            for (FieldValueRule handler : AbstractHandler.getHandlers(getDataProvider(), getSchemaProvider(), FieldValueRule.class, flagNode)) {
                 Boolean result = handler.getValue(flag, context, field, value);
                 if (result != null) {
                     return result;

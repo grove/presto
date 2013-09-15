@@ -6,6 +6,7 @@ import javax.ws.rs.core.UriBuilder;
 
 import net.ontopia.presto.jaxb.Link;
 import net.ontopia.presto.spi.PrestoField;
+import net.ontopia.presto.spi.utils.PrestoContext;
 
 public class Links {
     

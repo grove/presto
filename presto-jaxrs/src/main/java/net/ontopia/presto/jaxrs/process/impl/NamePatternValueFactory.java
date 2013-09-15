@@ -1,12 +1,13 @@
 package net.ontopia.presto.jaxrs.process.impl;
 
 import net.ontopia.presto.jaxb.Value;
-import net.ontopia.presto.jaxrs.PrestoContext;
-import net.ontopia.presto.jaxrs.PrestoContextRules;
 import net.ontopia.presto.jaxrs.process.ValueFactory;
-import net.ontopia.presto.jaxrs.resolve.PrestoTopicWithParentFieldVariableResolver;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoTopic;
+import net.ontopia.presto.spi.utils.PatternValueUtils;
+import net.ontopia.presto.spi.utils.PrestoContext;
+import net.ontopia.presto.spi.utils.PrestoContextRules;
+import net.ontopia.presto.spi.utils.PrestoTopicWithParentFieldVariableResolver;
 import net.ontopia.presto.spi.utils.PrestoVariableResolver;
 
 public class NamePatternValueFactory extends ValueFactory {

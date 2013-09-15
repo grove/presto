@@ -1,9 +1,9 @@
-package net.ontopia.presto.jaxrs.rules;
+package net.ontopia.presto.spi.rules;
 
-import net.ontopia.presto.jaxrs.AbstractHandler;
-import net.ontopia.presto.jaxrs.PrestoContext;
-import net.ontopia.presto.jaxrs.PrestoContextRules.TypeFlag;
-import net.ontopia.presto.jaxrs.PrestoContextRules.TypeRule;
+import net.ontopia.presto.spi.utils.AbstractHandler;
+import net.ontopia.presto.spi.utils.PrestoContext;
+import net.ontopia.presto.spi.utils.PrestoContextRules.TypeFlag;
+import net.ontopia.presto.spi.utils.PrestoContextRules.TypeRule;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;

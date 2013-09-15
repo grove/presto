@@ -1,4 +1,4 @@
-package net.ontopia.presto.jaxrs;
+package net.ontopia.presto.spi.utils;
 
 import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
@@ -6,14 +6,14 @@ import net.ontopia.presto.spi.PrestoSchemaProvider;
 import org.codehaus.jackson.node.ObjectNode;
 
 public interface Handler {
-    
-    Presto getPresto();
-
-    void setPresto(Presto presto);
 
     PrestoDataProvider getDataProvider();
+    
+    void setDataProvider(PrestoDataProvider dataProvider);
 
     PrestoSchemaProvider getSchemaProvider();
+
+    void setSchemaProvider(PrestoSchemaProvider schemaProvider);
 
     ObjectNode getConfig();
 

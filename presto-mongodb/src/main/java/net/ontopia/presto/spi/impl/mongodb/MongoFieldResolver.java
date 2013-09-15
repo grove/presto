@@ -11,7 +11,7 @@ import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
 import net.ontopia.presto.spi.PrestoTopic.Paging;
-import net.ontopia.presto.spi.utils.PrestoFieldResolver;
+import net.ontopia.presto.spi.resolve.PrestoFieldResolver;
 import net.ontopia.presto.spi.utils.PrestoPagedValues;
 import net.ontopia.presto.spi.utils.PrestoVariableContext;
 import net.ontopia.presto.spi.utils.PrestoVariableResolver;

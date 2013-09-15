@@ -1,4 +1,4 @@
-package net.ontopia.presto.spi.utils;
+package net.ontopia.presto.spi.resolve;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -10,6 +10,12 @@ import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
 import net.ontopia.presto.spi.PrestoTopic.Paging;
 import net.ontopia.presto.spi.jackson.JacksonDataProvider;
+import net.ontopia.presto.spi.utils.PrestoPagedValues;
+import net.ontopia.presto.spi.utils.PrestoPaging;
+import net.ontopia.presto.spi.utils.PrestoTopicFieldVariableResolver;
+import net.ontopia.presto.spi.utils.PrestoVariableContext;
+import net.ontopia.presto.spi.utils.PrestoVariableResolver;
+import net.ontopia.presto.spi.utils.Utils;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;

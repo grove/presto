@@ -2,8 +2,6 @@ package net.ontopia.presto.jaxrs;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 
 import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxb.Topic;
@@ -19,15 +17,14 @@ import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoView;
-import net.ontopia.presto.spi.utils.Utils;
+import net.ontopia.presto.spi.utils.AbstractHandler;
+import net.ontopia.presto.spi.utils.PrestoContext;
+import net.ontopia.presto.spi.utils.PrestoContextRules;
 
 import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
 
 public class PrestoProcessor {
-
-    private static final ObjectMapper mapper = new ObjectMapper();
     
     private Presto presto;
 
@@ -236,7 +233,8 @@ public class PrestoProcessor {
         if (extraNode != null) {
             JsonNode processorsNode = getTopicProcessorsNode(extraNode, processType);
             if (!processorsNode.isMissingNode()) {
-                for (TopicProcessor processor : getHandlers(presto, TopicProcessor.class, processorsNode)) {
+                for (TopicProcessor processor : AbstractHandler.getHandlers(getDataProvider(), getSchemaProvider(), TopicProcessor.class, processorsNode)) {
+                    processor.setPresto(presto);
                     processor.setType(processType);
                     processor.setStatus(status);
                     topicData = processor.processTopic(topicData, rules);
@@ -250,7 +248,8 @@ public class PrestoProcessor {
         if (extraNode != null) {
             JsonNode processorsNode = getTopicViewProcessorsNode(extraNode, processType);
             if (!processorsNode.isMissingNode()) {
-                for (TopicViewProcessor processor : getHandlers(presto, TopicViewProcessor.class, processorsNode)) {
+                for (TopicViewProcessor processor : AbstractHandler.getHandlers(getDataProvider(), getSchemaProvider(), TopicViewProcessor.class, processorsNode)) {
+                    processor.setPresto(presto);
                     processor.setType(processType);
                     processor.setStatus(status);
                     topicView = processor.processTopicView(topicView, rules);
@@ -264,7 +263,8 @@ public class PrestoProcessor {
         if (extraNode != null) {
             JsonNode processorsNode = getFieldDataProcessorsNode(extraNode, processType);
             if (!processorsNode.isMissingNode()) {
-                for (FieldDataProcessor processor : getHandlers(presto, FieldDataProcessor.class, processorsNode)) {
+                for (FieldDataProcessor processor : AbstractHandler.getHandlers(getDataProvider(), getSchemaProvider(), FieldDataProcessor.class, processorsNode)) {
+                    processor.setPresto(presto);
                     processor.setType(processType);
                     processor.setStatus(status);
                     processor.setSubmittedState(sstate); // NOTE: only done on FieldProcessors for now
@@ -336,86 +336,5 @@ public class PrestoProcessor {
 //            return extraNode.path("valuePostProcessors");
 //        }
 //    }
-    
-    public static <T extends Handler> Iterable<T> getHandlers(Presto session, Class<T> klass, JsonNode processorsNode) {
-        if (processorsNode.isArray()) {
-            List<T> result = new ArrayList<T>();
-            for (JsonNode processorNode : processorsNode) {
-                T processor = getHandler(session, klass, processorNode);
-                if (processor != null) {
-                    result.add(processor);
-                }
-            }
-            return result;
-        } else {
-            T processor = getHandler(session, klass, processorsNode);
-            if (processor != null) {
-                return Collections.singleton(processor);
-            }
-        }
-        return Collections.emptyList();
-    }
-    
-    public static <T extends Handler> T getHandler(Presto session, Class<T> klass, JsonNode processorNode) {
-        T handler = getHandler(session.getSchemaProvider(), klass, processorNode);
-        if (handler != null) {
-            handler.setPresto(session);
-        }
-        return handler;
-    }
-    
-    private static <T extends Handler> T getHandler(PrestoSchemaProvider schemaProvider, Class<T> klass, JsonNode processorNode) {
-        if (processorNode.isTextual()) {
-            String className = processorNode.getTextValue();
-            if (className != null) {
-                return getHandlerInstance(klass, className, null);
-            }
-        } else if (processorNode.isObject()) {
-            if (processorNode.has("class")) {
-                String className = processorNode.path("class").getTextValue();
-                if (className != null) {
-                    return getHandlerInstance(klass, className, (ObjectNode)processorNode);
-                }
-            } else if (processorNode.has("processor")) {
-                String ref = processorNode.path("processor").getTextValue();
-                ObjectNode extra = (ObjectNode)schemaProvider.getExtra();
-                if (extra != null) {
-                    JsonNode globalProcessorNode = extra.path("processors").path(ref);
-                    ObjectNode mergedProcessorNode = mergeObjectNodes(globalProcessorNode, processorNode);
-                    mergedProcessorNode.remove("processor"); // remove 'processor' entry to avoid recursion
-                    return getHandler(schemaProvider, klass, mergedProcessorNode);
-                }
-            } 
-        }
-//        log.warn("Could not find processor for config: {}", processorNode);
-        return null;
-    }
-    
-    private static ObjectNode mergeObjectNodes(JsonNode n1, JsonNode n2) {
-        if (n1.isObject() && n2.isObject()) {
-            ObjectNode result = mapper.createObjectNode();
-            result.putAll((ObjectNode)n1);
-            result.putAll((ObjectNode)n2);
-            return result;
-        } else if (n1.isObject()) {
-            ObjectNode result = mapper.createObjectNode();
-            result.putAll((ObjectNode)n1);
-            return result;
-        } else if (n2.isObject()) {
-            ObjectNode result = mapper.createObjectNode();
-            result.putAll((ObjectNode)n2);
-            return result;
-        } else {
-            return null;
-        }
-    }
-
-    private static <T extends Handler> T getHandlerInstance(Class<T> klass, String className, ObjectNode processorConfig) {
-        T processor = Utils.newInstanceOf(className, klass);
-        if (processor != null) {
-            processor.setConfig(processorConfig);
-        }
-        return processor;
-    }
 
 }

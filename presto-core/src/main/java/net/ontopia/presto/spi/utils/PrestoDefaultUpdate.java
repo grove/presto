@@ -86,11 +86,6 @@ public class PrestoDefaultUpdate implements PrestoUpdate, PrestoDefaultChangeSet
     }
 
     @Override
-    public Collection<?> getValues(PrestoField field) {
-        return topic.getValues(field);
-    }
-
-    @Override
     public void setValues(PrestoField field, Collection<?> values) {
         if (values != null) {
             Collection<? extends Object> existingValues = topic.getValues(field);

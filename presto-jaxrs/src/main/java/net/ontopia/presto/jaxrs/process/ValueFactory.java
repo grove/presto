@@ -1,10 +1,10 @@
 package net.ontopia.presto.jaxrs.process;
 
 import net.ontopia.presto.jaxb.Value;
-import net.ontopia.presto.jaxrs.AbstractHandler;
-import net.ontopia.presto.jaxrs.PrestoContextRules;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoTopic;
+import net.ontopia.presto.spi.utils.AbstractHandler;
+import net.ontopia.presto.spi.utils.PrestoContextRules;
 
 public abstract class ValueFactory extends AbstractHandler {
 

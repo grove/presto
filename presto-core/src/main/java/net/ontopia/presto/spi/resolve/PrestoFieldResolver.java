@@ -1,4 +1,4 @@
-package net.ontopia.presto.spi.utils;
+package net.ontopia.presto.spi.resolve;
 
 import java.util.Collection;
 
@@ -6,6 +6,8 @@ import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
 import net.ontopia.presto.spi.PrestoTopic.Paging;
+import net.ontopia.presto.spi.utils.PrestoVariableContext;
+import net.ontopia.presto.spi.utils.PrestoVariableResolver;
 
 import org.codehaus.jackson.node.ObjectNode;
 

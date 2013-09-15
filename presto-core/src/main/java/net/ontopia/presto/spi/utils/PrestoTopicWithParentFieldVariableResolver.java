@@ -1,10 +1,8 @@
-package net.ontopia.presto.jaxrs.resolve;
+package net.ontopia.presto.spi.utils;
 
 import java.util.List;
 
-import net.ontopia.presto.jaxrs.PrestoContext;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
-import net.ontopia.presto.spi.utils.PrestoTopicFieldVariableResolver;
 
 public class PrestoTopicWithParentFieldVariableResolver extends PrestoTopicFieldVariableResolver {
 

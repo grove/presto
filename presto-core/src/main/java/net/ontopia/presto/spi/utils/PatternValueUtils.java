@@ -1,11 +1,10 @@
-package net.ontopia.presto.jaxrs.process.impl;
+package net.ontopia.presto.spi.utils;
 
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import net.ontopia.presto.spi.PrestoTopic;
-import net.ontopia.presto.spi.utils.PrestoVariableResolver;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;

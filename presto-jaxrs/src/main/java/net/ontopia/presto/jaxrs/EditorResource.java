@@ -43,6 +43,9 @@ import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
+import net.ontopia.presto.spi.utils.PrestoContext;
+import net.ontopia.presto.spi.utils.PrestoContextField;
+import net.ontopia.presto.spi.utils.PrestoContextRules;
 
 @Path("/editor")
 public abstract class EditorResource {
@@ -425,7 +428,7 @@ public abstract class EditorResource {
             // former is a descendant of the latter.
             String topicViewTopicId = topicView.getTopicId();
             
-            PrestoContext context = PrestoContext.create(session, topicViewTopicId, viewId);
+            PrestoContext context = PrestoContext.create(session.getDataProvider(), session.getSchemaProvider(), topicViewTopicId, viewId);
 
             if (context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -698,7 +701,7 @@ public abstract class EditorResource {
         Presto session = createPresto(databaseId, readOnly);
 
         try {
-            PrestoContext context = PrestoContext.create(session, Links.deskull(topicId), viewId);
+            PrestoContext context = PrestoContext.create(session.getDataProvider(), session.getSchemaProvider(), Links.deskull(topicId), viewId);
 
             if (context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();

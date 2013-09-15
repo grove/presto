@@ -1,8 +1,8 @@
 package net.ontopia.presto.jaxrs.process.impl;
 
 import net.ontopia.presto.jaxb.FieldData;
-import net.ontopia.presto.jaxrs.PrestoContextRules;
 import net.ontopia.presto.spi.PrestoFieldUsage;
+import net.ontopia.presto.spi.utils.PrestoContextRules;
 
 public class UniqueValuesValidator extends IfThenElseResolveFieldDataProcessor {
 

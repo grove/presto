@@ -1,8 +1,10 @@
-package net.ontopia.presto.jaxrs;
+package net.ontopia.presto.spi.utils;
 
-import net.ontopia.presto.jaxrs.rules.DelegatingContextRules;
+import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoField;
+import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoType;
+import net.ontopia.presto.spi.rules.DelegatingContextRules;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;
@@ -63,7 +65,7 @@ public class PrestoContextRules {
     private PrestoContext context;
     private PrestoType type;
 
-    public PrestoContextRules(Presto session, PrestoContext context) {
+    public PrestoContextRules(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, PrestoContext context) {
         this.context = context;
         this.type = context.getType();
 
@@ -73,14 +75,15 @@ public class PrestoContextRules {
         if (extra != null) {
             JsonNode contextRules = extra.path("contextRules");
             if (contextRules.isObject()) {
-                this.handler = PrestoProcessor.getHandler(session, ContextRulesHandler.class, contextRules);
+                this.handler = AbstractHandler.getHandler(dataProvider, schemaProvider, ContextRulesHandler.class, contextRules);
                 config = (ObjectNode)contextRules;
             }
         }
         if (this.handler == null) {
             this.handler = new DelegatingContextRules();
-            this.handler.setPresto(session);
             this.handler.setConfig(config);
+            this.handler.setDataProvider(dataProvider);;
+            this.handler.setSchemaProvider(schemaProvider);
         }
         this.readOnlyType = isTypeHandlerFlag(TypeFlag.isReadOnlyType, false);
     }

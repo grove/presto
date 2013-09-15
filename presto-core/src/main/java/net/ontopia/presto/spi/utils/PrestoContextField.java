@@ -1,4 +1,4 @@
-package net.ontopia.presto.jaxrs;
+package net.ontopia.presto.spi.utils;
 
 import net.ontopia.presto.spi.PrestoFieldUsage;
 
@@ -7,7 +7,7 @@ public class PrestoContextField {
     private final PrestoContext context;
     private final PrestoFieldUsage field;
     
-    PrestoContextField(PrestoContext context, PrestoFieldUsage field) {
+    public PrestoContextField(PrestoContext context, PrestoFieldUsage field) {
         this.context = context;
         this.field = field;
     }

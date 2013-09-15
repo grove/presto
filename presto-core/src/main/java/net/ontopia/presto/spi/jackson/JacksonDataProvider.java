@@ -10,11 +10,11 @@ import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
 import net.ontopia.presto.spi.PrestoTopic.Paging;
 import net.ontopia.presto.spi.PrestoType;
+import net.ontopia.presto.spi.resolve.PrestoResolver;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.Change;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.DefaultDataProvider;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.DefaultTopic;
-import net.ontopia.presto.spi.utils.PrestoResolver;
 import net.ontopia.presto.spi.utils.PrestoVariableResolver;
 
 import org.codehaus.jackson.JsonNode;
