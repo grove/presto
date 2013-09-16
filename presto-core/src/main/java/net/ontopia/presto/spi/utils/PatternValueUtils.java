@@ -22,7 +22,7 @@ public class PatternValueUtils {
         return null;
     }
 
-    public static String getValueByPattern(PrestoVariableResolver variableResolver, Object value, String pattern) {
+    private static String getValueByPattern(PrestoVariableResolver variableResolver, Object value, String pattern) {
         String result = pattern;
         Matcher matcher = Pattern.compile("\\$\\{([\\:\\.\\-\\w]+)\\}").matcher(pattern);
         while (matcher.find()) {
