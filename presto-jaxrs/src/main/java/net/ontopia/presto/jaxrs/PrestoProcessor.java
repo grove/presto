@@ -73,7 +73,6 @@ public class PrestoProcessor {
         topicData = processTopicExtra(topicData, rules, schemaExtra, processType, status);
         
         PrestoContext context = rules.getContext();
-        PrestoTopic topic = context.getTopic();
         PrestoType type = context.getType();
         
         ObjectNode topicExtra = presto.getTypeExtraNode(type);
@@ -86,7 +85,7 @@ public class PrestoProcessor {
         for (TopicView topicView : views) {
             String viewId = topicView.getId();
             PrestoView specificView = type.getViewById(viewId);
-            PrestoContext subcontext = PrestoContext.create(topic, type, specificView);
+            PrestoContext subcontext = PrestoContext.newContext(context, specificView);
             PrestoContextRules subrules = presto.getPrestoContextRules(subcontext);
             
             TopicView newView = processTopicView(topicView, subrules, processType, status);

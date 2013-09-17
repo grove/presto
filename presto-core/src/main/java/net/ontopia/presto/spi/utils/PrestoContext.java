@@ -79,7 +79,19 @@ public class PrestoContext {
     }
     
     public static PrestoContext newContext(PrestoContext context, PrestoTopic topic) {
-        return PrestoContext.create(topic, context.getType(), context.getView());
+        PrestoContext parentContext = context.getParentContext();
+        PrestoFieldUsage parentField = context.getParentField();
+        PrestoType type = context.getType();
+        PrestoView view = context.getView();
+        return PrestoContext.createSubContext(parentContext, parentField, topic, type, view);
+    }
+    
+    public static PrestoContext newContext(PrestoContext context, PrestoView view) {
+        PrestoContext parentContext = context.getParentContext();
+        PrestoFieldUsage parentField = context.getParentField();
+        PrestoTopic topic = context.getTopic();
+        PrestoType type = context.getType();
+        return PrestoContext.createSubContext(parentContext, parentField, topic, type, view);
     }
     
     // create subcontexts

@@ -418,6 +418,19 @@ public abstract class EditorResource {
             @PathParam("databaseId") final String databaseId, 
             @PathParam("topicId") final String topicId, 
             @PathParam("viewId") final String viewId, TopicView topicView) throws Exception {
+        String path = null;
+        return validateTopic(databaseId, path, topicId, viewId, topicView);
+    }
+
+    @PUT
+    @Produces(APPLICATION_JSON_UTF8)
+    @Consumes(APPLICATION_JSON_UTF8)
+    @Path("validate-topic/{databaseId}/{path}/{topicId}/{viewId}")
+    public Response validateTopic(
+            @PathParam("databaseId") final String databaseId, 
+            @PathParam("path") final String path, 
+            @PathParam("topicId") final String topicId, 
+            @PathParam("viewId") final String viewId, TopicView topicView) throws Exception {
 
         boolean readOnly = false;
         Presto session = createPresto(databaseId, readOnly);
@@ -428,9 +441,9 @@ public abstract class EditorResource {
             // former is a descendant of the latter.
             String topicViewTopicId = topicView.getTopicId();
             
-            PrestoContext context = PrestoContext.create(session.getDataProvider(), session.getSchemaProvider(), topicViewTopicId, viewId);
+            PrestoContext context = PathParser.getTopicByPath(session, path, topicViewTopicId, viewId);
 
-            if (context.isMissingTopic()) {
+            if (context == null || context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
             }
             
