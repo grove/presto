@@ -1189,7 +1189,7 @@ public abstract class Presto {
                             if (type != null) {
                                 newValues.add(buildInlineTopic(context, type, value.getValue()));
                             } else {
-                                log.warn("Ignoring value because if unknown type: " + value);
+                                log.warn("Ignoring value because it is of unknown type: " + value);
                             }
                         }
                     }
