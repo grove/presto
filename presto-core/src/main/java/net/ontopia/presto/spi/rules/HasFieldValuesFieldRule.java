@@ -19,17 +19,20 @@ public class HasFieldValuesFieldRule extends BooleanFieldRule {
             return false;
         } else {
             PrestoTopic topic = context.getTopic();
-            JsonNode fieldNode = config.path("field");
-            PrestoField valueField;
-            if (fieldNode.isTextual()) {
-                String fieldId = fieldNode.getTextValue();
-                PrestoType type = context.getType();
-                valueField = type.getFieldById(fieldId);
-            } else {
-                valueField = field;
-            }
+            PrestoField valueField = getValueField(context, field, config);
             List<? extends Object> values = topic.getValues(valueField);
             return !values.isEmpty();
+        }
+    }
+
+    private PrestoField getValueField(PrestoContext context, PrestoField field, ObjectNode config) {
+        JsonNode fieldNode = config.path("field");
+        if (fieldNode.isTextual()) {
+            String fieldId = fieldNode.getTextValue();
+            PrestoType type = context.getType();
+            return type.getFieldById(fieldId);
+        } else {
+            return field;
         }
     }
 
