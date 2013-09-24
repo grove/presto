@@ -96,17 +96,16 @@ public abstract class JacksonBucketDataStrategy implements JacksonDataStrategy {
 
     private ArrayNode getFieldValueUnionBuckets(ObjectNode doc, String fieldId) {
         // Strategy: union-buckets: value is union of all read buckets
-        Set<String> values = new LinkedHashSet<String>();
+        Set<JsonNode> values = new LinkedHashSet<JsonNode>();
         for (String bucketId : getReadBucketIds(doc)) {
             ObjectNode bucket = getBucket(bucketId, doc);
             if (bucket != null) {
                 ArrayNode bucketFieldValues = getBucketFieldValue(fieldId, bucket);
                 if (bucketFieldValues != null) {
                     for (JsonNode bucketFieldValue : bucketFieldValues) {
-                        if (bucketFieldValue.isTextual()) {
-                            String textValue = bucketFieldValue.getTextValue();
-                            if (!values.contains(textValue)) {
-                                values.add(bucketFieldValue.getTextValue());
+                        if (bucketFieldValue.isTextual() || bucketFieldValue.isObject()) {
+                            if (!values.contains(bucketFieldValue)) {
+                                values.add(bucketFieldValue);
                             }
                         }
                     }
@@ -115,9 +114,7 @@ public abstract class JacksonBucketDataStrategy implements JacksonDataStrategy {
             }
         }
         ArrayNode result = getObjectMapper().createArrayNode();
-        for (String value : values) {
-            result.add(value);
-        }
+        result.addAll(values);
         return result;
     }
     
