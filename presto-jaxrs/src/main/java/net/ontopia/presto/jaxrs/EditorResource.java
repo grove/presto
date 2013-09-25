@@ -32,6 +32,7 @@ import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxb.Link;
 import net.ontopia.presto.jaxb.RootInfo;
 import net.ontopia.presto.jaxb.Topic;
+import net.ontopia.presto.jaxb.TopicMessage;
 import net.ontopia.presto.jaxb.TopicView;
 import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoChanges;
@@ -548,12 +549,15 @@ public abstract class EditorResource {
             PrestoContextRules rules = session.getPrestoContextRules(context);
 
             if (!rules.isReadOnlyField(field) && (rules.isAddableField(field) || rules.isCreatableField(field))) {
-                FieldData result = session.addFieldValues(rules, field, index, fieldData);
-    
-                session.commit();
-    
-                return Response.ok(result).build();
-            
+                try {
+                    FieldData result = session.addFieldValues(rules, field, index, fieldData);
+        
+                    session.commit();
+        
+                    return Response.ok(result).build();
+                } catch (ConstraintException ce) {
+                    return getConstraintMessageResponse(ce);
+                }
             } else {
                 // 403
                 return Response.status(Status.FORBIDDEN).build();
@@ -565,6 +569,11 @@ public abstract class EditorResource {
         } finally {
             session.close();      
         } 
+    }
+
+    private Response getConstraintMessageResponse(ConstraintException ce) {
+        TopicMessage entity = new TopicMessage(ce.getType(), ce.getTitle(), ce.getMessage());
+        return Response.status(422).entity(entity).build();
     }
 
     @POST

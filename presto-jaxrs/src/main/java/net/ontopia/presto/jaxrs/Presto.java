@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -1007,8 +1008,8 @@ public abstract class Presto {
         boolean resolveEmbedded = true;
         boolean includeExisting = false;
         boolean filterNonStorable = true;
-
-        List<? extends Object> addableValues = updateAndExtractValuesFromFieldData(rules, field, fieldData, resolveEmbedded, includeExisting, filterNonStorable);
+        boolean validateValueTypes = true;
+        List<? extends Object> addableValues = updateAndExtractValuesFromFieldData(rules, field, fieldData, resolveEmbedded, includeExisting, filterNonStorable, validateValueTypes);
         
         PrestoTopic topicAfterSave = addFieldValues(rules, field, addableValues, index);
 
@@ -1019,8 +1020,8 @@ public abstract class Presto {
         boolean resolveEmbedded = false;
         boolean includeExisting = false;
         boolean filterNonStorable = true;
-
-        List<? extends Object> removeableValues = updateAndExtractValuesFromFieldData(rules, field, fieldData, resolveEmbedded, includeExisting, filterNonStorable);
+        boolean validateValueTypes = false;
+        List<? extends Object> removeableValues = updateAndExtractValuesFromFieldData(rules, field, fieldData, resolveEmbedded, includeExisting, filterNonStorable, validateValueTypes);
 
         PrestoTopic topicAfterSave = removeFieldValues(rules, field, removeableValues);
 
@@ -1154,8 +1155,8 @@ public abstract class Presto {
 
                     boolean resolveEmbedded = true;
                     boolean includeExisting = false;
-
-                    List<? extends Object> values = updateAndExtractValuesFromFieldData(rules, field, fieldData, resolveEmbedded, includeExisting, filterNonStorable);
+                    boolean validateValueTypes = true;
+                    List<? extends Object> values = updateAndExtractValuesFromFieldData(rules, field, fieldData, resolveEmbedded, includeExisting, filterNonStorable, validateValueTypes);
                     
                     update.setValues(field, values);
                 }
@@ -1168,14 +1169,14 @@ public abstract class Presto {
     }
 
     private List<? extends Object> updateAndExtractValuesFromFieldData(PrestoContextRules rules, PrestoFieldUsage field, FieldData fieldData, 
-            boolean resolveEmbedded, boolean includeExisting, boolean filterNonStorable) {
+            boolean resolveEmbedded, boolean includeExisting, boolean filterNonStorable, boolean validateValueTypes) {
         Collection<Value> values = fieldData.getValues();
         List<Object> result = new ArrayList<Object>(values.size());
 
         if (!values.isEmpty()) {
+            PrestoContext context = rules.getContext();
 
             if (field.isReferenceField()) {
-                PrestoContext context = rules.getContext();
                 if (field.isInline()) {
                     // build inline topics from field data
                     List<Object> newValues = new ArrayList<Object>();
@@ -1218,14 +1219,43 @@ public abstract class Presto {
                         result.addAll(getDataProvider().getTopicsByIds(valueIds));
                     }
                 }
+                // validate valueTypes
+                if (validateValueTypes) {
+                    validateValueTypes(context, field, result);
+                }
+                
             } else {
                 for (Value value : values) {
                     result.add(getPrimitiveValue(value));
                 }
             }
+
+            // filter out non-storable values
+            if (filterNonStorable) {
+                removeNonStorableFieldValues(rules, field, result);
+            }
         }
-        if (filterNonStorable) {
-            removeNonStorableFieldValues(rules, field, result);
+        return result;
+    }
+
+    private void validateValueTypes(PrestoContext context, PrestoFieldUsage field, List<Object> values) {
+        Collection<String> valueTypeIds = getAvailableFieldValueTypesId(context, field);
+        for (Object value : values) {
+            PrestoTopic v = (PrestoTopic)value;
+            if (!valueTypeIds.contains(v.getTypeId())) {
+                throw new InvalidValueType(context, field, v);
+            }
+        }
+    }
+
+    private Collection<String> getAvailableFieldValueTypesId(PrestoContext context, PrestoFieldUsage field) {
+        Collection<PrestoType> valueTypes = getAvailableFieldValueTypes(context, field);
+        if (valueTypes.isEmpty()) {
+            return Collections.emptySet();
+        }
+        Collection<String> result = new HashSet<String>(valueTypes.size());
+        for (PrestoType valueType : valueTypes) {
+            result.add(valueType.getId());
         }
         return result;
     }
@@ -1281,7 +1311,8 @@ public abstract class Presto {
 
             boolean resolveEmbedded = true;
             boolean includeExisting = false;
-            List<? extends Object> values = updateAndExtractValuesFromFieldData(subrules, field, fieldData, resolveEmbedded, includeExisting, filterNonStorable);
+            boolean validateValueTypes = false;
+            List<? extends Object> values = updateAndExtractValuesFromFieldData(subrules, field, fieldData, resolveEmbedded, includeExisting, filterNonStorable, validateValueTypes);
             builder.setValues(field, values);
         }
 
