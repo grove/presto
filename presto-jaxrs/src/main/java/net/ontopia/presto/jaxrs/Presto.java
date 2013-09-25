@@ -1190,7 +1190,7 @@ public abstract class Presto {
                             if (type != null) {
                                 newValues.add(buildInlineTopic(context, type, value.getValue()));
                             } else {
-                                log.warn("Ignoring value because it is of unknown type: " + value);
+                                throw new InvalidValueTypeConstraintException(getSchemaProvider());
                             }
                         }
                     }
@@ -1243,7 +1243,7 @@ public abstract class Presto {
         for (Object value : values) {
             PrestoTopic v = (PrestoTopic)value;
             if (!valueTypeIds.contains(v.getTypeId())) {
-                throw new InvalidValueType(context, field, v);
+                throw new InvalidValueTypeConstraintException(getSchemaProvider());
             }
         }
     }
@@ -1286,7 +1286,7 @@ public abstract class Presto {
         PrestoType type = schemaProvider.getTypeById(topicTypeId);
 
         if (!type.isInline()) {
-            throw new RuntimeException("Type " + type.getId() + " is not an inline type.");
+            throw new NotInlineTypeConstraintException(getSchemaProvider());
         }
 
         PrestoTopic topic;
