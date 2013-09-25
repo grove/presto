@@ -1,4 +1,4 @@
-package net.ontopia.presto.jaxrs;
+package net.ontopia.presto.spi.utils;
 
 import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoFieldUsage;
@@ -22,10 +22,7 @@ public class PrestoContext {
     private PrestoContext parentContext;
     private PrestoFieldUsage parentField;
     
-    private PrestoContext(Presto session, String topicId, String viewId) {
-        PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
-        PrestoDataProvider dataProvider = session.getDataProvider();
-
+    private PrestoContext(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, String topicId, String viewId) {
         if (topicId == null) {
             throw new RuntimeException("topicId cannot be null");
         } else if (isNewTopic(topicId)) {
@@ -63,12 +60,11 @@ public class PrestoContext {
     
     // create new contexts
     
-    public static PrestoContext create(Presto session, String topicId, String viewId) {
-        return new PrestoContext(session, topicId, viewId);
+    public static PrestoContext create(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, String topicId, String viewId) {
+        return new PrestoContext(dataProvider, schemaProvider, topicId, viewId);
     }
     
-    public static PrestoContext create(Presto session, PrestoTopic topic) {
-        PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
+    public static PrestoContext create(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, PrestoTopic topic) {
         String typeId = topic.getTypeId();
         PrestoType type = schemaProvider.getTypeById(typeId);
         return new PrestoContext(topic, type, type.getDefaultView());
@@ -83,13 +79,25 @@ public class PrestoContext {
     }
     
     public static PrestoContext newContext(PrestoContext context, PrestoTopic topic) {
-        return PrestoContext.create(topic, context.getType(), context.getView());
+        PrestoContext parentContext = context.getParentContext();
+        PrestoFieldUsage parentField = context.getParentField();
+        PrestoType type = context.getType();
+        PrestoView view = context.getView();
+        return PrestoContext.createSubContext(parentContext, parentField, topic, type, view);
+    }
+    
+    public static PrestoContext newContext(PrestoContext context, PrestoView view) {
+        PrestoContext parentContext = context.getParentContext();
+        PrestoFieldUsage parentField = context.getParentField();
+        PrestoTopic topic = context.getTopic();
+        PrestoType type = context.getType();
+        return PrestoContext.createSubContext(parentContext, parentField, topic, type, view);
     }
     
     // create subcontexts
     
-    public static PrestoContext createSubContext(Presto session, PrestoContext parentContext, PrestoFieldUsage parentField, PrestoTopic topic) {
-        PrestoContext context = create(session, topic);
+    public static PrestoContext createSubContext(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, PrestoContext parentContext, PrestoFieldUsage parentField, PrestoTopic topic) {
+        PrestoContext context = create(dataProvider, schemaProvider, topic);
         context.setParentContext(parentContext, parentField);
         return context;
     }
@@ -100,8 +108,8 @@ public class PrestoContext {
         return context;
     }
     
-    public static PrestoContext createSubContext(Presto session, PrestoContext parentContext, PrestoFieldUsage parentField, String topicId, String viewId) {
-        PrestoContext context = new PrestoContext(session, topicId, viewId);
+    public static PrestoContext createSubContext(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, PrestoContext parentContext, PrestoFieldUsage parentField, String topicId, String viewId) {
+        PrestoContext context = new PrestoContext(dataProvider, schemaProvider, topicId, viewId);
         context.setParentContext(parentContext, parentField);
         return context;
     }

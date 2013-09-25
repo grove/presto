@@ -8,6 +8,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 @XmlRootElement
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+@Deprecated
 public class AvailableFieldTypes extends Document {
 
     private String id;

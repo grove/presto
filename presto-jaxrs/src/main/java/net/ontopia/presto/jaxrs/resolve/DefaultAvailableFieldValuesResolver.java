@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import net.ontopia.presto.jaxrs.PrestoContext;
 import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
@@ -12,6 +11,7 @@ import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
 import net.ontopia.presto.spi.PrestoTopic.Paging;
 import net.ontopia.presto.spi.jackson.JacksonDataProvider;
+import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoTopicFieldVariableResolver;
 import net.ontopia.presto.spi.utils.PrestoVariableResolver;
 
@@ -28,7 +28,6 @@ public class DefaultAvailableFieldValuesResolver extends AvailableFieldValuesRes
             PrestoDataProvider dataProvider = getDataProvider();
 
             if (dataProvider instanceof JacksonDataProvider) {
-                JacksonDataProvider jacksonDataProvider = (JacksonDataProvider)dataProvider;
                 Paging paging = null; // new PrestoPaging(0, 100);
                 
                 PrestoVariableResolver variableResolver = new QueryFilterVariableResolver(field.getSchemaProvider(), query);
@@ -37,7 +36,7 @@ public class DefaultAvailableFieldValuesResolver extends AvailableFieldValuesRes
                 
                 Collection<? extends Object> objects = (topic == null ? Collections.emptyList() : Collections.singleton(topic));
                 
-                PagedValues result = jacksonDataProvider.resolveValues(objects, field, paging, resolveConfig, variableResolver);
+                PagedValues result = dataProvider.resolveValues(objects, field, paging, resolveConfig, variableResolver);
                 return result.getValues();
             }
         }

@@ -148,19 +148,16 @@ public class PojoSchemaModel {
                 superType.addDirectSubType(type);
             }
             // defaultView
-            String defaultViewId;
+            String defaultViewId = null;
             if (typeConfig.has("defaultView")) {
                 defaultViewId = typeConfig.get("defaultView").getTextValue();
-                type.setDefaultViewId(defaultViewId);
-            } else {
-                defaultViewId = "info"; // TODO: should 'info' or the first view be default?
                 type.setDefaultViewId(defaultViewId);
             } 
             // createView
             if (typeConfig.has("createView")) {
                 String createViewId = typeConfig.get("createView").getTextValue();
                 type.setCreateViewId(createViewId);
-            } else {
+            } else if (defaultViewId != null){
                 type.setCreateViewId(defaultViewId);
             } 
 

@@ -7,18 +7,18 @@ import java.util.List;
 
 import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxb.Value;
-import net.ontopia.presto.jaxrs.PrestoContext;
-import net.ontopia.presto.jaxrs.PrestoContextRules;
 import net.ontopia.presto.jaxrs.process.FieldDataProcessor;
 import net.ontopia.presto.jaxrs.process.SubmittedState;
-import net.ontopia.presto.jaxrs.resolve.PrestoTopicWithParentFieldVariableResolver;
 import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
 import net.ontopia.presto.spi.PrestoTopic.Paging;
 import net.ontopia.presto.spi.jackson.JacksonDataProvider;
+import net.ontopia.presto.spi.utils.PrestoContext;
+import net.ontopia.presto.spi.utils.PrestoContextRules;
 import net.ontopia.presto.spi.utils.PrestoPaging;
+import net.ontopia.presto.spi.utils.PrestoTopicWithParentFieldVariableResolver;
 import net.ontopia.presto.spi.utils.PrestoVariableResolver;
 
 import org.codehaus.jackson.JsonNode;
@@ -61,9 +61,8 @@ public abstract class IfThenElseResolveFieldDataProcessor extends FieldDataProce
     
                 Collection<? extends Object> objects = (topic == null ? Collections.emptyList() : Collections.singleton(topic));
     
-                JacksonDataProvider jacksonDataProvider = (JacksonDataProvider)dataProvider;
                 JsonNode resolveConfig = config.path("resolve");
-                PagedValues values = jacksonDataProvider.resolveValues(objects, field, paging, resolveConfig, variableResolver);
+                PagedValues values = dataProvider.resolveValues(objects, field, paging, resolveConfig, variableResolver);
     
                 return !values.getValues().isEmpty();
             }

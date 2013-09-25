@@ -145,12 +145,24 @@ public class PojoType implements PrestoType {
 
     @Override
     public PrestoView getDefaultView() {
-        return getViewById(defaultViewId);
+        if (defaultViewId != null) {
+            return getViewById(defaultViewId);
+        } else {
+            return getFirstView();
+        }
     }
 
     @Override
     public PrestoView getCreateView() {
-        return getViewById(createViewId);
+        if (createViewId != null) {
+            return getViewById(createViewId);
+        } else {
+            return getDefaultView();
+        }
+    }
+
+    protected PrestoView getFirstView() {
+        return views.get(0);
     }
     
     @Override

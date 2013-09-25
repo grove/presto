@@ -8,6 +8,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 @XmlRootElement
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+@Deprecated
 public class AvailableTopicTypes extends Document {
 
     private Collection<TopicTypeTree> types;

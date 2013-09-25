@@ -2,7 +2,6 @@ package net.ontopia.presto.spi.jackson;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -14,18 +13,12 @@ import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.DefaultDataProvider;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.DefaultTopic;
 import net.ontopia.presto.spi.utils.PrestoPagedValues;
 import net.ontopia.presto.spi.utils.PrestoPaging;
-import net.ontopia.presto.spi.utils.PrestoTopicFieldVariableResolver;
-import net.ontopia.presto.spi.utils.PrestoVariableResolver;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class JacksonTopic implements DefaultTopic {
-
-    private static Logger log = LoggerFactory.getLogger(JacksonTopic.class);
 
     protected final JacksonDataProvider dataProvider;  
     protected final ObjectNode data;
@@ -110,27 +103,22 @@ public class JacksonTopic implements DefaultTopic {
     
     @Override
     public List<? extends Object> getValues(PrestoField field) {
-        return getValues(field, null).getValues();            
+        return dataProvider.resolveValues(this, field);
     }
 
     @Override
     public PagedValues getValues(PrestoField field, int offset, int limit) {
-        return getValues(field, new PrestoPaging(offset, limit));
+        return dataProvider.resolveValues(this, field, offset, limit);
+    }
+    
+    @Override
+    public List<? extends Object> getStoredValues(PrestoField field) {
+        return getValuesFromField(field, null).getValues();            
     }
 
-    protected PagedValues getValues(PrestoField field, Paging paging) {
-        // get field values from data provider
-        ObjectNode extra = (ObjectNode)field.getExtra();
-        if (extra != null && extra.has("resolve")) {
-            JsonNode resolveConfig = extra.get("resolve");
-            if (!field.isReadOnly()) {
-                log.warn("Field {} not read-only. Resolve config: {}", field.getId(), resolveConfig);
-            }
-
-            PrestoVariableResolver variableResolver = new PrestoTopicFieldVariableResolver(field.getSchemaProvider());
-            return dataProvider.resolveValues(Collections.singleton(this), field, paging, resolveConfig, variableResolver);
-        }
-        return getValuesFromField(field, paging);
+    @Override
+    public PagedValues getStoredValues(PrestoField field, int offset, int limit) {
+        return getValuesFromField(field, new PrestoPaging(offset, limit));
     }
 
     private PagedValues getValuesFromField(PrestoField field, Paging paging) {

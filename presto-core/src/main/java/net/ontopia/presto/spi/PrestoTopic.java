@@ -31,4 +31,8 @@ public interface PrestoTopic {
         int getLimit();
     }
 
+    List<? extends Object> getStoredValues(PrestoField field);
+
+    PagedValues getStoredValues(PrestoField field, int offset, int limit);
+
 }

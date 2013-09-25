@@ -58,6 +58,15 @@ public class PojoSchemaProvider implements PrestoSchemaProvider {
         }
         return type;
     }
+    
+    @Override
+    public PrestoType getTypeById(String typeId, PrestoType defaultValue) {
+        PrestoType type = typesMap.get(typeId);
+        if (type == null) {
+            return defaultValue;
+        }
+        return type;
+    }
 
     @Override
     public Collection<PrestoType> getRootTypes() {

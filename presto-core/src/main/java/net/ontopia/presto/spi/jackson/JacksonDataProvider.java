@@ -6,9 +6,11 @@ import java.util.List;
 import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoInlineTopicBuilder;
+import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
 import net.ontopia.presto.spi.PrestoTopic.Paging;
 import net.ontopia.presto.spi.PrestoType;
+import net.ontopia.presto.spi.resolve.PrestoResolver;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.Change;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.DefaultDataProvider;
@@ -25,7 +27,7 @@ public abstract class JacksonDataProvider implements DefaultDataProvider {
     protected final JacksonDataStrategy dataStrategy;
     protected final JacksonDataStrategy inlineDataStrategy;
     protected final IdentityStrategy identityStrategy;
-    protected final JacksonResolver resolver;
+    protected final PrestoResolver resolver;
     
     protected JacksonDataProvider() {
         this.mapper = createObjectMapper();
@@ -55,8 +57,8 @@ public abstract class JacksonDataProvider implements DefaultDataProvider {
     
     protected abstract IdentityStrategy createIdentityStrategy();
     
-    protected JacksonResolver createResolver() {
-        return new JacksonResolver() {
+    protected PrestoResolver createResolver() {
+        return new PrestoResolver() {
             @Override
             protected JacksonDataProvider getDataProvider() {
                 return JacksonDataProvider.this;
@@ -152,6 +154,17 @@ public abstract class JacksonDataProvider implements DefaultDataProvider {
        return value; 
     }
 
+    @Override
+    public List<? extends Object>  resolveValues(PrestoTopic topic, PrestoField field) {
+        return resolver.resolveValues(topic, field);
+    }
+
+    @Override
+    public PagedValues resolveValues(PrestoTopic topic, PrestoField field, int offset, int limit) {
+        return resolver.resolveValues(topic, field, offset, limit);
+    }
+
+    @Override
     public PagedValues resolveValues(Collection<? extends Object> objects, PrestoField field, Paging paging, 
             JsonNode resolveConfig, PrestoVariableResolver variableResolver) {
         return resolver.resolveValues(objects, field, paging, resolveConfig, variableResolver);

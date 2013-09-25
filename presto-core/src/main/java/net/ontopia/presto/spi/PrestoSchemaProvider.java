@@ -8,6 +8,8 @@ public interface PrestoSchemaProvider {
 
     PrestoType getTypeById(String typeId);
 
+    PrestoType getTypeById(String typeId, PrestoType defaultValue);
+
     Collection<PrestoType> getRootTypes();
 
     Object getExtra();

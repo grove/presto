@@ -43,6 +43,9 @@ import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
+import net.ontopia.presto.spi.utils.PrestoContext;
+import net.ontopia.presto.spi.utils.PrestoContextField;
+import net.ontopia.presto.spi.utils.PrestoContextRules;
 
 @Path("/editor")
 public abstract class EditorResource {
@@ -415,6 +418,19 @@ public abstract class EditorResource {
             @PathParam("databaseId") final String databaseId, 
             @PathParam("topicId") final String topicId, 
             @PathParam("viewId") final String viewId, TopicView topicView) throws Exception {
+        String path = null;
+        return validateTopic(databaseId, path, topicId, viewId, topicView);
+    }
+
+    @PUT
+    @Produces(APPLICATION_JSON_UTF8)
+    @Consumes(APPLICATION_JSON_UTF8)
+    @Path("validate-topic/{databaseId}/{path}/{topicId}/{viewId}")
+    public Response validateTopic(
+            @PathParam("databaseId") final String databaseId, 
+            @PathParam("path") final String path, 
+            @PathParam("topicId") final String topicId, 
+            @PathParam("viewId") final String viewId, TopicView topicView) throws Exception {
 
         boolean readOnly = false;
         Presto session = createPresto(databaseId, readOnly);
@@ -425,9 +441,9 @@ public abstract class EditorResource {
             // former is a descendant of the latter.
             String topicViewTopicId = topicView.getTopicId();
             
-            PrestoContext context = PrestoContext.create(session, topicViewTopicId, viewId);
+            PrestoContext context = PathParser.getTopicByPath(session, path, topicViewTopicId, viewId);
 
-            if (context.isMissingTopic()) {
+            if (context == null || context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
             }
             
@@ -588,7 +604,7 @@ public abstract class EditorResource {
             PrestoFieldUsage field = context.getFieldById(fieldId);
             PrestoContextRules rules = session.getPrestoContextRules(context);
 
-            if (rules.isRemovableField(field)) {
+            if (!rules.isReadOnlyField(field) && rules.isRemovableField(field)) {
                 FieldData result =  session.removeFieldValues(rules, field, fieldData);
     
                 session.commit();
@@ -687,6 +703,7 @@ public abstract class EditorResource {
     @GET
     @Produces(APPLICATION_JSON_UTF8)
     @Path("available-field-types/{databaseId}/{topicId}/{viewId}/{fieldId}")
+    @Deprecated
     public Response getAvailableFieldTypes( 
             @PathParam("databaseId") final String databaseId, 
             @PathParam("topicId") final String topicId, 
@@ -697,7 +714,7 @@ public abstract class EditorResource {
         Presto session = createPresto(databaseId, readOnly);
 
         try {
-            PrestoContext context = PrestoContext.create(session, Links.deskull(topicId), viewId);
+            PrestoContext context = PrestoContext.create(session.getDataProvider(), session.getSchemaProvider(), Links.deskull(topicId), viewId);
 
             if (context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -720,6 +737,7 @@ public abstract class EditorResource {
     @GET
     @Produces(APPLICATION_JSON_UTF8)
     @Path("available-types-tree/{databaseId}")
+    @Deprecated
     public Response getAvailableTypesTree(@PathParam("databaseId") final String databaseId) throws Exception {
 
         Presto session = createPresto(databaseId, false);

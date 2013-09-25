@@ -1,14 +1,16 @@
-package net.ontopia.presto.spi.utils;
+package net.ontopia.presto.spi.resolve;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
 import net.ontopia.presto.spi.PrestoTopic.Paging;
-import net.ontopia.presto.spi.jackson.JacksonDataProvider;
+import net.ontopia.presto.spi.utils.PrestoPagedValues;
+import net.ontopia.presto.spi.utils.PrestoVariableResolver;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;
@@ -26,9 +28,9 @@ public class PrestoIntersectionResolver extends PrestoFieldResolver {
         if (config != null && config.has("resolve")) {
             JsonNode resolveParentConfig = config.get("resolve");
             if (resolveParentConfig.isArray()) {
+                PrestoDataProvider dataProvider = getDataProvider();
                 for (JsonNode resolveConfig : resolveParentConfig) {
-                    JacksonDataProvider jacksonDataProvider = (JacksonDataProvider)getDataProvider();
-                    PagedValues values = jacksonDataProvider.resolveValues(objects, field, paging, resolveConfig, variableResolver);
+                    PagedValues values = dataProvider.resolveValues(objects, field, paging, resolveConfig, variableResolver);
                     if (result == null) {
                         result = new ArrayList<Object>(values.getValues());
                     } else {

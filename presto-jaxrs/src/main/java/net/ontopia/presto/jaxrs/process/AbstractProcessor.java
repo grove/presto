@@ -4,15 +4,28 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import net.ontopia.presto.jaxb.FieldData;
-import net.ontopia.presto.jaxrs.AbstractHandler;
+import net.ontopia.presto.jaxrs.Presto;
 import net.ontopia.presto.jaxrs.PrestoProcessor.Status;
 import net.ontopia.presto.jaxrs.PrestoProcessor.Type;
+import net.ontopia.presto.spi.utils.AbstractHandler;
+
+import org.codehaus.jackson.JsonNode;
 
 public class AbstractProcessor extends AbstractHandler {
 
+    private Presto presto;
+    
     private Status status;
     private Type processType;
-    
+
+    public Presto getPresto() {
+        return presto;
+    }
+
+    public void setPresto(Presto presto) {
+        this.presto = presto;
+    }
+
     public Type getType() {
         return processType;
     }
@@ -51,5 +64,23 @@ public class AbstractProcessor extends AbstractHandler {
         }
         errors.add(error);
     }
-   
+
+    // -- statics
+    
+    public static <T extends AbstractProcessor> Iterable<T> getProcessors(Presto presto, Class<T> klass, JsonNode processorsNode) {
+        Iterable<T> handlers = AbstractHandler.getHandlers(presto.getDataProvider(), presto.getSchemaProvider(), klass, processorsNode);
+        for (T handler : handlers) {
+            handler.setPresto(presto);
+        }
+        return handlers;
+    }
+    
+    public static <T extends AbstractProcessor> T getProcessor(Presto presto, Class<T> klass, JsonNode processorNode) {
+        T handler = AbstractHandler.getHandler(presto.getDataProvider(), presto.getSchemaProvider(), klass, processorNode);
+        if (handler != null) {
+            handler.setPresto(presto);
+        }
+        return handler;
+    }
+    
 }

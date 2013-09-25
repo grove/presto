@@ -7,6 +7,8 @@ import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoView;
+import net.ontopia.presto.spi.utils.PrestoContext;
+import net.ontopia.presto.spi.utils.PrestoContextField;
 
 public class PathParser {
     
@@ -66,7 +68,7 @@ public class PathParser {
                 currentTopic = null;
                 currentType = currentContext.getType();
                 currentView = currentContext.getView();
-                currentContext = PrestoContext.createSubContext(session, currentContext, currentField, topicId, viewId);
+                currentContext = PrestoContext.createSubContext(dataProvider, schemaProvider, currentContext, currentField, topicId, viewId);
             } else {
                 // find topic amongst parent field values
                 currentTopic = findInParentField(currentTopic, currentField, topicId);
@@ -85,11 +87,13 @@ public class PathParser {
     }
     
     public static PrestoContext getTopicByPath(Presto session, String path, String topicId, String viewId) {
+        PrestoDataProvider dataProvider = session.getDataProvider();
+        PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
 
         if (path == null || path.equals("_")) {
-            return PrestoContext.create(session, Links.deskull(topicId), viewId);
+            return PrestoContext.create(dataProvider, schemaProvider, Links.deskull(topicId), viewId);
         }
-        
+
         PrestoContextField contextField = getContextField(session, path);
         
         PrestoContext currentContext = contextField.getContext();
@@ -98,7 +102,7 @@ public class PathParser {
         
         PrestoTopic resultTopic = findInParentField(currentTopic, currentField, topicId);
         if (resultTopic == null) {
-            return PrestoContext.createSubContext(session, currentContext, currentField, Links.deskull(topicId), viewId);
+            return PrestoContext.createSubContext(dataProvider, schemaProvider, currentContext, currentField, Links.deskull(topicId), viewId);
         } else {
             String resultTypeId = resultTopic.getTypeId();
             PrestoType resultType = session.getSchemaProvider().getTypeById(resultTypeId);
