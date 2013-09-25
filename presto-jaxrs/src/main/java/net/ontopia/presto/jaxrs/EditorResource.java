@@ -55,7 +55,7 @@ public abstract class EditorResource {
 
     @Context HttpServletRequest request;
     private @Context UriInfo uriInfo;
-    
+
     @GET
     @Produces(APPLICATION_JSON_UTF8)
     public Response getRootInfo() throws Exception {
@@ -101,7 +101,7 @@ public abstract class EditorResource {
         result.setDatabases(databases);      
         return result;
     }
-    
+
     @GET
     @Produces(APPLICATION_JSON_UTF8)
     @Path("database-info/{databaseId}")
@@ -175,7 +175,7 @@ public abstract class EditorResource {
 
             PrestoContextField contextField = PathParser.getContextField(session, path);
             TopicView result = session.getNewTopicView(contextField.getContext(), contextField.getField(), type);
-            
+
             return Response.ok(result).build();
 
         } catch (Exception e) {
@@ -199,7 +199,7 @@ public abstract class EditorResource {
         String path = null;
         return getFieldPaging(databaseId, path, topicId, viewId, fieldId, start, limit);
     }
-    
+
     @GET
     @Produces(APPLICATION_JSON_UTF8)
     @Path("paging-field/{databaseId}/{path}/{topicId}/{viewId}/{fieldId}/{start}/{limit}")
@@ -211,7 +211,7 @@ public abstract class EditorResource {
             @PathParam("fieldId") final String fieldId, 
             @PathParam("start") final int start, 
             @PathParam("limit") final int limit) throws Exception {
-        
+
         boolean readOnly = false;
         Presto session = createPresto(databaseId, readOnly);
 
@@ -226,7 +226,7 @@ public abstract class EditorResource {
             if (field == null) {
                 return Response.status(Status.NOT_FOUND).build();
             }
-            
+
             PrestoContextRules rules = session.getPrestoContextRules(context);
 
             FieldData result = session.getFieldData(rules, field, start, limit, true);
@@ -271,21 +271,24 @@ public abstract class EditorResource {
             } else {
                 PrestoType type = context.getType();
                 if (type.isRemovable()) {
+                    try {
+                        PrestoTopic topic = context.getTopic();
+                        if (type.isInline()) {
+                            PrestoContext parentContext = context.getParentContext();
+                            PrestoFieldUsage parentField = context.getParentField();
+                            PrestoContextRules parentRules = session.getPrestoContextRules(parentContext);
+                            PrestoTopic parentTopicAfterSave = session.removeFieldValues(parentRules, parentField, Collections.singletonList(topic));
 
-                    PrestoTopic topic = context.getTopic();
-                    if (type.isInline()) {
-                        PrestoContext parentContext = context.getParentContext();
-                        PrestoFieldUsage parentField = context.getParentField();
-                        PrestoContextRules parentRules = session.getPrestoContextRules(parentContext);
-                        PrestoTopic parentTopicAfterSave = session.removeFieldValues(parentRules, parentField, Collections.singletonList(topic));
-    
-                        // return field data of parent field
-                        FieldData fieldData = session.getFieldData(parentTopicAfterSave, parentField);
-                        return Response.ok(fieldData).build();
-                    } else {
-                        session.deleteTopic(topic, type);
-                        // 204
-                        return Response.noContent().build();
+                            // return field data of parent field
+                            FieldData fieldData = session.getFieldData(parentTopicAfterSave, parentField);
+                            return Response.ok(fieldData).build();
+                        } else {
+                            session.deleteTopic(topic, type);
+                            // 204
+                            return Response.noContent().build();
+                        }
+                    } catch (ConstraintException ce) {
+                        return getConstraintMessageResponse(ce);
                     }
                 } else {
                     // 403
@@ -300,7 +303,7 @@ public abstract class EditorResource {
             session.close();      
         }
     }
-    
+
     @GET
     @Produces(APPLICATION_JSON_UTF8)
     @Path("topic/{databaseId}/{topicId}")
@@ -312,7 +315,7 @@ public abstract class EditorResource {
         String viewId = null;
         return getTopicInView(databaseId, path, topicId, viewId, readOnly);
     }
-    
+
     @GET
     @Produces(APPLICATION_JSON_UTF8)
     @Path("topic/{databaseId}/{topicId}/{view}")
@@ -343,9 +346,9 @@ public abstract class EditorResource {
             if (context == null || context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
             }
-            
+
             Topic result = session.getTopicAndProcess(context);
-            
+
             return Response.ok(result).build();
 
         } catch (Exception e) {
@@ -398,9 +401,9 @@ public abstract class EditorResource {
             if (context == null || context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
             }
-            
+
             TopicView result = session.getTopicViewAndProcess(context);
-            
+
             return Response.ok(result).build();
 
         } catch (Exception e) {
@@ -441,18 +444,22 @@ public abstract class EditorResource {
             // validation needs to start with the topicId of the received topicView. The 
             // former is a descendant of the latter.
             String topicViewTopicId = topicView.getTopicId();
-            
+
             PrestoContext context = PathParser.getTopicByPath(session, path, topicViewTopicId, viewId);
 
             if (context == null || context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
             }
-            
-            TopicView result = session.validateTopic(context, topicView);
 
-            session.commit();
-
-            return Response.ok(result).build();
+            try {
+                TopicView result = session.validateTopic(context, topicView);
+                session.commit();
+    
+                return Response.ok(result).build();
+                
+            } catch (ConstraintException ce) {
+                return getConstraintMessageResponse(ce);
+            }
 
         } catch (Exception e) {
             session.abort();
@@ -461,7 +468,7 @@ public abstract class EditorResource {
             session.close();
         }
     }
-    
+
     @PUT
     @Produces(APPLICATION_JSON_UTF8)
     @Consumes(APPLICATION_JSON_UTF8)
@@ -473,7 +480,7 @@ public abstract class EditorResource {
         String path = null;
         return updateTopicView(databaseId, path, topicId, viewId, topicView);
     }
-    
+
     @PUT
     @Produces(APPLICATION_JSON_UTF8)
     @Consumes(APPLICATION_JSON_UTF8)
@@ -493,13 +500,17 @@ public abstract class EditorResource {
             if (context == null || context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();
             }
+            try {
+                boolean returnParent = true;
+                Object result = session.updateTopic(context, topicView, returnParent);
+                session.commit();
 
-            boolean returnParent = true;
-            Object result = session.updateTopic(context, topicView, returnParent);
-            session.commit();
+                return Response.ok(result).build();
 
-            return Response.ok(result).build();
-            
+            } catch (ConstraintException ce) {
+                return getConstraintMessageResponse(ce);
+            }
+
         } catch (Exception e) {
             session.abort();
             throw e;
@@ -551,9 +562,9 @@ public abstract class EditorResource {
             if (!rules.isReadOnlyField(field) && (rules.isAddableField(field) || rules.isCreatableField(field))) {
                 try {
                     FieldData result = session.addFieldValues(rules, field, index, fieldData);
-        
+
                     session.commit();
-        
+
                     return Response.ok(result).build();
                 } catch (ConstraintException ce) {
                     return getConstraintMessageResponse(ce);
@@ -588,7 +599,7 @@ public abstract class EditorResource {
         String path = null;
         return removeFieldValues(databaseId, path, topicId, viewId, fieldId, fieldData);
     }
-    
+
     @POST
     @Produces(APPLICATION_JSON_UTF8)
     @Consumes(APPLICATION_JSON_UTF8)
@@ -614,12 +625,15 @@ public abstract class EditorResource {
             PrestoContextRules rules = session.getPrestoContextRules(context);
 
             if (!rules.isReadOnlyField(field) && rules.isRemovableField(field)) {
-                FieldData result =  session.removeFieldValues(rules, field, fieldData);
-    
-                session.commit();
-    
-                return Response.ok(result).build();
-                
+                try {
+                    FieldData result =  session.removeFieldValues(rules, field, fieldData);
+
+                    session.commit();
+
+                    return Response.ok(result).build();
+                } catch (ConstraintException ce) {
+                    return getConstraintMessageResponse(ce);
+                }
             } else {
                 // 403
                 return Response.status(Status.FORBIDDEN).build();
@@ -696,11 +710,11 @@ public abstract class EditorResource {
             }
 
             PrestoFieldUsage field = context.getFieldById(fieldId);
-            
+
             PrestoContextRules rules = session.getPrestoContextRules(context);
             AvailableFieldValues result = session.getAvailableFieldValuesInfo(rules, field, query);
             return Response.ok(result).build();
-            
+
         } catch (Exception e) {
             session.abort();
             throw e;
@@ -708,7 +722,7 @@ public abstract class EditorResource {
             session.close();      
         }
     }
-    
+
     @GET
     @Produces(APPLICATION_JSON_UTF8)
     @Path("available-field-types/{databaseId}/{topicId}/{viewId}/{fieldId}")
@@ -731,7 +745,7 @@ public abstract class EditorResource {
 
             PrestoFieldUsage field = context.getFieldById(fieldId);
             PrestoContextRules rules = session.getPrestoContextRules(context);
-            
+
             AvailableFieldTypes result = session.getAvailableFieldTypesInfo(rules, field);
             return Response.ok(result).build();
 
@@ -766,16 +780,16 @@ public abstract class EditorResource {
     // overridable methods
 
     public abstract class EditorResourcePresto extends Presto {
-        
+
         public EditorResourcePresto(String databaseId, String databaseName, PrestoSchemaProvider schemaProvider, PrestoDataProvider dataProvider) {
             super(databaseId, databaseName, schemaProvider, dataProvider);
         }
-        
+
         @Override
         public URI getBaseUri() {
             return uriInfo.getBaseUri();
         }
-        
+
         @Override
         protected ChangeSetHandler getChangeSetHandler() {
             return new DefaultChangeSetHandler() {
@@ -784,7 +798,7 @@ public abstract class EditorResource {
                 protected PrestoSchemaProvider getSchemaProvider() {
                     return EditorResourcePresto.this.getSchemaProvider();
                 }
-                
+
                 @Override
                 public void onAfterSave(PrestoChangeSet changeSet, PrestoChanges changes) {
                     for (PrestoUpdate create : changes.getCreated()) {
@@ -817,9 +831,9 @@ public abstract class EditorResource {
             };
         }
     }
-    
+
     protected abstract Presto createPresto(String databaseId, boolean readOnlyMode);
-    
+
     protected abstract Collection<String> getDatabaseIds();
 
     protected abstract String getDatabaseName(String databaseId);
@@ -829,7 +843,7 @@ public abstract class EditorResource {
 
     protected void onTopicUpdated(PrestoTopic topic) {      
     }
-    
+
     protected void onTopicDeleted(PrestoTopic topic) {      
     }
 
