@@ -14,9 +14,9 @@ import java.util.Set;
 
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoView.ViewType;
+import net.ontopia.presto.spi.utils.Utils;
 
 import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
 import org.slf4j.Logger;
@@ -41,8 +41,7 @@ public class PojoSchemaModel {
                 throw new RuntimeException("Cannot find schema file: " + schemaFilename);
             }
             Reader reader = new InputStreamReader(istream, "UTF-8");
-            ObjectMapper mapper = new ObjectMapper();
-            ObjectNode objectNode = mapper.readValue(reader, ObjectNode.class);
+            ObjectNode objectNode = Utils.DEFAULT_OBJECT_MAPPER.readValue(reader, ObjectNode.class);
             
             return createSchemaProvider(databaseId, objectNode);
             

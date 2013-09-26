@@ -20,14 +20,14 @@ import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
+import net.ontopia.presto.spi.utils.Utils;
 
 import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
 
 public class DataLoader {
-    
+
     private PrestoDataProvider dataProvider;
     private PrestoSchemaProvider schemaProvider;
     
@@ -58,8 +58,7 @@ public class DataLoader {
                 throw new RuntimeException("Cannot find schema file: " + filename);
             }
             Reader reader = new InputStreamReader(istream, "UTF-8");
-            ObjectMapper mapper = new ObjectMapper();
-            ArrayNode data = mapper.readValue(reader, ArrayNode.class);
+            ArrayNode data = Utils.DEFAULT_OBJECT_MAPPER.readValue(reader, ArrayNode.class);
             readData(data);
 
         } catch (Exception e) {

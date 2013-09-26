@@ -15,6 +15,7 @@ import net.ontopia.presto.spi.resolve.PrestoFieldResolver;
 import net.ontopia.presto.spi.utils.PrestoPagedValues;
 import net.ontopia.presto.spi.utils.PrestoVariableContext;
 import net.ontopia.presto.spi.utils.PrestoVariableResolver;
+import net.ontopia.presto.spi.utils.Utils;
 import net.vz.mongodb.jackson.JacksonDBCollection;
 import net.vz.mongodb.jackson.MongoJsonMappingException;
 import net.vz.mongodb.jackson.internal.object.BsonObjectGenerator;
@@ -38,11 +39,13 @@ public abstract class MongoFieldResolver extends PrestoFieldResolver {
 
     private static Logger log = LoggerFactory.getLogger(MongoFieldResolver.class);
 
-    private final ObjectMapper mapper = new ObjectMapper();
-
     protected abstract DB getDB();
 
     protected abstract PrestoTopic existingTopic(ObjectNode doc);
+
+    protected ObjectMapper getObjectMapper() {
+        return Utils.DEFAULT_OBJECT_MAPPER;
+    }
 
     @Override
     public PagedValues resolve(Collection<? extends Object> objects,
@@ -135,13 +138,13 @@ public abstract class MongoFieldResolver extends PrestoFieldResolver {
         if (o == null) {
             return null;
         } else if (o.isArray()) {
-            ArrayNode list = mapper.createArrayNode();
+            ArrayNode list = getObjectMapper().createArrayNode();
             for (JsonNode v : o) {
                 list.add(replaceKeywords(v));
             }
             return list;
         } else if (o.isObject()) {
-            ObjectNode obj = mapper.createObjectNode();
+            ObjectNode obj = getObjectMapper().createObjectNode();
             Iterator<String> iter = o.getFieldNames();
             while (iter.hasNext()) {
                 String fieldName = iter.next();
@@ -163,7 +166,7 @@ public abstract class MongoFieldResolver extends PrestoFieldResolver {
         }
         BsonObjectGenerator generator = new BsonObjectGenerator();
         try {
-            mapper.writeValue(generator, object);
+            getObjectMapper().writeValue(generator, object);
         } catch (JsonMappingException e) {
             throw new MongoJsonMappingException(e);
         } catch (IOException e) {

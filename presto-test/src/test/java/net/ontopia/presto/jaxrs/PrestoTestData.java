@@ -15,11 +15,11 @@ import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
+import net.ontopia.presto.spi.utils.Utils;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonToken;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
 import org.junit.Test;
 
@@ -27,11 +27,10 @@ public class PrestoTestData {
 
     public static void loadData(PrestoTestContext ctx, String resource) throws Exception {
 
-        ObjectMapper mapper = new ObjectMapper();
         InputStream istream = getInputStream(resource);
         if (istream != null) {
             try {
-                JsonParser jp = mapper.getJsonFactory().createJsonParser(istream);
+                JsonParser jp = Utils.DEFAULT_OBJECT_MAPPER.getJsonFactory().createJsonParser(istream);
                 jp.nextToken(); // ignore array start
                 while (jp.nextToken() == JsonToken.START_OBJECT) {
                     ObjectNode doc = jp.readValueAs(ObjectNode.class);

@@ -16,13 +16,14 @@ import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.Change;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.DefaultDataProvider;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.DefaultTopic;
 import net.ontopia.presto.spi.utils.PrestoVariableResolver;
+import net.ontopia.presto.spi.utils.Utils;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
 
 public abstract class JacksonDataProvider implements DefaultDataProvider {
-
+    
     protected final ObjectMapper mapper;
     protected final JacksonDataStrategy dataStrategy;
     protected final JacksonDataStrategy inlineDataStrategy;
@@ -38,7 +39,7 @@ public abstract class JacksonDataProvider implements DefaultDataProvider {
     }
 
     protected ObjectMapper createObjectMapper() {
-        return new ObjectMapper();
+        return Utils.DEFAULT_OBJECT_MAPPER;
     }
 
     abstract protected JacksonDataStrategy createDataStrategy(ObjectMapper mapper);

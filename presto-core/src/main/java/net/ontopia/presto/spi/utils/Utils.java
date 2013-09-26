@@ -1,9 +1,12 @@
 package net.ontopia.presto.spi.utils;
 
+import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Utils {
+
+    public static final ObjectMapper DEFAULT_OBJECT_MAPPER = new ObjectMapper();
 
     private static Logger log = LoggerFactory.getLogger(Utils.class);
 
