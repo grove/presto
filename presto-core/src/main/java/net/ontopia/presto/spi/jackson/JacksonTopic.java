@@ -2,8 +2,10 @@ package net.ontopia.presto.spi.jackson;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import net.ontopia.presto.spi.PrestoField;
@@ -212,6 +214,20 @@ public class JacksonTopic implements DefaultTopic {
         }
     }
 
+    private String getNeutralValueKey(PrestoField field, Object value) {
+        if (field.isInline()) {
+            ObjectNode node = (ObjectNode)value;
+            String id = node.path("_id").getTextValue();
+            if (id != null) {
+                return id;
+            } else {
+                throw new RuntimeException("Cannot find object id in inline object: " + node);
+            }
+        } else {
+            return (String)value;
+        }
+    }
+
     @Override
     public void setValue(PrestoField field, Collection<? extends Object> values) {
         ArrayNode arrayNode = dataProvider.getObjectMapper().createArrayNode();
@@ -233,53 +249,68 @@ public class JacksonTopic implements DefaultTopic {
     @Override
     public void addValue(PrestoField field, Collection<? extends Object> values, int index) {
         if (!values.isEmpty()) {
+            ArrayNode arrayNode = dataProvider.getObjectMapper().createArrayNode();
 
-            // remove duplicates (new)
-            Set<Object> addableValues = new LinkedHashSet<Object>(values.size()); 
-            for (Object value : values) {
-                addableValues.add(convertExternalToNeutral(value));
-            }
+            ArrayNode existingNode = getFieldValue(field);
 
-            // remove duplicates (existing)
-            Set<Object> existingValues = new LinkedHashSet<Object>();
-            ArrayNode jsonNode = getFieldValue(field);
-            if (jsonNode != null) {
-                for (JsonNode existing : jsonNode) {
-                    existingValues.add(convertInternalToNeutralValue(existing));
-                }
-            }
-
-            List<Object> result = new ArrayList<Object>(existingValues.size() + addableValues.size());
-            for (Object value : existingValues) {
-                result.add(value);
-            }
-
-            // remove duplicate values and decrement calculated index
-            int calculatedIndex = index >= 0 && index < existingValues.size() ? index : existingValues.size();
-            if (!result.isEmpty()) {
-                for (Object value : addableValues) {
-                    int valueIndex = result.indexOf(value);
-                    if (valueIndex >= 0) {
-                        if (valueIndex < calculatedIndex) {
-                            calculatedIndex--;
-                        } 
-                        result.remove(valueIndex);
+            if (existingNode == null || existingNode.size() == 0) {
+                Set<String> addableValues = new LinkedHashSet<String>(values.size()); 
+                for (Object addableValue : values) {
+                    Object addableNeutralValue = convertExternalToNeutral(addableValue);
+                    String addableNeutralValueKey = getNeutralValueKey(field, addableNeutralValue);
+                    if (!addableValues.contains(addableNeutralValueKey)) {
+                        addNeutralValue(arrayNode, addableNeutralValue);
+                        addableValues.add(addableNeutralValueKey);
                     }
                 }
-            }
-            
-            // insert new values at calculated index
-            if (calculatedIndex >= 0) {
-                result.addAll(calculatedIndex, addableValues);
             } else {
-                result.addAll(addableValues);
-            }
-            // create new array node
-            ArrayNode arrayNode = dataProvider.getObjectMapper().createArrayNode();
-            for (Object ev : result) {
-                addNeutralValue(arrayNode, ev);
+                
+                // new values
+                Map<String,Object> addableValues = new LinkedHashMap<String,Object>(values.size()); 
+                for (Object addableValue : values) {
+                    Object addableNeutralValue = convertExternalToNeutral(addableValue);
+                    String addableNeutralValueKey = getNeutralValueKey(field, addableNeutralValue);
+                    addableValues.put(addableNeutralValueKey, addableNeutralValue);
+                }
+
+                int existingSize = existingNode.size();
+                
+                Map<String,Object> result = new LinkedHashMap<String,Object>(existingSize + addableValues.size());
+                
+                int c=0;
+                for (JsonNode existing : existingNode) {
+                    if (c == index) {
+                        addAddableValuesToMap(addableValues, result);
+                    }
+                    c++;
+
+                    Object existingNeutralValue = convertInternalToNeutralValue(existing);
+                    String existingNeutralValueKey = getNeutralValueKey(field, existingNeutralValue);
+
+                    if (addableValues.containsKey(existingNeutralValueKey) || result.containsKey(existingNeutralValueKey)) {
+                        continue;
+                    } else {
+                        result.put(existingNeutralValueKey, existingNeutralValue);
+                    }
+                }
+                if (index < 0 || index >= c) {
+                    addAddableValuesToMap(addableValues, result);
+                }
+                for (Object ev : result.values()) {
+                    addNeutralValue(arrayNode, ev);
+                }
             }
             putFieldValue(field, arrayNode);
+        }
+    }
+
+    private void addAddableValuesToMap(Map<String, Object> addableValues, Map<String, Object> result) {
+        for (String addableNeutralValueKey : addableValues.keySet()) {
+            if (result.containsKey(addableNeutralValueKey)) {
+                continue;
+            }
+            Object addableNeutralValue = addableValues.get(addableNeutralValueKey);
+            result.put(addableNeutralValueKey, addableNeutralValue);
         }
     }
 
@@ -288,21 +319,26 @@ public class JacksonTopic implements DefaultTopic {
         if (!values.isEmpty()) {
             ArrayNode jsonNode = getFieldValue(field);
             if (jsonNode != null) {
-                Collection<Object> existing = new LinkedHashSet<Object>(jsonNode.size());
+                ArrayNode arrayNode  = dataProvider.getObjectMapper().createArrayNode();
+                Map<String, Object> existing = new LinkedHashMap<String,Object>(jsonNode.size());
                 for (JsonNode item : jsonNode) {
-                    existing.add(convertInternalToNeutralValue(item));
+                    Object existingValue = convertInternalToNeutralValue(item);
+                    String key = getNeutralValueKey(field, existingValue);
+                    if (!existing.containsKey(key)) {
+                        existing.put(key, existingValue);
+                    }
                 }
                 for (Object value : values) {
-                    // TODO: internal topics will not be exactly the same, but share id
-                    existing.remove(convertExternalToNeutral(value));
+                    Object removableValue = convertExternalToNeutral(value);
+                    String id = getNeutralValueKey(field, removableValue);
+                    existing.remove(id);
                 }
-                ArrayNode arrayNode  = dataProvider.getObjectMapper().createArrayNode();
-                for (Object ev : existing) {
+                for (Object ev : existing.values()) {
                     addNeutralValue(arrayNode, ev);
                 }
                 putFieldValue(field, arrayNode);
             }
         }
     }
-
+    
 }
