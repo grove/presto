@@ -40,6 +40,8 @@ public class JacksonTopicTest {
     
     private PrestoTopic createInlineTopic(PrestoType type, String topicId) {
         PrestoInlineTopicBuilder builder = dataProvider.createInlineTopic(type, topicId);
+        PrestoField nameField = type.getFieldById("name");
+        builder.setValues(nameField, Arrays.asList(topicId.toLowerCase()));
         return builder.build();
     }
     
