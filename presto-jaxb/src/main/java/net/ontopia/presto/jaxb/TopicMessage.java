@@ -14,6 +14,15 @@ public class TopicMessage {
     private String title;
     private String message;
 
+    public TopicMessage() {
+    }
+
+    public TopicMessage(String type, String title, String message) {
+        this.type = type;
+        this.title = title;
+        this.message = message;
+    }
+    
     public String getType() {
         return type;
     }

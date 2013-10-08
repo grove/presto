@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -285,7 +286,7 @@ public abstract class Presto {
             if (!allFieldsReadOnly && rules.isUpdatableType()) {
                 links.add(new Link("update", href));
             }
-            if (rules.isRemovableType()) {
+            if (rules.isRemovableType() && rules.isDeletableType()) {
                 links.add(new Link("delete", href));
             }
             if (rules.isCreatableType() && !type.isInline()) {
@@ -1007,8 +1008,8 @@ public abstract class Presto {
         boolean resolveEmbedded = true;
         boolean includeExisting = false;
         boolean filterNonStorable = true;
-
-        List<? extends Object> addableValues = updateAndExtractValuesFromFieldData(rules, field, fieldData, resolveEmbedded, includeExisting, filterNonStorable);
+        boolean validateValueTypes = true;
+        List<? extends Object> addableValues = updateAndExtractValuesFromFieldData(rules, field, fieldData, resolveEmbedded, includeExisting, filterNonStorable, validateValueTypes);
         
         PrestoTopic topicAfterSave = addFieldValues(rules, field, addableValues, index);
 
@@ -1019,8 +1020,8 @@ public abstract class Presto {
         boolean resolveEmbedded = false;
         boolean includeExisting = false;
         boolean filterNonStorable = true;
-
-        List<? extends Object> removeableValues = updateAndExtractValuesFromFieldData(rules, field, fieldData, resolveEmbedded, includeExisting, filterNonStorable);
+        boolean validateValueTypes = false;
+        List<? extends Object> removeableValues = updateAndExtractValuesFromFieldData(rules, field, fieldData, resolveEmbedded, includeExisting, filterNonStorable, validateValueTypes);
 
         PrestoTopic topicAfterSave = removeFieldValues(rules, field, removeableValues);
 
@@ -1048,6 +1049,8 @@ public abstract class Presto {
     }
 
     public PrestoTopic addFieldValues(PrestoContextRules rules, PrestoFieldUsage field, List<? extends Object> addableValues, Integer index) {
+        validateAddableFieldValues(rules, field, addableValues);
+
         PrestoContext context = rules.getContext();
         PrestoTopic topic = context.getTopic();
         PrestoType type = context.getType();
@@ -1067,6 +1070,8 @@ public abstract class Presto {
     }
 
     public PrestoTopic removeFieldValues(PrestoContextRules rules, PrestoFieldUsage field, List<? extends Object> removeableValues) {
+        validateRemovableFieldValues(rules, field, removeableValues);
+        
         PrestoContext context = rules.getContext();
         PrestoTopic topic = context.getTopic();
         PrestoType type = context.getType();
@@ -1081,6 +1086,36 @@ public abstract class Presto {
         return update.getTopicAfterSave();
     }
 
+    private void validateAddableFieldValues(PrestoContextRules rules, PrestoFieldUsage field, List<? extends Object> addableValues) {
+        for (Object addableValue : addableValues) {
+            // make sure that non-addable values are not added
+            if (!rules.isAddableFieldValue(field, addableValue)) {
+                throw new NotAddableValueConstraintException(rules.getContext(), field, addableValue);
+            }
+        }
+    }
+
+    private void validateRemovableFieldValues(PrestoContextRules rules, PrestoFieldUsage field, List<? extends Object> removableValues) {
+        for (Object removableValue : removableValues) {
+            // make sure that non-removable values are not removed
+            if (!rules.isRemovableFieldValue(field, removableValue)) {
+                throw new NotRemovableValueConstraintException(rules.getContext(), field, removableValue);
+            }
+            // make sure that inline types cannot be removed if the type is  not removable
+            if (removableValue instanceof PrestoTopic) {
+                PrestoTopic removableTopic = (PrestoTopic)removableValue;
+                PrestoType removableType = schemaProvider.getTypeById(removableTopic.getTypeId());
+                if (removableType.isInline()) {
+                    PrestoContext subcontext = PrestoContext.createSubContext(rules.getContext(), field, removableTopic, removableType, field.getValueView(removableType));
+                    PrestoContextRules subrules = getPrestoContextRules(subcontext);
+                    if (!subrules.isRemovableType()) {
+                        throw new NotRemovableValueTypeConstraintException(rules.getContext(), field, removableValue);
+                    }
+                }
+            }
+        }
+    }
+    
     public TopicView validateTopic(PrestoContext context, TopicView topicView) {
         PrestoContextRules rules = getPrestoContextRules(context);
         Status status = new Status();
@@ -1154,8 +1189,8 @@ public abstract class Presto {
 
                     boolean resolveEmbedded = true;
                     boolean includeExisting = false;
-
-                    List<? extends Object> values = updateAndExtractValuesFromFieldData(rules, field, fieldData, resolveEmbedded, includeExisting, filterNonStorable);
+                    boolean validateValueTypes = true;
+                    List<? extends Object> values = updateAndExtractValuesFromFieldData(rules, field, fieldData, resolveEmbedded, includeExisting, filterNonStorable, validateValueTypes);
                     
                     update.setValues(field, values);
                 }
@@ -1168,14 +1203,14 @@ public abstract class Presto {
     }
 
     private List<? extends Object> updateAndExtractValuesFromFieldData(PrestoContextRules rules, PrestoFieldUsage field, FieldData fieldData, 
-            boolean resolveEmbedded, boolean includeExisting, boolean filterNonStorable) {
+            boolean resolveEmbedded, boolean includeExisting, boolean filterNonStorable, boolean validateValueTypes) {
         Collection<Value> values = fieldData.getValues();
         List<Object> result = new ArrayList<Object>(values.size());
 
         if (!values.isEmpty()) {
+            PrestoContext context = rules.getContext();
 
             if (field.isReferenceField()) {
-                PrestoContext context = rules.getContext();
                 if (field.isInline()) {
                     // build inline topics from field data
                     List<Object> newValues = new ArrayList<Object>();
@@ -1189,7 +1224,7 @@ public abstract class Presto {
                             if (type != null) {
                                 newValues.add(buildInlineTopic(context, type, value.getValue()));
                             } else {
-                                log.warn("Ignoring value because it is of unknown type: " + value);
+                                throw new InvalidValueTypeConstraintException(getSchemaProvider());
                             }
                         }
                     }
@@ -1218,14 +1253,43 @@ public abstract class Presto {
                         result.addAll(getDataProvider().getTopicsByIds(valueIds));
                     }
                 }
+                // validate valueTypes
+                if (validateValueTypes) {
+                    validateValueTypes(context, field, result);
+                }
+                
             } else {
                 for (Value value : values) {
                     result.add(getPrimitiveValue(value));
                 }
             }
+
+            // filter out non-storable values
+            if (filterNonStorable) {
+                removeNonStorableFieldValues(rules, field, result);
+            }
         }
-        if (filterNonStorable) {
-            removeNonStorableFieldValues(rules, field, result);
+        return result;
+    }
+
+    private void validateValueTypes(PrestoContext context, PrestoFieldUsage field, List<Object> values) {
+        Collection<String> valueTypeIds = getAvailableFieldValueTypesId(context, field);
+        for (Object value : values) {
+            PrestoTopic v = (PrestoTopic)value;
+            if (!valueTypeIds.contains(v.getTypeId())) {
+                throw new InvalidValueTypeConstraintException(getSchemaProvider());
+            }
+        }
+    }
+
+    private Collection<String> getAvailableFieldValueTypesId(PrestoContext context, PrestoFieldUsage field) {
+        Collection<PrestoType> valueTypes = getAvailableFieldValueTypes(context, field);
+        if (valueTypes.isEmpty()) {
+            return Collections.emptySet();
+        }
+        Collection<String> result = new HashSet<String>(valueTypes.size());
+        for (PrestoType valueType : valueTypes) {
+            result.add(valueType.getId());
         }
         return result;
     }
@@ -1256,7 +1320,7 @@ public abstract class Presto {
         PrestoType type = schemaProvider.getTypeById(topicTypeId);
 
         if (!type.isInline()) {
-            throw new RuntimeException("Type " + type.getId() + " is not an inline type.");
+            throw new NotInlineTypeConstraintException(getSchemaProvider());
         }
 
         PrestoTopic topic;
@@ -1281,7 +1345,8 @@ public abstract class Presto {
 
             boolean resolveEmbedded = true;
             boolean includeExisting = false;
-            List<? extends Object> values = updateAndExtractValuesFromFieldData(subrules, field, fieldData, resolveEmbedded, includeExisting, filterNonStorable);
+            boolean validateValueTypes = false;
+            List<? extends Object> values = updateAndExtractValuesFromFieldData(subrules, field, fieldData, resolveEmbedded, includeExisting, filterNonStorable, validateValueTypes);
             builder.setValues(field, values);
         }
 

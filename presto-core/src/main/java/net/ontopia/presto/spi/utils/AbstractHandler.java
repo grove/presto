@@ -8,7 +8,6 @@ import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 
 import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
 
 public class AbstractHandler implements Handler {
@@ -48,8 +47,6 @@ public class AbstractHandler implements Handler {
     }
     
     // -- statics
-
-    private static final ObjectMapper mapper = new ObjectMapper();
 
     public static <T extends Handler> Iterable<T> getHandlers(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, Class<T> klass, JsonNode processorsNode) {
         if (processorsNode.isArray()) {
@@ -96,19 +93,19 @@ public class AbstractHandler implements Handler {
 //        log.warn("Could not find processor for config: {}", processorNode);
         return null;
     }
-    
+
     private static ObjectNode mergeObjectNodes(JsonNode n1, JsonNode n2) {
         if (n1.isObject() && n2.isObject()) {
-            ObjectNode result = mapper.createObjectNode();
+            ObjectNode result = Utils.DEFAULT_OBJECT_MAPPER.createObjectNode();
             result.putAll((ObjectNode)n1);
             result.putAll((ObjectNode)n2);
             return result;
         } else if (n1.isObject()) {
-            ObjectNode result = mapper.createObjectNode();
+            ObjectNode result = Utils.DEFAULT_OBJECT_MAPPER.createObjectNode();
             result.putAll((ObjectNode)n1);
             return result;
         } else if (n2.isObject()) {
-            ObjectNode result = mapper.createObjectNode();
+            ObjectNode result = Utils.DEFAULT_OBJECT_MAPPER.createObjectNode();
             result.putAll((ObjectNode)n2);
             return result;
         } else {

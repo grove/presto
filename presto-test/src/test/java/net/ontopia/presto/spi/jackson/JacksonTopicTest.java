@@ -40,6 +40,8 @@ public class JacksonTopicTest {
     
     private PrestoTopic createInlineTopic(PrestoType type, String topicId) {
         PrestoInlineTopicBuilder builder = dataProvider.createInlineTopic(type, topicId);
+        PrestoField nameField = type.getFieldById("name");
+        builder.setValues(nameField, Arrays.asList(topicId.toLowerCase()));
         return builder.build();
     }
     
@@ -198,6 +200,41 @@ public class JacksonTopicTest {
     }
 
     @Test
+    public void testTopicAddValuesDuplicates() {
+        PrestoType type = schemaProvider.getTypeById("sometype");
+        PrestoType vtype = schemaProvider.getTypeById("external-type");
+
+        PrestoField field = type.getFieldById("topics");
+        isReferenceField(field);
+        
+        JacksonTopic topic = (JacksonTopic)createTopic(type, "t1");
+        
+        // add A, B (at end)
+        topic.addValue(field, topics(vtype, "A", "B", "A", "B"), -1);        
+        JacksonTest.assertValuesEquals(topics(vtype, "A", "B"), topic.getValues(field));
+        
+        // add C, D, E (at end)
+        topic.addValue(field, topics(vtype, "C", "D", "E", "C", "D", "E"), -1);        
+        JacksonTest.assertValuesEquals(topics(vtype, "A", "B", "C", "D", "E"), topic.getValues(field));
+        
+        // add F, G at index 0
+        topic.addValue(field, topics(vtype, "F", "G", "F", "G"), 0);        
+        JacksonTest.assertValuesEquals(topics(vtype, "F", "G", "A", "B", "C", "D", "E"), topic.getValues(field));
+
+        // add H, I at index 4
+        topic.addValue(field, topics(vtype, "H", "I", "H", "I"), 4);        
+        JacksonTest.assertValuesEquals(topics(vtype, "F", "G", "A", "B", "H", "I", "C", "D", "E"), topic.getValues(field));
+
+        // add J at index 9
+        topic.addValue(field, topics(vtype, "J"), 9);        
+        JacksonTest.assertValuesEquals(topics(vtype, "F", "G", "A", "B", "H", "I", "C", "D", "E", "J"), topic.getValues(field));
+
+        // add K at index 100
+        topic.addValue(field, topics(vtype, "K"), 100);        
+        JacksonTest.assertValuesEquals(topics(vtype, "F", "G", "A", "B", "H", "I", "C", "D", "E", "J", "K"), topic.getValues(field));
+    }
+
+    @Test
     public void testTopicRemoveValues() {
         PrestoType type = schemaProvider.getTypeById("sometype");
         PrestoType vtype = schemaProvider.getTypeById("external-type");
@@ -219,12 +256,43 @@ public class JacksonTopicTest {
         topic.removeValue(field, topics(vtype, "F", "D"));        
         JacksonTest.assertValuesEquals(topics(vtype, "C", "E", "G", "H", "I"), topic.getValues(field));
         
-        // remove C, I
-        topic.removeValue(field, topics(vtype, "C", "I"));        
+        // remove C, I, X (non-existent)
+        topic.removeValue(field, topics(vtype, "C", "I", "X"));        
         JacksonTest.assertValuesEquals(topics(vtype, "E", "G", "H"), topic.getValues(field));
         
         // remove E, G, H
         topic.removeValue(field, topics(vtype, "G", "E", "H"));        
+        JacksonTest.assertValuesEquals(topics(vtype), topic.getValues(field));
+    }
+
+    @Test
+    public void testTopicRemoveValuesDuplicates() {
+        PrestoType type = schemaProvider.getTypeById("sometype");
+        PrestoType vtype = schemaProvider.getTypeById("external-type");
+
+        PrestoField field = type.getFieldById("topics");
+        isReferenceField(field);
+        
+        JacksonTopic topic = (JacksonTopic)createTopic(type, "t2");
+        
+        // add A, B, C, D, E, F, G, H, I (at end)
+        topic.addValue(field, topics(vtype, "A", "B", "C", "D", "E", "F", "G", "H", "I"), -1);        
+        JacksonTest.assertValuesEquals(topics(vtype, "A", "B", "C", "D", "E", "F", "G", "H", "I"), topic.getValues(field));
+        
+        // remove A, B
+        topic.removeValue(field, topics(vtype, "A", "B", "A", "B"));        
+        JacksonTest.assertValuesEquals(topics(vtype, "C", "D", "E", "F", "G", "H", "I"), topic.getValues(field));
+        
+        // remove D, F
+        topic.removeValue(field, topics(vtype, "F", "D", "F", "D"));        
+        JacksonTest.assertValuesEquals(topics(vtype, "C", "E", "G", "H", "I"), topic.getValues(field));
+        
+        // remove C, I, X (non-existent)
+        topic.removeValue(field, topics(vtype, "C", "I", "X", "C", "I", "X"));        
+        JacksonTest.assertValuesEquals(topics(vtype, "E", "G", "H"), topic.getValues(field));
+        
+        // remove E, G, H
+        topic.removeValue(field, topics(vtype, "G", "E", "H", "G", "E", "H"));        
         JacksonTest.assertValuesEquals(topics(vtype), topic.getValues(field));
     }
 
