@@ -15,7 +15,8 @@ public class PrestoContextRules {
         isReadOnlyType,
         isUpdatableType,
         isCreatableType,
-        isRemovableType
+        isRemovableType, 
+        isDeletableType
     }
 
     public enum FieldFlag {
@@ -129,15 +130,19 @@ public class PrestoContextRules {
     public boolean isUpdatableType() {
         return isTypeHandlerFlag(TypeFlag.isUpdatableType, true);
     }
-
+    
     public boolean isCreatableType() {
         return isTypeHandlerFlag(TypeFlag.isCreatableType, type.isCreatable());
     }
-
+    
     public boolean isRemovableType() {
         return isTypeHandlerFlag(TypeFlag.isRemovableType, type.isRemovable());
     }
-
+    
+    public boolean isDeletableType() {
+        return isTypeHandlerFlag(TypeFlag.isDeletableType, type.isRemovable());
+    }
+    
 
     // characteristics
 

@@ -9,8 +9,8 @@ public class NotInlineTypeConstraintException extends DefaultConstraintException
     }
 
     @Override
-    protected String getMessageKey() {
-        return "not-inline-type";
+    protected String[] getMessageKeys() {
+        return new String[] { "not-inline-type" };
     }
     
 }

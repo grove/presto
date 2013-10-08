@@ -286,7 +286,7 @@ public abstract class Presto {
             if (!allFieldsReadOnly && rules.isUpdatableType()) {
                 links.add(new Link("update", href));
             }
-            if (rules.isRemovableType()) {
+            if (rules.isRemovableType() && rules.isDeletableType()) {
                 links.add(new Link("delete", href));
             }
             if (rules.isCreatableType() && !type.isInline()) {
@@ -1049,6 +1049,8 @@ public abstract class Presto {
     }
 
     public PrestoTopic addFieldValues(PrestoContextRules rules, PrestoFieldUsage field, List<? extends Object> addableValues, Integer index) {
+        validateAddableFieldValues(rules, field, addableValues);
+
         PrestoContext context = rules.getContext();
         PrestoTopic topic = context.getTopic();
         PrestoType type = context.getType();
@@ -1068,6 +1070,8 @@ public abstract class Presto {
     }
 
     public PrestoTopic removeFieldValues(PrestoContextRules rules, PrestoFieldUsage field, List<? extends Object> removeableValues) {
+        validateRemovableFieldValues(rules, field, removeableValues);
+        
         PrestoContext context = rules.getContext();
         PrestoTopic topic = context.getTopic();
         PrestoType type = context.getType();
@@ -1082,6 +1086,36 @@ public abstract class Presto {
         return update.getTopicAfterSave();
     }
 
+    private void validateAddableFieldValues(PrestoContextRules rules, PrestoFieldUsage field, List<? extends Object> addableValues) {
+        for (Object addableValue : addableValues) {
+            // make sure that non-addable values are not added
+            if (!rules.isAddableFieldValue(field, addableValue)) {
+                throw new NotAddableValueConstraintException(rules.getContext(), field, addableValue);
+            }
+        }
+    }
+
+    private void validateRemovableFieldValues(PrestoContextRules rules, PrestoFieldUsage field, List<? extends Object> removableValues) {
+        for (Object removableValue : removableValues) {
+            // make sure that non-removable values are not removed
+            if (!rules.isRemovableFieldValue(field, removableValue)) {
+                throw new NotRemovableValueConstraintException(rules.getContext(), field, removableValue);
+            }
+            // make sure that inline types cannot be removed if the type is  not removable
+            if (removableValue instanceof PrestoTopic) {
+                PrestoTopic removableTopic = (PrestoTopic)removableValue;
+                PrestoType removableType = schemaProvider.getTypeById(removableTopic.getTypeId());
+                if (removableType.isInline()) {
+                    PrestoContext subcontext = PrestoContext.createSubContext(rules.getContext(), field, removableTopic, removableType, field.getValueView(removableType));
+                    PrestoContextRules subrules = getPrestoContextRules(subcontext);
+                    if (!subrules.isRemovableType()) {
+                        throw new NotRemovableValueTypeConstraintException(rules.getContext(), field, removableValue);
+                    }
+                }
+            }
+        }
+    }
+    
     public TopicView validateTopic(PrestoContext context, TopicView topicView) {
         PrestoContextRules rules = getPrestoContextRules(context);
         Status status = new Status();

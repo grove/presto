@@ -14,12 +14,7 @@ public abstract class BooleanTypeRule extends AbstractHandler implements TypeRul
     public Boolean getValue(TypeFlag flag, PrestoContext context) {
         ObjectNode config = getConfig();
         if (config != null) {
-            boolean result = evaluateType(flag, context, config);
-//            if (result) {
-//                JsonNode valueNode = config.path("value");
-//                return valueNode.isBoolean() ? valueNode.getBooleanValue() : true;
-//            }
-            return result;
+            return evaluateType(flag, context, config);
         }
         return null;
     }

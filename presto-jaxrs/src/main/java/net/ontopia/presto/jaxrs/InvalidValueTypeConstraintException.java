@@ -9,8 +9,8 @@ public class InvalidValueTypeConstraintException extends DefaultConstraintExcept
     }
 
     @Override
-    protected String getMessageKey() {
-        return "invalid-value-type";
+    protected String[] getMessageKeys() {
+        return new String[] { "invalid-value-type" };
     }
 
 }
