@@ -4,7 +4,7 @@ public interface PrestoView {
 
     enum ViewType { 
 
-        EDIT_IN_VIEW("edit-in-view"), COLUMN_VIEW("column-view");
+        NORMAL_VIEW("normal-view"), COLUMN_VIEW("column-view"), EXTERNAL_VIEW("external-view");
         
         private String typeId;
         private ViewType(String typeId) {
@@ -21,7 +21,7 @@ public interface PrestoView {
                     return vt;
                 }
             }
-            return ViewType.EDIT_IN_VIEW;
+            return ViewType.NORMAL_VIEW;
         }
     };
     

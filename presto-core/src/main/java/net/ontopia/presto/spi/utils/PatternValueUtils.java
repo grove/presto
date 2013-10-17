@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 
 import org.codehaus.jackson.JsonNode;
@@ -22,6 +23,12 @@ public class PatternValueUtils {
         return null;
     }
 
+    public static String getValueByPattern(PrestoSchemaProvider schemaProvider, PrestoContext context, String pattern) {
+        PrestoVariableResolver variableResolver = new PrestoTopicWithParentFieldVariableResolver(schemaProvider, context);
+        PrestoTopic topic = context.getTopic();
+        return PatternValueUtils.getValueByPattern(variableResolver, topic, pattern);
+    }
+    
     private static String getValueByPattern(PrestoVariableResolver variableResolver, Object value, String pattern) {
         String result = pattern;
         Matcher matcher = Pattern.compile("\\$\\{([\\:\\.\\-\\w]+)\\}").matcher(pattern);

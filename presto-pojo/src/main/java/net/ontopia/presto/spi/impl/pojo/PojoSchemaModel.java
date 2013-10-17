@@ -163,6 +163,7 @@ public class PojoSchemaModel {
             if (typeConfig.has("views")) {
                 createViews(typeConfig, type, readOnlyDefault);
             }
+
             types.put(typeId, type);
         }
 
@@ -196,7 +197,7 @@ public class PojoSchemaModel {
                 }
 
                 // type
-                ViewType viewType = ViewType.EDIT_IN_VIEW;
+                ViewType viewType = ViewType.NORMAL_VIEW;
                 if (viewConfig.has("type")) {
                     viewType = ViewType.findByTypeId(viewConfig.get("type").getTextValue());
                 }
@@ -214,9 +215,11 @@ public class PojoSchemaModel {
 
         private void createFields(PojoType type, ObjectNode viewConfig, boolean readOnlyDefault, PojoView view) {
             ArrayNode fieldsArray = (ArrayNode)viewConfig.get("fields");
-            for (JsonNode fieldNode : fieldsArray) {
-                PojoField field = createField(type, view, readOnlyDefault, fieldNode);
-                type.addField(field);
+            if (fieldsArray != null) {
+                for (JsonNode fieldNode : fieldsArray) {
+                    PojoField field = createField(type, view, readOnlyDefault, fieldNode);
+                    type.addField(field);
+                }
             }
         }
 

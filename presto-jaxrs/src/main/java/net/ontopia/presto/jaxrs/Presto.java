@@ -17,6 +17,7 @@ import net.ontopia.presto.jaxb.AvailableFieldValues;
 import net.ontopia.presto.jaxb.AvailableTopicTypes;
 import net.ontopia.presto.jaxb.Database;
 import net.ontopia.presto.jaxb.FieldData;
+import net.ontopia.presto.jaxb.Layout;
 import net.ontopia.presto.jaxb.Link;
 import net.ontopia.presto.jaxb.Topic;
 import net.ontopia.presto.jaxb.TopicType;
@@ -41,11 +42,13 @@ import net.ontopia.presto.spi.PrestoUpdate;
 import net.ontopia.presto.spi.PrestoView;
 import net.ontopia.presto.spi.PrestoView.ViewType;
 import net.ontopia.presto.spi.utils.AbstractHandler;
+import net.ontopia.presto.spi.utils.PatternValueUtils;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
 import net.ontopia.presto.spi.utils.Utils;
 
 import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -143,26 +146,37 @@ public abstract class Presto {
         String viewId = view.getId();
         result.setView(viewId);
 
+        ObjectNode extra = (ObjectNode)type.getExtra();
+        Layout layout = getLayout(extra);
+        if (layout != null) {
+            result.setLayout(layout);
+        }
+        
         // create topic-views
         Collection<PrestoView> views = type.getViews(view);
         List<TopicView> topicViews = new ArrayList<TopicView>(views.size()); 
         for (PrestoView v : views) {
-            if (ViewType.EDIT_IN_VIEW.equals(v.getType())) {
-                PrestoContext parentContext = context.getParentContext();
-                PrestoFieldUsage parentField = context.getParentField();
+            PrestoContext parentContext = context.getParentContext();
+            PrestoFieldUsage parentField = context.getParentField();
+            
+            PrestoContext subcontext = PrestoContext.createSubContext(parentContext, parentField, topic, type, v);
+            PrestoContextRules subrules = getPrestoContextRules(subcontext);
 
-                PrestoContext subcontext = PrestoContext.createSubContext(parentContext, parentField, topic, type, v);
-                PrestoContextRules subrules = getPrestoContextRules(subcontext);
+            ViewType viewType = v.getType();
+            
+            if (ViewType.NORMAL_VIEW.equals(viewType)) {
 
                 if (viewId.equals(v.getId())) {
                     topicViews.add(getTopicView(subrules));
                 } else {
                     if (isRemoteLoadView(v)) {
-                        topicViews.add(getTopicViewRemote(subrules));
+                        topicViews.add(getTopicViewRemote(subrules, false));
                     } else {
                         topicViews.add(getTopicView(subrules));
                     }
                 }
+            } else if (ViewType.EXTERNAL_VIEW.equals(viewType)) {
+                topicViews.add(getTopicViewRemote(subrules, true));
             }
         }
         result.setViews(topicViews);
@@ -170,6 +184,22 @@ public abstract class Presto {
         result = processor.postProcessTopic(result, rules, null);
 
         return result;
+    }
+
+    private Layout getLayout(ObjectNode extra) {
+        Layout layout = null;
+        if (extra != null) {
+            JsonNode layoutNode = extra.path("layout");
+            if (layoutNode.isObject()) {
+                ObjectMapper mapper = new ObjectMapper();
+                try {
+                    layout = mapper.readValue(layoutNode, Layout.class);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+        return layout;
     }
 
     private boolean isRemoteLoadView(PrestoView v) {
@@ -183,13 +213,13 @@ public abstract class Presto {
         return true;
     }
 
-    public TopicView getTopicViewRemoteAndProcess(PrestoContextRules rules) {
-        TopicView result = getTopicViewRemote(rules);
-
-        result = processor.postProcessTopicView(result, rules, null);
-
-        return result;
-    }
+//    public TopicView getTopicViewRemoteAndProcess(PrestoContextRules rules) {
+//        TopicView result = getTopicViewRemote(rules);
+//
+//        result = processor.postProcessTopicView(result, rules, null);
+//
+//        return result;
+//    }
 
     public TopicView getTopicViewAndProcess(PrestoContext context) {
         return getTopicViewAndProcess(getPrestoContextRules(context));
@@ -205,7 +235,7 @@ public abstract class Presto {
         return result;
     }
 
-    public TopicView getTopicViewRemote(PrestoContextRules rules) {
+    public TopicView getTopicViewRemote(PrestoContextRules rules, boolean external) {
         PrestoContext context = rules.getContext();
 
         PrestoTopic topic = context.getTopic();
@@ -219,7 +249,10 @@ public abstract class Presto {
         result.setTopicId(topic.getId());
 
         String href;
-        if (type.isInline()) {
+        if (external) {
+            String pattern = getExtraParamsStringValue((ObjectNode)view.getExtra(), "href");
+            href = PatternValueUtils.getValueByPattern(getSchemaProvider(), context, pattern);
+        } else if (type.isInline()) {
             String topicId = context.getTopicId();
             PrestoContext parentContext = context.getParentContext();
             PrestoField parentField = context.getParentField();
@@ -254,6 +287,12 @@ public abstract class Presto {
 
         result.setTopicId(topic.getId());
         result.setTopicTypeId(type.getId());
+
+        ObjectNode extra = (ObjectNode)view.getExtra();
+        Layout layout = getLayout(extra);
+        if (layout != null) {
+            result.setLayout(layout);
+        }
 
         String href;
         if (type.isInline()) {
@@ -316,6 +355,12 @@ public abstract class Presto {
 
         result.setTopicTypeId(typeId);
 
+        ObjectNode extra = (ObjectNode)view.getExtra();
+        Layout layout = getLayout(extra);
+        if (layout != null) {
+            result.setLayout(layout);
+        }
+
         List<FieldData> fields = new ArrayList<FieldData>(); 
         for (PrestoFieldUsage field : type.getFields(view)) {
             if (!rules.isHiddenField(field)) {
@@ -355,6 +400,12 @@ public abstract class Presto {
         result.setName("*" + type.getName() + "*");
 
         result.setTopicTypeId(typeId);
+
+        ObjectNode extra = (ObjectNode)view.getExtra();
+        Layout layout = getLayout(extra);
+        if (layout != null) {
+            result.setLayout(layout);
+        }
 
         List<FieldData> fields = new ArrayList<FieldData>(); 
         for (PrestoFieldUsage field : type.getFields(view)) {
@@ -947,6 +998,18 @@ public abstract class Presto {
         return null;
     }
 
+    public String getExtraParamsStringValue(ObjectNode extra, String paramKey) {
+        ObjectNode extraNode = (ObjectNode)extra;
+        JsonNode params = extraNode.path("params");
+        if (params.isObject()) {
+            JsonNode paramNode = params.path(paramKey);
+            if (paramNode.isTextual()) {
+                return paramNode.getTextValue();
+            }
+        }
+        return null;
+    }
+    
     public Map<String,Object> getExtraParamsMap(ObjectNode extra) {
         ObjectNode extraNode = (ObjectNode)extra;
         JsonNode params = extraNode.path("params");
