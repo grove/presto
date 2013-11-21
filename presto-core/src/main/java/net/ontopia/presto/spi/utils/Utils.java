@@ -1,5 +1,8 @@
 package net.ontopia.presto.spi.utils;
 
+import net.ontopia.presto.spi.PrestoFieldUsage;
+import net.ontopia.presto.spi.PrestoTopic;
+
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +48,24 @@ public class Utils {
     public static void validateNotNull(Object o) {
         if (o == null) {
             throw new NullPointerException("Object cannot be null");
+        }
+    }
+    
+    public static String getName(Object o) {
+        if (o instanceof PrestoTopic) {
+            PrestoTopic topic = (PrestoTopic)o;
+            return topic.getName();
+        } else {
+            return o == null ? "null" : o.toString();
+        }
+    }
+ 
+    public static String getName(PrestoFieldUsage field, Object o) {
+        if (o instanceof PrestoTopic) {
+            PrestoTopic topic = (PrestoTopic)o;
+            return topic.getName(field);
+        } else {
+            return o == null ? "null" : o.toString();
         }
     }
     
