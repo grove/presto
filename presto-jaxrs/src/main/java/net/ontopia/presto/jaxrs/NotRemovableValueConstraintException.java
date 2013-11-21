@@ -1,11 +1,11 @@
 package net.ontopia.presto.jaxrs;
 
-import org.codehaus.jackson.node.ObjectNode;
-
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.utils.PrestoContext;
+
+import org.codehaus.jackson.node.ObjectNode;
 
 public class NotRemovableValueConstraintException extends DefaultConstraintException {
 
@@ -15,6 +15,13 @@ public class NotRemovableValueConstraintException extends DefaultConstraintExcep
         super(context, field);
         this.removableValue = removableValue;
     }
+    
+//    @Override
+//    public String getMessage() {
+//        String message = super.getMessage();
+//        String value = Utils.getName(getField(), removableValue);
+//        return MessageFormat.format(message, new Object[] { value });
+//    }
 
     @Override
     protected String[] getMessageKeys() {

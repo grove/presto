@@ -778,10 +778,7 @@ public abstract class Presto {
             result = new Value();
             result.setValue(value);
         }
-        boolean isRemovableValue = !rules.isReadOnlyField(field) && rules.isRemovableFieldValue(field, value);
-        if (isRemovableValue) {
-            result.setRemovable(Boolean.TRUE);
-        }
+        result.setRemovable(isRemovableFieldValue(rules, field, value));
         return result;
     }
 
@@ -808,10 +805,7 @@ public abstract class Presto {
             result.setEmbedded(getTopicView(subrules));
         }
 
-        boolean isRemovableValue = !rules.isReadOnlyField(field) && rules.isRemovableFieldValue(field, value);
-        if (isRemovableValue) {
-            result.setRemovable(Boolean.TRUE);
-        }
+        result.setRemovable(isRemovableFieldValue(rules, field, value));
 
         List<Link> links = new ArrayList<Link>();
         if (rules.isTraversableField(field)) {
@@ -827,6 +821,31 @@ public abstract class Presto {
         return result;
     }
 
+    private boolean isRemovableFieldValue(PrestoContextRules rules, PrestoFieldUsage field, PrestoTopic value) {
+        boolean isRemovableValue = !rules.isReadOnlyField(field) && rules.isRemovableFieldValue(field, value);
+        if (isRemovableValue) {
+//            // make sure that inline types cannot be removed if the type is  not removable
+//            PrestoType removableType = schemaProvider.getTypeById(value.getTypeId());
+//            if (removableType.isInline()) {
+//                PrestoContext subcontext = PrestoContext.createSubContext(rules.getContext(), field, value, removableType, field.getValueView(removableType));
+//                PrestoContextRules subrules = getPrestoContextRules(subcontext);
+//                if (!subrules.isRemovableType()) {
+//                    throw new NotRemovableValueTypeConstraintException(rules.getContext(), field, value);
+//                }
+//            }
+            return true;
+        }
+        return false;
+    }
+    
+    private boolean isRemovableFieldValue(PrestoContextRules rules, PrestoFieldUsage field, String value) {
+        boolean isRemovableValue = !rules.isReadOnlyField(field) && rules.isRemovableFieldValue(field, value);
+        if (isRemovableValue) {
+            return true;
+        }
+        return false;
+    }
+    
     public AvailableFieldValues getAvailableFieldValuesInfo(PrestoContextRules rules, PrestoFieldUsage field, String query) {
 
         AvailableFieldValues result = new AvailableFieldValues();
@@ -1082,7 +1101,7 @@ public abstract class Presto {
     public FieldData removeFieldValues(PrestoContextRules rules, PrestoFieldUsage field, FieldData fieldData) {
         boolean resolveEmbedded = false;
         boolean includeExisting = false;
-        boolean filterNonStorable = true;
+        boolean filterNonStorable = false; // NOTE: instead of filtering we complain in removeFieldValues
         boolean validateValueTypes = false;
         List<? extends Object> removeableValues = updateAndExtractValuesFromFieldData(rules, field, fieldData, resolveEmbedded, includeExisting, filterNonStorable, validateValueTypes);
 
@@ -1161,19 +1180,13 @@ public abstract class Presto {
     private void validateRemovableFieldValues(PrestoContextRules rules, PrestoFieldUsage field, List<? extends Object> removableValues) {
         for (Object removableValue : removableValues) {
             // make sure that non-removable values are not removed
-            if (!rules.isRemovableFieldValue(field, removableValue)) {
-                throw new NotRemovableValueConstraintException(rules.getContext(), field, removableValue);
-            }
-            // make sure that inline types cannot be removed if the type is  not removable
             if (removableValue instanceof PrestoTopic) {
-                PrestoTopic removableTopic = (PrestoTopic)removableValue;
-                PrestoType removableType = schemaProvider.getTypeById(removableTopic.getTypeId());
-                if (removableType.isInline()) {
-                    PrestoContext subcontext = PrestoContext.createSubContext(rules.getContext(), field, removableTopic, removableType, field.getValueView(removableType));
-                    PrestoContextRules subrules = getPrestoContextRules(subcontext);
-                    if (!subrules.isRemovableType()) {
-                        throw new NotRemovableValueTypeConstraintException(rules.getContext(), field, removableValue);
-                    }
+                if (!isRemovableFieldValue(rules, field, (PrestoTopic)removableValue)) {
+                    throw new NotRemovableValueConstraintException(rules.getContext(), field, removableValue);
+                }
+            } else {
+                if (!isRemovableFieldValue(rules, field, (String)removableValue)) {
+                    throw new NotRemovableValueConstraintException(rules.getContext(), field, removableValue);
                 }
             }
         }
@@ -1280,7 +1293,8 @@ public abstract class Presto {
                     for (Value value : values) {
                         TopicView embeddedTopic = getEmbeddedTopic(value);
                         if (embeddedTopic != null) {
-                            newValues.add(buildInlineTopic(context, field, embeddedTopic, filterNonStorable));
+                            boolean filterNonStorableNested = true;
+                            newValues.add(buildInlineTopic(context, field, embeddedTopic, filterNonStorableNested));
                         } else {
                             String typeId = value.getType();
                             PrestoType type = schemaProvider.getTypeById(typeId, null);
