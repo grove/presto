@@ -149,7 +149,7 @@ public class Links {
     }
 
     @Deprecated
-    public String availableTypesTreeLazy(String typeId) {
+    public String getAvailableTypesTreeLazy(String typeId) {
         UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor").path("available-types-tree-lazy").path(databaseId).path(typeId);
         return builder.build().toString();
     }

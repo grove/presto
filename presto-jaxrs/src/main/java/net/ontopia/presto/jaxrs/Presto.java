@@ -1632,7 +1632,7 @@ public abstract class Presto {
                 }
             } else {
                 if (!type.getDirectSubTypes().isEmpty()) {
-                    links.add(new Link("available-types-tree-lazy", lx.availableTypesTreeLazy(type.getId())));
+                    links.add(new Link("available-types-tree-lazy", lx.getAvailableTypesTreeLazy(type.getId())));
                 }
             }
             typeMap.setLinks(links);
