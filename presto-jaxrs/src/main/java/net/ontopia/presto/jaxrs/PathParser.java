@@ -27,7 +27,7 @@ public class PathParser {
         int steps = traverse.length / 3;
 
         // find root topic
-        String startTopicId = Links.deskull(traverse[0]);
+        String startTopicId = PathParser.deskull(traverse[0]);
         String startViewId = traverse[1];
         String startFieldId = traverse[2];
 
@@ -60,7 +60,7 @@ public class PathParser {
         
         // traverse children
         for (int i=1; i < steps; i++) {
-            String topicId = Links.deskull(traverse[i*3]);
+            String topicId = PathParser.deskull(traverse[i*3]);
             String viewId = traverse[i*3+1];
             String fieldId = traverse[i*3+2];
             
@@ -91,7 +91,7 @@ public class PathParser {
         PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
 
         if (path == null || path.equals("_")) {
-            return PrestoContext.create(dataProvider, schemaProvider, Links.deskull(topicId), viewId);
+            return PrestoContext.create(dataProvider, schemaProvider, PathParser.deskull(topicId), viewId);
         }
 
         PrestoContextField contextField = getContextField(session, path);
@@ -102,7 +102,7 @@ public class PathParser {
         
         PrestoTopic resultTopic = findInParentField(currentTopic, currentField, topicId);
         if (resultTopic == null) {
-            return PrestoContext.createSubContext(dataProvider, schemaProvider, currentContext, currentField, Links.deskull(topicId), viewId);
+            return PrestoContext.createSubContext(dataProvider, schemaProvider, currentContext, currentField, PathParser.deskull(topicId), viewId);
         } else {
             String resultTypeId = resultTopic.getTypeId();
             PrestoType resultType = session.getSchemaProvider().getTypeById(resultTypeId);
@@ -130,7 +130,7 @@ public class PathParser {
         String topicId = context.getTopicId();
         String viewId = context.getView().getId();
         String fieldId = field.getId();
-        String localPath = Links.skull(topicId) + PathParser.FIELD_PATH_SEPARATOR + viewId + PathParser.FIELD_PATH_SEPARATOR + fieldId;
+        String localPath = PathParser.skull(topicId) + PathParser.FIELD_PATH_SEPARATOR + viewId + PathParser.FIELD_PATH_SEPARATOR + fieldId;
 
         PrestoContext parentContext = context.getParentContext();
         if (parentContext != null) {
@@ -140,6 +140,20 @@ public class PathParser {
         } else {
             return localPath;
         }
+    }
+
+    // WARN: replacing all / characters with skull character to 
+    // work around http://java.net/jira/browse/JAX_RS_SPEC-70
+    static final String SKULL_CHARACTER = "\u2620";
+
+    public static String skull(String u) {
+        // NOTE: we're only patching the ids of topics
+        return u.replaceAll("/", PathParser.SKULL_CHARACTER);
+    }
+
+    public static String deskull(String u) {
+        // NOTE: we're only patching the ids of topics
+        return u.replaceAll(PathParser.SKULL_CHARACTER, "/");
     }
 
 }

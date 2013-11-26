@@ -737,7 +737,7 @@ public abstract class EditorResource {
         Presto session = createPresto(databaseId, readOnly);
 
         try {
-            PrestoContext context = PrestoContext.create(session.getDataProvider(), session.getSchemaProvider(), Links.deskull(topicId), viewId);
+            PrestoContext context = PrestoContext.create(session.getDataProvider(), session.getSchemaProvider(), PathParser.deskull(topicId), viewId);
 
             if (context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();

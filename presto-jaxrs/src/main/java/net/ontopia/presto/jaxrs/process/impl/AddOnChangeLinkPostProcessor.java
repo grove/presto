@@ -1,6 +1,5 @@
 package net.ontopia.presto.jaxrs.process.impl;
 
-import java.net.URI;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 
@@ -47,21 +46,14 @@ public class AddOnChangeLinkPostProcessor extends FieldDataProcessor {
             
             Presto presto = getPresto();
             
-            URI baseUri = presto.getBaseUri();
-            String databaseId = presto.getDatabaseId();
             String topicId = topic.getId();
             PrestoView view = field.getView();
             String viewId = view.getId();
             PrestoContext parentContext = context.getParentContext();
             PrestoFieldUsage parentField = context.getParentField();
-            String href = Links.getTopicValidateLink(baseUri, databaseId, parentContext, parentField, topicId, viewId);
             
-//            UriBuilder builder = UriBuilder.fromUri(presto.getBaseUri())
-//                    .path("editor/validate-topic/")
-//                    .path(presto.getDatabaseId())
-//                    .path(topic.getId())
-//                    .path(view.getId());
-//            String href = builder.build().toString();
+            Links lx = presto.getLinks();
+            String href = lx.getTopicValidateLink(parentContext, parentField, topicId, viewId);
     
             Link link = new Link();
             link.setRel("onchange");
