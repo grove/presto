@@ -1248,9 +1248,10 @@ public abstract class Presto {
         PrestoView view = context.getView();
 
         boolean filterNonStorable = true;
+        boolean validateValueTypes = true;
 
         if (type.isInline()) {
-            PrestoTopic inlineTopic = buildInlineTopic(context.getParentContext(), context.getParentField(), topicView, filterNonStorable);
+            PrestoTopic inlineTopic = buildInlineTopic(context.getParentContext(), context.getParentField(), topicView, filterNonStorable, validateValueTypes);
             return inlineTopic;
         } else {
             PrestoUpdate update;
@@ -1271,7 +1272,6 @@ public abstract class Presto {
 
                     boolean resolveEmbedded = true;
                     boolean includeExisting = false;
-                    boolean validateValueTypes = true;
                     List<? extends Object> values = updateAndExtractValuesFromFieldData(rules, field, fieldData, resolveEmbedded, includeExisting, filterNonStorable, validateValueTypes);
                     
                     update.setValues(field, values);
@@ -1300,7 +1300,7 @@ public abstract class Presto {
                         TopicView embeddedTopic = getEmbeddedTopic(value);
                         if (embeddedTopic != null) {
                             boolean filterNonStorableNested = true;
-                            newValues.add(buildInlineTopic(context, field, embeddedTopic, filterNonStorableNested));
+                            newValues.add(buildInlineTopic(context, field, embeddedTopic, filterNonStorableNested, validateValueTypes));
                         } else {
                             String typeId = value.getType();
                             PrestoType type = schemaProvider.getTypeById(typeId, null);
@@ -1392,7 +1392,8 @@ public abstract class Presto {
         return builder.build();
     }
 
-    protected PrestoTopic buildInlineTopic(PrestoContext parentContext, PrestoFieldUsage parentField, TopicView embeddedTopic, boolean filterNonStorable) {
+    protected PrestoTopic buildInlineTopic(PrestoContext parentContext, PrestoFieldUsage parentField, TopicView embeddedTopic, 
+            boolean filterNonStorable, boolean validateValueTypes) {
 
         PrestoSchemaProvider schemaProvider = getSchemaProvider();
 
@@ -1428,7 +1429,6 @@ public abstract class Presto {
 
             boolean resolveEmbedded = true;
             boolean includeExisting = false;
-            boolean validateValueTypes = false;
             List<? extends Object> values = updateAndExtractValuesFromFieldData(subrules, field, fieldData, resolveEmbedded, includeExisting, filterNonStorable, validateValueTypes);
             builder.setValues(field, values);
         }
