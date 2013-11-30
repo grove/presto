@@ -10,6 +10,7 @@ import net.ontopia.presto.jaxrs.Presto;
 import net.ontopia.presto.jaxrs.process.FieldDataProcessor;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoTopic;
+import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoView;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
@@ -33,8 +34,7 @@ public class AddOnChangeLinkPostProcessor extends FieldDataProcessor {
         return fieldData;
     }
 
-    private FieldData addOnChangeLink(FieldData fieldData, PrestoContextRules rules,
-            PrestoFieldUsage field) {
+    private FieldData addOnChangeLink(FieldData fieldData, PrestoContextRules rules, PrestoFieldUsage field) {
         // TODO: may want to support this for inline *new* topics as well
         PrestoContext context = rules.getContext();
         PrestoTopic topic = context.getTopic();
@@ -47,13 +47,14 @@ public class AddOnChangeLinkPostProcessor extends FieldDataProcessor {
             Presto presto = getPresto();
             
             String topicId = topic.getId();
+            String typeId = topic.getTypeId();
+            PrestoType type = getSchemaProvider().getTypeById(typeId);
             PrestoView view = field.getView();
-            String viewId = view.getId();
             PrestoContext parentContext = context.getParentContext();
             PrestoFieldUsage parentField = context.getParentField();
             
             Links lx = presto.getLinks();
-            String href = lx.topicValidateLink(parentContext, parentField, topicId, viewId);
+            String href = lx.topicValidateLink(parentContext, parentField, topicId, type, view);
     
             Link link = new Link();
             link.setRel("onchange");
