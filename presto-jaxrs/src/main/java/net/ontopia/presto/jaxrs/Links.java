@@ -19,6 +19,14 @@ public class Links {
         this.databaseId = databaseId;
     }
 
+    protected URI getBaseUri() {
+        return baseUri;
+    }
+    
+    protected String getDatabaseId() {
+        return databaseId;
+    }
+    
     public String topicLinkById() {
         UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor").path("topic").path(databaseId).path("{topicId}");
         return builder.build().toString();

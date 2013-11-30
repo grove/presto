@@ -74,9 +74,13 @@ public abstract class Presto {
         this.schemaProvider = schemaProvider;
         this.dataProvider = dataProvider;
         this.processor = new PrestoProcessor(this);
-        this.lx = new Links(getBaseUri(), getDatabaseId());
+        this.lx = createLinks(getBaseUri(), getDatabaseId());
     }
 
+    protected Links createLinks(URI baseUri, String databaseId) {
+        return new Links(baseUri, databaseId);
+    }
+    
     protected boolean isReadOnlyMode() {
         return false;
     }
