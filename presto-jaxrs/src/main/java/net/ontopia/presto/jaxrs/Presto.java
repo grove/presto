@@ -339,7 +339,7 @@ public abstract class Presto {
                 links.add(new Link("delete", href));
             }
             if (rules.isCreatableType() && !type.isInline()) {
-                links.add(new Link("create-instance", lx.createInstanceLink(type)));
+                links.add(new Link("topic-template", lx.topicTemplate(type)));
             }
         }
         result.setLinks(links);
@@ -382,9 +382,9 @@ public abstract class Presto {
         List<Link> links = new ArrayList<Link>();
         links.add(createLabel(type.getName()));
 
-        links.add(new Link("create", lx.createNewTopicViewLink(type, view)));
+        links.add(new Link("create", lx.createTopicLink(type, view)));
 
-        result.setHref(lx.createInstanceLink(type));
+        result.setHref(lx.topicTemplate(type));
         result.setLinks(links);
 
         //        Status status = new Status();
@@ -393,7 +393,7 @@ public abstract class Presto {
         return result;
     }
 
-    public TopicView getTopicViewTemplate(PrestoContext parentContext, PrestoFieldUsage parentField, PrestoType type) {
+    public TopicView getTopicViewTemplateField(PrestoContext parentContext, PrestoFieldUsage parentField, PrestoType type) {
 
         PrestoView view = parentField.getCreateView(type);
 
@@ -428,9 +428,9 @@ public abstract class Presto {
         List<Link> links = new ArrayList<Link>();
         links.add(createLabel(type.getName()));
 
-        links.add(new Link("create", lx.createNewTopicViewLink(parentContext, parentField, type, view)));
+        links.add(new Link("create", lx.createTopicLink(parentContext, parentField, type, view)));
 
-        result.setHref(lx.createFieldInstanceLink(parentContext, parentField, type));
+        result.setHref(lx.topicTemplateField(parentContext, parentField, type));
         result.setLinks(links);
 
         //        Status status = new Status();
@@ -558,7 +558,7 @@ public abstract class Presto {
         }
 
         if (!isReadOnly && allowCreate) {
-            fieldLinks.addAll(getCreateFieldInstanceLinks(context, field));
+            fieldLinks.addAll(getTopicTemplateFieldLinks(context, field));
         }
 
         if (rules.isPageableField(field)) {
@@ -588,7 +588,7 @@ public abstract class Presto {
         params.put(key, value);
     }
 
-    private Collection<? extends Link> getCreateFieldInstanceLinks(PrestoContext context, PrestoFieldUsage field) {
+    private Collection<? extends Link> getTopicTemplateFieldLinks(PrestoContext context, PrestoFieldUsage field) {
         Collection<PrestoType> availableFieldCreateTypes = getAvailableFieldCreateTypes(context, field);
 
         if (availableFieldCreateTypes.isEmpty()) {
@@ -596,16 +596,16 @@ public abstract class Presto {
 
         } else if (availableFieldCreateTypes.size() == 1) {
             PrestoType createType = availableFieldCreateTypes.iterator().next();
-            Link link = getCreateFieldInstanceLink(context, field, createType);
+            Link link = getTopicTemplateFieldLink(context, field, createType);
             link.setName("Ny"); // FIXME: localize
             return Collections.singleton(link);
         } else {
             Link link = new Link();
-            link.setRel("create-field-instance");
+            link.setRel("topic-template-field");
             link.setName("Ny"); // FIXME: localize
             Collection<Link> links = new ArrayList<Link>(availableFieldCreateTypes.size());
             for (PrestoType createType : availableFieldCreateTypes) {
-                links.add(getCreateFieldInstanceLink(context, field, createType));
+                links.add(getTopicTemplateFieldLink(context, field, createType));
             }
             link.setLinks(links);
             return Collections.singleton(link);
@@ -1068,16 +1068,16 @@ public abstract class Presto {
     }
 
     @Deprecated
-    protected TopicType getTopicTypeWithCreateFieldInstanceLink(PrestoContext context, PrestoFieldUsage field, PrestoType createType) {
+    protected TopicType getTopicTypeWithTopicTemplateFieldLink(PrestoContext context, PrestoFieldUsage field, PrestoType createType) {
         TopicType result = new TopicType(createType.getId(), createType.getName());
         List<Link> links = new ArrayList<Link>();
-        links.add(getCreateFieldInstanceLink(context, field, createType));
+        links.add(getTopicTemplateFieldLink(context, field, createType));
         result.setLinks(links);
         return result;
     }
 
-    protected Link getCreateFieldInstanceLink(PrestoContext context, PrestoFieldUsage field, PrestoType createType) {
-        Link result = new Link("create-field-instance", lx.createFieldInstanceLink(context, field, createType));
+    protected Link getTopicTemplateFieldLink(PrestoContext context, PrestoFieldUsage field, PrestoType createType) {
+        Link result = new Link("topic-template-field", lx.topicTemplateField(context, field, createType));
         result.setName(createType.getName());
         return result;
     }
@@ -1582,7 +1582,7 @@ public abstract class Presto {
             Collection<PrestoType> availableFieldCreateTypes = getAvailableFieldCreateTypes(context, field);
             List<TopicType> types = new ArrayList<TopicType>(availableFieldCreateTypes.size());
             for (PrestoType createType : availableFieldCreateTypes) {
-                types.add(getTopicTypeWithCreateFieldInstanceLink(context, field, createType));
+                types.add(getTopicTypeWithTopicTemplateFieldLink(context, field, createType));
             }                
             result.setTypes(types);
         } else {
@@ -1624,7 +1624,7 @@ public abstract class Presto {
 
             List<Link> links = new ArrayList<Link>();
             if (type.isCreatable() && !type.isInline()) {
-                links.add(new Link("create-instance", lx.createInstanceLink(type)));
+                links.add(new Link("topic-template", lx.topicTemplate(type)));
             }
 
             if (tree) {

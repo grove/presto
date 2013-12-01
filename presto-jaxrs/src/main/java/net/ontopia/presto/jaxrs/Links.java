@@ -71,13 +71,13 @@ public class Links {
         return builder.build().toString();        
     }
 
-    public String createNewTopicViewLink(PrestoType type, PrestoView view) {
+    public String createTopicLink(PrestoType type, PrestoView view) {
         PrestoContext parentContext = null;
         PrestoField parentField = null;
-        return createNewTopicViewLink(parentContext, parentField, type, view);
+        return createTopicLink(parentContext, parentField, type, view);
     }
     
-    public String createNewTopicViewLink(PrestoContext parentContext, PrestoField parentField, PrestoType type, PrestoView view) {
+    public String createTopicLink(PrestoContext parentContext, PrestoField parentField, PrestoType type, PrestoView view) {
         String path = PathParser.getInlineTopicPath(parentContext, parentField);
         String typeId = type.getId();
         String viewId = view.getId();
@@ -85,16 +85,16 @@ public class Links {
         return builder.build().toString();
     }
 
-    public String createInstanceLink(PrestoType type) {
+    public String topicTemplate(PrestoType type) {
         String typeId = type.getId();
-        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor").path("create-instance").path(databaseId).path(typeId);
+        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor").path("topic-template").path(databaseId).path(typeId);
         return builder.build().toString();
     }
 
-    public String createFieldInstanceLink(PrestoContext parentContext, PrestoField parentField, PrestoType type) {
+    public String topicTemplateField(PrestoContext parentContext, PrestoField parentField, PrestoType type) {
         String path = PathParser.getInlineTopicPath(parentContext, parentField);
         String typeId = type.getId();
-        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor").path("create-field-instance").path(databaseId).path(path).path(typeId);
+        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor").path("topic-template-field").path(databaseId).path(path).path(typeId);
         return builder.build().toString();
     }
 

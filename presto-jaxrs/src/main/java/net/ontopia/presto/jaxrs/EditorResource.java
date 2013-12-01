@@ -125,8 +125,8 @@ public abstract class EditorResource {
 
     @GET
     @Produces(APPLICATION_JSON_UTF8)
-    @Path("create-instance/{databaseId}/{typeId}")
-    public Response createInstance(
+    @Path("topic-template/{databaseId}/{typeId}")
+    public Response getTopicTemplate(
             @PathParam("databaseId") final String databaseId, 
             @PathParam("typeId") final String typeId) throws Exception {
 
@@ -156,8 +156,8 @@ public abstract class EditorResource {
 
     @GET
     @Produces(APPLICATION_JSON_UTF8)
-    @Path("create-field-instance/{databaseId}/{path}/{typeId}")
-    public Response createFieldInstance(
+    @Path("topic-template-field/{databaseId}/{path}/{typeId}")
+    public Response getTopicTemplateField(
             @PathParam("databaseId") final String databaseId,
             @PathParam("path") final String path,
             @PathParam("typeId") final String typeId) throws Exception {
@@ -174,7 +174,7 @@ public abstract class EditorResource {
             }
 
             PrestoContextField contextField = PathParser.getContextField(session, path);
-            TopicView result = session.getTopicViewTemplate(contextField.getContext(), contextField.getField(), type);
+            TopicView result = session.getTopicViewTemplateField(contextField.getContext(), contextField.getField(), type);
 
             return Response.ok(result).build();
 
