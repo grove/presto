@@ -349,7 +349,7 @@ public abstract class Presto {
 
     public abstract URI getBaseUri();
 
-    public TopicView getNewTopicView(PrestoContext context) {
+    public TopicView getTopicViewTemplate(PrestoContext context) {
 
         PrestoContextRules rules = getPrestoContextRules(context);
 
@@ -393,7 +393,7 @@ public abstract class Presto {
         return result;
     }
 
-    public TopicView getNewTopicView(PrestoContext parentContext, PrestoFieldUsage parentField, PrestoType type) {
+    public TopicView getTopicViewTemplate(PrestoContext parentContext, PrestoFieldUsage parentField, PrestoType type) {
 
         PrestoView view = parentField.getCreateView(type);
 
@@ -562,7 +562,7 @@ public abstract class Presto {
         }
 
         if (rules.isPageableField(field)) {
-            fieldLinks.add(new Link("paging", lx.pagingLink(parentContext, parentField, topicId, view, field)));    
+            fieldLinks.add(new Link("paging", lx.fieldPagingLink(parentContext, parentField, topicId, view, field)));    
         }
 
         if (!fieldLinks.isEmpty()) {
@@ -600,13 +600,13 @@ public abstract class Presto {
             link.setName("Ny"); // FIXME: localize
             return Collections.singleton(link);
         } else {
+            Link link = new Link();
+            link.setRel("create-field-instance");
+            link.setName("Ny"); // FIXME: localize
             Collection<Link> links = new ArrayList<Link>(availableFieldCreateTypes.size());
             for (PrestoType createType : availableFieldCreateTypes) {
                 links.add(getCreateFieldInstanceLink(context, field, createType));
             }
-            Link link = new Link();
-            link.setRel("create-field-instance");
-            link.setName("Ny"); // FIXME: localize
             link.setLinks(links);
             return Collections.singleton(link);
         }

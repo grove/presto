@@ -143,7 +143,7 @@ public abstract class EditorResource {
 
             PrestoContext context = PrestoContext.create(type, type.getCreateView());
 
-            TopicView result = session.getNewTopicView(context);
+            TopicView result = session.getTopicViewTemplate(context);
             return Response.ok(result).build();
 
         } catch (Exception e) {
@@ -174,7 +174,7 @@ public abstract class EditorResource {
             }
 
             PrestoContextField contextField = PathParser.getContextField(session, path);
-            TopicView result = session.getNewTopicView(contextField.getContext(), contextField.getField(), type);
+            TopicView result = session.getTopicViewTemplate(contextField.getContext(), contextField.getField(), type);
 
             return Response.ok(result).build();
 

@@ -143,13 +143,13 @@ public class Links {
         return builder.build().toString();
     }
 
-    public String pagingLink(String topicId, PrestoView parentView, PrestoField field) {
-        PrestoContext parentContext = null;
-        PrestoField parentField = null;
-        return pagingLink(parentContext, parentField, topicId, parentView, field);
-    }
+//    public String fieldPagingLink(String topicId, PrestoView parentView, PrestoField field) {
+//        PrestoContext parentContext = null;
+//        PrestoField parentField = null;
+//        return pagingLink(parentContext, parentField, topicId, parentView, field);
+//    }
 
-    public String pagingLink(PrestoContext parentContext, PrestoField parentField, String topicId, PrestoView parentView, PrestoField field) {
+    public String fieldPagingLink(PrestoContext parentContext, PrestoField parentField, String topicId, PrestoView parentView, PrestoField field) {
         String path = PathParser.getInlineTopicPath(parentContext, parentField);
         String parentViewId = parentView.getId();
         String fieldId = field.getId();
@@ -157,11 +157,11 @@ public class Links {
         return builder.build().toString();
     }
 
-    public String availableFieldValuesLink(String topicId, PrestoView parentView, PrestoField field, boolean query) {
-        PrestoContext parentContext = null;
-        PrestoField parentField = null;
-        return availableFieldValuesLink(parentContext, parentField, topicId, parentView, field, query);
-    }
+//    public String availableFieldValuesLink(String topicId, PrestoView parentView, PrestoField field, boolean query) {
+//        PrestoContext parentContext = null;
+//        PrestoField parentField = null;
+//        return availableFieldValuesLink(parentContext, parentField, topicId, parentView, field, query);
+//    }
 
     public String availableFieldValuesLink(PrestoContext parentContext, PrestoField parentField, String topicId, PrestoView parentView, PrestoField field, boolean query) {
         String path = PathParser.getInlineTopicPath(parentContext, parentField);
