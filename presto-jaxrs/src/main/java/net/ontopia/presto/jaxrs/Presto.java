@@ -597,12 +597,12 @@ public abstract class Presto {
         } else if (availableFieldCreateTypes.size() == 1) {
             PrestoType createType = availableFieldCreateTypes.iterator().next();
             Link link = getTopicTemplateFieldLink(context, field, createType);
-            link.setName("Ny"); // FIXME: localize
+            link.setName(getTopicTemplateLabel());
             return Collections.singleton(link);
         } else {
             Link link = new Link();
             link.setRel("topic-template-field");
-            link.setName("Ny"); // FIXME: localize
+            link.setName(getTopicTemplateLabel());
             Collection<Link> links = new ArrayList<Link>(availableFieldCreateTypes.size());
             for (PrestoType createType : availableFieldCreateTypes) {
                 links.add(getTopicTemplateFieldLink(context, field, createType));
@@ -612,6 +612,10 @@ public abstract class Presto {
         }
     }
 
+    protected String getTopicTemplateLabel() {
+        return "Ny"; // FIXME: localize
+    }
+    
     public static final class FieldDataValues {
         private List<Object> inputValues; 
         private List<Value> outputValues;
