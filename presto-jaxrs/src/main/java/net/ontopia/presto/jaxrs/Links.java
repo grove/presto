@@ -98,11 +98,11 @@ public class Links {
         return builder.build().toString();
     }
 
-    public String addFieldValuesLink(String topicId, PrestoView parentView, PrestoField field, boolean index) {
-        PrestoContext parentContext = null;
-        PrestoField parentField = null;
-        return addFieldValuesLink(parentContext, parentField, topicId, parentView, field, index);
-    }
+//    public String addFieldValuesLink(String topicId, PrestoView parentView, PrestoField field, boolean index) {
+//        PrestoContext parentContext = null;
+//        PrestoField parentField = null;
+//        return addFieldValuesLink(parentContext, parentField, topicId, parentView, field, index);
+//    }
 
     public String addFieldValuesLink(PrestoContext parentContext, PrestoField parentField, String topicId, PrestoView parentView, PrestoField field, boolean index) {
         String path = PathParser.getInlineTopicPath(parentContext, parentField);
@@ -115,11 +115,11 @@ public class Links {
         return builder.build().toString();
     }
 
-    public String removeFieldValuesLink(String topicId, PrestoView parentView, PrestoField field) {
-        PrestoContext parentContext = null;
-        PrestoField parentField = null;
-        return removeFieldValuesLink(parentContext, parentField, topicId, parentView, field);
-    }
+//    public String removeFieldValuesLink(String topicId, PrestoView parentView, PrestoField field) {
+//        PrestoContext parentContext = null;
+//        PrestoField parentField = null;
+//        return removeFieldValuesLink(parentContext, parentField, topicId, parentView, field);
+//    }
 
     public String removeFieldValuesLink(PrestoContext parentContext, PrestoField parentField, String topicId, PrestoView parentView, PrestoField field) {
         String path = PathParser.getInlineTopicPath(parentContext, parentField);
@@ -129,11 +129,11 @@ public class Links {
         return builder.build().toString();
     }
 
-    public String moveFieldValuesToIndexLink(String topicId, PrestoView parentView, PrestoField field) {
-        PrestoContext parentContext = null;
-        PrestoField parentField = null;
-        return moveFieldValuesToIndexLink(parentContext, parentField, topicId, parentView, field);
-    }
+//    public String moveFieldValuesToIndexLink(String topicId, PrestoView parentView, PrestoField field) {
+//        PrestoContext parentContext = null;
+//        PrestoField parentField = null;
+//        return moveFieldValuesToIndexLink(parentContext, parentField, topicId, parentView, field);
+//    }
 
     public String moveFieldValuesToIndexLink(PrestoContext parentContext, PrestoField parentField, String topicId, PrestoView parentView, PrestoField field) {
         String path = PathParser.getInlineTopicPath(parentContext, parentField);
