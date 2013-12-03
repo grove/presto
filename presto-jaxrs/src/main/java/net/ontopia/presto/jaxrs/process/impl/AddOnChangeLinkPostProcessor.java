@@ -56,9 +56,7 @@ public class AddOnChangeLinkPostProcessor extends FieldDataProcessor {
             Links lx = presto.getLinks();
             String href = lx.topicValidateLink(parentContext, parentField, topicId, type, view);
     
-            Link link = new Link();
-            link.setRel("onchange");
-            link.setHref(href);
+            Link link = new Link("onchange", href);
     
             if (!links.contains(link)) {
                 links.add(link);
