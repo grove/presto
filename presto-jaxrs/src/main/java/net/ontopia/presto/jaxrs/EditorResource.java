@@ -51,6 +51,9 @@ import net.ontopia.presto.spi.utils.PrestoContextRules;
 @Path("/editor")
 public abstract class EditorResource {
 
+    private static final String REL_AVAILABLE_DATABASES = "available-databases";
+    private static final String REL_DATABASE_EDIT = "edit";
+
     public final static String APPLICATION_JSON_UTF8 = "application/json;charset=UTF-8";
 
     @Context HttpServletRequest request;
@@ -66,7 +69,7 @@ public abstract class EditorResource {
         result.setName("Presto - Editor REST API");
 
         List<Link> links = new ArrayList<Link>();
-        links.add(new Link("available-databases", uriInfo.getBaseUri() + "editor/available-databases"));
+        links.add(new Link(REL_AVAILABLE_DATABASES, uriInfo.getBaseUri() + "editor/available-databases"));
         result.setLinks(links);      
 
         return Response.ok(result).build();
@@ -93,7 +96,7 @@ public abstract class EditorResource {
             database.setName(getDatabaseName(databaseId));
 
             List<Link> links = new ArrayList<Link>();
-            links.add(new Link("edit", uriInfo.getBaseUri() + "editor/database-info/" + database.getId()));
+            links.add(new Link(REL_DATABASE_EDIT, uriInfo.getBaseUri() + "editor/database-info/" + database.getId()));
             database.setLinks(links);    
 
             databases.add(database);
@@ -125,8 +128,8 @@ public abstract class EditorResource {
 
     @GET
     @Produces(APPLICATION_JSON_UTF8)
-    @Path("create-instance/{databaseId}/{typeId}")
-    public Response createInstance(
+    @Path("topic-template/{databaseId}/{typeId}")
+    public Response getTopicTemplate(
             @PathParam("databaseId") final String databaseId, 
             @PathParam("typeId") final String typeId) throws Exception {
 
@@ -156,8 +159,8 @@ public abstract class EditorResource {
 
     @GET
     @Produces(APPLICATION_JSON_UTF8)
-    @Path("create-field-instance/{databaseId}/{path}/{typeId}")
-    public Response createFieldInstance(
+    @Path("topic-template-field/{databaseId}/{path}/{typeId}")
+    public Response getTopicTemplateField(
             @PathParam("databaseId") final String databaseId,
             @PathParam("path") final String path,
             @PathParam("typeId") final String typeId) throws Exception {
@@ -174,7 +177,7 @@ public abstract class EditorResource {
             }
 
             PrestoContextField contextField = PathParser.getContextField(session, path);
-            TopicView result = session.getTopicViewTemplate(contextField.getContext(), contextField.getField(), type);
+            TopicView result = session.getTopicViewTemplateField(contextField.getContext(), contextField.getField(), type);
 
             return Response.ok(result).build();
 

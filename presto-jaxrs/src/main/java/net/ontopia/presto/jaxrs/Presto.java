@@ -55,9 +55,30 @@ import org.slf4j.LoggerFactory;
 
 public abstract class Presto {
 
+    private static final String REL_EDIT_TOPIC_BY_ID = "edit-topic-by-id";
+    private static final String REL_CREATE = "create";
+    private static final String REL_EDIT = "edit";
+    private static final String REL_UPDATE = "update";
+    private static final String REL_DELETE = "delete";
+    private static final String REL_TOPIC_TEMPLATE = "topic-template";
+
+    private static final String REL_PAGING = "paging";
+    private static final String REL_AVAILABLE_FIELD_VALUES = "available-field-values";
+    private static final String REL_ADD_FIELD_VALUES = "add-field-values";
+    private static final String REL_ADD_FIELD_VALUES_AT_INDEX = "add-field-values-at-index";
+    private static final String REL_MOVE_FIELD_VALUES_TO_INDEX = "move-field-values-to-index";
+    private static final String REL_REMOVE_FIELD_VALUES = "remove-field-values";
+
+    public static final String REL_ONCHANGE = "onchange";
+
+    private static final String REL_AVAILABLE_TYPES_TREE = "available-types-tree"; // deprecated
+    private static final String REL_AVAILABLE_TYPES_TREE_LAZY = "available-types-tree-lazy"; // deprecated
+
     private static Logger log = LoggerFactory.getLogger(Presto.class);
 
     public static final int DEFAULT_LIMIT = 100;
+
+    private final static String REL_TOPIC_TEMPLATE_FIELD = "topic-template-field";
 
     private final String databaseId;
     private final String databaseName;
@@ -333,13 +354,13 @@ public abstract class Presto {
 
         if (!rules.isReadOnlyType()) {
             if (!allFieldsReadOnly && rules.isUpdatableType()) {
-                links.add(new Link("update", href));
+                links.add(new Link(REL_UPDATE, href));
             }
             if (rules.isRemovableType() && rules.isDeletableType()) {
-                links.add(new Link("delete", href));
+                links.add(new Link(REL_DELETE, href));
             }
             if (rules.isCreatableType() && !type.isInline()) {
-                links.add(new Link("create-instance", lx.createInstanceLink(type)));
+                links.add(new Link(REL_TOPIC_TEMPLATE, lx.topicTemplate(type)));
             }
         }
         result.setLinks(links);
@@ -382,9 +403,9 @@ public abstract class Presto {
         List<Link> links = new ArrayList<Link>();
         links.add(createLabel(type.getName()));
 
-        links.add(new Link("create", lx.createNewTopicViewLink(type, view)));
+        links.add(new Link(REL_CREATE, lx.createTopicLink(type, view)));
 
-        result.setHref(lx.createInstanceLink(type));
+        result.setHref(lx.topicTemplate(type));
         result.setLinks(links);
 
         //        Status status = new Status();
@@ -393,7 +414,7 @@ public abstract class Presto {
         return result;
     }
 
-    public TopicView getTopicViewTemplate(PrestoContext parentContext, PrestoFieldUsage parentField, PrestoType type) {
+    public TopicView getTopicViewTemplateField(PrestoContext parentContext, PrestoFieldUsage parentField, PrestoType type) {
 
         PrestoView view = parentField.getCreateView(type);
 
@@ -428,9 +449,9 @@ public abstract class Presto {
         List<Link> links = new ArrayList<Link>();
         links.add(createLabel(type.getName()));
 
-        links.add(new Link("create", lx.createNewTopicViewLink(parentContext, parentField, type, view)));
+        links.add(new Link(REL_CREATE, lx.createTopicLink(parentContext, parentField, type, view)));
 
-        result.setHref(lx.createFieldInstanceLink(parentContext, parentField, type));
+        result.setHref(lx.topicTemplateField(parentContext, parentField, type));
         result.setLinks(links);
 
         //        Status status = new Status();
@@ -519,18 +540,18 @@ public abstract class Presto {
 
                 if (allowAdd || allowCreate) {
                     if (!isNewTopic) {
-                        fieldLinks.add(new Link("add-field-values", lx.addFieldValuesLink(parentContext, parentField, topicId, view, field, false)));
+                        fieldLinks.add(new Link(REL_ADD_FIELD_VALUES, lx.addFieldValuesLink(parentContext, parentField, topicId, view, field, false)));
                         if (!isSorted) {
-                            fieldLinks.add(new Link("add-field-values-at-index", lx.addFieldValuesLink(parentContext, parentField, topicId, view, field, true)));
+                            fieldLinks.add(new Link(REL_ADD_FIELD_VALUES_AT_INDEX, lx.addFieldValuesLink(parentContext, parentField, topicId, view, field, true)));
                         }
                     }
                 }
                 if (allowRemove && !isNewTopic) {
-                    fieldLinks.add(new Link("remove-field-values", lx.removeFieldValuesLink(parentContext, parentField, topicId, view, field)));
+                    fieldLinks.add(new Link(REL_REMOVE_FIELD_VALUES, lx.removeFieldValuesLink(parentContext, parentField, topicId, view, field)));
                 }      
 
                 if (allowMove && !isNewTopic) {
-                    fieldLinks.add(new Link("move-field-values-to-index", lx.moveFieldValuesToIndexLink(parentContext, parentField, topicId, view, field)));
+                    fieldLinks.add(new Link(REL_MOVE_FIELD_VALUES_TO_INDEX, lx.moveFieldValuesToIndexLink(parentContext, parentField, topicId, view, field)));
                 }
             }
         } else {
@@ -540,11 +561,11 @@ public abstract class Presto {
             }
             if (!isReadOnly) {
                 if (!isNewTopic) {
-                    fieldLinks.add(new Link("add-field-values", lx.addFieldValuesLink(parentContext, parentField, topicId, view, field, false)));
-                    fieldLinks.add(new Link("remove-field-values", lx.removeFieldValuesLink(parentContext, parentField, topicId, view, field)));
+                    fieldLinks.add(new Link(REL_ADD_FIELD_VALUES, lx.addFieldValuesLink(parentContext, parentField, topicId, view, field, false)));
+                    fieldLinks.add(new Link(REL_REMOVE_FIELD_VALUES, lx.removeFieldValuesLink(parentContext, parentField, topicId, view, field)));
                     if (!rules.isSortedField(field)) {
-                        fieldLinks.add(new Link("add-field-values-at-index", lx.addFieldValuesLink(parentContext, parentField, topicId, view, field, true)));
-                        fieldLinks.add(new Link("move-field-values-to-index", lx.moveFieldValuesToIndexLink(parentContext, parentField, topicId, view, field)));
+                        fieldLinks.add(new Link(REL_ADD_FIELD_VALUES_AT_INDEX, lx.addFieldValuesLink(parentContext, parentField, topicId, view, field, true)));
+                        fieldLinks.add(new Link(REL_MOVE_FIELD_VALUES_TO_INDEX, lx.moveFieldValuesToIndexLink(parentContext, parentField, topicId, view, field)));
                     }
                 }
             }
@@ -553,16 +574,16 @@ public abstract class Presto {
             // ISSUE: should add-values and remove-values be links on list result instead?
             if (!field.isReferenceField() || !getAvailableFieldValueTypes(context, field).isEmpty()) {
                 boolean query = isCustomAvailableValuesQuery(context, field);
-                fieldLinks.add(new Link("available-field-values", lx.availableFieldValuesLink(parentContext, parentField, topicId, view, field, query)));
+                fieldLinks.add(new Link(REL_AVAILABLE_FIELD_VALUES, lx.availableFieldValuesLink(parentContext, parentField, topicId, view, field, query)));
             }
         }
 
         if (!isReadOnly && allowCreate) {
-            fieldLinks.addAll(getCreateFieldInstanceLinks(context, field));
+            fieldLinks.addAll(getTopicTemplateFieldLinks(context, field));
         }
 
         if (rules.isPageableField(field)) {
-            fieldLinks.add(new Link("paging", lx.fieldPagingLink(parentContext, parentField, topicId, view, field)));    
+            fieldLinks.add(new Link(REL_PAGING, lx.fieldPagingLink(parentContext, parentField, topicId, view, field)));    
         }
 
         if (!fieldLinks.isEmpty()) {
@@ -588,7 +609,7 @@ public abstract class Presto {
         params.put(key, value);
     }
 
-    private Collection<? extends Link> getCreateFieldInstanceLinks(PrestoContext context, PrestoFieldUsage field) {
+    private Collection<? extends Link> getTopicTemplateFieldLinks(PrestoContext context, PrestoFieldUsage field) {
         Collection<PrestoType> availableFieldCreateTypes = getAvailableFieldCreateTypes(context, field);
 
         if (availableFieldCreateTypes.isEmpty()) {
@@ -596,20 +617,44 @@ public abstract class Presto {
 
         } else if (availableFieldCreateTypes.size() == 1) {
             PrestoType createType = availableFieldCreateTypes.iterator().next();
-            Link link = getCreateFieldInstanceLink(context, field, createType);
-            link.setName("Ny"); // FIXME: localize
+            Link link = getTopicTemplateFieldLink(context, field, createType);
+            link.setName(getTopicTemplateLabel());
             return Collections.singleton(link);
         } else {
             Link link = new Link();
-            link.setRel("create-field-instance");
-            link.setName("Ny"); // FIXME: localize
+            link.setRel(REL_TOPIC_TEMPLATE_FIELD);
+            link.setName(getTopicTemplateLabel());
             Collection<Link> links = new ArrayList<Link>(availableFieldCreateTypes.size());
             for (PrestoType createType : availableFieldCreateTypes) {
-                links.add(getCreateFieldInstanceLink(context, field, createType));
+                links.add(getTopicTemplateFieldLink(context, field, createType));
             }
             link.setLinks(links);
             return Collections.singleton(link);
         }
+    }
+    
+    protected String getTopicTemplateLabel() {
+        return "Ny"; // FIXME: localize
+    }
+
+    protected Link getTopicTemplateFieldLink(PrestoContext context, PrestoFieldUsage field, PrestoType createType) {
+        Link result = new Link(REL_TOPIC_TEMPLATE_FIELD, lx.topicTemplateField(context, field, createType));
+        result.setName(createType.getName());
+        return result;
+    }
+
+    @Deprecated
+    protected TopicType getTopicTypeWithNoLinks(PrestoType type) {
+        return new TopicType(type.getId(), type.getName());
+    }
+
+    @Deprecated
+    protected TopicType getTopicTypeWithTopicTemplateFieldLink(PrestoContext context, PrestoFieldUsage field, PrestoType createType) {
+        TopicType result = new TopicType(createType.getId(), createType.getName());
+        List<Link> links = new ArrayList<Link>();
+        links.add(getTopicTemplateFieldLink(context, field, createType));
+        result.setLinks(links);
+        return result;
     }
 
     public static final class FieldDataValues {
@@ -819,9 +864,9 @@ public abstract class Presto {
         if (rules.isTraversableField(field)) {
             PrestoView fieldsView = field.getEditView(valueType);
             if (valueType.isInline()) {
-                links.add(new Link("edit", lx.topicLink(context, field, value.getId(), valueType, fieldsView, isReadOnlyMode())));
+                links.add(new Link(REL_EDIT, lx.topicLink(context, field, value.getId(), valueType, fieldsView, isReadOnlyMode())));
             } else {
-                links.add(new Link("edit", lx.topicLink(value.getId(), valueType, fieldsView, isReadOnlyMode())));
+                links.add(new Link(REL_EDIT, lx.topicLink(value.getId(), valueType, fieldsView, isReadOnlyMode())));
             }
         }
         result.setLinks(links);
@@ -976,7 +1021,7 @@ public abstract class Presto {
         if (rules.isTraversableField(field)) {
             PrestoType valueType = getSchemaProvider().getTypeById(value.getTypeId());
             PrestoView fieldsView = field.getEditView(valueType);
-            links.add(new Link("edit", lx.topicLink(value.getId(), valueType, fieldsView, false)));
+            links.add(new Link(REL_EDIT, lx.topicLink(value.getId(), valueType, fieldsView, false)));
         }
         result.setLinks(links);
 
@@ -1060,26 +1105,6 @@ public abstract class Presto {
             return 1;
         else
             return o1.compareTo(o2);
-    }
-
-    @Deprecated
-    protected TopicType getTopicTypeWithNoLinks(PrestoType type) {
-        return new TopicType(type.getId(), type.getName());
-    }
-
-    @Deprecated
-    protected TopicType getTopicTypeWithCreateFieldInstanceLink(PrestoContext context, PrestoFieldUsage field, PrestoType createType) {
-        TopicType result = new TopicType(createType.getId(), createType.getName());
-        List<Link> links = new ArrayList<Link>();
-        links.add(getCreateFieldInstanceLink(context, field, createType));
-        result.setLinks(links);
-        return result;
-    }
-
-    protected Link getCreateFieldInstanceLink(PrestoContext context, PrestoFieldUsage field, PrestoType createType) {
-        Link result = new Link("create-field-instance", lx.createFieldInstanceLink(context, field, createType));
-        result.setName(createType.getName());
-        return result;
     }
 
     public FieldData getFieldData(PrestoTopic topic, PrestoFieldUsage field) {
@@ -1582,7 +1607,7 @@ public abstract class Presto {
             Collection<PrestoType> availableFieldCreateTypes = getAvailableFieldCreateTypes(context, field);
             List<TopicType> types = new ArrayList<TopicType>(availableFieldCreateTypes.size());
             for (PrestoType createType : availableFieldCreateTypes) {
-                types.add(getTopicTypeWithCreateFieldInstanceLink(context, field, createType));
+                types.add(getTopicTypeWithTopicTemplateFieldLink(context, field, createType));
             }                
             result.setTypes(types);
         } else {
@@ -1624,7 +1649,7 @@ public abstract class Presto {
 
             List<Link> links = new ArrayList<Link>();
             if (type.isCreatable() && !type.isInline()) {
-                links.add(new Link("create-instance", lx.createInstanceLink(type)));
+                links.add(new Link(REL_TOPIC_TEMPLATE, lx.topicTemplate(type)));
             }
 
             if (tree) {
@@ -1634,7 +1659,7 @@ public abstract class Presto {
                 }
             } else {
                 if (!type.getDirectSubTypes().isEmpty()) {
-                    links.add(new Link("available-types-tree-lazy", lx.availableTypesTreeLazyLink(type)));
+                    links.add(new Link(REL_AVAILABLE_TYPES_TREE_LAZY, lx.availableTypesTreeLazyLink(type)));
                 }
             }
             typeMap.setLinks(links);
@@ -1658,8 +1683,8 @@ public abstract class Presto {
         result.setName(getDatabaseName());
 
         List<Link> links = new ArrayList<Link>();
-        links.add(new Link("available-types-tree", lx.availableTypesTreeLink()));
-        links.add(new Link("edit-topic-by-id", lx.topicLinkById()));
+        links.add(new Link(REL_AVAILABLE_TYPES_TREE, lx.availableTypesTreeLink()));
+        links.add(new Link(REL_EDIT_TOPIC_BY_ID, lx.topicLinkById()));
         result.setLinks(links);      
 
         return result;
