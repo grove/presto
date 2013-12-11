@@ -185,7 +185,8 @@ public class PrestoProcessor {
                         } else {
                             if (field.isInline()) {
                                 boolean filterNonStorable = processType == Type.PRE_PROCESS;
-                                valueTopic = presto.buildInlineTopic(context, field, embeddedTopic, filterNonStorable);
+                                boolean validateValueTypes = false;
+                                valueTopic = presto.buildInlineTopic(context, field, embeddedTopic, filterNonStorable, validateValueTypes);
                             } else {
                                 valueTopic = dataProvider.getTopicById(topicId);
                             }

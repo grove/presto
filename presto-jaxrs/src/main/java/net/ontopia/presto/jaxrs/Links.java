@@ -4,161 +4,171 @@ import java.net.URI;
 
 import javax.ws.rs.core.UriBuilder;
 
-import net.ontopia.presto.jaxb.Link;
 import net.ontopia.presto.spi.PrestoField;
+import net.ontopia.presto.spi.PrestoType;
+import net.ontopia.presto.spi.PrestoView;
 import net.ontopia.presto.spi.utils.PrestoContext;
 
 public class Links {
     
-    private Links() {
+    private final URI baseUri;
+    private final String databaseId;
+
+    public Links(URI baseUri, String databaseId) {
+        this.baseUri = baseUri;
+        this.databaseId = databaseId;
     }
 
-    // WARN: replacing all / characters with skull character to 
-    // work around http://java.net/jira/browse/JAX_RS_SPEC-70
-    private static final String SKULL_CHARACTER = "\u2620";
-
-    public static String skull(String u) {
-        // NOTE: we're only patching the ids of topics
-        return u.replaceAll("/", SKULL_CHARACTER);
+    protected URI getBaseUri() {
+        return baseUri;
     }
     
-    public static String deskull(String u) {
-        // NOTE: we're only patching the ids of topics
-        return u.replaceAll(SKULL_CHARACTER, "/");
+    protected String getDatabaseId() {
+        return databaseId;
     }
     
-    public static Link createLabel(String name) {
-        Link link = new Link();
-        link.setName(name);
-        link.setRel("label");
-        return link;
-    }
-    
-    public static String getTopicEditLinkById(URI baseUri, String databaseId) {
+    public String topicLinkById() {
         UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor").path("topic").path(databaseId).path("{topicId}");
         return builder.build().toString();
     }
     
-    public static String getTopicEditLink(URI baseUri, String databaseId, String topicId, String viewId, boolean readOnly) {
+    public String topicLink(String topicId, PrestoType type, PrestoView view, boolean readOnly) {
         PrestoContext parentContext = null;
         PrestoField parentField = null;
-        return getTopicEditLink(baseUri, databaseId, parentContext, parentField, topicId, viewId, readOnly);
+        return topicLink(parentContext, parentField, topicId, type, view, readOnly);
     }
     
-    public static String getTopicEditLink(URI baseUri, String databaseId, PrestoContext parentContext, PrestoField parentField, String topicId, String viewId, boolean readOnly) {
+    public String topicLink(PrestoContext parentContext, PrestoField parentField, String topicId, PrestoType type, PrestoView view, boolean readOnly) {
         String path = PathParser.getInlineTopicPath(parentContext, parentField);
-        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor").path("topic").path(databaseId).path(path).path(skull(topicId)).path(viewId);
+        String viewId = view.getId();
+        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor").path("topic").path(databaseId).path(path).path(PathParser.skull(topicId)).path(viewId);
         if (readOnly) {
             builder = builder.queryParam("readOnly", "true");
         }
-        return builder.build().toString();        
-    }
-    
-    public static String getTopicValidateLink(URI baseUri, String databaseId, PrestoContext parentContext, PrestoField parentField, String topicId, String viewId) {
-        String path = PathParser.getInlineTopicPath(parentContext, parentField);
-        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor").path("validate-topic").path(databaseId).path(path).path(skull(topicId)).path(viewId);
         return builder.build().toString();        
     }
 
-    public static String getTopicViewHref(URI baseUri, String databaseId, String topicId, String viewId, boolean readOnly) {
+    public String topicViewLink(String topicId, PrestoType type, PrestoView view, boolean readOnly) {
         PrestoContext parentContext = null;
         PrestoField parentField = null;
-        return getTopicViewHref(baseUri, databaseId, parentContext, parentField, topicId, viewId, readOnly);
+        return topicViewLink(parentContext, parentField, topicId, type, view, readOnly);
     }
     
-    public static String getTopicViewHref(URI baseUri, String databaseId, PrestoContext parentContext, PrestoField parentField, String topicId, String viewId, boolean readOnly) {
+    public String topicViewLink(PrestoContext parentContext, PrestoField parentField, String topicId, PrestoType type, PrestoView view, boolean readOnly) {
         String path = PathParser.getInlineTopicPath(parentContext, parentField);
-        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor").path("topic-view").path(databaseId).path(path).path(skull(topicId)).path(viewId);
+        String viewId = view.getId();
+        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor").path("topic-view").path(databaseId).path(path).path(PathParser.skull(topicId)).path(viewId);
         if (readOnly) {
             builder = builder.queryParam("readOnly", "true");
         }
         return builder.build().toString();        
     }
     
-    public static String createNewTopicViewLink(URI baseUri, String databaseId, String typeId, String viewId) {
+    public String topicValidateLink(PrestoContext parentContext, PrestoField parentField, String topicId, PrestoType type, PrestoView view) {
+        String path = PathParser.getInlineTopicPath(parentContext, parentField);
+        String viewId = view.getId();
+        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor").path("validate-topic").path(databaseId).path(path).path(PathParser.skull(topicId)).path(viewId);
+        return builder.build().toString();        
+    }
+
+    public String createNewTopicViewLink(PrestoType type, PrestoView view) {
         PrestoContext parentContext = null;
         PrestoField parentField = null;
-        return createNewTopicViewLink(baseUri, databaseId, parentContext, parentField, typeId, viewId);
+        return createNewTopicViewLink(parentContext, parentField, type, view);
     }
     
-    public static String createNewTopicViewLink(URI baseUri, String databaseId, PrestoContext parentContext, PrestoField parentField, String typeId, String viewId) {
+    public String createNewTopicViewLink(PrestoContext parentContext, PrestoField parentField, PrestoType type, PrestoView view) {
         String path = PathParser.getInlineTopicPath(parentContext, parentField);
+        String typeId = type.getId();
+        String viewId = view.getId();
         UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor").path("topic-view").path(databaseId).path(path).path("_" + typeId).path(viewId);
         return builder.build().toString();
     }
 
-    public static String createInstanceLink(URI baseUri, String databaseId, String typeId) {
+    public String createInstanceLink(PrestoType type) {
+        String typeId = type.getId();
         UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor").path("create-instance").path(databaseId).path(typeId);
         return builder.build().toString();
     }
 
-    public static String createFieldInstanceLink(URI baseUri, String databaseId, PrestoContext parentContext, PrestoField parentField, String typeId) {
+    public String createFieldInstanceLink(PrestoContext parentContext, PrestoField parentField, PrestoType type) {
         String path = PathParser.getInlineTopicPath(parentContext, parentField);
+        String typeId = type.getId();
         UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor").path("create-field-instance").path(databaseId).path(path).path(typeId);
         return builder.build().toString();
     }
 
-    public static String addFieldValuesLink(URI baseUri, String databaseId, String topicId, String parentViewId, String fieldId, boolean index) {
+    public String addFieldValuesLink(String topicId, PrestoView parentView, PrestoField field, boolean index) {
         PrestoContext parentContext = null;
         PrestoField parentField = null;
-        return addFieldValuesLink(baseUri, databaseId, parentContext, parentField, topicId, parentViewId, fieldId, index);
+        return addFieldValuesLink(parentContext, parentField, topicId, parentView, field, index);
     }
 
-    public static String addFieldValuesLink(URI baseUri, String databaseId, PrestoContext parentContext, PrestoField parentField, String topicId, String parentViewId, String fieldId, boolean index) {
+    public String addFieldValuesLink(PrestoContext parentContext, PrestoField parentField, String topicId, PrestoView parentView, PrestoField field, boolean index) {
         String path = PathParser.getInlineTopicPath(parentContext, parentField);
-        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor").path("add-field-values").path(databaseId).path(path).path(skull(topicId)).path(parentViewId).path(fieldId);
+        String parentViewId = parentView.getId();
+        String fieldId = field.getId();
+        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor").path("add-field-values").path(databaseId).path(path).path(PathParser.skull(topicId)).path(parentViewId).path(fieldId);
         if (index) {
             builder = builder.queryParam("index", "{index}");
         }
         return builder.build().toString();
     }
 
-    public static String removeFieldValuesLink(URI baseUri, String databaseId, String topicId, String parentViewId, String fieldId) {
+    public String removeFieldValuesLink(String topicId, PrestoView parentView, PrestoField field) {
         PrestoContext parentContext = null;
         PrestoField parentField = null;
-        return removeFieldValuesLink(baseUri, databaseId, parentContext, parentField, topicId, parentViewId, fieldId);
+        return removeFieldValuesLink(parentContext, parentField, topicId, parentView, field);
     }
 
-    public static String removeFieldValuesLink(URI baseUri, String databaseId, PrestoContext parentContext, PrestoField parentField, String topicId, String parentViewId, String fieldId) {
+    public String removeFieldValuesLink(PrestoContext parentContext, PrestoField parentField, String topicId, PrestoView parentView, PrestoField field) {
         String path = PathParser.getInlineTopicPath(parentContext, parentField);
-        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor").path("remove-field-values").path(databaseId).path(path).path(skull(topicId)).path(parentViewId).path(fieldId);
+        String parentViewId = parentView.getId();
+        String fieldId = field.getId();
+        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor").path("remove-field-values").path(databaseId).path(path).path(PathParser.skull(topicId)).path(parentViewId).path(fieldId);
         return builder.build().toString();
     }
 
-    public static String moveFieldValuesToIndex(URI baseUri, String databaseId, String topicId, String parentViewId, String fieldId) {
+    public String moveFieldValuesToIndexLink(String topicId, PrestoView parentView, PrestoField field) {
         PrestoContext parentContext = null;
         PrestoField parentField = null;
-        return moveFieldValuesToIndex(baseUri, databaseId, parentContext, parentField, topicId, parentViewId, fieldId);
+        return moveFieldValuesToIndexLink(parentContext, parentField, topicId, parentView, field);
     }
 
-    public static String moveFieldValuesToIndex(URI baseUri, String databaseId, PrestoContext parentContext, PrestoField parentField, String topicId, String parentViewId, String fieldId) {
+    public String moveFieldValuesToIndexLink(PrestoContext parentContext, PrestoField parentField, String topicId, PrestoView parentView, PrestoField field) {
         String path = PathParser.getInlineTopicPath(parentContext, parentField);
-        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor").path("move-field-values-to-index").path(databaseId).path(path).path(skull(topicId)).path(parentViewId).path(fieldId).queryParam("index", "{index}");
+        String parentViewId = parentView.getId();
+        String fieldId = field.getId();
+        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor").path("move-field-values-to-index").path(databaseId).path(path).path(PathParser.skull(topicId)).path(parentViewId).path(fieldId).queryParam("index", "{index}");
         return builder.build().toString();
     }
 
-    public static String pagingLink(URI baseUri, String databaseId, String topicId, String parentViewId, String fieldId) {
-        PrestoContext parentContext = null;
-        PrestoField parentField = null;
-        return pagingLink(baseUri, databaseId, parentContext, parentField, topicId, parentViewId, fieldId);
-    }
+//    public String fieldPagingLink(String topicId, PrestoView parentView, PrestoField field) {
+//        PrestoContext parentContext = null;
+//        PrestoField parentField = null;
+//        return pagingLink(parentContext, parentField, topicId, parentView, field);
+//    }
 
-    public static String pagingLink(URI baseUri, String databaseId, PrestoContext parentContext, PrestoField parentField, String topicId, String parentViewId, String fieldId) {
+    public String fieldPagingLink(PrestoContext parentContext, PrestoField parentField, String topicId, PrestoView parentView, PrestoField field) {
         String path = PathParser.getInlineTopicPath(parentContext, parentField);
-        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor").path("paging-field").path(databaseId).path(path).path(skull(topicId)).path(parentViewId).path(fieldId).path("{start}").path("{limit}");
+        String parentViewId = parentView.getId();
+        String fieldId = field.getId();
+        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor").path("paging-field").path(databaseId).path(path).path(PathParser.skull(topicId)).path(parentViewId).path(fieldId).path("{start}").path("{limit}");
         return builder.build().toString();
     }
 
-    public static String availableFieldValues(URI baseUri, String databaseId, String topicId, String parentViewId, String fieldId, boolean query) {
-        PrestoContext parentContext = null;
-        PrestoField parentField = null;
-        return availableFieldValues(baseUri, databaseId, parentContext, parentField, topicId, parentViewId, fieldId, query);
-    }
+//    public String availableFieldValuesLink(String topicId, PrestoView parentView, PrestoField field, boolean query) {
+//        PrestoContext parentContext = null;
+//        PrestoField parentField = null;
+//        return availableFieldValuesLink(parentContext, parentField, topicId, parentView, field, query);
+//    }
 
-    public static String availableFieldValues(URI baseUri, String databaseId, PrestoContext parentContext, PrestoField parentField, String topicId, String parentViewId, String fieldId, boolean query) {
+    public String availableFieldValuesLink(PrestoContext parentContext, PrestoField parentField, String topicId, PrestoView parentView, PrestoField field, boolean query) {
         String path = PathParser.getInlineTopicPath(parentContext, parentField);
         UriBuilder builder = UriBuilder.fromUri(baseUri);
-        builder = builder.path("editor").path("available-field-values").path(databaseId).path(path).path(skull(topicId)).path(parentViewId).path(fieldId);
+        String parentViewId = parentView.getId();
+        String fieldId = field.getId();
+        builder = builder.path("editor").path("available-field-values").path(databaseId).path(path).path(PathParser.skull(topicId)).path(parentViewId).path(fieldId);
         if (query) {
             builder = builder.queryParam("query", "{query}");
         }
@@ -166,13 +176,14 @@ public class Links {
     }
 
     @Deprecated
-    public static String availableTypesTreeLazy(URI baseUri, String databaseId, String typeId) {
+    public String availableTypesTreeLazyLink(PrestoType type) {
+        String typeId = type.getId();
         UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor").path("available-types-tree-lazy").path(databaseId).path(typeId);
         return builder.build().toString();
     }
 
     @Deprecated
-    public static String getAvailableTypesTree(URI baseUri, String databaseId) {
+    public String availableTypesTreeLink() {
         UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor").path("available-types-tree").path(databaseId);
         return builder.build().toString();
     }
