@@ -9,7 +9,6 @@ import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoView;
 import net.ontopia.presto.spi.utils.PrestoContext;
-import net.ontopia.presto.spi.utils.Utils;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;
@@ -152,6 +151,8 @@ public class CustomSchemaLinks implements Links {
             params.put("typeId", type.getId());
             params.put("viewId", view.getId());
             params.put("readOnly", Boolean.toString(readOnly));
+            String path = getInlineTopicPath(parentContext, parentField);
+            params.put("path", path);
             return replaceUriPattern(href, params);
         }
         return delegate.topicViewHref(parentContext, parentField, topicId, type, view, readOnly);
@@ -168,6 +169,8 @@ public class CustomSchemaLinks implements Links {
             params.put("topicId", PathParser.skull(topicId));
             params.put("typeId", type.getId());
             params.put("viewId", view.getId());
+            String path = getInlineTopicPath(parentContext, parentField);
+            params.put("path", path);
             return new Link(rel, replaceUriPattern(href, params));
         }
         return delegate.topicViewUpdateLink(parentContext, parentField, topicId, type, view);
@@ -184,6 +187,8 @@ public class CustomSchemaLinks implements Links {
             params.put("topicId", PathParser.skull(topicId));
             params.put("typeId", type.getId());
             params.put("viewId", view.getId());
+            String path = getInlineTopicPath(parentContext, parentField);
+            params.put("path", path);
             return new Link(rel, replaceUriPattern(href, params));
         }
         return delegate.topicViewDeleteLink(parentContext, parentField, topicId, type, view);
