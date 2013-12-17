@@ -12,6 +12,8 @@ public interface PrestoUpdate {
 
     void removeValues(PrestoField field, Collection<?> values);
     
+    void clearValues(PrestoField field);
+    
     boolean isNewTopic();
     
     boolean isTopicUpdated();

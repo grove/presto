@@ -780,6 +780,69 @@ public abstract class EditorResource {
         }
     }
 
+    @PUT
+    @Produces(APPLICATION_JSON_UTF8)
+    @Consumes(APPLICATION_JSON_UTF8)
+    @Path("execute-field-action/{databaseId}/{topicId}/{viewId}/{fieldId}/{actionId}")
+    public Response executeFieldAction(
+            @PathParam("databaseId") final String databaseId, 
+            @PathParam("topicId") final String topicId, 
+            @PathParam("viewId") final String viewId, 
+            @PathParam("fieldId") final String fieldId, 
+            @PathParam("actionId") final String actionId, 
+            TopicView topicView) throws Exception {
+        String path = null;
+        return executeFieldAction(databaseId, path, topicId, viewId, fieldId, actionId, topicView);
+    }
+
+    @PUT
+    @Produces(APPLICATION_JSON_UTF8)
+    @Consumes(APPLICATION_JSON_UTF8)
+    @Path("execute-field-action/{databaseId}/{path}/{topicId}/{viewId}/{fieldId}/{actionId}")
+    public Response executeFieldAction(
+            @PathParam("databaseId") final String databaseId, 
+            @PathParam("path") final String path, 
+            @PathParam("topicId") final String topicId, 
+            @PathParam("viewId") final String viewId, 
+            @PathParam("fieldId") final String fieldId, 
+            @PathParam("actionId") final String actionId, 
+            TopicView topicView) throws Exception {
+
+        boolean readOnly = false;
+        Presto session = createPresto(databaseId, readOnly);
+
+        try {
+            // NOTE: the topicId is the topic that requested the validation, but the 
+            // validation needs to start with the topicId of the received topicView. The 
+            // former is a descendant of the latter.
+            String topicViewTopicId = topicView.getTopicId();
+
+            PrestoContext context = PathParser.getTopicByPath(session, path, topicViewTopicId, viewId);
+
+            if (context == null || context.isMissingTopic()) {
+                return Response.status(Status.NOT_FOUND).build();
+            }
+
+            try {
+                PrestoFieldUsage field = context.getFieldById(fieldId);
+
+                TopicView result = session.executeFieldAction(context, topicView, field, actionId);
+                session.commit();
+    
+                return Response.ok(result).build();
+                
+            } catch (ConstraintException ce) {
+                return getConstraintMessageResponse(ce);
+            }
+
+        } catch (Exception e) {
+            session.abort();
+            throw e;
+        } finally {
+            session.close();
+        }
+    }
+
     // overridable methods
 
     public abstract class EditorResourcePresto extends Presto {

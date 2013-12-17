@@ -64,13 +64,18 @@ public class JacksonDefaultDataStrategy implements JacksonDataStrategy {
     }
 
     @Override
-    public void putFieldValue(ObjectNode doc, PrestoField field, ArrayNode value) {
-        doc.put(field.getActualId(), value);
+    public boolean hasFieldValue(ObjectNode doc, PrestoField field) {
+        return doc.has(field.getActualId());
     }
 
     @Override
-    public boolean hasFieldValue(ObjectNode doc, PrestoField field) {
-        return doc.has(field.getActualId());
+    public void putFieldValue(ObjectNode doc, PrestoField field, ArrayNode value) {
+        doc.put(field.getActualId(), value);
+    }
+    
+    @Override
+    public void clearFieldValue(ObjectNode doc, PrestoField field) {
+        doc.remove(field.getActualId());
     }
 
 }

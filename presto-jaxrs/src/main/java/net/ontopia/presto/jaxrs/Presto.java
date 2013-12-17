@@ -25,6 +25,7 @@ import net.ontopia.presto.jaxb.TopicTypeTree;
 import net.ontopia.presto.jaxb.TopicView;
 import net.ontopia.presto.jaxb.Value;
 import net.ontopia.presto.jaxrs.PrestoProcessor.Status;
+import net.ontopia.presto.jaxrs.action.FieldAction;
 import net.ontopia.presto.jaxrs.process.ValueFactory;
 import net.ontopia.presto.jaxrs.resolve.AvailableFieldCreateTypesResolver;
 import net.ontopia.presto.jaxrs.resolve.AvailableFieldValuesResolver;
@@ -175,6 +176,11 @@ public abstract class Presto {
     //        return result;
     //    }
 
+    public PrestoChangeSet newChangeSet() {
+        PrestoDataProvider dataProvider = getDataProvider();
+        return dataProvider.newChangeSet(getChangeSetHandler());
+    }
+    
     public Topic getTopicAndProcess(PrestoContext context) {
         PrestoContextRules rules = getPrestoContextRules(context);
 
@@ -1063,7 +1069,7 @@ public abstract class Presto {
 
         return processor.postProcessFieldData(result, rules, field, null);
     }
-
+    
     public FieldData addFieldValues(PrestoContextRules rules, PrestoFieldUsage field, Integer index, FieldData fieldData) {
         boolean resolveEmbedded = true;
         boolean includeExisting = false;
@@ -1176,6 +1182,27 @@ public abstract class Presto {
 
         topicView = processor.preProcessTopicView(topicView, rules, status);
 
+        return processor.postProcessTopicView(topicView, rules, null);
+    }
+    
+    public TopicView executeFieldAction(PrestoContext context, TopicView topicView, PrestoFieldUsage field, String actionId) {
+        PrestoContextRules rules = getPrestoContextRules(context);
+        Status status = new Status();
+
+        topicView = processor.preProcessTopicView(topicView, rules, status);
+
+        ObjectNode extra = ExtraUtils.getFieldExtraNode(field);
+        if (extra != null) {
+            JsonNode actionNode = extra.path(actionId);
+            if (actionNode.isObject()) {
+                String className = actionNode.path("class").getTextValue();
+                FieldAction fieldAction = Utils.newInstanceOf(className, FieldAction.class);
+                if (fieldAction != null) {
+                    System.out.println("Executing action: "+ actionId);
+                    topicView = fieldAction.executeAction(this, context, topicView, field, actionId);
+                }
+            }
+        }        
         return processor.postProcessTopicView(topicView, rules, null);
     }
 

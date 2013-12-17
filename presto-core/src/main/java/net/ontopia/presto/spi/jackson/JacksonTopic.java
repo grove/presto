@@ -96,6 +96,10 @@ public class JacksonTopic implements DefaultTopic {
         getDataStrategy().putFieldValue(getData(), field, value);
     }
     
+    protected void clearFieldValue(PrestoField field) {
+        getDataStrategy().clearFieldValue(getData(), field);
+    }
+    
     // methods for retrieving the state of a topic
 
     @Override
@@ -340,7 +344,12 @@ public class JacksonTopic implements DefaultTopic {
             }
         }
     }
-
+    
+    @Override
+    public void clearValue(PrestoField field) {
+        clearFieldValue(field);
+    }
+    
     @Override
     public Object getInternalData() {
         return data;
