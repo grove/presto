@@ -65,7 +65,7 @@ public class ExtraUtils {
         }
         return null;
     }
-
+    
     public static String getExtraParamsStringValue(ObjectNode extra, String paramKey) {
         JsonNode params = extra.path("params");
         if (params.isObject()) {
@@ -79,6 +79,10 @@ public class ExtraUtils {
     
     public static Map<String,Object> getExtraParamsMap(ObjectNode extra) {
         JsonNode params = extra.path("params");
+        return getParamsMap(params);
+    }
+    
+    public static Map<String,Object> getParamsMap(JsonNode params) {
         if (params.isObject()) {
             Map<String,Object> result = new LinkedHashMap<String,Object>();
             Iterator<String> pnIter = params.getFieldNames();
@@ -90,5 +94,5 @@ public class ExtraUtils {
         }
         return null;
     }
-
+    
 }
