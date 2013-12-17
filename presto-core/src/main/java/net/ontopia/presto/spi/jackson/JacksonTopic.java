@@ -340,5 +340,10 @@ public class JacksonTopic implements DefaultTopic {
             }
         }
     }
+
+    @Override
+    public Object getInternalData() {
+        return data;
+    }
     
 }
