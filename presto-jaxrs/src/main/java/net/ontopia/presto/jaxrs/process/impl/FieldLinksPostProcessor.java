@@ -3,6 +3,7 @@ package net.ontopia.presto.jaxrs.process.impl;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
 
 import javax.ws.rs.core.UriBuilder;
 
@@ -45,6 +46,9 @@ public class FieldLinksPostProcessor extends FieldDataProcessor {
                             String name = linkNode.path("name").getTextValue();
                             link = new Link(rel, href);
                             link.setName(name);
+                            Map<String, Object> params = ExtraUtils.getParamsMap(linkNode.path("params"));
+                            link.setParams(params);
+                            // TODO: support nested links?
                         } else {
                             link = getLink(linkNode);
                         }

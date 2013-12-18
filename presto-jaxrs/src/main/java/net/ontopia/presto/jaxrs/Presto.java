@@ -1193,13 +1193,15 @@ public abstract class Presto {
 
         ObjectNode extra = ExtraUtils.getFieldExtraNode(field);
         if (extra != null) {
-            JsonNode actionNode = extra.path(actionId);
+            JsonNode actionNode = extra.path("actions").path(actionId);
             if (actionNode.isObject()) {
                 String className = actionNode.path("class").getTextValue();
                 FieldAction fieldAction = Utils.newInstanceOf(className, FieldAction.class);
                 if (fieldAction != null) {
+                    fieldAction.setConfig((ObjectNode)actionNode);
+                    fieldAction.setPresto(this);
                     System.out.println("Executing action: "+ actionId);
-                    topicView = fieldAction.executeAction(this, context, topicView, field, actionId);
+                    topicView = fieldAction.executeAction(context, topicView, field, actionId);
                 }
             }
         }        
