@@ -1,7 +1,7 @@
 package net.ontopia.presto.jaxrs.action;
 
-import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import net.ontopia.presto.jaxb.TopicView;
 import net.ontopia.presto.jaxrs.Presto;
@@ -29,8 +29,8 @@ public class ClearOverrideFieldAction extends ClearValuesFieldAction {
     }
 
     @Override
-    protected Collection<String> getRefreshFieldIds(TopicView topicView, PrestoFieldUsage field, Presto session, PrestoContext newContext) {
-        Collection<String> result = super.getRefreshFieldIds(topicView, field, session, newContext);
+    protected Set<String> getRefreshFieldIds(TopicView topicView, PrestoFieldUsage field, Presto session, PrestoContext newContext) {
+        Set<String> result = super.getRefreshFieldIds(topicView, field, session, newContext);
         String overrideFieldId = getOverrideFieldId();
         if (overrideFieldId != null) {
             result.add(overrideFieldId);
