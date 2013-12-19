@@ -12,6 +12,7 @@ import net.ontopia.presto.jaxb.Link;
 import net.ontopia.presto.jaxrs.ExtraUtils;
 import net.ontopia.presto.jaxrs.PathParser;
 import net.ontopia.presto.jaxrs.Presto;
+import net.ontopia.presto.jaxrs.action.FieldAction;
 import net.ontopia.presto.jaxrs.process.FieldDataProcessor;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoView;
@@ -38,17 +39,24 @@ public class FieldLinksPostProcessor extends FieldDataProcessor {
                 }
                 for (JsonNode linkNode : linksNode) {
                     if (linkNode.isObject()) {
-                        Link link;
+                        Link link = null;
                         if (linkNode.has("action")) {
+                            
                             String actionId = linkNode.path("action").getTextValue();
-                            String rel = "action";
-                            String href = getActionLink(rules.getContext(), field, actionId);
-                            String name = linkNode.path("name").getTextValue();
-                            link = new Link(rel, href);
-                            link.setName(name);
-                            Map<String, Object> params = ExtraUtils.getParamsMap(linkNode.path("params"));
-                            link.setParams(params);
-                            // TODO: support nested links?
+                            Presto session = getPresto();
+                            
+                            FieldAction fieldAction = session.getFieldAction(field, actionId);
+                            if (fieldAction != null && fieldAction.isActive(rules, field, actionId)) {
+                                String rel = "action";
+                                PrestoContext context = rules.getContext();
+                                String href = getActionLink(context, field, actionId);
+                                String name = linkNode.path("name").getTextValue();
+                                link = new Link(rel, href);
+                                link.setName(name);
+                                Map<String, Object> params = ExtraUtils.getParamsMap(linkNode.path("params"));
+                                link.setParams(params);
+                                // TODO: support nested links?
+                            }
                         } else {
                             link = getLink(linkNode);
                         }

@@ -6,6 +6,7 @@ import net.ontopia.presto.jaxb.TopicView;
 import net.ontopia.presto.jaxrs.Presto;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.utils.PrestoContext;
+import net.ontopia.presto.spi.utils.PrestoContextRules;
 
 public abstract class FieldAction {
 
@@ -13,6 +14,8 @@ public abstract class FieldAction {
 
     private Presto presto;
 
+    public abstract boolean isActive(PrestoContextRules rules, PrestoFieldUsage field, String actionId);
+    
     public abstract TopicView executeAction(PrestoContext context, TopicView topicView, PrestoFieldUsage field, String actionId);
 
     public ObjectNode getConfig() {

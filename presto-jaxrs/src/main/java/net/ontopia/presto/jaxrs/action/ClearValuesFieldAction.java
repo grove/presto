@@ -4,9 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ObjectNode;
-
 import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxb.TopicView;
 import net.ontopia.presto.jaxrs.Presto;
@@ -18,7 +15,10 @@ import net.ontopia.presto.spi.PrestoUpdate;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.Utils;
 
-public class ClearValuesFieldAction extends FieldAction {
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.node.ObjectNode;
+
+public abstract class ClearValuesFieldAction extends FieldAction {
 
     @Override
     public TopicView executeAction(PrestoContext context, TopicView topicView, PrestoFieldUsage field, String actionId) {
@@ -37,19 +37,30 @@ public class ClearValuesFieldAction extends FieldAction {
         PrestoTopic topicAfterSave = update.getTopicAfterSave();
         PrestoContext newContext = PrestoContext.newContext(context, topicAfterSave);
         
-        refreshField(session, topicView, newContext, field.getId());
+        refreshFields(topicView, field, session, newContext);
         
+        return topicView;
+    }
+
+    protected Collection<String> getRefreshFieldIds(TopicView topicView, PrestoFieldUsage field, Presto session, PrestoContext newContext) {
+        List<String> result = new ArrayList<String>();
+        result.add(field.getId());
         ObjectNode config  = getConfig();
         if (config != null && config.isObject()) {
             for (JsonNode refreshField : config.path("refresh-fields")) {
                 String refreshFieldId = refreshField.getTextValue();
                 if (refreshFieldId != null) {
-                    refreshField(session, topicView, newContext, refreshFieldId);
+                    result.add(refreshFieldId);
                 }
             }
         }
-        
-        return topicView;
+        return result;
+    }
+    
+    private void refreshFields(TopicView topicView, PrestoFieldUsage field, Presto session, PrestoContext newContext) {
+        for (String fieldId : getRefreshFieldIds(topicView, field, session, newContext)) {
+            refreshField(session, topicView, newContext, fieldId);
+        }
     }
 
     private void refreshField(Presto session, TopicView topicView, PrestoContext context, String fieldId) {

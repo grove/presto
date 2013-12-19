@@ -1190,7 +1190,18 @@ public abstract class Presto {
         Status status = new Status();
 
         topicView = processor.preProcessTopicView(topicView, rules, status);
+        
+        FieldAction fieldAction = getFieldAction(field, actionId);
+        
+        if (fieldAction != null && fieldAction.isActive(rules, field, actionId)) {
+            System.out.println("Executing action: "+ actionId);
+            topicView = fieldAction.executeAction(context, topicView, field, actionId);
+        }
+        
+        return processor.postProcessTopicView(topicView, rules, null);
+    }
 
+    public FieldAction getFieldAction(PrestoField field, String actionId) {
         ObjectNode extra = ExtraUtils.getFieldExtraNode(field);
         if (extra != null) {
             JsonNode actionNode = extra.path("actions").path(actionId);
@@ -1200,14 +1211,13 @@ public abstract class Presto {
                 if (fieldAction != null) {
                     fieldAction.setConfig((ObjectNode)actionNode);
                     fieldAction.setPresto(this);
-                    System.out.println("Executing action: "+ actionId);
-                    topicView = fieldAction.executeAction(context, topicView, field, actionId);
+                    return fieldAction;
                 }
             }
         }        
-        return processor.postProcessTopicView(topicView, rules, null);
+        return null;
     }
-
+    
     public Object updateTopic(PrestoContext context, TopicView topicView, boolean returnParent) {
         PrestoContextRules rules = getPrestoContextRules(context);
         Status status = new Status();
