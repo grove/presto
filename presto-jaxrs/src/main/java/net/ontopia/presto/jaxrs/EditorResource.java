@@ -200,13 +200,13 @@ public abstract class EditorResource {
             @PathParam("start") final int start, 
             @PathParam("limit") final int limit) throws Exception {
         String path = null;
-        return getFieldPaging(databaseId, path, topicId, viewId, fieldId, start, limit);
+        return getFieldPagingPath(databaseId, path, topicId, viewId, fieldId, start, limit);
     }
 
     @GET
     @Produces(APPLICATION_JSON_UTF8)
     @Path("paging-field/{databaseId}/{path}/{topicId}/{viewId}/{fieldId}/{start}/{limit}")
-    public Response getFieldPaging(
+    public Response getFieldPagingPath(
             @PathParam("databaseId") final String databaseId, 
             @PathParam("path") final String path, 
             @PathParam("topicId") final String topicId, 
@@ -251,13 +251,13 @@ public abstract class EditorResource {
             @PathParam("topicId") final String topicId,
             @PathParam("viewId") final String viewId) throws Exception {
         String path = null;
-        return deleteTopicView(databaseId, path, topicId, viewId);
+        return deleteTopicViewPath(databaseId, path, topicId, viewId);
     }
 
     @DELETE
     @Produces(APPLICATION_JSON_UTF8)
     @Path("topic-view/{databaseId}/{path}/{topicId}/{viewId}")
-    public Response deleteTopicView(
+    public Response deleteTopicViewPath(
             @PathParam("databaseId") final String databaseId, 
             @PathParam("path") final String path,
             @PathParam("topicId") final String topicId,
@@ -316,7 +316,7 @@ public abstract class EditorResource {
             @QueryParam("readOnly") final boolean readOnly) throws Exception {
         String path = null;
         String viewId = null;
-        return getTopicInView(databaseId, path, topicId, viewId, readOnly);
+        return getTopicInViewPath(databaseId, path, topicId, viewId, readOnly);
     }
 
     @GET
@@ -328,13 +328,13 @@ public abstract class EditorResource {
             @PathParam("viewId") final String viewId,
             @QueryParam("readOnly") final boolean readOnly) throws Exception {
         String path = null;
-        return getTopicInView(databaseId, path, topicId, viewId, readOnly);
+        return getTopicInViewPath(databaseId, path, topicId, viewId, readOnly);
     }
 
     @GET
     @Produces(APPLICATION_JSON_UTF8)
     @Path("topic/{databaseId}/{path}/{topicId}/{viewId}")
-    public Response getTopicInView(
+    public Response getTopicInViewPath(
             @PathParam("databaseId") final String databaseId, 
             @PathParam("path") final String path,
             @PathParam("topicId") final String topicId,
@@ -371,7 +371,7 @@ public abstract class EditorResource {
             @QueryParam("readOnly") final boolean readOnly) throws Exception {
         String path = null;
         String viewId = null;
-        return getTopicViewInView(databaseId, path, topicId, viewId, readOnly);
+        return getTopicViewInViewPath(databaseId, path, topicId, viewId, readOnly);
     }
 
     @GET
@@ -383,13 +383,13 @@ public abstract class EditorResource {
             @PathParam("viewId") final String viewId,
             @QueryParam("readOnly") final boolean readOnly) throws Exception {
         String path = null;
-        return getTopicViewInView(databaseId, path, topicId, viewId, readOnly);
+        return getTopicViewInViewPath(databaseId, path, topicId, viewId, readOnly);
     }
 
     @GET
     @Produces(APPLICATION_JSON_UTF8)
     @Path("topic-view/{databaseId}/{path}/{topicId}/{viewId}")
-    public Response getTopicViewInView(
+    public Response getTopicViewInViewPath(
             @PathParam("databaseId") final String databaseId, 
             @PathParam("path") final String path,
             @PathParam("topicId") final String topicId,
@@ -534,14 +534,14 @@ public abstract class EditorResource {
             @QueryParam("index") final Integer index, FieldData fieldData) throws Exception {
 
         String path = null;
-        return addFieldValues(databaseId, path, topicId, viewId, fieldId, index, fieldData);
+        return addFieldValuesPath(databaseId, path, topicId, viewId, fieldId, index, fieldData);
     }
 
     @POST
     @Produces(APPLICATION_JSON_UTF8)
     @Consumes(APPLICATION_JSON_UTF8)
     @Path("add-field-values/{databaseId}/{path}/{topicId}/{viewId}/{fieldId}")
-    public Response addFieldValues( 
+    public Response addFieldValuesPath( 
             @PathParam("databaseId") final String databaseId, 
             @PathParam("path") final String path, 
             @PathParam("topicId") final String topicId, 
@@ -600,14 +600,14 @@ public abstract class EditorResource {
             @PathParam("viewId") final String viewId,
             @PathParam("fieldId") final String fieldId, FieldData fieldData) throws Exception {
         String path = null;
-        return removeFieldValues(databaseId, path, topicId, viewId, fieldId, fieldData);
+        return removeFieldValuesPath(databaseId, path, topicId, viewId, fieldId, fieldData);
     }
 
     @POST
     @Produces(APPLICATION_JSON_UTF8)
     @Consumes(APPLICATION_JSON_UTF8)
     @Path("remove-field-values/{databaseId}/{path}/{topicId}/{viewId}/{fieldId}")
-    public Response removeFieldValues(
+    public Response removeFieldValuesPath(
             @PathParam("databaseId") final String databaseId, 
             @PathParam("path") final String path,
             @PathParam("topicId") final String topicId, 
@@ -667,7 +667,7 @@ public abstract class EditorResource {
     @Produces(APPLICATION_JSON_UTF8)
     @Consumes(APPLICATION_JSON_UTF8)
     @Path("move-field-values-to-index/{databaseId}/{path}/{topicId}/{viewId}/{fieldId}")
-    public Response moveFieldValuesToIndex( 
+    public Response moveFieldValuesToIndexPath( 
             @PathParam("databaseId") final String databaseId, 
             @PathParam("path") final String path, 
             @PathParam("topicId") final String topicId, 
@@ -675,7 +675,7 @@ public abstract class EditorResource {
             @PathParam("fieldId") final String fieldId, 
             @QueryParam("index") final Integer index, FieldData fieldData) throws Exception {
 
-        return addFieldValues(databaseId, path, topicId, viewId, fieldId, index, fieldData);
+        return addFieldValuesPath(databaseId, path, topicId, viewId, fieldId, index, fieldData);
     }
 
     @GET
@@ -688,13 +688,13 @@ public abstract class EditorResource {
             @PathParam("fieldId") final String fieldId,
             @QueryParam("query") final String query) throws Exception {
         String path = null;
-        return getAvailableFieldValues(databaseId, path, topicId, viewId, fieldId, query);
+        return getAvailableFieldValuesPath(databaseId, path, topicId, viewId, fieldId, query);
     }
 
     @GET
     @Produces(APPLICATION_JSON_UTF8)
     @Path("available-field-values/{databaseId}/{path}/{topicId}/{viewId}/{fieldId}")
-    public Response getAvailableFieldValues( 
+    public Response getAvailableFieldValuesPath( 
             @PathParam("databaseId") final String databaseId, 
             @PathParam("path") final String path, 
             @PathParam("topicId") final String topicId, 
@@ -792,14 +792,14 @@ public abstract class EditorResource {
             @PathParam("actionId") final String actionId, 
             TopicView topicView) throws Exception {
         String path = null;
-        return executeFieldAction(databaseId, path, topicId, viewId, fieldId, actionId, topicView);
+        return executeFieldActionPath(databaseId, path, topicId, viewId, fieldId, actionId, topicView);
     }
 
     @PUT
     @Produces(APPLICATION_JSON_UTF8)
     @Consumes(APPLICATION_JSON_UTF8)
     @Path("execute-field-action/{databaseId}/{path}/{topicId}/{viewId}/{fieldId}/{actionId}")
-    public Response executeFieldAction(
+    public Response executeFieldActionPath(
             @PathParam("databaseId") final String databaseId, 
             @PathParam("path") final String path, 
             @PathParam("topicId") final String topicId, 
