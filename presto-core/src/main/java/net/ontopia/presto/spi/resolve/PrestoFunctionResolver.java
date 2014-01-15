@@ -23,7 +23,7 @@ public class PrestoFunctionResolver extends PrestoFieldResolver {
         
         PrestoFunction func = getFunction(getConfig());
         if (func != null) {
-            List<Object> result = func.execute(getVariableContext(), objects, field, paging);
+            List<Object> result = func.execute(getVariableContext(), getConfig(), objects, field, paging);
             return new PrestoPagedValues(result, paging, result.size());            
         } else {
             return new PrestoPagedValues(Collections.emptyList(), paging, 0);        

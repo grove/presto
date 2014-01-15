@@ -22,4 +22,6 @@ public interface JacksonDataStrategy {
 
     void putFieldValue(ObjectNode doc, PrestoField field, ArrayNode value);
 
+    void clearFieldValue(ObjectNode doc, PrestoField field);
+
 }

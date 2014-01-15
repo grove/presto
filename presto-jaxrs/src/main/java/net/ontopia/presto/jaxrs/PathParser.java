@@ -1,5 +1,10 @@
 package net.ontopia.presto.jaxrs;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoFieldUsage;
@@ -154,6 +159,37 @@ public class PathParser {
     public static String deskull(String u) {
         // NOTE: we're only patching the ids of topics
         return u.replaceAll(PathParser.SKULL_CHARACTER, "/");
+    }
+    
+    public static String replaceUriPattern(String template, Map<String, String> values) {
+        StringBuilder b = new StringBuilder(template.length());
+        String PATTERN = "\\{(\\w+)\\}";
+        Matcher m = Pattern.compile(PATTERN).matcher(template);
+        int i = 0;
+        while(m.find()) {
+            b.append(template, i, m.start());
+            String group = m.group(1);
+            String value = values.get(group);
+            if (value != null) {
+                b.append(value);
+            } else {
+                b.append(m.group());
+            }
+            i = m.end();
+        }
+        b.append(template, i, template.length());
+        return b.toString();
+    }
+
+    public static void main(String[] args) throws Exception {
+        String template = "http://localhost/{something}/{databaseId}/{topicId}/{topicId}/{typeId}/{viewId}/";
+        Map<String,String> values = new HashMap<String,String>();
+        values.put("databaseId", "pesto");
+        values.put("topicId", "ab/c");
+        values.put("typeId", "A");
+        values.put("viewId", "B");
+        String result = replaceUriPattern(template, values);
+        System.out.println("R: " + result);
     }
 
 }

@@ -32,7 +32,9 @@ public interface PrestoTopic {
     }
 
     List<? extends Object> getStoredValues(PrestoField field);
-
+    
     PagedValues getStoredValues(PrestoField field, int offset, int limit);
+
+    Object getInternalData(); // WARN: be careful, no guarantees given
 
 }

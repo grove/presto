@@ -132,7 +132,16 @@ public abstract class JacksonBucketDataStrategy implements JacksonDataStrategy {
             writeBucket.put(fieldId, value);
         }
     }
-
+    
+    @Override
+    public void clearFieldValue(ObjectNode doc, PrestoField field) {
+        String fieldId = field.getActualId();
+        ObjectNode writeBucket = getWriteBucket(doc, field, false);
+        if (writeBucket != null) {
+            writeBucket.remove(fieldId);
+        }
+    }
+    
     protected ObjectNode getBucket(String bucketId, ObjectNode doc) {
         return (ObjectNode)doc.get(bucketId);
     }

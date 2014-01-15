@@ -69,13 +69,13 @@ public class PrestoProcessor {
             throw new UnsupportedOperationException("Cannot pre-process Topic just yet.");
         }
         // process the topic
-        ObjectNode schemaExtra = presto.getSchemaExtraNode(presto.getSchemaProvider());
+        ObjectNode schemaExtra = ExtraUtils.getSchemaExtraNode(presto.getSchemaProvider());
         topicData = processTopicExtra(topicData, rules, schemaExtra, processType, status);
         
         PrestoContext context = rules.getContext();
         PrestoType type = context.getType();
         
-        ObjectNode topicExtra = presto.getTypeExtraNode(type);
+        ObjectNode topicExtra = ExtraUtils.getTypeExtraNode(type);
         topicData = processTopicExtra(topicData, rules, topicExtra, processType, status);
 
         // process the topic views
@@ -117,13 +117,13 @@ public class PrestoProcessor {
         PrestoContext context = rules.getContext();
         
         // process the topic
-        ObjectNode schemaExtra = presto.getSchemaExtraNode(presto.getSchemaProvider());
+        ObjectNode schemaExtra = ExtraUtils.getSchemaExtraNode(presto.getSchemaProvider());
         topicView = processTopicViewExtra(topicView, rules, schemaExtra, processType, status);
         
-        ObjectNode topicExtra = presto.getTypeExtraNode(context.getType());
+        ObjectNode topicExtra = ExtraUtils.getTypeExtraNode(context.getType());
         topicView = processTopicViewExtra(topicView, rules, topicExtra, processType, status);
         
-        ObjectNode viewExtra = presto.getViewExtraNode(context.getView());
+        ObjectNode viewExtra = ExtraUtils.getViewExtraNode(context.getView());
         topicView = processTopicViewExtra(topicView, rules, viewExtra, processType, status);
 
         // process the field data
@@ -214,16 +214,16 @@ public class PrestoProcessor {
         }
 
         // process field
-        ObjectNode schemaExtra = presto.getSchemaExtraNode(presto.getSchemaProvider());
+        ObjectNode schemaExtra = ExtraUtils.getSchemaExtraNode(presto.getSchemaProvider());
         fieldData = processFieldDataExtra(sstate, fieldData, rules, field, schemaExtra, processType, status);
         
-        ObjectNode topicExtra = presto.getTypeExtraNode(context.getType());
+        ObjectNode topicExtra = ExtraUtils.getTypeExtraNode(context.getType());
         fieldData = processFieldDataExtra(sstate, fieldData, rules, field, topicExtra, processType, status);
         
-        ObjectNode viewExtra = presto.getViewExtraNode(context.getView());
+        ObjectNode viewExtra = ExtraUtils.getViewExtraNode(context.getView());
         fieldData = processFieldDataExtra(sstate, fieldData, rules, field, viewExtra, processType, status);
 
-        ObjectNode fieldExtra = presto.getFieldExtraNode(field);
+        ObjectNode fieldExtra = ExtraUtils.getFieldExtraNode(field);
         fieldData = processFieldDataExtra(sstate, fieldData, rules, field, fieldExtra, processType, status);
         
         return fieldData;

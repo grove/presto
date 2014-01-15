@@ -3,6 +3,7 @@ package net.ontopia.presto.spi.utils;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 import net.ontopia.presto.spi.PrestoField;
@@ -125,6 +126,13 @@ public class PrestoDefaultUpdate implements PrestoUpdate, PrestoDefaultChangeSet
             topic.removeValue(field, values);
             handleFieldUpdated(field, null, values);
         }
+    }
+
+    @Override
+    public void clearValues(PrestoField field) {
+        List<? extends Object> values = topic.getValues(field);
+        topic.clearValue(field);
+        handleFieldUpdated(field, null, values);
     }
 
     private void handleFieldUpdated(PrestoField field, Collection<?> addValues, Collection<?> remValues) {

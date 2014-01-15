@@ -51,6 +51,9 @@ import net.ontopia.presto.spi.utils.PrestoContextRules;
 @Path("/editor")
 public abstract class EditorResource {
 
+    private static final String REL_AVAILABLE_DATABASES = "available-databases";
+    private static final String REL_DATABASE_EDIT = "edit";
+
     public final static String APPLICATION_JSON_UTF8 = "application/json;charset=UTF-8";
 
     @Context HttpServletRequest request;
@@ -66,7 +69,7 @@ public abstract class EditorResource {
         result.setName("Presto - Editor REST API");
 
         List<Link> links = new ArrayList<Link>();
-        links.add(new Link("available-databases", uriInfo.getBaseUri() + "editor/available-databases"));
+        links.add(new Link(REL_AVAILABLE_DATABASES, uriInfo.getBaseUri() + "editor/available-databases"));
         result.setLinks(links);      
 
         return Response.ok(result).build();
@@ -93,7 +96,7 @@ public abstract class EditorResource {
             database.setName(getDatabaseName(databaseId));
 
             List<Link> links = new ArrayList<Link>();
-            links.add(new Link("edit", uriInfo.getBaseUri() + "editor/database-info/" + database.getId()));
+            links.add(new Link(REL_DATABASE_EDIT, uriInfo.getBaseUri() + "editor/database-info/" + database.getId()));
             database.setLinks(links);    
 
             databases.add(database);
@@ -125,8 +128,8 @@ public abstract class EditorResource {
 
     @GET
     @Produces(APPLICATION_JSON_UTF8)
-    @Path("create-instance/{databaseId}/{typeId}")
-    public Response createInstance(
+    @Path("topic-template/{databaseId}/{typeId}")
+    public Response getTopicTemplate(
             @PathParam("databaseId") final String databaseId, 
             @PathParam("typeId") final String typeId) throws Exception {
 
@@ -156,8 +159,8 @@ public abstract class EditorResource {
 
     @GET
     @Produces(APPLICATION_JSON_UTF8)
-    @Path("create-field-instance/{databaseId}/{path}/{typeId}")
-    public Response createFieldInstance(
+    @Path("topic-template-field/{databaseId}/{path}/{typeId}")
+    public Response getTopicTemplateField(
             @PathParam("databaseId") final String databaseId,
             @PathParam("path") final String path,
             @PathParam("typeId") final String typeId) throws Exception {
@@ -174,7 +177,7 @@ public abstract class EditorResource {
             }
 
             PrestoContextField contextField = PathParser.getContextField(session, path);
-            TopicView result = session.getTopicViewTemplate(contextField.getContext(), contextField.getField(), type);
+            TopicView result = session.getTopicViewTemplateField(contextField.getContext(), contextField.getField(), type);
 
             return Response.ok(result).build();
 
@@ -197,13 +200,13 @@ public abstract class EditorResource {
             @PathParam("start") final int start, 
             @PathParam("limit") final int limit) throws Exception {
         String path = null;
-        return getFieldPaging(databaseId, path, topicId, viewId, fieldId, start, limit);
+        return getFieldPagingPath(databaseId, path, topicId, viewId, fieldId, start, limit);
     }
 
     @GET
     @Produces(APPLICATION_JSON_UTF8)
     @Path("paging-field/{databaseId}/{path}/{topicId}/{viewId}/{fieldId}/{start}/{limit}")
-    public Response getFieldPaging(
+    public Response getFieldPagingPath(
             @PathParam("databaseId") final String databaseId, 
             @PathParam("path") final String path, 
             @PathParam("topicId") final String topicId, 
@@ -248,13 +251,13 @@ public abstract class EditorResource {
             @PathParam("topicId") final String topicId,
             @PathParam("viewId") final String viewId) throws Exception {
         String path = null;
-        return deleteTopicView(databaseId, path, topicId, viewId);
+        return deleteTopicViewPath(databaseId, path, topicId, viewId);
     }
 
     @DELETE
     @Produces(APPLICATION_JSON_UTF8)
     @Path("topic-view/{databaseId}/{path}/{topicId}/{viewId}")
-    public Response deleteTopicView(
+    public Response deleteTopicViewPath(
             @PathParam("databaseId") final String databaseId, 
             @PathParam("path") final String path,
             @PathParam("topicId") final String topicId,
@@ -313,7 +316,7 @@ public abstract class EditorResource {
             @QueryParam("readOnly") final boolean readOnly) throws Exception {
         String path = null;
         String viewId = null;
-        return getTopicInView(databaseId, path, topicId, viewId, readOnly);
+        return getTopicInViewPath(databaseId, path, topicId, viewId, readOnly);
     }
 
     @GET
@@ -325,13 +328,13 @@ public abstract class EditorResource {
             @PathParam("viewId") final String viewId,
             @QueryParam("readOnly") final boolean readOnly) throws Exception {
         String path = null;
-        return getTopicInView(databaseId, path, topicId, viewId, readOnly);
+        return getTopicInViewPath(databaseId, path, topicId, viewId, readOnly);
     }
 
     @GET
     @Produces(APPLICATION_JSON_UTF8)
     @Path("topic/{databaseId}/{path}/{topicId}/{viewId}")
-    public Response getTopicInView(
+    public Response getTopicInViewPath(
             @PathParam("databaseId") final String databaseId, 
             @PathParam("path") final String path,
             @PathParam("topicId") final String topicId,
@@ -368,7 +371,7 @@ public abstract class EditorResource {
             @QueryParam("readOnly") final boolean readOnly) throws Exception {
         String path = null;
         String viewId = null;
-        return getTopicViewInView(databaseId, path, topicId, viewId, readOnly);
+        return getTopicViewInViewPath(databaseId, path, topicId, viewId, readOnly);
     }
 
     @GET
@@ -380,13 +383,13 @@ public abstract class EditorResource {
             @PathParam("viewId") final String viewId,
             @QueryParam("readOnly") final boolean readOnly) throws Exception {
         String path = null;
-        return getTopicViewInView(databaseId, path, topicId, viewId, readOnly);
+        return getTopicViewInViewPath(databaseId, path, topicId, viewId, readOnly);
     }
 
     @GET
     @Produces(APPLICATION_JSON_UTF8)
     @Path("topic-view/{databaseId}/{path}/{topicId}/{viewId}")
-    public Response getTopicViewInView(
+    public Response getTopicViewInViewPath(
             @PathParam("databaseId") final String databaseId, 
             @PathParam("path") final String path,
             @PathParam("topicId") final String topicId,
@@ -531,14 +534,14 @@ public abstract class EditorResource {
             @QueryParam("index") final Integer index, FieldData fieldData) throws Exception {
 
         String path = null;
-        return addFieldValues(databaseId, path, topicId, viewId, fieldId, index, fieldData);
+        return addFieldValuesPath(databaseId, path, topicId, viewId, fieldId, index, fieldData);
     }
 
     @POST
     @Produces(APPLICATION_JSON_UTF8)
     @Consumes(APPLICATION_JSON_UTF8)
     @Path("add-field-values/{databaseId}/{path}/{topicId}/{viewId}/{fieldId}")
-    public Response addFieldValues( 
+    public Response addFieldValuesPath( 
             @PathParam("databaseId") final String databaseId, 
             @PathParam("path") final String path, 
             @PathParam("topicId") final String topicId, 
@@ -597,14 +600,14 @@ public abstract class EditorResource {
             @PathParam("viewId") final String viewId,
             @PathParam("fieldId") final String fieldId, FieldData fieldData) throws Exception {
         String path = null;
-        return removeFieldValues(databaseId, path, topicId, viewId, fieldId, fieldData);
+        return removeFieldValuesPath(databaseId, path, topicId, viewId, fieldId, fieldData);
     }
 
     @POST
     @Produces(APPLICATION_JSON_UTF8)
     @Consumes(APPLICATION_JSON_UTF8)
     @Path("remove-field-values/{databaseId}/{path}/{topicId}/{viewId}/{fieldId}")
-    public Response removeFieldValues(
+    public Response removeFieldValuesPath(
             @PathParam("databaseId") final String databaseId, 
             @PathParam("path") final String path,
             @PathParam("topicId") final String topicId, 
@@ -664,7 +667,7 @@ public abstract class EditorResource {
     @Produces(APPLICATION_JSON_UTF8)
     @Consumes(APPLICATION_JSON_UTF8)
     @Path("move-field-values-to-index/{databaseId}/{path}/{topicId}/{viewId}/{fieldId}")
-    public Response moveFieldValuesToIndex( 
+    public Response moveFieldValuesToIndexPath( 
             @PathParam("databaseId") final String databaseId, 
             @PathParam("path") final String path, 
             @PathParam("topicId") final String topicId, 
@@ -672,7 +675,7 @@ public abstract class EditorResource {
             @PathParam("fieldId") final String fieldId, 
             @QueryParam("index") final Integer index, FieldData fieldData) throws Exception {
 
-        return addFieldValues(databaseId, path, topicId, viewId, fieldId, index, fieldData);
+        return addFieldValuesPath(databaseId, path, topicId, viewId, fieldId, index, fieldData);
     }
 
     @GET
@@ -685,13 +688,13 @@ public abstract class EditorResource {
             @PathParam("fieldId") final String fieldId,
             @QueryParam("query") final String query) throws Exception {
         String path = null;
-        return getAvailableFieldValues(databaseId, path, topicId, viewId, fieldId, query);
+        return getAvailableFieldValuesPath(databaseId, path, topicId, viewId, fieldId, query);
     }
 
     @GET
     @Produces(APPLICATION_JSON_UTF8)
     @Path("available-field-values/{databaseId}/{path}/{topicId}/{viewId}/{fieldId}")
-    public Response getAvailableFieldValues( 
+    public Response getAvailableFieldValuesPath( 
             @PathParam("databaseId") final String databaseId, 
             @PathParam("path") final String path, 
             @PathParam("topicId") final String topicId, 
@@ -774,6 +777,69 @@ public abstract class EditorResource {
             throw e;
         } finally {
             session.close();      
+        }
+    }
+
+    @PUT
+    @Produces(APPLICATION_JSON_UTF8)
+    @Consumes(APPLICATION_JSON_UTF8)
+    @Path("execute-field-action/{databaseId}/{topicId}/{viewId}/{fieldId}/{actionId}")
+    public Response executeFieldAction(
+            @PathParam("databaseId") final String databaseId, 
+            @PathParam("topicId") final String topicId, 
+            @PathParam("viewId") final String viewId, 
+            @PathParam("fieldId") final String fieldId, 
+            @PathParam("actionId") final String actionId, 
+            TopicView topicView) throws Exception {
+        String path = null;
+        return executeFieldActionPath(databaseId, path, topicId, viewId, fieldId, actionId, topicView);
+    }
+
+    @PUT
+    @Produces(APPLICATION_JSON_UTF8)
+    @Consumes(APPLICATION_JSON_UTF8)
+    @Path("execute-field-action/{databaseId}/{path}/{topicId}/{viewId}/{fieldId}/{actionId}")
+    public Response executeFieldActionPath(
+            @PathParam("databaseId") final String databaseId, 
+            @PathParam("path") final String path, 
+            @PathParam("topicId") final String topicId, 
+            @PathParam("viewId") final String viewId, 
+            @PathParam("fieldId") final String fieldId, 
+            @PathParam("actionId") final String actionId, 
+            TopicView topicView) throws Exception {
+
+        boolean readOnly = false;
+        Presto session = createPresto(databaseId, readOnly);
+
+        try {
+            // NOTE: the topicId is the topic that requested the validation, but the 
+            // validation needs to start with the topicId of the received topicView. The 
+            // former is a descendant of the latter.
+            String topicViewTopicId = topicView.getTopicId();
+
+            PrestoContext context = PathParser.getTopicByPath(session, path, topicViewTopicId, viewId);
+
+            if (context == null || context.isMissingTopic()) {
+                return Response.status(Status.NOT_FOUND).build();
+            }
+
+            try {
+                PrestoFieldUsage field = context.getFieldById(fieldId);
+
+                TopicView result = session.executeFieldAction(context, topicView, field, actionId);
+                session.commit();
+    
+                return Response.ok(result).build();
+                
+            } catch (ConstraintException ce) {
+                return getConstraintMessageResponse(ce);
+            }
+
+        } catch (Exception e) {
+            session.abort();
+            throw e;
+        } finally {
+            session.close();
         }
     }
 
