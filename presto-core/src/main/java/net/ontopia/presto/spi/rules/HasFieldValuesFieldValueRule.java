@@ -1,15 +1,10 @@
 package net.ontopia.presto.spi.rules;
 
-import java.util.List;
-
 import net.ontopia.presto.spi.PrestoField;
-import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
-import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoContextRules.FieldValueFlag;
 
-import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;
 
 public class HasFieldValuesFieldValueRule extends BooleanFieldValueRule {
@@ -21,19 +16,10 @@ public class HasFieldValuesFieldValueRule extends BooleanFieldValueRule {
         } else {
             if (value instanceof PrestoTopic) {
                 PrestoTopic topic = (PrestoTopic)value;
-                JsonNode fieldNode = config.path("field");
-                if (fieldNode.isTextual()) {
-                    String typeId = topic.getTypeId();
-                    PrestoSchemaProvider schemaProvider = field.getSchemaProvider();
-                    PrestoType type = schemaProvider.getTypeById(typeId);
-                    String fieldId = fieldNode.getTextValue();
-                    PrestoField valueField = type.getFieldById(fieldId);
-                    List<? extends Object> values = topic.getValues(valueField);
-                    return !values.isEmpty();
-                }
+                return HasFieldValues.hasFieldValues(getSchemaProvider(), topic, field, config);
             }
             return false;
         }
     }
-
+    
 }

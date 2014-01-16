@@ -25,27 +25,31 @@ public class IfResolveFieldRule extends BooleanFieldRule {
         if (context.isNewTopic()) {
             return false;
         } else {
-            if (config != null) {
-                PrestoDataProvider dataProvider = getDataProvider();
-    
-                if (dataProvider instanceof JacksonDataProvider) {
-    
-                    Paging paging = new PrestoPaging(0, 1);
-    
-                    PrestoVariableResolver variableResolver = new PrestoTopicWithParentFieldVariableResolver(getSchemaProvider(), context);
-    
-                    PrestoTopic topic = context.getTopic();
-    
-                    Collection<? extends Object> objects = (topic == null ? Collections.emptyList() : Collections.singleton(topic));
-    
-                    JsonNode resolveConfig = config.path("resolve");
-                    PagedValues values = dataProvider.resolveValues(objects, field, paging, resolveConfig, variableResolver);
-    
-                    return !values.getValues().isEmpty();
-                }
-            }
-            return false;
+            return ifResolve(context, field, config);
         }
+    }
+
+    private boolean ifResolve(PrestoContext context, PrestoField field, ObjectNode config) {
+        if (config != null) {
+            PrestoDataProvider dataProvider = getDataProvider();
+   
+            if (dataProvider instanceof JacksonDataProvider) {
+   
+                Paging paging = new PrestoPaging(0, 1);
+   
+                PrestoVariableResolver variableResolver = new PrestoTopicWithParentFieldVariableResolver(getSchemaProvider(), context);
+   
+                PrestoTopic topic = context.getTopic();
+   
+                Collection<? extends Object> objects = (topic == null ? Collections.emptyList() : Collections.singleton(topic));
+   
+                JsonNode resolveConfig = config.path("resolve");
+                PagedValues values = dataProvider.resolveValues(objects, field, paging, resolveConfig, variableResolver);
+   
+                return !values.getValues().isEmpty();
+            }
+        }
+        return false;
     }
 
 }
