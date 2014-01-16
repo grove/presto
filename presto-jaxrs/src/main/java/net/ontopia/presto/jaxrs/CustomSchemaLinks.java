@@ -8,6 +8,7 @@ import net.ontopia.presto.jaxb.Link;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoView;
+import net.ontopia.presto.spi.utils.ExtraUtils;
 import net.ontopia.presto.spi.utils.PrestoContext;
 
 import org.codehaus.jackson.JsonNode;

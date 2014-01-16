@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.ontopia.presto.jaxb.FieldData;
-import net.ontopia.presto.jaxrs.ExtraUtils;
 import net.ontopia.presto.jaxrs.process.FieldDataProcessor;
 import net.ontopia.presto.spi.PrestoFieldUsage;
+import net.ontopia.presto.spi.utils.ExtraUtils;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
 
 import org.codehaus.jackson.JsonNode;

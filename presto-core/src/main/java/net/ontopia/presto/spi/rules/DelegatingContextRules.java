@@ -1,7 +1,9 @@
 package net.ontopia.presto.spi.rules;
 
 import net.ontopia.presto.spi.PrestoField;
+import net.ontopia.presto.spi.PrestoView;
 import net.ontopia.presto.spi.utils.AbstractHandler;
+import net.ontopia.presto.spi.utils.ExtraUtils;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoContextRules.ContextRulesHandler;
 import net.ontopia.presto.spi.utils.PrestoContextRules.FieldFlag;
@@ -10,6 +12,8 @@ import net.ontopia.presto.spi.utils.PrestoContextRules.FieldValueFlag;
 import net.ontopia.presto.spi.utils.PrestoContextRules.FieldValueRule;
 import net.ontopia.presto.spi.utils.PrestoContextRules.TypeFlag;
 import net.ontopia.presto.spi.utils.PrestoContextRules.TypeRule;
+import net.ontopia.presto.spi.utils.PrestoContextRules.ViewFlag;
+import net.ontopia.presto.spi.utils.PrestoContextRules.ViewRule;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;
@@ -22,6 +26,20 @@ public class DelegatingContextRules extends ContextRulesHandler {
         if (flagNode != null && !flagNode.isMissingNode()) {
             for (TypeRule handler : AbstractHandler.getHandlers(getDataProvider(), getSchemaProvider(), TypeRule.class, flagNode)) {
                 Boolean result = handler.getValue(flag, context);
+                if (result != null) {
+                    return result;
+                }
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public Boolean getValue(ViewFlag flag, PrestoContext context, PrestoView view) {
+        JsonNode flagNode = getFlagNode(flag, context, view);
+        if (flagNode != null && !flagNode.isMissingNode()) {
+            for (ViewRule handler : AbstractHandler.getHandlers(getDataProvider(), getSchemaProvider(), ViewRule.class, flagNode)) {
+                Boolean result = handler.getValue(flag, context, view);
                 if (result != null) {
                     return result;
                 }
@@ -62,6 +80,14 @@ public class DelegatingContextRules extends ContextRulesHandler {
         ObjectNode config = getConfig();
         if (config != null) {
             return config.path(flag.name());
+        }
+        return null;
+    }
+
+    protected JsonNode getFlagNode(ViewFlag flag, PrestoContext context, PrestoView view) {
+        ObjectNode extra = ExtraUtils.getViewExtraNode(view); // getConfig();
+        if (extra != null) {
+            return extra.path("viewRules").path(flag.name());
         }
         return null;
     }

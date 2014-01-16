@@ -4,6 +4,7 @@ import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoType;
+import net.ontopia.presto.spi.PrestoView;
 import net.ontopia.presto.spi.rules.DelegatingContextRules;
 
 import org.codehaus.jackson.JsonNode;
@@ -17,6 +18,10 @@ public class PrestoContextRules {
         isCreatableType,
         isRemovableType, 
         isDeletableType
+    }
+
+    public enum ViewFlag {
+        isHiddenView
     }
 
     public enum FieldFlag {
@@ -42,7 +47,13 @@ public class PrestoContextRules {
     public static interface TypeRule extends Handler {
 
         public Boolean getValue(TypeFlag flag, PrestoContext context);
+        
+    }
 
+    public static interface ViewRule extends Handler {
+
+        public Boolean getValue(ViewFlag flag, PrestoContext context, PrestoView view);
+        
     }
 
     public static interface FieldRule extends Handler {
@@ -57,7 +68,7 @@ public class PrestoContextRules {
 
     }
 
-    public static abstract class ContextRulesHandler extends AbstractHandler implements TypeRule, FieldRule, FieldValueRule {
+    public static abstract class ContextRulesHandler extends AbstractHandler implements TypeRule, ViewRule, FieldRule, FieldValueRule {
     }
 
     private ContextRulesHandler handler;
@@ -94,31 +105,33 @@ public class PrestoContextRules {
     }
 
     private boolean isTypeHandlerFlag(TypeFlag flag, boolean defaultValue) {
-        if (handler != null) {
-            Boolean result = handler.getValue(flag, context);
-            if (result != null) {
-                return result;
-            }
+        Boolean result = handler.getValue(flag, context);
+        if (result != null) {
+            return result;
+        }
+        return defaultValue;
+    }
+
+    private boolean isViewHandlerFlag(ViewFlag flag, PrestoView view, boolean defaultValue) {
+        Boolean result = handler.getValue(flag, context, view);
+        if (result != null) {
+            return result;
         }
         return defaultValue;
     }
 
     private boolean isFieldHandlerFlag(FieldFlag flag, PrestoField field, boolean defaultValue) {
-        if (handler != null) {
-            Boolean result = handler.getValue(flag, context, field);
-            if (result != null) {
-                return result;
-            }
+        Boolean result = handler.getValue(flag, context, field);
+        if (result != null) {
+            return result;
         }
         return defaultValue;
     }
 
     private boolean isFieldValueHandlerFlag(FieldValueFlag flag, PrestoField field, Object value, boolean defaultValue) {
-        if (handler != null) {
-            Boolean result = handler.getValue(flag, context, field, value);
-            if (result != null) {
-                return result;
-            }
+        Boolean result = handler.getValue(flag, context, field, value);
+        if (result != null) {
+            return result;
         }
         return defaultValue;
     }
@@ -143,6 +156,9 @@ public class PrestoContextRules {
         return isTypeHandlerFlag(TypeFlag.isDeletableType, type.isRemovable());
     }
     
+    public boolean isHiddenView(PrestoView view) {
+        return isViewHandlerFlag(ViewFlag.isHiddenView, view, false);
+    }    
 
     // characteristics
 

@@ -43,6 +43,7 @@ import net.ontopia.presto.spi.PrestoUpdate;
 import net.ontopia.presto.spi.PrestoView;
 import net.ontopia.presto.spi.PrestoView.ViewType;
 import net.ontopia.presto.spi.utils.AbstractHandler;
+import net.ontopia.presto.spi.utils.ExtraUtils;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
 import net.ontopia.presto.spi.utils.Utils;
@@ -205,27 +206,29 @@ public abstract class Presto {
         Collection<PrestoView> views = type.getViews(view);
         List<TopicView> topicViews = new ArrayList<TopicView>(views.size()); 
         for (PrestoView v : views) {
-            PrestoContext parentContext = context.getParentContext();
-            PrestoFieldUsage parentField = context.getParentField();
-            
-            PrestoContext subcontext = PrestoContext.createSubContext(parentContext, parentField, topic, type, v);
-            PrestoContextRules subrules = getPrestoContextRules(subcontext);
+            if (!rules.isHiddenView(v)) {
+                PrestoContext parentContext = context.getParentContext();
+                PrestoFieldUsage parentField = context.getParentField();
 
-            ViewType viewType = v.getType();
-            
-            if (ViewType.NORMAL_VIEW.equals(viewType)) {
+                PrestoContext subcontext = PrestoContext.createSubContext(parentContext, parentField, topic, type, v);
+                PrestoContextRules subrules = getPrestoContextRules(subcontext);
 
-                if (viewId.equals(v.getId())) {
-                    topicViews.add(getTopicView(subrules));
-                } else {
-                    if (isRemoteLoadView(v)) {
-                        topicViews.add(getTopicViewRemote(subrules, false));
-                    } else {
+                ViewType viewType = v.getType();
+
+                if (ViewType.NORMAL_VIEW.equals(viewType)) {
+
+                    if (viewId.equals(v.getId())) {
                         topicViews.add(getTopicView(subrules));
+                    } else {
+                        if (isRemoteLoadView(v)) {
+                            topicViews.add(getTopicViewRemote(subrules, false));
+                        } else {
+                            topicViews.add(getTopicView(subrules));
+                        }
                     }
+                } else if (ViewType.EXTERNAL_VIEW.equals(viewType)) {
+                    topicViews.add(getTopicViewRemote(subrules, true));
                 }
-            } else if (ViewType.EXTERNAL_VIEW.equals(viewType)) {
-                topicViews.add(getTopicViewRemote(subrules, true));
             }
         }
         result.setViews(topicViews);

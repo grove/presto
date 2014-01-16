@@ -9,13 +9,13 @@ import javax.ws.rs.core.UriBuilder;
 
 import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxb.Link;
-import net.ontopia.presto.jaxrs.ExtraUtils;
 import net.ontopia.presto.jaxrs.PathParser;
 import net.ontopia.presto.jaxrs.Presto;
 import net.ontopia.presto.jaxrs.action.FieldAction;
 import net.ontopia.presto.jaxrs.process.FieldDataProcessor;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoView;
+import net.ontopia.presto.spi.utils.ExtraUtils;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
 
