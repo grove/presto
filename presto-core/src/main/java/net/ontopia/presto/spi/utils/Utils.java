@@ -1,7 +1,9 @@
 package net.ontopia.presto.spi.utils;
 
 import net.ontopia.presto.spi.PrestoFieldUsage;
+import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
+import net.ontopia.presto.spi.PrestoType;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
@@ -69,4 +71,9 @@ public class Utils {
         }
     }
 
+    public static PrestoType getTopicType(PrestoTopic topic, PrestoSchemaProvider schemaProvider) {
+        String typeId = topic.getTypeId();
+        return schemaProvider.getTypeById(typeId);
+    }
+    
 }
