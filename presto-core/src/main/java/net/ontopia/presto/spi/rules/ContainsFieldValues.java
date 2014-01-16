@@ -14,10 +14,36 @@ import net.ontopia.presto.spi.utils.Utils;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ContainsFieldValues {
     
-    public static PrestoField getValueField(PrestoSchemaProvider schemaProvider, PrestoTopic topic, ObjectNode config) {
+    private static Logger log = LoggerFactory.getLogger(ContainsFieldValues.class);
+
+    public static boolean containsFieldValue(PrestoSchemaProvider schemaProvider, PrestoTopic topic, PrestoField defaultField, ObjectNode config) {
+        PrestoField valueField = getValueField(schemaProvider, topic, config);
+        if (valueField == null) {
+            valueField = defaultField;
+        }
+        Set<String> testValues = getTestValues(config);
+        List<? extends Object> fieldValues = topic.getValues(valueField);
+        return ContainsFieldValues.containsAllValues(fieldValues, testValues);
+    }
+
+    public static boolean containsFieldValue(PrestoSchemaProvider schemaProvider, PrestoTopic topic, ObjectNode config) {
+        PrestoField valueField = ContainsFieldValues.getValueField(schemaProvider, topic, config);
+        if (valueField != null) {
+            Set<String> testValues = ContainsFieldValues.getTestValues(config);
+            List<? extends Object> fieldValues = topic.getValues(valueField);
+            return ContainsFieldValues.containsAllValues(fieldValues, testValues);
+        } else {
+            log.warn("Not able to find field from configuration: " + config);
+            return false;
+        }
+    }
+
+    private static PrestoField getValueField(PrestoSchemaProvider schemaProvider, PrestoTopic topic, ObjectNode config) {
         JsonNode fieldNode = config.path("field");
         if (fieldNode.isTextual()) {
             String fieldId = fieldNode.getTextValue();
@@ -28,7 +54,7 @@ public class ContainsFieldValues {
         }
     }
 
-    public static Set<String> getTestValues(ObjectNode config) {
+    private static Set<String> getTestValues(ObjectNode config) {
         JsonNode valuesNode = config.path("values");
         if (valuesNode.isArray()) {
             Set<String> testValues = new LinkedHashSet<String>();
@@ -42,7 +68,7 @@ public class ContainsFieldValues {
         return Collections.emptySet();
     }
 
-    public static boolean containsAllValues(List<? extends Object> fieldValues, Collection<String> testValues) {
+    private static boolean containsAllValues(List<? extends Object> fieldValues, Collection<String> testValues) {
         if (fieldValues.isEmpty()) {
             return testValues.isEmpty();
         }

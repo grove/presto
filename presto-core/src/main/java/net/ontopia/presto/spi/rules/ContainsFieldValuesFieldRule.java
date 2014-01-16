@@ -1,8 +1,5 @@
 package net.ontopia.presto.spi.rules;
 
-import java.util.List;
-import java.util.Set;
-
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.utils.PrestoContext;
@@ -18,18 +15,8 @@ public class ContainsFieldValuesFieldRule extends BooleanFieldRule {
             return false;
         } else {
             PrestoTopic topic = context.getTopic();
-            return containsFieldValue(topic, field, config);
+            return ContainsFieldValues.containsFieldValue(getSchemaProvider(), topic, field, config);
         }
-    }
-
-    private boolean containsFieldValue(PrestoTopic topic, PrestoField defaultField, ObjectNode config) {
-        PrestoField valueField = ContainsFieldValues.getValueField(getSchemaProvider(), topic, config);
-        if (valueField == null) {
-            valueField = defaultField;
-        }
-        Set<String> testValues = ContainsFieldValues.getTestValues(config);
-        List<? extends Object> fieldValues = topic.getValues(valueField);
-        return ContainsFieldValues.containsAllValues(fieldValues, testValues);
     }
     
 }

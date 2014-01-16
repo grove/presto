@@ -13,22 +13,6 @@ import org.codehaus.jackson.node.ObjectNode;
 
 public class HasFieldValues {
 
-    public static PrestoField getValueField(PrestoSchemaProvider schemaProvider, PrestoTopic topic, ObjectNode config) {
-        JsonNode fieldNode = config.path("field");
-        if (fieldNode.isTextual()) {
-            String fieldId = fieldNode.getTextValue();
-            PrestoType type = Utils.getTopicType(topic, schemaProvider);
-            return type.getFieldById(fieldId);
-        } else {
-            return null;
-        }
-    }
-
-    private static boolean hasFieldValues(PrestoTopic topic, PrestoField valueField) {
-        List<? extends Object> values = topic.getValues(valueField);
-        return !values.isEmpty();
-    }
-    
     public static boolean hasFieldValues(PrestoSchemaProvider schemaProvider, PrestoTopic topic, PrestoField defaultField, ObjectNode config) {
         PrestoField valueField = getValueField(schemaProvider, topic, config);
         if (valueField == null) {
@@ -44,6 +28,22 @@ public class HasFieldValues {
         } else {
             return false;
         }
+    }
+    
+    private static PrestoField getValueField(PrestoSchemaProvider schemaProvider, PrestoTopic topic, ObjectNode config) {
+        JsonNode fieldNode = config.path("field");
+        if (fieldNode.isTextual()) {
+            String fieldId = fieldNode.getTextValue();
+            PrestoType type = Utils.getTopicType(topic, schemaProvider);
+            return type.getFieldById(fieldId);
+        } else {
+            return null;
+        }
+    }
+
+    private static boolean hasFieldValues(PrestoTopic topic, PrestoField valueField) {
+        List<? extends Object> values = topic.getValues(valueField);
+        return !values.isEmpty();
     }
 
 }
