@@ -102,11 +102,6 @@ public class PojoType implements PrestoType {
     }
 
     @Override
-    public Collection<PrestoType> getDirectSubTypes() {
-        return directSubTypes;
-    }
-
-    @Override
     public List<PrestoField> getFields() {
         return fields;
     }

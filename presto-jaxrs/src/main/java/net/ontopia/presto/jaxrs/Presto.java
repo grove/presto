@@ -12,16 +12,12 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
-import net.ontopia.presto.jaxb.AvailableFieldTypes;
 import net.ontopia.presto.jaxb.AvailableFieldValues;
-import net.ontopia.presto.jaxb.AvailableTopicTypes;
 import net.ontopia.presto.jaxb.Database;
 import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxb.Layout;
 import net.ontopia.presto.jaxb.Link;
 import net.ontopia.presto.jaxb.Topic;
-import net.ontopia.presto.jaxb.TopicType;
-import net.ontopia.presto.jaxb.TopicTypeTree;
 import net.ontopia.presto.jaxb.TopicView;
 import net.ontopia.presto.jaxb.Value;
 import net.ontopia.presto.jaxrs.PrestoProcessor.Status;
@@ -75,10 +71,7 @@ public abstract class Presto {
         REL_MOVE_FIELD_VALUES_TO_INDEX("move-field-values-to-index"),
         REL_REMOVE_FIELD_VALUES("remove-field-values"),
 
-        REL_ONCHANGE("onchange"),
-
-        REL_AVAILABLE_TYPES_TREE("available-types-tree"), // deprecated
-        REL_AVAILABLE_TYPES_TREE_LAZY("available-types-tree-lazy"); // deprecated
+        REL_ONCHANGE("onchange");
 
         private final String rel;
 
@@ -653,20 +646,6 @@ public abstract class Presto {
     protected Link getTopicTemplateFieldLink(PrestoContext context, PrestoFieldUsage field, PrestoType createType) {
         Link result = lx.topicTemplateFieldLink(context, field, createType);
         result.setName(createType.getName());
-        return result;
-    }
-
-    @Deprecated
-    protected TopicType getTopicTypeWithNoLinks(PrestoType type) {
-        return new TopicType(type.getId(), type.getName());
-    }
-
-    @Deprecated
-    protected TopicType getTopicTypeWithTopicTemplateFieldLink(PrestoContext context, PrestoFieldUsage field, PrestoType createType) {
-        TopicType result = new TopicType(createType.getId(), createType.getName());
-        List<Link> links = new ArrayList<Link>();
-        links.add(getTopicTemplateFieldLink(context, field, createType));
-        result.setLinks(links);
         return result;
     }
 
@@ -1582,78 +1561,6 @@ public abstract class Presto {
         changeSet.save();
     }
 
-    @Deprecated
-    public AvailableFieldTypes getAvailableFieldTypesInfo(PrestoContextRules rules, PrestoFieldUsage field) {
-
-        AvailableFieldTypes result = new AvailableFieldTypes();
-        result.setId(field.getId());
-        result.setName(field.getName());
-
-        if (rules.isCreatableField(field)) {
-            PrestoContext context = rules.getContext();
-            Collection<PrestoType> availableFieldCreateTypes = getAvailableFieldCreateTypes(context, field);
-            List<TopicType> types = new ArrayList<TopicType>(availableFieldCreateTypes.size());
-            for (PrestoType createType : availableFieldCreateTypes) {
-                types.add(getTopicTypeWithTopicTemplateFieldLink(context, field, createType));
-            }                
-            result.setTypes(types);
-        } else {
-            result.setTypes(new ArrayList<TopicType>());
-        }
-        return result;
-    }
-
-    @Deprecated
-    public AvailableTopicTypes getAvailableTypesInfo(boolean tree) {
-        AvailableTopicTypes result = new AvailableTopicTypes();
-        result.setTypes(getAvailableTypes(tree));
-        return result;
-    }
-
-    @Deprecated
-    protected Collection<TopicTypeTree> getAvailableTypes(boolean tree) {
-        Collection<PrestoType> rootTypes = schemaProvider.getRootTypes();
-        return getAvailableTypes(rootTypes, tree);
-    }
-
-    @Deprecated
-    protected Collection<TopicTypeTree> getAvailableTypes(Collection<PrestoType> types, boolean tree) {
-        Collection<TopicTypeTree> result = new ArrayList<TopicTypeTree>(); 
-        for (PrestoType rootType : types) {
-            result.addAll(getAvailableTypes(rootType, tree));
-        }
-        return result;
-    }
-
-    @Deprecated
-    protected Collection<TopicTypeTree> getAvailableTypes(PrestoType type, boolean tree) {
-        if (type.isHidden()) {
-            return getAvailableTypes(type.getDirectSubTypes(), true);   
-        } else {
-            TopicTypeTree typeMap = new TopicTypeTree();
-            typeMap.setId(type.getId());
-            typeMap.setName(type.getName());
-
-            List<Link> links = new ArrayList<Link>();
-            if (type.isCreatable() && !type.isInline()) {
-                links.add(lx.topicTemplateLink(type));
-            }
-
-            if (tree) {
-                Collection<TopicTypeTree> typesList = getAvailableTypes(type.getDirectSubTypes(), true);
-                if (!typesList.isEmpty()) {
-                    typeMap.setTypes(typesList);
-                }
-            } else {
-                if (!type.getDirectSubTypes().isEmpty()) {
-                    links.add(lx.availableTypesTreeLazyLink(type));
-                }
-            }
-            typeMap.setLinks(links);
-            return Collections.singleton(typeMap);
-        }
-    }
-
     public void commit() {
     }
 
@@ -1670,7 +1577,6 @@ public abstract class Presto {
         result.setName(getDatabaseName());
 
         List<Link> links = new ArrayList<Link>();
-        links.add(lx.availableTypesTreeLink());
         links.add(lx.topicEditByIdLink());
         result.setLinks(links);      
 

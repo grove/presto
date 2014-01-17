@@ -24,9 +24,7 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
 import net.ontopia.presto.jaxb.AvailableDatabases;
-import net.ontopia.presto.jaxb.AvailableFieldTypes;
 import net.ontopia.presto.jaxb.AvailableFieldValues;
-import net.ontopia.presto.jaxb.AvailableTopicTypes;
 import net.ontopia.presto.jaxb.Database;
 import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxb.Link;
@@ -716,60 +714,6 @@ public abstract class EditorResource {
 
             PrestoContextRules rules = session.getPrestoContextRules(context);
             AvailableFieldValues result = session.getAvailableFieldValuesInfo(rules, field, query);
-            return Response.ok(result).build();
-
-        } catch (Exception e) {
-            session.abort();
-            throw e;
-        } finally {
-            session.close();      
-        }
-    }
-
-    @GET
-    @Produces(APPLICATION_JSON_UTF8)
-    @Path("available-field-types/{databaseId}/{topicId}/{viewId}/{fieldId}")
-    @Deprecated
-    public Response getAvailableFieldTypes( 
-            @PathParam("databaseId") final String databaseId, 
-            @PathParam("topicId") final String topicId, 
-            @PathParam("viewId") final String viewId,
-            @PathParam("fieldId") final String fieldId) throws Exception {
-
-        boolean readOnly = false;
-        Presto session = createPresto(databaseId, readOnly);
-
-        try {
-            PrestoContext context = PrestoContext.create(session.getDataProvider(), session.getSchemaProvider(), PathParser.deskull(topicId), viewId);
-
-            if (context.isMissingTopic()) {
-                return Response.status(Status.NOT_FOUND).build();
-            }
-
-            PrestoFieldUsage field = context.getFieldById(fieldId);
-            PrestoContextRules rules = session.getPrestoContextRules(context);
-
-            AvailableFieldTypes result = session.getAvailableFieldTypesInfo(rules, field);
-            return Response.ok(result).build();
-
-        } catch (Exception e) {
-            session.abort();
-            throw e;
-        } finally {
-            session.close();      
-        }
-    }
-
-    @GET
-    @Produces(APPLICATION_JSON_UTF8)
-    @Path("available-types-tree/{databaseId}")
-    @Deprecated
-    public Response getAvailableTypesTree(@PathParam("databaseId") final String databaseId) throws Exception {
-
-        Presto session = createPresto(databaseId, false);
-
-        try {
-            AvailableTopicTypes result = session.getAvailableTypesInfo(true);
             return Response.ok(result).build();
 
         } catch (Exception e) {

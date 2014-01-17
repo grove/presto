@@ -419,16 +419,6 @@ public class CustomSchemaLinks implements Links {
     }
 
     @Override
-    public Link availableTypesTreeLazyLink(PrestoType type) {
-        return delegate.availableTypesTreeLazyLink(type);
-    }
-
-    @Override
-    public Link availableTypesTreeLink() {
-        return delegate.availableTypesTreeLink();
-    }
-
-    @Override
     public Link topicEditByIdLink() {
         return delegate.topicEditByIdLink();
     }

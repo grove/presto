@@ -219,22 +219,5 @@ public class DefaultLinks implements Links {
         String href = builder.build().toString();
         return new Link(Rel.REL_AVAILABLE_FIELD_VALUES.getRel(), href);
     }
-
-    @Override
-    @Deprecated
-    public Link availableTypesTreeLazyLink(PrestoType type) {
-        String typeId = type.getId();
-        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor").path("available-types-tree-lazy").path(databaseId).path(typeId);
-        String href = builder.build().toString();
-        return new Link(Rel.REL_AVAILABLE_TYPES_TREE_LAZY.getRel(), href);
-    }
-
-    @Override
-    @Deprecated
-    public Link availableTypesTreeLink() {
-        UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor").path("available-types-tree").path(databaseId);
-        String href = builder.build().toString();
-        return new Link(Rel.REL_AVAILABLE_TYPES_TREE.getRel(), href);
-    }
     
 }
