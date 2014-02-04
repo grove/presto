@@ -141,35 +141,6 @@ public abstract class Presto {
         return processor;
     }
 
-    //    public Map<String,Object> getTopicAsMap(PrestoTopic topic, PrestoType type) {
-    //        Map<String,Object> result = new LinkedHashMap<String,Object>();
-    //
-    //        result.put("_id", topic.getId());
-    //        result.put(":name", topic.getName());
-    //        result.put(":type", type.getId());
-    //
-    //        for (PrestoField field : type.getFields()) {
-    //            List<Object> values = getValueData(field, topic.getValues(field));
-    //            if (!values.isEmpty()) {
-    //                result.put(field.getId(), values);
-    //            }
-    //        }
-    //        return result;
-    //    }
-    //
-    //    protected List<Object> getValueData(PrestoField field, Collection<? extends Object> fieldValues) {
-    //        List<Object> result = new ArrayList<Object>(fieldValues.size());
-    //        for (Object fieldValue : fieldValues) {
-    //            if (fieldValue instanceof PrestoTopic) {
-    //                PrestoTopic valueTopic = (PrestoTopic)fieldValue;
-    //                result.add(valueTopic.getId());
-    //            } else {
-    //                result.add(fieldValue);
-    //            }
-    //        }
-    //        return result;
-    //    }
-
     public PrestoChangeSet newChangeSet() {
         PrestoDataProvider dataProvider = getDataProvider();
         return dataProvider.newChangeSet(getChangeSetHandler());
@@ -257,14 +228,6 @@ public abstract class Presto {
         }
         return true;
     }
-
-//    public TopicView getTopicViewRemoteAndProcess(PrestoContextRules rules) {
-//        TopicView result = getTopicViewRemote(rules);
-//
-//        result = processor.postProcessTopicView(result, rules, null);
-//
-//        return result;
-//    }
 
     public TopicView getTopicViewAndProcess(PrestoContext context) {
         return getTopicViewAndProcess(getPrestoContextRules(context));
@@ -727,28 +690,11 @@ public abstract class Presto {
     }
 
     private boolean isRemovableFieldValue(PrestoContextRules rules, PrestoFieldUsage field, PrestoTopic value) {
-        boolean isRemovableValue = !rules.isReadOnlyField(field) && rules.isRemovableFieldValue(field, value);
-        if (isRemovableValue) {
-//            // make sure that inline types cannot be removed if the type is  not removable
-//            PrestoType removableType = schemaProvider.getTypeById(value.getTypeId());
-//            if (removableType.isInline()) {
-//                PrestoContext subcontext = PrestoContext.createSubContext(rules.getContext(), field, value, removableType, field.getValueView(removableType));
-//                PrestoContextRules subrules = getPrestoContextRules(subcontext);
-//                if (!subrules.isRemovableType()) {
-//                    throw new NotRemovableValueTypeConstraintException(rules.getContext(), field, value);
-//                }
-//            }
-            return true;
-        }
-        return false;
+        return !rules.isReadOnlyField(field) && rules.isRemovableFieldValue(field, value);
     }
     
     private boolean isRemovableFieldValue(PrestoContextRules rules, PrestoFieldUsage field, String value) {
-        boolean isRemovableValue = !rules.isReadOnlyField(field) && rules.isRemovableFieldValue(field, value);
-        if (isRemovableValue) {
-            return true;
-        }
-        return false;
+        return !rules.isReadOnlyField(field) && rules.isRemovableFieldValue(field, value);
     }
     
     public AvailableFieldValues getAvailableFieldValuesInfo(PrestoContextRules rules, PrestoFieldUsage field, String query) {
@@ -1038,30 +984,6 @@ public abstract class Presto {
 
         return processor.postProcessFieldData(result, rules, field, null);
     }
-    
-    public FieldData addFieldValues(PrestoContextRules rules, PrestoFieldUsage field, Integer index, FieldData fieldData) {
-        boolean resolveEmbedded = true;
-        boolean includeExisting = false;
-        boolean filterNonStorable = true;
-        boolean validateValueTypes = true;
-        List<? extends Object> addableValues = updateAndExtractValuesFromFieldData(rules, field, fieldData, resolveEmbedded, includeExisting, filterNonStorable, validateValueTypes);
-        
-        PrestoTopic topicAfterSave = addFieldValues(rules, field, addableValues, index);
-
-        return getFieldData(topicAfterSave, field);
-    }
-
-    public FieldData removeFieldValues(PrestoContextRules rules, PrestoFieldUsage field, FieldData fieldData) {
-        boolean resolveEmbedded = false;
-        boolean includeExisting = false;
-        boolean filterNonStorable = false; // NOTE: instead of filtering we complain in removeFieldValues
-        boolean validateValueTypes = false;
-        List<? extends Object> removeableValues = updateAndExtractValuesFromFieldData(rules, field, fieldData, resolveEmbedded, includeExisting, filterNonStorable, validateValueTypes);
-
-        PrestoTopic topicAfterSave = removeFieldValues(rules, field, removeableValues);
-
-        return getFieldData(topicAfterSave, field);
-    }
 
     protected PrestoTopic updateFieldValues(PrestoContext context, PrestoFieldUsage field, List<? extends Object> updateableValues) {
         PrestoTopic topic = context.getTopic();
@@ -1074,13 +996,26 @@ public abstract class Presto {
         PrestoContextRules rules = getPrestoContextRules(context);
 
         List<? extends Object> existingValues = topic.getValues(field);
-        Collection<? extends Object> newValues = mergeInlineTopics(updateableValues, existingValues, true);
+        boolean includeExisting = true;
+        Collection<? extends Object> newValues = mergeInlineTopics(updateableValues, existingValues, includeExisting);
         removeNonStorableFieldValues(rules, field, newValues);
 
         update.setValues(field, newValues); // TODO: check if inline field first?
         changeSet.save();
 
         return update.getTopicAfterSave();
+    }
+    
+    public FieldData addFieldValues(PrestoContextRules rules, PrestoFieldUsage field, Integer index, FieldData fieldData) {
+        boolean resolveEmbedded = true;
+        boolean includeExisting = false;
+        boolean filterNonStorable = true;
+        boolean validateValueTypes = true;
+        List<? extends Object> addableValues = updateAndExtractValuesFromFieldData(rules, field, fieldData, resolveEmbedded, includeExisting, filterNonStorable, validateValueTypes);
+        
+        PrestoTopic topicAfterSave = addFieldValues(rules, field, addableValues, index);
+
+        return getFieldData(topicAfterSave, field);
     }
 
     public PrestoTopic addFieldValues(PrestoContextRules rules, PrestoFieldUsage field, List<? extends Object> addableValues, Integer index) {
@@ -1102,6 +1037,18 @@ public abstract class Presto {
         changeSet.save();
 
         return update.getTopicAfterSave();
+    }
+
+    public FieldData removeFieldValues(PrestoContextRules rules, PrestoFieldUsage field, FieldData fieldData) {
+        boolean resolveEmbedded = false;
+        boolean includeExisting = false;
+        boolean filterNonStorable = false; // NOTE: instead of filtering we complain in removeFieldValues
+        boolean validateValueTypes = false;
+        List<? extends Object> removeableValues = updateAndExtractValuesFromFieldData(rules, field, fieldData, resolveEmbedded, includeExisting, filterNonStorable, validateValueTypes);
+
+        PrestoTopic topicAfterSave = removeFieldValues(rules, field, removeableValues);
+
+        return getFieldData(topicAfterSave, field);
     }
 
     public PrestoTopic removeFieldValues(PrestoContextRules rules, PrestoFieldUsage field, List<? extends Object> removeableValues) {
@@ -1187,7 +1134,7 @@ public abstract class Presto {
         return null;
     }
     
-    public Object updateTopic(PrestoContext context, TopicView topicView, boolean returnParent) {
+    public Object updateTopicView(PrestoContext context, TopicView topicView, boolean returnParent) {
         PrestoContextRules rules = getPrestoContextRules(context);
         Status status = new Status();
 
