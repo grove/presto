@@ -41,6 +41,7 @@ public class PojoField implements PrestoField {
     private boolean isCreatable = true;
     private boolean isAddable = true;
     private boolean isRemovable = true;
+    private boolean isMovable = true;
     private String interfaceControl;
     private Object extra;
 
@@ -196,6 +197,11 @@ public class PojoField implements PrestoField {
     }
 
     @Override
+    public boolean isMovable() {
+        return isMovable;
+    }
+
+    @Override
     public boolean isRemovable() {
         return isRemovable;
     }
@@ -328,6 +334,10 @@ public class PojoField implements PrestoField {
 
     public void setRemovable(boolean isRemovable) {
         this.isRemovable = isRemovable;
+    }
+
+    public void setMovable(boolean isMovable) {
+        this.isMovable = isMovable;
     }
 
     public void setInterfaceControl(String interfaceControl) {

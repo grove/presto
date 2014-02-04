@@ -57,6 +57,8 @@ public interface PrestoField {
     boolean isAddable();
     
     boolean isRemovable();
+    
+    boolean isMovable();
 
     boolean isCascadingDelete();
 

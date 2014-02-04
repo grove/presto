@@ -905,42 +905,64 @@ public abstract class Presto {
         if (field.isReferenceField()) {
             fieldData.setDatatype("reference");
 
-            if (!isReadOnly) {
-                boolean isSorted = rules.isSortedField(field);
-
-                boolean allowRemove = rules.isRemovableField(field);
-                boolean allowMove = !isSorted;
-
-                if (allowAdd || allowCreate) {
-                    if (!isNewTopic) {
-                        fieldLinks.add(lx.fieldAddValuesLink(parentContext, parentField, topicId, type, view, field));
-                        if (!isSorted) {
-                            fieldLinks.add(lx.fieldAddValuesAtIndexLink(parentContext, parentField, topicId, type, view, field));
-                        }
-                    }
-                }
-                if (allowRemove && !isNewTopic) {
-                    fieldLinks.add(lx.fieldRemoveValuesLink(parentContext, parentField, topicId, type, view, field));
-                }      
-
-                if (allowMove && !isNewTopic) {
-                    fieldLinks.add(lx.fieldMoveValuesToIndexLink(parentContext, parentField, topicId, type, view, field));
-                }
-            }
+//            if (!isReadOnly) {
+//                boolean isSorted = rules.isSortedField(field);
+//
+//                boolean allowRemove = rules.isRemovableField(field);
+//                boolean allowMove = !isSorted;
+//
+//                if (allowAdd || allowCreate) {
+//                    if (!isNewTopic) {
+//                        fieldLinks.add(lx.fieldAddValuesLink(parentContext, parentField, topicId, type, view, field));
+//                        if (!isSorted) {
+//                            fieldLinks.add(lx.fieldAddValuesAtIndexLink(parentContext, parentField, topicId, type, view, field));
+//                        }
+//                    }
+//                }
+//                if (allowRemove && !isNewTopic) {
+//                    fieldLinks.add(lx.fieldRemoveValuesLink(parentContext, parentField, topicId, type, view, field));
+//                }      
+//
+//                if (allowMove && !isNewTopic) {
+//                    fieldLinks.add(lx.fieldMoveValuesToIndexLink(parentContext, parentField, topicId, type, view, field));
+//                }
+//            }
         } else {
             String dataType = field.getDataType();
             if (dataType != null) {
                 fieldData.setDatatype(dataType);
             }
-            if (!isReadOnly) {
+//            if (!isReadOnly) {
+//                if (!isNewTopic) {
+//                    fieldLinks.add(lx.fieldAddValuesLink(parentContext, parentField, topicId, type, view, field));
+//                    fieldLinks.add(lx.fieldRemoveValuesLink(parentContext, parentField, topicId, type, view, field));
+//                    if (!rules.isSortedField(field)) {
+//                        fieldLinks.add(lx.fieldAddValuesAtIndexLink(parentContext, parentField, topicId, type, view, field));
+//                        fieldLinks.add(lx.fieldMoveValuesToIndexLink(parentContext, parentField, topicId, type, view, field));
+//                    }
+//                }
+//            }
+        }
+        if (!isReadOnly) {
+            boolean isSorted = rules.isSortedField(field);
+
+            boolean allowRemove = rules.isRemovableField(field);
+            boolean allowMove = !isSorted;
+
+            if (allowAdd || allowCreate) {
                 if (!isNewTopic) {
                     fieldLinks.add(lx.fieldAddValuesLink(parentContext, parentField, topicId, type, view, field));
-                    fieldLinks.add(lx.fieldRemoveValuesLink(parentContext, parentField, topicId, type, view, field));
-                    if (!rules.isSortedField(field)) {
+                    if (!isSorted) {
                         fieldLinks.add(lx.fieldAddValuesAtIndexLink(parentContext, parentField, topicId, type, view, field));
-                        fieldLinks.add(lx.fieldMoveValuesToIndexLink(parentContext, parentField, topicId, type, view, field));
                     }
                 }
+            }
+            if (allowRemove && !isNewTopic) {
+                fieldLinks.add(lx.fieldRemoveValuesLink(parentContext, parentField, topicId, type, view, field));
+            }      
+
+            if (allowMove && !isNewTopic) {
+                fieldLinks.add(lx.fieldMoveValuesToIndexLink(parentContext, parentField, topicId, type, view, field));
             }
         }
         if (!isReadOnly && allowAdd) {
@@ -1203,6 +1225,53 @@ public abstract class Presto {
                     
                     update.setValues(field, values);
                 }
+            }
+
+            changeSet.save();
+
+            return update.getTopicAfterSave();
+        }
+    }
+    
+    public FieldData updateFieldValues(PrestoContextRules rules, PrestoFieldUsage field, FieldData fieldData) {
+        PrestoTopic topicAfterSave = updatePrestoTopic(rules, fieldData);
+        return getFieldData(topicAfterSave, field);
+    }
+
+    protected PrestoTopic updatePrestoTopic(PrestoContextRules rules, FieldData fieldData) {
+
+        PrestoDataProvider dataProvider = getDataProvider();
+        PrestoChangeSet changeSet = dataProvider.newChangeSet(getChangeSetHandler());
+
+        PrestoContext context = rules.getContext();
+        PrestoType type = context.getType();
+        PrestoView view = context.getView();
+
+        boolean filterNonStorable = true;
+        boolean validateValueTypes = true;
+
+        if (type.isInline()) {
+            throw new RuntimeException("Cannot update inline objects this way."); // or can we?
+        } else {
+            PrestoUpdate update;
+            if (context.isNewTopic()) {
+                // TODO: add support for assigning topic ids?
+                update = changeSet.createTopic(type);
+            } else {
+                update = changeSet.updateTopic(context.getTopic(), type);
+            }
+
+            String fieldId = fieldData.getId();
+            PrestoFieldUsage field = type.getFieldById(fieldId, view);
+
+            // ignore read-only or pageable fields 
+            if (!rules.isReadOnlyField(field) && !rules.isPageableField(field)) {
+
+                boolean resolveEmbedded = true;
+                boolean includeExisting = false;
+                List<? extends Object> values = updateAndExtractValuesFromFieldData(rules, field, fieldData, resolveEmbedded, includeExisting, filterNonStorable, validateValueTypes);
+
+                update.setValues(field, values);
             }
 
             changeSet.save();

@@ -34,12 +34,14 @@ public class PrestoContextRules {
         isEditableField,
         isCreatableField,
         isAddableField,
-        isRemovableField
+        isRemovableField, 
+        isMovableField
     }
 
     public enum FieldValueFlag {
         isAddableFieldValue,
         isRemovableFieldValue,
+        isMovableFieldValue,
         isEditableFieldValue,
         isStorableFieldValue
     }
@@ -212,12 +214,20 @@ public class PrestoContextRules {
         return isFieldHandlerFlag(FieldFlag.isRemovableField, field, field.isRemovable());
     }
 
+    public boolean isMovableField(PrestoField field) {
+        return isFieldHandlerFlag(FieldFlag.isMovableField, field, field.isMovable());
+    }
+
     public boolean isAddableFieldValue(PrestoField field, Object value) {
         return isFieldValueHandlerFlag(FieldValueFlag.isAddableFieldValue, field, value, field.isAddable());
     }
 
     public boolean isRemovableFieldValue(PrestoField field, Object value) {
         return isFieldValueHandlerFlag(FieldValueFlag.isRemovableFieldValue, field, value, field.isRemovable());
+    }
+
+    public boolean isMovableFieldValue(PrestoField field, Object value) {
+        return isFieldValueHandlerFlag(FieldValueFlag.isMovableFieldValue, field, value, field.isMovable());
     }
 
     public boolean isEditableFieldValue(PrestoField field, Object value) {

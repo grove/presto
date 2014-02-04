@@ -583,6 +583,68 @@ public abstract class EditorResource {
         } 
     }
 
+    @POST
+    @Produces(APPLICATION_JSON_UTF8)
+    @Consumes(APPLICATION_JSON_UTF8)
+    @Path("update-field-values/{databaseId}/{topicId}/{viewId}/{fieldId}")
+    public Response updateFieldValuesPath( 
+            @PathParam("databaseId") final String databaseId, 
+            @PathParam("topicId") final String topicId, 
+            @PathParam("viewId") final String viewId,
+            @PathParam("fieldId") final String fieldId, FieldData fieldData) throws Exception {
+
+        String path = null;
+        return updateFieldValuesPath(databaseId, path, topicId, viewId, fieldId, fieldData);
+    }
+
+    @POST
+    @Produces(APPLICATION_JSON_UTF8)
+    @Consumes(APPLICATION_JSON_UTF8)
+    @Path("update-field-values/{databaseId}/{path}/{topicId}/{viewId}/{fieldId}")
+    public Response updateFieldValuesPath( 
+            @PathParam("databaseId") final String databaseId, 
+            @PathParam("path") final String path, 
+            @PathParam("topicId") final String topicId, 
+            @PathParam("viewId") final String viewId,
+            @PathParam("fieldId") final String fieldId, FieldData fieldData) throws Exception {
+
+        boolean readOnly = false;
+        Presto session = createPresto(databaseId, readOnly);
+
+        try {
+            PrestoContext context = PathParser.getTopicByPath(session, path, topicId, viewId);
+
+            if (context == null || context.isMissingTopic()) {
+                return Response.status(Status.NOT_FOUND).build();
+            }
+
+            PrestoFieldUsage field = context.getFieldById(fieldId);
+            PrestoContextRules rules = session.getPrestoContextRules(context);
+
+            if (!rules.isReadOnlyField(field) && 
+                    (rules.isAddableField(field) || rules.isRemovableField(field) || rules.isCreatableField(field))) { // TODO: what are the rules?
+                try {
+                    FieldData result = session.updateFieldValues(rules, field, fieldData);
+
+                    session.commit();
+
+                    return Response.ok(result).build();
+                } catch (ConstraintException ce) {
+                    return getConstraintMessageResponse(ce);
+                }
+            } else {
+                // 403
+                return Response.status(Status.FORBIDDEN).build();
+            }
+
+        } catch (Exception e) {
+            session.abort();
+            throw e;
+        } finally {
+            session.close();      
+        } 
+    }
+
     private Response getConstraintMessageResponse(ConstraintException ce) {
         TopicMessage entity = new TopicMessage(ce.getType(), ce.getTitle(), ce.getMessage());
         return Response.status(422).entity(entity).build();
