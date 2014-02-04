@@ -466,146 +466,6 @@ public abstract class Presto {
         return result;
     }
 
-    public FieldData getFieldData(PrestoContextRules rules, PrestoFieldUsage field) {
-        return getFieldData(rules, field, 0, -1, true);
-    }
-
-    public FieldData getFieldDataNoValues(PrestoContextRules rules, PrestoFieldUsage field) {
-        return getFieldData(rules, field, 0, -1, false);
-    }
-
-    public FieldData getFieldData(PrestoContextRules rules, PrestoFieldUsage field, 
-            int offset, int limit, boolean includeValues) {
-
-        PrestoContext context = rules.getContext();
-
-        PrestoTopic topic = context.getTopic();
-        PrestoType type = context.getType();
-        PrestoView view = context.getView();
-
-        boolean isNewTopic = context.isNewTopic();
-
-        String topicId;
-        if (isNewTopic) {
-            topicId = "_" + type.getId();
-        } else {
-            topicId = topic.getId();
-        }
-
-//        String parentViewId = view.getId();
-//        String fieldId = field.getId();
-
-        FieldData fieldData = new FieldData();
-        fieldData.setId(field.getId());
-        fieldData.setName(field.getName());
-
-        int minCard = field.getMinCardinality();
-        if (minCard > 0) {
-            fieldData.setMinCardinality(minCard);
-        }
-
-        int maxCard = field.getMaxCardinality();
-        if (maxCard > 0) {
-            fieldData.setMaxCardinality(maxCard);
-        }
-
-        String validationType = field.getValidationType();
-        if (validationType != null) {
-            setParam(fieldData, "validationType", validationType);
-        }
-
-        String interfaceControl = field.getInterfaceControl(); // ISSUE: should we default the interface control?
-        if (interfaceControl != null) {
-            fieldData.setInterfaceControl(interfaceControl);          
-        }
-
-        if (field.isEmbedded()) {
-            fieldData.setEmbeddable(true);
-        }
-
-        boolean isReadOnly = rules.isReadOnlyField(field);
-        if (isReadOnly) {
-            fieldData.setReadOnly(Boolean.TRUE);
-        }
-
-        PrestoContext parentContext = context.getParentContext();
-        PrestoFieldUsage parentField = context.getParentField();
-
-        boolean allowCreate = rules.isCreatableField(field);
-        boolean allowAdd = rules.isAddableField(field);
-
-        Collection<Link> fieldLinks = new LinkedHashSet<Link>();      
-        if (field.isReferenceField()) {
-            fieldData.setDatatype("reference");
-
-            if (!isReadOnly) {
-                boolean isSorted = rules.isSortedField(field);
-
-                boolean allowRemove = rules.isRemovableField(field);
-                boolean allowMove = !isSorted;
-
-                if (allowAdd || allowCreate) {
-                    if (!isNewTopic) {
-                        fieldLinks.add(lx.fieldAddValuesLink(parentContext, parentField, topicId, type, view, field));
-                        if (!isSorted) {
-                            fieldLinks.add(lx.fieldAddValuesAtIndexLink(parentContext, parentField, topicId, type, view, field));
-                        }
-                    }
-                }
-                if (allowRemove && !isNewTopic) {
-                    fieldLinks.add(lx.fieldRemoveValuesLink(parentContext, parentField, topicId, type, view, field));
-                }      
-
-                if (allowMove && !isNewTopic) {
-                    fieldLinks.add(lx.fieldMoveValuesToIndexLink(parentContext, parentField, topicId, type, view, field));
-                }
-            }
-        } else {
-            String dataType = field.getDataType();
-            if (dataType != null) {
-                fieldData.setDatatype(dataType);
-            }
-            if (!isReadOnly) {
-                if (!isNewTopic) {
-                    fieldLinks.add(lx.fieldAddValuesLink(parentContext, parentField, topicId, type, view, field));
-                    fieldLinks.add(lx.fieldRemoveValuesLink(parentContext, parentField, topicId, type, view, field));
-                    if (!rules.isSortedField(field)) {
-                        fieldLinks.add(lx.fieldAddValuesAtIndexLink(parentContext, parentField, topicId, type, view, field));
-                        fieldLinks.add(lx.fieldMoveValuesToIndexLink(parentContext, parentField, topicId, type, view, field));
-                    }
-                }
-            }
-        }
-        if (!isReadOnly && allowAdd) {
-            // ISSUE: should add-values and remove-values be links on list result instead?
-            if (!field.isReferenceField() || !getAvailableFieldValueTypes(context, field).isEmpty()) {
-                boolean query = isCustomAvailableValuesQuery(context, field);
-                fieldLinks.add(lx.fieldAvailableValuesLink(parentContext, parentField, topicId, type, view, field, query));
-            }
-        }
-
-        if (!isReadOnly && allowCreate) {
-            fieldLinks.addAll(getTopicTemplateFieldLinks(context, field));
-        }
-
-        if (rules.isPageableField(field)) {
-            fieldLinks.add(lx.fieldPagingLink(parentContext, parentField, topicId, type, view, field));    
-        }
-
-        if (!fieldLinks.isEmpty()) {
-            fieldData.setLinks(fieldLinks);
-        }
-
-        // get values (truncated if neccessary)
-        if (includeValues) {
-            setFieldDataValues(offset, limit, rules, field, fieldData);
-        }
-
-        //        fieldData = processor.postProcessFieldData(fieldData, topic, field, null);
-
-        return fieldData;
-    }
-
     private void setParam(FieldData fieldData, String key, Object value) {
         Map<String, Object> params = fieldData.getParams();
         if (params == null) {
@@ -1030,14 +890,141 @@ public abstract class Presto {
         }
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    protected <T> int compareStatic(Comparable o1, Comparable o2) {
-        if (o1 == null)
-            return (o2 == null ? 0 : -1);
-        else if (o2 == null)
-            return 1;
-        else
-            return o1.compareTo(o2);
+    public FieldData getFieldData(PrestoContextRules rules, PrestoFieldUsage field) {
+        return getFieldData(rules, field, 0, -1, true);
+    }
+
+    public FieldData getFieldDataNoValues(PrestoContextRules rules, PrestoFieldUsage field) {
+        return getFieldData(rules, field, 0, -1, false);
+    }
+
+    public FieldData getFieldData(PrestoContextRules rules, PrestoFieldUsage field, 
+            int offset, int limit, boolean includeValues) {
+
+        PrestoContext context = rules.getContext();
+
+        PrestoTopic topic = context.getTopic();
+        PrestoType type = context.getType();
+        PrestoView view = context.getView();
+
+        boolean isNewTopic = context.isNewTopic();
+
+        String topicId;
+        if (isNewTopic) {
+            topicId = "_" + type.getId();
+        } else {
+            topicId = topic.getId();
+        }
+
+        FieldData fieldData = new FieldData();
+        fieldData.setId(field.getId());
+        fieldData.setName(field.getName());
+
+        int minCard = field.getMinCardinality();
+        if (minCard > 0) {
+            fieldData.setMinCardinality(minCard);
+        }
+
+        int maxCard = field.getMaxCardinality();
+        if (maxCard > 0) {
+            fieldData.setMaxCardinality(maxCard);
+        }
+
+        String validationType = field.getValidationType();
+        if (validationType != null) {
+            setParam(fieldData, "validationType", validationType);
+        }
+
+        String interfaceControl = field.getInterfaceControl(); // ISSUE: should we default the interface control?
+        if (interfaceControl != null) {
+            fieldData.setInterfaceControl(interfaceControl);          
+        }
+
+        if (field.isEmbedded()) {
+            fieldData.setEmbeddable(true);
+        }
+
+        boolean isReadOnly = rules.isReadOnlyField(field);
+        if (isReadOnly) {
+            fieldData.setReadOnly(Boolean.TRUE);
+        }
+
+        PrestoContext parentContext = context.getParentContext();
+        PrestoFieldUsage parentField = context.getParentField();
+
+        boolean allowCreate = rules.isCreatableField(field);
+        boolean allowAdd = rules.isAddableField(field);
+
+        Collection<Link> fieldLinks = new LinkedHashSet<Link>();      
+        if (field.isReferenceField()) {
+            fieldData.setDatatype("reference");
+
+            if (!isReadOnly) {
+                boolean isSorted = rules.isSortedField(field);
+
+                boolean allowRemove = rules.isRemovableField(field);
+                boolean allowMove = !isSorted;
+
+                if (allowAdd || allowCreate) {
+                    if (!isNewTopic) {
+                        fieldLinks.add(lx.fieldAddValuesLink(parentContext, parentField, topicId, type, view, field));
+                        if (!isSorted) {
+                            fieldLinks.add(lx.fieldAddValuesAtIndexLink(parentContext, parentField, topicId, type, view, field));
+                        }
+                    }
+                }
+                if (allowRemove && !isNewTopic) {
+                    fieldLinks.add(lx.fieldRemoveValuesLink(parentContext, parentField, topicId, type, view, field));
+                }      
+
+                if (allowMove && !isNewTopic) {
+                    fieldLinks.add(lx.fieldMoveValuesToIndexLink(parentContext, parentField, topicId, type, view, field));
+                }
+            }
+        } else {
+            String dataType = field.getDataType();
+            if (dataType != null) {
+                fieldData.setDatatype(dataType);
+            }
+            if (!isReadOnly) {
+                if (!isNewTopic) {
+                    fieldLinks.add(lx.fieldAddValuesLink(parentContext, parentField, topicId, type, view, field));
+                    fieldLinks.add(lx.fieldRemoveValuesLink(parentContext, parentField, topicId, type, view, field));
+                    if (!rules.isSortedField(field)) {
+                        fieldLinks.add(lx.fieldAddValuesAtIndexLink(parentContext, parentField, topicId, type, view, field));
+                        fieldLinks.add(lx.fieldMoveValuesToIndexLink(parentContext, parentField, topicId, type, view, field));
+                    }
+                }
+            }
+        }
+        if (!isReadOnly && allowAdd) {
+            // ISSUE: should add-values and remove-values be links on list result instead?
+            if (!field.isReferenceField() || !getAvailableFieldValueTypes(context, field).isEmpty()) {
+                boolean query = isCustomAvailableValuesQuery(context, field);
+                fieldLinks.add(lx.fieldAvailableValuesLink(parentContext, parentField, topicId, type, view, field, query));
+            }
+        }
+
+        if (!isReadOnly && allowCreate) {
+            fieldLinks.addAll(getTopicTemplateFieldLinks(context, field));
+        }
+
+        if (rules.isPageableField(field)) {
+            fieldLinks.add(lx.fieldPagingLink(parentContext, parentField, topicId, type, view, field));    
+        }
+
+        if (!fieldLinks.isEmpty()) {
+            fieldData.setLinks(fieldLinks);
+        }
+
+        // get values (truncated if neccessary)
+        if (includeValues) {
+            setFieldDataValues(offset, limit, rules, field, fieldData);
+        }
+
+        //        fieldData = processor.postProcessFieldData(fieldData, topic, field, null);
+
+        return fieldData;
     }
 
     public FieldData getFieldData(PrestoTopic topic, PrestoFieldUsage field) {
