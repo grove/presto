@@ -995,37 +995,12 @@ public abstract class Presto {
         return fieldData;
     }
 
-    public FieldData getFieldData(PrestoTopic topic, PrestoFieldUsage field) {
-        PrestoType type = field.getType();
-        PrestoView view = field.getView();
-
-        PrestoContext context = PrestoContext.create(topic, type, view);
+    public FieldData getFieldDataAndProcess(PrestoContext context, PrestoFieldUsage field) {
         PrestoContextRules rules = getPrestoContextRules(context);
 
         FieldData result = getFieldData(rules, field);
 
         return processor.postProcessFieldData(result, rules, field, null);
-    }
-
-    protected PrestoTopic updateFieldValues(PrestoContext context, PrestoFieldUsage field, List<? extends Object> updateableValues) {
-        PrestoTopic topic = context.getTopic();
-        PrestoType type = context.getType();
-
-        PrestoDataProvider dataProvider = getDataProvider();
-        PrestoChangeSet changeSet = dataProvider.newChangeSet(getChangeSetHandler());
-        PrestoUpdate update = changeSet.updateTopic(topic, type);        
-
-        PrestoContextRules rules = getPrestoContextRules(context);
-
-        List<? extends Object> existingValues = topic.getValues(field);
-        boolean includeExisting = true;
-        Collection<? extends Object> newValues = mergeInlineTopics(updateableValues, existingValues, includeExisting);
-        removeNonStorableFieldValues(rules, field, newValues);
-
-        update.setValues(field, newValues); // TODO: check if inline field first?
-        changeSet.save();
-
-        return update.getTopicAfterSave();
     }
     
     public FieldData addFieldValues(PrestoContextRules rules, PrestoFieldUsage field, Integer index, FieldData fieldData) {
@@ -1035,12 +1010,12 @@ public abstract class Presto {
         boolean validateValueTypes = true;
         List<? extends Object> addableValues = updateAndExtractValuesFromFieldData(rules, field, fieldData, resolveEmbedded, includeExisting, filterNonStorable, validateValueTypes);
         
-        PrestoTopic topicAfterSave = addFieldValues(rules, field, addableValues, index);
+        PrestoContext updatedContext = addFieldValues(rules, field, addableValues, index);
 
-        return getFieldData(topicAfterSave, field);
+        return getFieldDataAndProcess(updatedContext, field);
     }
 
-    public PrestoTopic addFieldValues(PrestoContextRules rules, PrestoFieldUsage field, List<? extends Object> addableValues, Integer index) {
+    public PrestoContext addFieldValues(PrestoContextRules rules, PrestoFieldUsage field, List<? extends Object> addableValues, Integer index) {
         validateAddableFieldValues(rules, field, addableValues);
 
         PrestoContext context = rules.getContext();
@@ -1058,7 +1033,8 @@ public abstract class Presto {
         }
         changeSet.save();
 
-        return update.getTopicAfterSave();
+        PrestoTopic updatedTopic = update.getTopicAfterSave();
+        return updateParentContext(rules.getContext(), updatedTopic);
     }
 
     public FieldData removeFieldValues(PrestoContextRules rules, PrestoFieldUsage field, FieldData fieldData) {
@@ -1068,12 +1044,12 @@ public abstract class Presto {
         boolean validateValueTypes = false;
         List<? extends Object> removeableValues = updateAndExtractValuesFromFieldData(rules, field, fieldData, resolveEmbedded, includeExisting, filterNonStorable, validateValueTypes);
 
-        PrestoTopic topicAfterSave = removeFieldValues(rules, field, removeableValues);
+        PrestoContext updatedContext = removeFieldValues(rules, field, removeableValues);
 
-        return getFieldData(topicAfterSave, field);
+        return getFieldDataAndProcess(updatedContext, field);
     }
 
-    public PrestoTopic removeFieldValues(PrestoContextRules rules, PrestoFieldUsage field, List<? extends Object> removeableValues) {
+    public PrestoContext removeFieldValues(PrestoContextRules rules, PrestoFieldUsage field, List<? extends Object> removeableValues) {
         validateRemovableFieldValues(rules, field, removeableValues);
         
         PrestoContext context = rules.getContext();
@@ -1087,7 +1063,8 @@ public abstract class Presto {
         update.removeValues(field, removeableValues);
         changeSet.save();
 
-        return update.getTopicAfterSave();
+        PrestoTopic updatedTopic = update.getTopicAfterSave();
+        return updateParentContext(rules.getContext(), updatedTopic);
     }
 
     private void validateAddableFieldValues(PrestoContextRules rules, PrestoFieldUsage field, List<? extends Object> addableValues) {
@@ -1164,19 +1141,17 @@ public abstract class Presto {
 
         if (status.isValid()) {
 
-            PrestoTopic result = updatePrestoTopic(rules, topicView);
+            PrestoTopic updatedTopic = updatePrestoTopic(rules, topicView);
+            PrestoContext newContext = updateParentContext(context, updatedTopic);
 
-            // update inline topic in field of parent
-            PrestoContext parentContext = context.getParentContext();
-            PrestoFieldUsage parentField = context.getParentField();
-            PrestoContext newContext;
-            if (parentContext != null && returnParent) {
-                PrestoTopic updatedParent = updateFieldValues(parentContext, parentField, Collections.singletonList(result));
-                newContext = PrestoContext.newContext(parentContext, updatedParent);
-            } else {            
-                newContext = PrestoContext.createSubContext(parentContext, parentField, result, context.getType(), context.getView());
+            if (returnParent) {
+                PrestoContext parentContext = context.getParentContext();
+                if (parentContext != null) {
+                    newContext = parentContext;
+                }
             }
 
+            PrestoContext parentContext = context.getParentContext();
             if (context.isNewTopic() && parentContext == null) {
                 return getTopicAndProcess(newContext);
             } else {
@@ -1185,6 +1160,39 @@ public abstract class Presto {
         } else {
             return processor.postProcessTopicView(topicView, rules, null);
         }
+    }
+
+    protected PrestoContext updateParentContext(PrestoContext oldContext, PrestoTopic updatedTopic) {
+        PrestoContext oldParentContext = oldContext.getParentContext();
+        PrestoFieldUsage parentField = oldContext.getParentField();
+        if (oldParentContext != null) {
+            PrestoTopic updatedParent = updateContextFieldValues(oldParentContext, parentField, Collections.singletonList(updatedTopic));
+            PrestoContext newParentContext = updateParentContext(oldParentContext, updatedParent);
+            return PrestoContext.createSubContext(newParentContext, parentField, updatedTopic, oldContext.getType(), oldContext.getView());
+        } else {            
+            return PrestoContext.newContext(oldContext, updatedTopic);
+        }
+    }
+    
+    private PrestoTopic updateContextFieldValues(PrestoContext context, PrestoFieldUsage field, List<? extends Object> updateableValues) {
+        PrestoTopic topic = context.getTopic();
+        PrestoType type = context.getType();
+
+        PrestoDataProvider dataProvider = getDataProvider();
+        PrestoChangeSet changeSet = dataProvider.newChangeSet(getChangeSetHandler());
+        PrestoUpdate update = changeSet.updateTopic(topic, type);        
+
+        PrestoContextRules rules = getPrestoContextRules(context);
+
+        List<? extends Object> existingValues = topic.getValues(field);
+        boolean includeExisting = true;
+        Collection<? extends Object> newValues = mergeInlineTopics(updateableValues, existingValues, includeExisting);
+        filterNonStorableFieldValues(rules, field, newValues);
+
+        update.setValues(field, newValues); // TODO: check if inline field first?
+        changeSet.save();
+
+        return update.getTopicAfterSave();
     }
 
     protected PrestoTopic updatePrestoTopic(PrestoContextRules rules, TopicView topicView) {
@@ -1234,11 +1242,12 @@ public abstract class Presto {
     }
     
     public FieldData updateFieldValues(PrestoContextRules rules, PrestoFieldUsage field, FieldData fieldData) {
-        PrestoTopic topicAfterSave = updatePrestoTopic(rules, fieldData);
-        return getFieldData(topicAfterSave, field);
+        PrestoContext updatedContext = updatePrestoTopic(rules, fieldData);
+
+        return getFieldDataAndProcess(updatedContext, field);
     }
 
-    protected PrestoTopic updatePrestoTopic(PrestoContextRules rules, FieldData fieldData) {
+    protected PrestoContext updatePrestoTopic(PrestoContextRules rules, FieldData fieldData) {
 
         PrestoDataProvider dataProvider = getDataProvider();
         PrestoChangeSet changeSet = dataProvider.newChangeSet(getChangeSetHandler());
@@ -1276,7 +1285,8 @@ public abstract class Presto {
 
             changeSet.save();
 
-            return update.getTopicAfterSave();
+            PrestoTopic updatedTopic = update.getTopicAfterSave();
+            return updateParentContext(context, updatedTopic);
         }
     }
 
@@ -1345,7 +1355,7 @@ public abstract class Presto {
 
             // filter out non-storable values
             if (filterNonStorable) {
-                removeNonStorableFieldValues(rules, field, result);
+                filterNonStorableFieldValues(rules, field, result);
             }
         }
         return result;
@@ -1373,7 +1383,7 @@ public abstract class Presto {
         return result;
     }
 
-    private void removeNonStorableFieldValues(PrestoContextRules rules, PrestoFieldUsage field, Collection<? extends Object> values) {
+    private void filterNonStorableFieldValues(PrestoContextRules rules, PrestoFieldUsage field, Collection<? extends Object> values) {
         // remove ignorable field values
         Iterator<?> iter = values.iterator();
         while (iter.hasNext()) {

@@ -278,10 +278,11 @@ public abstract class EditorResource {
                             PrestoContext parentContext = context.getParentContext();
                             PrestoFieldUsage parentField = context.getParentField();
                             PrestoContextRules parentRules = session.getPrestoContextRules(parentContext);
-                            PrestoTopic parentTopicAfterSave = session.removeFieldValues(parentRules, parentField, Collections.singletonList(topic));
+                            
+                            PrestoContext updatedParentContext = session.removeFieldValues(parentRules, parentField, Collections.singletonList(topic));
 
                             // return field data of parent field
-                            FieldData fieldData = session.getFieldData(parentTopicAfterSave, parentField);
+                            FieldData fieldData = session.getFieldDataAndProcess(updatedParentContext, parentField);
                             return Response.ok(fieldData).build();
                         } else {
                             session.deleteTopic(topic, type);
@@ -645,11 +646,6 @@ public abstract class EditorResource {
         } 
     }
 
-    private Response getConstraintMessageResponse(ConstraintException ce) {
-        TopicMessage entity = new TopicMessage(ce.getType(), ce.getTitle(), ce.getMessage());
-        return Response.status(422).entity(entity).build();
-    }
-
     @POST
     @Produces(APPLICATION_JSON_UTF8)
     @Consumes(APPLICATION_JSON_UTF8)
@@ -902,6 +898,11 @@ public abstract class EditorResource {
                 }
             };
         }
+    }
+
+    private Response getConstraintMessageResponse(ConstraintException ce) {
+        TopicMessage entity = new TopicMessage(ce.getType(), ce.getTitle(), ce.getMessage());
+        return Response.status(422).entity(entity).build();
     }
 
     protected abstract Presto createPresto(String databaseId, boolean readOnlyMode);
