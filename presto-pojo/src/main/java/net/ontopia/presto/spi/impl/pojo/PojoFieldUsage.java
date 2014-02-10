@@ -174,6 +174,11 @@ public class PojoFieldUsage implements PrestoFieldUsage {
     }
 
     @Override
+    public boolean isMovable() {
+        return field.isMovable();
+    }
+
+    @Override
     public String getInterfaceControl() {
         return field.getInterfaceControl();
     }

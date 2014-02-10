@@ -8,6 +8,7 @@ import net.ontopia.presto.jaxb.Link;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoView;
+import net.ontopia.presto.spi.utils.ExtraUtils;
 import net.ontopia.presto.spi.utils.PrestoContext;
 
 import org.codehaus.jackson.JsonNode;
@@ -415,16 +416,6 @@ public class CustomSchemaLinks implements Links {
             return new Link(rel, replaceUriPattern(href, params));
         }
         return delegate.fieldAvailableValuesLink(parentContext, parentField, topicId, type, view, field, query);
-    }
-
-    @Override
-    public Link availableTypesTreeLazyLink(PrestoType type) {
-        return delegate.availableTypesTreeLazyLink(type);
-    }
-
-    @Override
-    public Link availableTypesTreeLink() {
-        return delegate.availableTypesTreeLink();
     }
 
     @Override

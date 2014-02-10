@@ -24,9 +24,7 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
 import net.ontopia.presto.jaxb.AvailableDatabases;
-import net.ontopia.presto.jaxb.AvailableFieldTypes;
 import net.ontopia.presto.jaxb.AvailableFieldValues;
-import net.ontopia.presto.jaxb.AvailableTopicTypes;
 import net.ontopia.presto.jaxb.Database;
 import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxb.Link;
@@ -280,10 +278,11 @@ public abstract class EditorResource {
                             PrestoContext parentContext = context.getParentContext();
                             PrestoFieldUsage parentField = context.getParentField();
                             PrestoContextRules parentRules = session.getPrestoContextRules(parentContext);
-                            PrestoTopic parentTopicAfterSave = session.removeFieldValues(parentRules, parentField, Collections.singletonList(topic));
+                            
+                            PrestoContext updatedParentContext = session.removeFieldValues(parentRules, parentField, Collections.singletonList(topic));
 
                             // return field data of parent field
-                            FieldData fieldData = session.getFieldData(parentTopicAfterSave, parentField);
+                            FieldData fieldData = session.getFieldDataAndProcess(updatedParentContext, parentField);
                             return Response.ok(fieldData).build();
                         } else {
                             session.deleteTopic(topic, type);
@@ -505,7 +504,7 @@ public abstract class EditorResource {
             }
             try {
                 boolean returnParent = true;
-                Object result = session.updateTopic(context, topicView, returnParent);
+                Object result = session.updateTopicView(context, topicView, returnParent);
                 session.commit();
 
                 return Response.ok(result).build();
@@ -585,9 +584,66 @@ public abstract class EditorResource {
         } 
     }
 
-    private Response getConstraintMessageResponse(ConstraintException ce) {
-        TopicMessage entity = new TopicMessage(ce.getType(), ce.getTitle(), ce.getMessage());
-        return Response.status(422).entity(entity).build();
+    @POST
+    @Produces(APPLICATION_JSON_UTF8)
+    @Consumes(APPLICATION_JSON_UTF8)
+    @Path("update-field-values/{databaseId}/{topicId}/{viewId}/{fieldId}")
+    public Response updateFieldValuesPath( 
+            @PathParam("databaseId") final String databaseId, 
+            @PathParam("topicId") final String topicId, 
+            @PathParam("viewId") final String viewId,
+            @PathParam("fieldId") final String fieldId, FieldData fieldData) throws Exception {
+
+        String path = null;
+        return updateFieldValuesPath(databaseId, path, topicId, viewId, fieldId, fieldData);
+    }
+
+    @POST
+    @Produces(APPLICATION_JSON_UTF8)
+    @Consumes(APPLICATION_JSON_UTF8)
+    @Path("update-field-values/{databaseId}/{path}/{topicId}/{viewId}/{fieldId}")
+    public Response updateFieldValuesPath( 
+            @PathParam("databaseId") final String databaseId, 
+            @PathParam("path") final String path, 
+            @PathParam("topicId") final String topicId, 
+            @PathParam("viewId") final String viewId,
+            @PathParam("fieldId") final String fieldId, FieldData fieldData) throws Exception {
+
+        boolean readOnly = false;
+        Presto session = createPresto(databaseId, readOnly);
+
+        try {
+            PrestoContext context = PathParser.getTopicByPath(session, path, topicId, viewId);
+
+            if (context == null || context.isMissingTopic()) {
+                return Response.status(Status.NOT_FOUND).build();
+            }
+
+            PrestoFieldUsage field = context.getFieldById(fieldId);
+            PrestoContextRules rules = session.getPrestoContextRules(context);
+
+            if (!rules.isReadOnlyField(field) && 
+                    (rules.isAddableField(field) || rules.isRemovableField(field) || rules.isCreatableField(field))) { // TODO: what are the rules?
+                try {
+                    FieldData result = session.updateFieldValues(rules, field, fieldData);
+
+                    session.commit();
+
+                    return Response.ok(result).build();
+                } catch (ConstraintException ce) {
+                    return getConstraintMessageResponse(ce);
+                }
+            } else {
+                // 403
+                return Response.status(Status.FORBIDDEN).build();
+            }
+
+        } catch (Exception e) {
+            session.abort();
+            throw e;
+        } finally {
+            session.close();      
+        } 
     }
 
     @POST
@@ -726,60 +782,6 @@ public abstract class EditorResource {
         }
     }
 
-    @GET
-    @Produces(APPLICATION_JSON_UTF8)
-    @Path("available-field-types/{databaseId}/{topicId}/{viewId}/{fieldId}")
-    @Deprecated
-    public Response getAvailableFieldTypes( 
-            @PathParam("databaseId") final String databaseId, 
-            @PathParam("topicId") final String topicId, 
-            @PathParam("viewId") final String viewId,
-            @PathParam("fieldId") final String fieldId) throws Exception {
-
-        boolean readOnly = false;
-        Presto session = createPresto(databaseId, readOnly);
-
-        try {
-            PrestoContext context = PrestoContext.create(session.getDataProvider(), session.getSchemaProvider(), PathParser.deskull(topicId), viewId);
-
-            if (context.isMissingTopic()) {
-                return Response.status(Status.NOT_FOUND).build();
-            }
-
-            PrestoFieldUsage field = context.getFieldById(fieldId);
-            PrestoContextRules rules = session.getPrestoContextRules(context);
-
-            AvailableFieldTypes result = session.getAvailableFieldTypesInfo(rules, field);
-            return Response.ok(result).build();
-
-        } catch (Exception e) {
-            session.abort();
-            throw e;
-        } finally {
-            session.close();      
-        }
-    }
-
-    @GET
-    @Produces(APPLICATION_JSON_UTF8)
-    @Path("available-types-tree/{databaseId}")
-    @Deprecated
-    public Response getAvailableTypesTree(@PathParam("databaseId") final String databaseId) throws Exception {
-
-        Presto session = createPresto(databaseId, false);
-
-        try {
-            AvailableTopicTypes result = session.getAvailableTypesInfo(true);
-            return Response.ok(result).build();
-
-        } catch (Exception e) {
-            session.abort();
-            throw e;
-        } finally {
-            session.close();      
-        }
-    }
-
     @PUT
     @Produces(APPLICATION_JSON_UTF8)
     @Consumes(APPLICATION_JSON_UTF8)
@@ -896,6 +898,11 @@ public abstract class EditorResource {
                 }
             };
         }
+    }
+
+    private Response getConstraintMessageResponse(ConstraintException ce) {
+        TopicMessage entity = new TopicMessage(ce.getType(), ce.getTitle(), ce.getMessage());
+        return Response.status(422).entity(entity).build();
     }
 
     protected abstract Presto createPresto(String databaseId, boolean readOnlyMode);

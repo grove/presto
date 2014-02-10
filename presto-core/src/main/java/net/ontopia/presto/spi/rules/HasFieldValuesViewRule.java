@@ -1,15 +1,16 @@
 package net.ontopia.presto.spi.rules;
 
 import net.ontopia.presto.spi.PrestoTopic;
+import net.ontopia.presto.spi.PrestoView;
 import net.ontopia.presto.spi.utils.PrestoContext;
-import net.ontopia.presto.spi.utils.PrestoContextRules.TypeFlag;
+import net.ontopia.presto.spi.utils.PrestoContextRules.ViewFlag;
 
 import org.codehaus.jackson.node.ObjectNode;
 
-public class HasFieldValuesTypeRule extends BooleanTypeRule {
+public class HasFieldValuesViewRule extends BooleanViewRule {
 
     @Override
-    protected boolean getResult(TypeFlag flag, PrestoContext context, ObjectNode config) {
+    protected boolean getResult(ViewFlag flag, PrestoContext context, ObjectNode config, PrestoView view) {
         if (context.isNewTopic()) {
             return false;
         } else {

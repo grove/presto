@@ -72,12 +72,6 @@ public interface Links {
             PrestoField parentField, String topicId, PrestoType type, PrestoView view,
             PrestoField field, boolean query);
 
-    @Deprecated
-    public abstract Link availableTypesTreeLazyLink(PrestoType type);
-
-    @Deprecated
-    public abstract Link availableTypesTreeLink();
-
     public abstract String topicViewExternalHref(PrestoContext context);
 
 }

@@ -1,4 +1,4 @@
-package net.ontopia.presto.jaxrs;
+package net.ontopia.presto.spi.utils;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;

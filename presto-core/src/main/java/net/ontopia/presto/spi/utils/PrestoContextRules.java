@@ -4,6 +4,7 @@ import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoType;
+import net.ontopia.presto.spi.PrestoView;
 import net.ontopia.presto.spi.rules.DelegatingContextRules;
 
 import org.codehaus.jackson.JsonNode;
@@ -19,6 +20,10 @@ public class PrestoContextRules {
         isDeletableType
     }
 
+    public enum ViewFlag {
+        isHiddenView
+    }
+
     public enum FieldFlag {
         isHiddenField,
         isTraverableField,
@@ -29,12 +34,14 @@ public class PrestoContextRules {
         isEditableField,
         isCreatableField,
         isAddableField,
-        isRemovableField
+        isRemovableField, 
+        isMovableField
     }
 
     public enum FieldValueFlag {
         isAddableFieldValue,
         isRemovableFieldValue,
+        isMovableFieldValue,
         isEditableFieldValue,
         isStorableFieldValue
     }
@@ -42,7 +49,13 @@ public class PrestoContextRules {
     public static interface TypeRule extends Handler {
 
         public Boolean getValue(TypeFlag flag, PrestoContext context);
+        
+    }
 
+    public static interface ViewRule extends Handler {
+
+        public Boolean getValue(ViewFlag flag, PrestoContext context, PrestoView view);
+        
     }
 
     public static interface FieldRule extends Handler {
@@ -57,7 +70,7 @@ public class PrestoContextRules {
 
     }
 
-    public static abstract class ContextRulesHandler extends AbstractHandler implements TypeRule, FieldRule, FieldValueRule {
+    public static abstract class ContextRulesHandler extends AbstractHandler implements TypeRule, ViewRule, FieldRule, FieldValueRule {
     }
 
     private ContextRulesHandler handler;
@@ -94,31 +107,33 @@ public class PrestoContextRules {
     }
 
     private boolean isTypeHandlerFlag(TypeFlag flag, boolean defaultValue) {
-        if (handler != null) {
-            Boolean result = handler.getValue(flag, context);
-            if (result != null) {
-                return result;
-            }
+        Boolean result = handler.getValue(flag, context);
+        if (result != null) {
+            return result;
+        }
+        return defaultValue;
+    }
+
+    private boolean isViewHandlerFlag(ViewFlag flag, PrestoView view, boolean defaultValue) {
+        Boolean result = handler.getValue(flag, context, view);
+        if (result != null) {
+            return result;
         }
         return defaultValue;
     }
 
     private boolean isFieldHandlerFlag(FieldFlag flag, PrestoField field, boolean defaultValue) {
-        if (handler != null) {
-            Boolean result = handler.getValue(flag, context, field);
-            if (result != null) {
-                return result;
-            }
+        Boolean result = handler.getValue(flag, context, field);
+        if (result != null) {
+            return result;
         }
         return defaultValue;
     }
 
     private boolean isFieldValueHandlerFlag(FieldValueFlag flag, PrestoField field, Object value, boolean defaultValue) {
-        if (handler != null) {
-            Boolean result = handler.getValue(flag, context, field, value);
-            if (result != null) {
-                return result;
-            }
+        Boolean result = handler.getValue(flag, context, field, value);
+        if (result != null) {
+            return result;
         }
         return defaultValue;
     }
@@ -143,6 +158,9 @@ public class PrestoContextRules {
         return isTypeHandlerFlag(TypeFlag.isDeletableType, type.isRemovable());
     }
     
+    public boolean isHiddenView(PrestoView view) {
+        return isViewHandlerFlag(ViewFlag.isHiddenView, view, false);
+    }    
 
     // characteristics
 
@@ -196,12 +214,20 @@ public class PrestoContextRules {
         return isFieldHandlerFlag(FieldFlag.isRemovableField, field, field.isRemovable());
     }
 
+    public boolean isMovableField(PrestoField field) {
+        return isFieldHandlerFlag(FieldFlag.isMovableField, field, field.isMovable());
+    }
+
     public boolean isAddableFieldValue(PrestoField field, Object value) {
         return isFieldValueHandlerFlag(FieldValueFlag.isAddableFieldValue, field, value, field.isAddable());
     }
 
     public boolean isRemovableFieldValue(PrestoField field, Object value) {
         return isFieldValueHandlerFlag(FieldValueFlag.isRemovableFieldValue, field, value, field.isRemovable());
+    }
+
+    public boolean isMovableFieldValue(PrestoField field, Object value) {
+        return isFieldValueHandlerFlag(FieldValueFlag.isMovableFieldValue, field, value, field.isMovable());
     }
 
     public boolean isEditableFieldValue(PrestoField field, Object value) {

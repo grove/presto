@@ -3,8 +3,8 @@ package net.ontopia.presto.jaxrs.process.impl;
 import java.util.Map;
 
 import net.ontopia.presto.jaxb.TopicView;
-import net.ontopia.presto.jaxrs.ExtraUtils;
 import net.ontopia.presto.jaxrs.process.TopicViewProcessor;
+import net.ontopia.presto.spi.utils.ExtraUtils;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
 

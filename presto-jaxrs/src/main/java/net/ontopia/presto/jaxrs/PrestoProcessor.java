@@ -18,6 +18,7 @@ import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoView;
 import net.ontopia.presto.spi.utils.AbstractHandler;
+import net.ontopia.presto.spi.utils.ExtraUtils;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
 

@@ -1,10 +1,7 @@
 package net.ontopia.presto.spi.impl.pojo;
 
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
@@ -66,17 +63,6 @@ public class PojoSchemaProvider implements PrestoSchemaProvider {
             return defaultValue;
         }
         return type;
-    }
-
-    @Override
-    public Collection<PrestoType> getRootTypes() {
-        Collection<PrestoType> result = new HashSet<PrestoType>(typesMap.values());
-        Set<PrestoType> notSuperTypes = new HashSet<PrestoType>();
-        for (PrestoType type : result) {
-            notSuperTypes.addAll(type.getDirectSubTypes());
-        }
-        result.removeAll(notSuperTypes);
-        return result;
     }
 
     protected void setDatabaseId(String databaseId) {

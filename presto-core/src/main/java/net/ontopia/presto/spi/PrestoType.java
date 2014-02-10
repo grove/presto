@@ -20,11 +20,6 @@ public interface PrestoType {
     boolean isRemovable();
 
     boolean isRemovableCascadingDelete();
-    
-    // TODO: getSuperType();
-
-    @Deprecated
-    Collection<PrestoType> getDirectSubTypes();
 
     List<PrestoField> getFields();
 
