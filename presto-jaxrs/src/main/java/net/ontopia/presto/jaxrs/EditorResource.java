@@ -782,7 +782,7 @@ public abstract class EditorResource {
         }
     }
 
-    @PUT
+    @POST
     @Produces(APPLICATION_JSON_UTF8)
     @Consumes(APPLICATION_JSON_UTF8)
     @Path("execute-field-action/{databaseId}/{topicId}/{viewId}/{fieldId}/{actionId}")
@@ -797,7 +797,7 @@ public abstract class EditorResource {
         return executeFieldActionPath(databaseId, path, topicId, viewId, fieldId, actionId, topicView);
     }
 
-    @PUT
+    @POST
     @Produces(APPLICATION_JSON_UTF8)
     @Consumes(APPLICATION_JSON_UTF8)
     @Path("execute-field-action/{databaseId}/{path}/{topicId}/{viewId}/{fieldId}/{actionId}")
@@ -814,12 +814,7 @@ public abstract class EditorResource {
         Presto session = createPresto(databaseId, readOnly);
 
         try {
-            // NOTE: the topicId is the topic that requested the validation, but the 
-            // validation needs to start with the topicId of the received topicView. The 
-            // former is a descendant of the latter.
-            String topicViewTopicId = topicView.getTopicId();
-
-            PrestoContext context = PathParser.getTopicByPath(session, path, topicViewTopicId, viewId);
+            PrestoContext context = PathParser.getTopicByPath(session, path, topicId, viewId);
 
             if (context == null || context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();

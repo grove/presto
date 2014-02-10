@@ -538,8 +538,8 @@ public abstract class Presto {
         int start = 0;
         int end = size;
 
-        List<Object> inputValues = new ArrayList<Object>(fieldValues.size());
-        List<Value> outputValues = new ArrayList<Value>(fieldValues.size());
+        List<Object> inputValues = new ArrayList<Object>(size);
+        List<Value> outputValues = new ArrayList<Value>(size);
         for (int i=start; i < end; i++) {
             Object value = fieldValues.get(i);
             if (value != null) {
