@@ -904,50 +904,17 @@ public abstract class Presto {
         Collection<Link> fieldLinks = new LinkedHashSet<Link>();      
         if (field.isReferenceField()) {
             fieldData.setDatatype("reference");
-
-//            if (!isReadOnly) {
-//                boolean isSorted = rules.isSortedField(field);
-//
-//                boolean allowRemove = rules.isRemovableField(field);
-//                boolean allowMove = !isSorted;
-//
-//                if (allowAdd || allowCreate) {
-//                    if (!isNewTopic) {
-//                        fieldLinks.add(lx.fieldAddValuesLink(parentContext, parentField, topicId, type, view, field));
-//                        if (!isSorted) {
-//                            fieldLinks.add(lx.fieldAddValuesAtIndexLink(parentContext, parentField, topicId, type, view, field));
-//                        }
-//                    }
-//                }
-//                if (allowRemove && !isNewTopic) {
-//                    fieldLinks.add(lx.fieldRemoveValuesLink(parentContext, parentField, topicId, type, view, field));
-//                }      
-//
-//                if (allowMove && !isNewTopic) {
-//                    fieldLinks.add(lx.fieldMoveValuesToIndexLink(parentContext, parentField, topicId, type, view, field));
-//                }
-//            }
         } else {
             String dataType = field.getDataType();
             if (dataType != null) {
                 fieldData.setDatatype(dataType);
             }
-//            if (!isReadOnly) {
-//                if (!isNewTopic) {
-//                    fieldLinks.add(lx.fieldAddValuesLink(parentContext, parentField, topicId, type, view, field));
-//                    fieldLinks.add(lx.fieldRemoveValuesLink(parentContext, parentField, topicId, type, view, field));
-//                    if (!rules.isSortedField(field)) {
-//                        fieldLinks.add(lx.fieldAddValuesAtIndexLink(parentContext, parentField, topicId, type, view, field));
-//                        fieldLinks.add(lx.fieldMoveValuesToIndexLink(parentContext, parentField, topicId, type, view, field));
-//                    }
-//                }
-//            }
         }
         if (!isReadOnly) {
             boolean isSorted = rules.isSortedField(field);
 
             boolean allowRemove = rules.isRemovableField(field);
-            boolean allowMove = !isSorted;
+            boolean allowMove = !isSorted && rules.isMovableField(field);
 
             if (allowAdd || allowCreate) {
                 if (!isNewTopic) {
@@ -1003,20 +970,20 @@ public abstract class Presto {
         return processor.postProcessFieldData(result, rules, field, null);
     }
     
-    public FieldData addFieldValues(PrestoContextRules rules, PrestoFieldUsage field, Integer index, FieldData fieldData) {
+    public FieldData addFieldValues(PrestoContextRules rules, PrestoFieldUsage field, Integer index, FieldData fieldData, boolean isMove) {
         boolean resolveEmbedded = true;
         boolean includeExisting = false;
         boolean filterNonStorable = true;
         boolean validateValueTypes = true;
         List<? extends Object> addableValues = updateAndExtractValuesFromFieldData(rules, field, fieldData, resolveEmbedded, includeExisting, filterNonStorable, validateValueTypes);
         
-        PrestoContext updatedContext = addFieldValues(rules, field, addableValues, index);
+        PrestoContext updatedContext = addFieldValues(rules, field, addableValues, index, isMove);
 
         return getFieldDataAndProcess(updatedContext, field);
     }
 
-    public PrestoContext addFieldValues(PrestoContextRules rules, PrestoFieldUsage field, List<? extends Object> addableValues, Integer index) {
-        validateAddableFieldValues(rules, field, addableValues);
+    public PrestoContext addFieldValues(PrestoContextRules rules, PrestoFieldUsage field, List<? extends Object> addableValues, Integer index, boolean isMove) {
+        validateAddableFieldValues(rules, field, addableValues, isMove);
 
         PrestoContext context = rules.getContext();
         PrestoTopic topic = context.getTopic();
@@ -1067,11 +1034,21 @@ public abstract class Presto {
         return updateParentContext(rules.getContext(), updatedTopic);
     }
 
-    private void validateAddableFieldValues(PrestoContextRules rules, PrestoFieldUsage field, List<? extends Object> addableValues) {
-        for (Object addableValue : addableValues) {
-            // make sure that non-addable values are not added
-            if (!rules.isAddableFieldValue(field, addableValue)) {
-                throw new NotAddableValueConstraintException(rules.getContext(), field, addableValue);
+    private void validateAddableFieldValues(PrestoContextRules rules, PrestoFieldUsage field, List<? extends Object> addableValues, boolean isMove) {
+        if (isMove) {
+            for (Object addableValue : addableValues) {
+                // make sure that non-movable values are not added
+                if (!rules.isMovableFieldValue(field, addableValue)) {
+                    throw new NotMovableValueConstraintException(rules.getContext(), field, addableValue);
+                }
+            }
+            
+        } else {
+            for (Object addableValue : addableValues) {
+                // make sure that non-addable values are not added
+                if (!rules.isAddableFieldValue(field, addableValue)) {
+                    throw new NotAddableValueConstraintException(rules.getContext(), field, addableValue);
+                }
             }
         }
     }

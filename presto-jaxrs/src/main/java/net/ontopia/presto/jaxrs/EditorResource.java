@@ -531,7 +531,6 @@ public abstract class EditorResource {
             @PathParam("viewId") final String viewId,
             @PathParam("fieldId") final String fieldId, 
             @QueryParam("index") final Integer index, FieldData fieldData) throws Exception {
-
         String path = null;
         return addFieldValuesPath(databaseId, path, topicId, viewId, fieldId, index, fieldData);
     }
@@ -547,7 +546,12 @@ public abstract class EditorResource {
             @PathParam("viewId") final String viewId,
             @PathParam("fieldId") final String fieldId, 
             @QueryParam("index") final Integer index, FieldData fieldData) throws Exception {
+        boolean isMove = false;
+        return performAddFieldValuesPath(databaseId, path, topicId, viewId, fieldId, index, fieldData, isMove);
+    }
 
+    private Response performAddFieldValuesPath(String databaseId, String path, String topicId, 
+           String viewId, String fieldId, Integer index, FieldData fieldData, boolean isMove) throws Exception {
         boolean readOnly = false;
         Presto session = createPresto(databaseId, readOnly);
 
@@ -561,9 +565,10 @@ public abstract class EditorResource {
             PrestoFieldUsage field = context.getFieldById(fieldId);
             PrestoContextRules rules = session.getPrestoContextRules(context);
 
-            if (!rules.isReadOnlyField(field) && (rules.isAddableField(field) || rules.isCreatableField(field))) {
+            if (!rules.isReadOnlyField(field) &&
+                    (isMove ?  rules.isMovableField(field) : (rules.isAddableField(field) || rules.isCreatableField(field)))) {
                 try {
-                    FieldData result = session.addFieldValues(rules, field, index, fieldData);
+                    FieldData result = session.addFieldValues(rules, field, index, fieldData, isMove);
 
                     session.commit();
 
@@ -715,8 +720,8 @@ public abstract class EditorResource {
             @PathParam("viewId") final String viewId,
             @PathParam("fieldId") final String fieldId, 
             @QueryParam("index") final Integer index, FieldData fieldData) throws Exception {
-
-        return addFieldValues(databaseId, topicId, viewId, fieldId, index, fieldData);
+        String path = null;
+        return moveFieldValuesToIndexPath(databaseId, path, topicId, viewId, fieldId, index, fieldData);
     }
 
     @POST
@@ -730,8 +735,8 @@ public abstract class EditorResource {
             @PathParam("viewId") final String viewId,
             @PathParam("fieldId") final String fieldId, 
             @QueryParam("index") final Integer index, FieldData fieldData) throws Exception {
-
-        return addFieldValuesPath(databaseId, path, topicId, viewId, fieldId, index, fieldData);
+        boolean isMove = true;
+        return performAddFieldValuesPath(databaseId, path, topicId, viewId, fieldId, index, fieldData, isMove);
     }
 
     @GET
