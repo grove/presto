@@ -16,7 +16,7 @@ import net.ontopia.presto.spi.utils.PrestoContextRules;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;
 
-public class FixedValuesAction extends FieldAction {
+public class SetFixedValuesAction extends FieldAction {
 
     @Override
     public boolean isActive(PrestoContextRules rules, PrestoFieldUsage field, String actionId) {
