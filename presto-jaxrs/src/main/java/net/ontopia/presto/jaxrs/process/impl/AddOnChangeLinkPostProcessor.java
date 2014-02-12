@@ -5,8 +5,8 @@ import java.util.LinkedHashSet;
 
 import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxb.Link;
-import net.ontopia.presto.jaxrs.Links;
 import net.ontopia.presto.jaxrs.Presto;
+import net.ontopia.presto.jaxrs.links.Links;
 import net.ontopia.presto.jaxrs.process.FieldDataProcessor;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoTopic;

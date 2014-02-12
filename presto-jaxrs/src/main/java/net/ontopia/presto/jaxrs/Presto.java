@@ -22,6 +22,13 @@ import net.ontopia.presto.jaxb.TopicView;
 import net.ontopia.presto.jaxb.Value;
 import net.ontopia.presto.jaxrs.PrestoProcessor.Status;
 import net.ontopia.presto.jaxrs.action.FieldAction;
+import net.ontopia.presto.jaxrs.constraints.InvalidValueTypeConstraintException;
+import net.ontopia.presto.jaxrs.constraints.NotAddableValueConstraintException;
+import net.ontopia.presto.jaxrs.constraints.NotInlineTypeConstraintException;
+import net.ontopia.presto.jaxrs.constraints.NotMovableValueConstraintException;
+import net.ontopia.presto.jaxrs.constraints.NotRemovableValueConstraintException;
+import net.ontopia.presto.jaxrs.links.DefaultLinks;
+import net.ontopia.presto.jaxrs.links.Links;
 import net.ontopia.presto.jaxrs.process.ValueFactory;
 import net.ontopia.presto.jaxrs.resolve.AvailableFieldCreateTypesResolver;
 import net.ontopia.presto.jaxrs.resolve.AvailableFieldValuesResolver;
@@ -594,6 +601,16 @@ public abstract class Presto {
         }
     }
 
+    protected int compareComparables(String o1, String o2) {
+        if (o1 == null) {
+            return (o2 == null ? 0 : -1);
+        } else if (o2 == null){ 
+            return 1;
+        } else {
+            return o1.compareTo(o2);
+        }
+    }
+
     private SortKeyGenerator createSortKeyGenerator(final PrestoFieldUsage field) {
         ObjectNode extra = ExtraUtils.getFieldExtraNode(field);
         if (extra != null) {
@@ -707,6 +724,62 @@ public abstract class Presto {
         return result;
     }
 
+    protected Collection<Value> getAllowedFieldValues(PrestoContextRules rules, PrestoFieldUsage field, String query) {
+        Collection<? extends Object> availableFieldValues = getAvailableFieldValues(rules, field, query);
+
+        ValueFactory valueFactory = createValueFactory(rules, field);
+
+        Collection<Value> result = new ArrayList<Value>(availableFieldValues.size());
+        for (Object value : availableFieldValues) {
+            result.add(getAllowedFieldValue(valueFactory, rules, field, value));
+        }
+
+        return result;
+    }
+
+    protected Value getAllowedFieldValue(ValueFactory valueFactory, PrestoContextRules rules, PrestoFieldUsage field, Object fieldValue) {
+        if (fieldValue instanceof PrestoTopic) {
+            PrestoTopic topicValue = (PrestoTopic)fieldValue;
+            return getAllowedFieldValueTopic(valueFactory, rules, field, topicValue);
+        } else {
+            String stringValue = fieldValue.toString();
+            return getAllowedFieldValueString(valueFactory, rules, field, stringValue);
+        }
+    }
+
+    protected Value getAllowedFieldValueString(ValueFactory valueFactory, PrestoContextRules rules, PrestoFieldUsage field, String value) {
+        Value result;
+        if (valueFactory != null) {
+            result = valueFactory.createValue(rules, field, value);
+        } else {
+            result = new Value();
+            result.setValue(value);
+        }
+        return result;
+    }
+
+    protected Value getAllowedFieldValueTopic(ValueFactory valueFactory, PrestoContextRules rules, PrestoFieldUsage field, PrestoTopic value) {
+        Value result;
+        if (valueFactory != null) {
+            result = valueFactory.createValue(rules, field, value);
+        } else {
+            result = new Value();
+            result.setValue(value.getId());
+            result.setName(value.getName(field));
+        }
+        result.setType(value.getTypeId());
+
+        List<Link> links = new ArrayList<Link>();
+        if (rules.isTraversableField(field)) {
+            PrestoType valueType = getSchemaProvider().getTypeById(value.getTypeId());
+            PrestoView fieldsView = field.getEditView(valueType);
+            links.add(lx.topicEditLink(value.getId(), valueType, fieldsView, false));
+        }
+        result.setLinks(links);
+
+        return result;
+    }
+
     protected Collection<? extends Object> getAvailableFieldValues(PrestoContextRules rules, PrestoFieldUsage field, String query) {
         Collection<? extends Object> result = getCustomAvailableValues(rules, field, query);
         if (result != null) {
@@ -768,72 +841,6 @@ public abstract class Presto {
             }
         }
         return null;
-    }
-
-    protected Collection<Value> getAllowedFieldValues(PrestoContextRules rules, PrestoFieldUsage field, String query) {
-        Collection<? extends Object> availableFieldValues = getAvailableFieldValues(rules, field, query);
-
-        ValueFactory valueFactory = createValueFactory(rules, field);
-
-        Collection<Value> result = new ArrayList<Value>(availableFieldValues.size());
-        for (Object value : availableFieldValues) {
-            result.add(getAllowedFieldValue(valueFactory, rules, field, value));
-        }
-
-        return result;
-    }
-
-    protected Value getAllowedFieldValue(ValueFactory valueFactory, PrestoContextRules rules, PrestoFieldUsage field, Object fieldValue) {
-        if (fieldValue instanceof PrestoTopic) {
-            PrestoTopic topicValue = (PrestoTopic)fieldValue;
-            return getAllowedFieldValueTopic(valueFactory, rules, field, topicValue);
-        } else {
-            String stringValue = fieldValue.toString();
-            return getAllowedFieldValueString(valueFactory, rules, field, stringValue);
-        }
-    }
-
-    protected Value getAllowedFieldValueString(ValueFactory valueFactory, PrestoContextRules rules, PrestoFieldUsage field, String value) {
-        Value result;
-        if (valueFactory != null) {
-            result = valueFactory.createValue(rules, field, value);
-        } else {
-            result = new Value();
-            result.setValue(value);
-        }
-        return result;
-    }
-
-    protected Value getAllowedFieldValueTopic(ValueFactory valueFactory, PrestoContextRules rules, PrestoFieldUsage field, PrestoTopic value) {
-        Value result;
-        if (valueFactory != null) {
-            result = valueFactory.createValue(rules, field, value);
-        } else {
-            result = new Value();
-            result.setValue(value.getId());
-            result.setName(value.getName(field));
-        }
-        result.setType(value.getTypeId());
-
-        List<Link> links = new ArrayList<Link>();
-        if (rules.isTraversableField(field)) {
-            PrestoType valueType = getSchemaProvider().getTypeById(value.getTypeId());
-            PrestoView fieldsView = field.getEditView(valueType);
-            links.add(lx.topicEditLink(value.getId(), valueType, fieldsView, false));
-        }
-        result.setLinks(links);
-
-        return result;
-    }
-
-    protected int compareComparables(String o1, String o2) {
-        if (o1 == null) {
-            return (o2 == null ? 0 : -1);
-        } else if (o2 == null){ 
-            return 1;
-        } else {
-            return o1.compareTo(o2);
-        }
     }
 
     public FieldData getFieldData(PrestoContextRules rules, PrestoFieldUsage field) {

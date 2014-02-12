@@ -1,4 +1,4 @@
-package net.ontopia.presto.jaxrs;
+package net.ontopia.presto.jaxrs.constraints;
 
 
 public abstract class ConstraintException extends RuntimeException {

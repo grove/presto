@@ -1,4 +1,4 @@
-package net.ontopia.presto.jaxrs;
+package net.ontopia.presto.jaxrs.links;
 
 import net.ontopia.presto.jaxb.Link;
 import net.ontopia.presto.spi.PrestoField;

@@ -1,10 +1,12 @@
-package net.ontopia.presto.jaxrs;
+package net.ontopia.presto.jaxrs.links;
 
 import java.net.URI;
 
 import javax.ws.rs.core.UriBuilder;
 
 import net.ontopia.presto.jaxb.Link;
+import net.ontopia.presto.jaxrs.PathParser;
+import net.ontopia.presto.jaxrs.Presto;
 import net.ontopia.presto.jaxrs.Presto.Rel;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoType;
