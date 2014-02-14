@@ -27,6 +27,7 @@ import net.ontopia.presto.jaxrs.constraints.NotAddableValueConstraintException;
 import net.ontopia.presto.jaxrs.constraints.NotInlineTypeConstraintException;
 import net.ontopia.presto.jaxrs.constraints.NotMovableValueConstraintException;
 import net.ontopia.presto.jaxrs.constraints.NotRemovableValueConstraintException;
+import net.ontopia.presto.jaxrs.function.PrestoFieldFunction;
 import net.ontopia.presto.jaxrs.links.DefaultLinks;
 import net.ontopia.presto.jaxrs.links.Links;
 import net.ontopia.presto.jaxrs.process.ValueFactory;
@@ -501,35 +502,70 @@ public abstract class Presto {
         }
     }
 
-    public FieldDataValues setFieldDataValues(int offset, int limit, 
-            PrestoContextRules rules, final PrestoFieldUsage field, FieldData fieldData) {
+    public FieldDataValues setFieldDataValues(
+            PrestoContextRules rules, final PrestoFieldUsage field, int offset, int limit, FieldData fieldData) {
 
         // TODO: refactor to return DTO instead of mutating FieldData here
-
-        PrestoContext context = rules.getContext();
-        PrestoTopic topic = context.getTopic();
-
-        List<? extends Object> fieldValues;
-        if (context.isNewTopic()) {
-            fieldValues = Collections.emptyList(); // TODO: support initial values
-        } else {
-            // server-side paging (only if not sorting)
-            if (rules.isPageableField(field) && !rules.isSortedField(field)) {
-                int actualOffset = offset >= 0 ? offset : 0;
-                int actualLimit = limit > 0 ? limit : DEFAULT_LIMIT;
-                PrestoTopic.PagedValues pagedValues = topic.getValues(field, actualOffset, actualLimit);
-                if (fieldData != null) {
-                    fieldData.setValuesOffset(pagedValues.getPaging().getOffset());
-                    fieldData.setValuesLimit(pagedValues.getPaging().getLimit());
-                    fieldData.setValuesTotal(pagedValues.getTotal());
-                }
-                fieldValues = pagedValues.getValues();
-            } else {
-                fieldValues = topic.getValues(field);
-            }
-        }
+        List<? extends Object> fieldValues = getFieldValues(rules, field, offset, limit, fieldData);
 
         return setFieldDataValues(offset, limit, rules, field, fieldData, fieldValues);
+    }
+
+    public List<? extends Object> getFieldValues(PrestoContextRules rules, final PrestoFieldUsage field) {
+        return getFieldValues(rules, field, 0, DEFAULT_LIMIT);
+    }
+
+    public List<? extends Object> getFieldValues(PrestoContextRules rules, final PrestoFieldUsage field, int offset, int limit) {
+        return getFieldValues(rules, field, offset, limit, null);
+    }
+    
+    private List<? extends Object> getFieldValues(PrestoContextRules rules, final PrestoFieldUsage field, int offset, int limit, 
+            FieldData fieldData) {
+        PrestoContext context = rules.getContext();
+        PrestoTopic topic = context.getTopic();
+        
+        PrestoFieldFunction function = createFieldFunction(field);
+        if (function != null) {
+            return function.execute(context, field);
+        } else {
+
+            if (context.isNewTopic()) {
+                return Collections.emptyList(); // TODO: support initial values
+            } else {
+                // server-side paging (only if not sorting)
+                if (rules.isPageableField(field) && !rules.isSortedField(field)) {
+                    int actualOffset = offset >= 0 ? offset : 0;
+                    int actualLimit = limit > 0 ? limit : DEFAULT_LIMIT;
+                    PrestoTopic.PagedValues pagedValues = topic.getValues(field, actualOffset, actualLimit);
+                    if (fieldData != null) {
+                        fieldData.setValuesOffset(pagedValues.getPaging().getOffset());
+                        fieldData.setValuesLimit(pagedValues.getPaging().getLimit());
+                        fieldData.setValuesTotal(pagedValues.getTotal());
+                    }
+                    return pagedValues.getValues();
+                } else {
+                    return topic.getValues(field);
+                }
+            }
+        }
+    }
+    
+    private PrestoFieldFunction createFieldFunction(PrestoFieldUsage field) {
+        ObjectNode extra = ExtraUtils.getFieldExtraNode(field);
+        if (extra != null) {
+            JsonNode handlerNode = extra.path("function");
+            if (handlerNode.isObject()) {
+                PrestoFieldFunction handler = AbstractHandler.getHandler(dataProvider, schemaProvider, PrestoFieldFunction.class, (ObjectNode)handlerNode);
+                if (handler != null) {
+                    handler.setPresto(this);
+                    return handler;
+                }
+                log.warn("Not able to extract function instance from field " + field.getId() + ": " + extra);                    
+            } else if (!handlerNode.isMissingNode()) {
+                log.warn("Field " + field.getId() + " extra.function is not an object: " + extra);
+            }
+        }
+        return null;
     }
 
     public FieldDataValues setFieldDataValues(int offset, int limit,
@@ -611,23 +647,18 @@ public abstract class Presto {
         }
     }
 
-    private SortKeyGenerator createSortKeyGenerator(final PrestoFieldUsage field) {
+    private SortKeyGenerator createSortKeyGenerator(PrestoFieldUsage field) {
         ObjectNode extra = ExtraUtils.getFieldExtraNode(field);
         if (extra != null) {
-            JsonNode sortKeyNode = extra.path("sortKeyGenerator");
-            if (sortKeyNode.isObject()) {
-                JsonNode classNode = sortKeyNode.path("class");
-                if (classNode.isTextual()) {
-                    String className = classNode.getTextValue();
-                    if (className != null) {
-                        SortKeyGenerator skg = AbstractHandler.getHandlerInstance(dataProvider, schemaProvider, SortKeyGenerator.class, className, (ObjectNode)sortKeyNode);
-                        if (skg != null) {
-                            return skg;
-                        }
-                    }
+            JsonNode handlerNode = extra.path("sortKeyGenerator");
+            if (handlerNode.isObject()) {
+                SortKeyGenerator handler = AbstractHandler.getHandler(dataProvider, schemaProvider, SortKeyGenerator.class, (ObjectNode)handlerNode);
+                if (handler != null) {
+                    handler.setPresto(this);
+                    return handler;
                 }
-                log.warn("Not able to extract extra.sortKeyGenerator.class from field " + field.getId() + ": " + extra);                    
-            } else if (!sortKeyNode.isMissingNode()) {
+                log.warn("Not able to extract sortKeyGenerator instance from field " + field.getId() + ": " + extra);                    
+            } else if (!handlerNode.isMissingNode()) {
                 log.warn("Field " + field.getId() + " extra.sortKeyGenerator is not an object: " + extra);
             }
         }
@@ -637,9 +668,16 @@ public abstract class Presto {
     private ValueFactory createValueFactory(PrestoContextRules rules, PrestoFieldUsage field) {
         ObjectNode extra = ExtraUtils.getFieldExtraNode(field);
         if (extra != null) {
-            JsonNode processorsNode = extra.path("valueFactory");
-            if (!processorsNode.isMissingNode()) {
-                return AbstractHandler.getHandler(getDataProvider(), getSchemaProvider(), ValueFactory.class, processorsNode);
+            JsonNode handlerNode = extra.path("valueFactory");
+            if (handlerNode.isObject()) {
+                ValueFactory handler = AbstractHandler.getHandler(getDataProvider(), getSchemaProvider(), ValueFactory.class, handlerNode);
+                if (handler != null) {
+                    handler.setPresto(this);
+                    return handler;
+                }
+                log.warn("Not able to extract valueFactory instance from field " + field.getId() + ": " + extra);                    
+            } else if (!handlerNode.isMissingNode()) {
+                log.warn("Field " + field.getId() + " extra.valueFactory is not an object: " + extra);
             }
         }
         return null;
@@ -825,17 +863,12 @@ public abstract class Presto {
                 }
                 return result;
             } else if (availableValuesNode.isObject()) {
-                JsonNode classNode = availableValuesNode.path("class");
-                if (classNode.isTextual()) {
-                    String className = classNode.getTextValue();
-                    if (className != null) {
-                        AvailableFieldValuesResolver processor = AbstractHandler.getHandlerInstance(dataProvider, schemaProvider, AvailableFieldValuesResolver.class, className, (ObjectNode)availableValuesNode);
-                        if (processor != null) {
-                            return processor.getAvailableFieldValues(rules.getContext(), field, query);
-                        }
-                    }
+                AvailableFieldValuesResolver handler = AbstractHandler.getHandler(dataProvider, schemaProvider, AvailableFieldValuesResolver.class, (ObjectNode)availableValuesNode);
+                if (handler != null) {
+                    handler.setPresto(this);
+                    return handler.getAvailableFieldValues(rules.getContext(), field, query);
                 }
-                log.warn("Not able to extract extra.availableValues.class from field " + field.getId() + ": " + extra);                    
+                log.warn("Not able to extract availableValues instance from field " + field.getId() + ": " + extra);                    
             } else if (!availableValuesNode.isMissingNode()) {
                 log.warn("Field " + field.getId() + " extra.availableValues is not an array: " + extra);
             }
@@ -961,7 +994,7 @@ public abstract class Presto {
 
         // get values (truncated if neccessary)
         if (includeValues) {
-            setFieldDataValues(offset, limit, rules, field, fieldData);
+            setFieldDataValues(rules, field, offset, limit, fieldData);
         }
 
         //        fieldData = processor.postProcessFieldData(fieldData, topic, field, null);
@@ -1595,20 +1628,15 @@ public abstract class Presto {
     private Collection<PrestoType> getCustomAvailableFieldCreateTypes(PrestoContext context, PrestoFieldUsage field) {
         ObjectNode extra = ExtraUtils.getFieldExtraNode(field);
         if (extra != null) {
-            JsonNode createTypesNode = extra.path("createTypes");
-            if (createTypesNode.isObject()) {
-                JsonNode classNode = createTypesNode.path("class");
-                if (classNode.isTextual()) {
-                    String className = classNode.getTextValue();
-                    if (className != null) {
-                        AvailableFieldCreateTypesResolver processor = AbstractHandler.getHandlerInstance(dataProvider, schemaProvider, AvailableFieldCreateTypesResolver.class, className, (ObjectNode)createTypesNode);
-                        if (processor != null) {
-                            return processor.getAvailableFieldCreateTypes(context, field);
-                        }
-                    }
+            JsonNode handlerNode = extra.path("createTypes");
+            if (handlerNode.isObject()) {
+                AvailableFieldCreateTypesResolver handler = AbstractHandler.getHandler(dataProvider, schemaProvider, AvailableFieldCreateTypesResolver.class, (ObjectNode)handlerNode);
+                if (handler != null) {
+                    handler.setPresto(this);
+                    return handler.getAvailableFieldCreateTypes(context, field);
                 }
-                log.warn("Not able to extract extra.createTypes.class from field " + field.getId() + ": " + extra);                    
-            } else if (!createTypesNode.isMissingNode()) {
+                log.warn("Not able to extract createTypes instance from field " + field.getId() + ": " + extra);                    
+            } else if (!handlerNode.isMissingNode()) {
                 log.warn("Field " + field.getId() + " extra.createTypes is not an object: " + extra);
             }
         }
