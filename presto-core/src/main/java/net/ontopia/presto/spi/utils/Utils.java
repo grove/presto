@@ -1,5 +1,8 @@
 package net.ontopia.presto.spi.utils;
 
+import java.util.List;
+
+import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
@@ -74,6 +77,12 @@ public class Utils {
     public static PrestoType getTopicType(PrestoTopic topic, PrestoSchemaProvider schemaProvider) {
         String typeId = topic.getTypeId();
         return schemaProvider.getTypeById(typeId);
+    }
+
+    public static List<? extends Object> getFieldValues(PrestoTopic topic, String fieldId, PrestoSchemaProvider schemaProvider) {
+        PrestoType type = getTopicType(topic, schemaProvider);
+        PrestoField field = type.getFieldById(fieldId);
+        return topic.getValues(field);
     }
     
 }

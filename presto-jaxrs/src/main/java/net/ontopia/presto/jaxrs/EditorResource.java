@@ -32,6 +32,7 @@ import net.ontopia.presto.jaxb.RootInfo;
 import net.ontopia.presto.jaxb.Topic;
 import net.ontopia.presto.jaxb.TopicMessage;
 import net.ontopia.presto.jaxb.TopicView;
+import net.ontopia.presto.jaxrs.constraints.ConstraintException;
 import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoChanges;
 import net.ontopia.presto.spi.PrestoDataProvider;
@@ -531,7 +532,6 @@ public abstract class EditorResource {
             @PathParam("viewId") final String viewId,
             @PathParam("fieldId") final String fieldId, 
             @QueryParam("index") final Integer index, FieldData fieldData) throws Exception {
-
         String path = null;
         return addFieldValuesPath(databaseId, path, topicId, viewId, fieldId, index, fieldData);
     }
@@ -547,7 +547,12 @@ public abstract class EditorResource {
             @PathParam("viewId") final String viewId,
             @PathParam("fieldId") final String fieldId, 
             @QueryParam("index") final Integer index, FieldData fieldData) throws Exception {
+        boolean isMove = false;
+        return performAddFieldValuesPath(databaseId, path, topicId, viewId, fieldId, index, fieldData, isMove);
+    }
 
+    private Response performAddFieldValuesPath(String databaseId, String path, String topicId, 
+           String viewId, String fieldId, Integer index, FieldData fieldData, boolean isMove) throws Exception {
         boolean readOnly = false;
         Presto session = createPresto(databaseId, readOnly);
 
@@ -561,9 +566,10 @@ public abstract class EditorResource {
             PrestoFieldUsage field = context.getFieldById(fieldId);
             PrestoContextRules rules = session.getPrestoContextRules(context);
 
-            if (!rules.isReadOnlyField(field) && (rules.isAddableField(field) || rules.isCreatableField(field))) {
+            if (!rules.isReadOnlyField(field) &&
+                    (isMove ?  rules.isMovableField(field) : (rules.isAddableField(field) || rules.isCreatableField(field)))) {
                 try {
-                    FieldData result = session.addFieldValues(rules, field, index, fieldData);
+                    FieldData result = session.addFieldValues(rules, field, index, fieldData, isMove);
 
                     session.commit();
 
@@ -715,8 +721,8 @@ public abstract class EditorResource {
             @PathParam("viewId") final String viewId,
             @PathParam("fieldId") final String fieldId, 
             @QueryParam("index") final Integer index, FieldData fieldData) throws Exception {
-
-        return addFieldValues(databaseId, topicId, viewId, fieldId, index, fieldData);
+        String path = null;
+        return moveFieldValuesToIndexPath(databaseId, path, topicId, viewId, fieldId, index, fieldData);
     }
 
     @POST
@@ -730,8 +736,8 @@ public abstract class EditorResource {
             @PathParam("viewId") final String viewId,
             @PathParam("fieldId") final String fieldId, 
             @QueryParam("index") final Integer index, FieldData fieldData) throws Exception {
-
-        return addFieldValuesPath(databaseId, path, topicId, viewId, fieldId, index, fieldData);
+        boolean isMove = true;
+        return performAddFieldValuesPath(databaseId, path, topicId, viewId, fieldId, index, fieldData, isMove);
     }
 
     @GET
@@ -782,7 +788,7 @@ public abstract class EditorResource {
         }
     }
 
-    @PUT
+    @POST
     @Produces(APPLICATION_JSON_UTF8)
     @Consumes(APPLICATION_JSON_UTF8)
     @Path("execute-field-action/{databaseId}/{topicId}/{viewId}/{fieldId}/{actionId}")
@@ -797,7 +803,7 @@ public abstract class EditorResource {
         return executeFieldActionPath(databaseId, path, topicId, viewId, fieldId, actionId, topicView);
     }
 
-    @PUT
+    @POST
     @Produces(APPLICATION_JSON_UTF8)
     @Consumes(APPLICATION_JSON_UTF8)
     @Path("execute-field-action/{databaseId}/{path}/{topicId}/{viewId}/{fieldId}/{actionId}")
@@ -814,12 +820,7 @@ public abstract class EditorResource {
         Presto session = createPresto(databaseId, readOnly);
 
         try {
-            // NOTE: the topicId is the topic that requested the validation, but the 
-            // validation needs to start with the topicId of the received topicView. The 
-            // former is a descendant of the latter.
-            String topicViewTopicId = topicView.getTopicId();
-
-            PrestoContext context = PathParser.getTopicByPath(session, path, topicViewTopicId, viewId);
+            PrestoContext context = PathParser.getTopicByPath(session, path, topicId, viewId);
 
             if (context == null || context.isMissingTopic()) {
                 return Response.status(Status.NOT_FOUND).build();

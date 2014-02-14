@@ -1,12 +1,12 @@
 package net.ontopia.presto.jaxrs.process;
 
 import net.ontopia.presto.jaxb.Value;
+import net.ontopia.presto.jaxrs.AbstractPrestoHandler;
 import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoTopic;
-import net.ontopia.presto.spi.utils.AbstractHandler;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
 
-public abstract class ValueFactory extends AbstractHandler {
+public abstract class ValueFactory extends AbstractPrestoHandler {
 
     public Value createValue(PrestoContextRules rules, PrestoFieldUsage field, String value) {
         Value result = new Value();

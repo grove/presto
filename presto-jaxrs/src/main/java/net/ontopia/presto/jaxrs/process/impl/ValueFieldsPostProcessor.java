@@ -65,7 +65,7 @@ public class ValueFieldsPostProcessor extends FieldDataProcessor {
     private FieldDataValues setFieldDataValues(PrestoContextRules rules, PrestoFieldUsage field, FieldData fieldData) {
         int offset = 0;
         int limit = Presto.DEFAULT_LIMIT;
-        return getPresto().setFieldDataValues(offset, limit, rules, field, fieldData);
+        return getPresto().setFieldDataValues(rules, field, offset, limit, fieldData);
     }
     
     private Value postProcessValue(PrestoContextRules rules, PrestoFieldUsage field, Object inputValue, Value outputValue, List<PrestoFieldUsage> fields) {
