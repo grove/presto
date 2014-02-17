@@ -122,15 +122,19 @@ public abstract class JacksonDataProvider implements DefaultDataProvider {
     @Override
     public void updateBulk(List<Change> changes) {
         for (Change c : changes) {
+            PrestoTopic topic = c.getTopic();
+            if (topic.isInline()) {
+                throw new RuntimeException("Cannot save inline topic directly: " + topic);
+            }
             switch (c.getType()) {
             case CREATE:
-                create(c.getTopic());
+                create(topic);
                 break;
             case UPDATE:
-                update(c.getTopic());
+                update(topic);
                 break;
             case DELETE:
-                delete(c.getTopic());
+                delete(topic);
                 break;
             }
         }

@@ -1162,7 +1162,7 @@ public abstract class Presto {
             PrestoContext newContext = updateParentContext(context, updatedTopic);
 
             if (returnParent) {
-                PrestoContext parentContext = context.getParentContext();
+                PrestoContext parentContext = newContext.getParentContext();
                 if (parentContext != null) {
                     newContext = parentContext;
                 }
@@ -1194,11 +1194,7 @@ public abstract class Presto {
     private PrestoTopic updateContextFieldValues(PrestoContext context, PrestoFieldUsage field, List<? extends Object> updateableValues) {
         PrestoTopic topic = context.getTopic();
         PrestoType type = context.getType();
-
-        PrestoDataProvider dataProvider = getDataProvider();
-        PrestoChangeSet changeSet = dataProvider.newChangeSet(getChangeSetHandler());
-        PrestoUpdate update = changeSet.updateTopic(topic, type);        
-
+        
         PrestoContextRules rules = getPrestoContextRules(context);
 
         List<? extends Object> existingValues = topic.getValues(field);
@@ -1206,10 +1202,22 @@ public abstract class Presto {
         Collection<? extends Object> newValues = mergeInlineTopics(updateableValues, existingValues, includeExisting);
         filterNonStorableFieldValues(rules, field, newValues);
 
-        update.setValues(field, newValues); // TODO: check if inline field first?
-        changeSet.save();
+        if (topic.isInline()) {
+            PrestoInlineTopicBuilder builder = dataProvider.createInlineTopic(type, topic.getId());
+            builder.setValues(field, newValues);
+            PrestoTopic newTopic = builder.build();
+            return mergeInlineTopic(newTopic, topic);
+        } else {
 
-        return update.getTopicAfterSave();
+            PrestoDataProvider dataProvider = getDataProvider();
+            PrestoChangeSet changeSet = dataProvider.newChangeSet(getChangeSetHandler());
+            PrestoUpdate update = changeSet.updateTopic(topic, type);        
+
+            update.setValues(field, newValues); // TODO: check if inline field first?
+            changeSet.save();
+
+            return update.getTopicAfterSave();
+        }
     }
 
     protected PrestoTopic updatePrestoTopic(PrestoContextRules rules, TopicView topicView) {
