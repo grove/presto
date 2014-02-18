@@ -10,7 +10,7 @@ import org.codehaus.jackson.node.ObjectNode;
 public class ContainsFieldValuesViewRule extends BooleanViewRule {
     
     @Override
-    protected boolean getResult(ViewFlag flag, PrestoContext context, ObjectNode config, PrestoView view) {
+    protected boolean getResult(ViewFlag flag, PrestoContext context, PrestoView view, ObjectNode config) {
         if (context.isNewTopic()) {
             return false;
         } else {
