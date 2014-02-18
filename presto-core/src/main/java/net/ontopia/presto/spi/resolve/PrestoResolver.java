@@ -103,13 +103,11 @@ public abstract class PrestoResolver {
         String className = getFieldResolverClassName(type, schemaProvider, resolveConfig);
         if (className != null) {
             PrestoFieldResolver fieldResolver = Utils.newInstanceOf(className, PrestoFieldResolver.class);
-            if (fieldResolver != null) {
-                JacksonDataProvider dataProvider = getDataProvider();
-                PrestoVariableContext context = new PrestoVariableContext(schemaProvider, dataProvider, dataProvider.getObjectMapper());
-                fieldResolver.setVariableContext(context);
-                fieldResolver.setConfig(resolveConfig);
-                return fieldResolver;
-            }
+            JacksonDataProvider dataProvider = getDataProvider();
+            PrestoVariableContext context = new PrestoVariableContext(schemaProvider, dataProvider, dataProvider.getObjectMapper());
+            fieldResolver.setVariableContext(context);
+            fieldResolver.setConfig(resolveConfig);
+            return fieldResolver;
         }
         log.warn("Unknown field resolver: type={}, config={}", type, resolveConfig);
         return null;

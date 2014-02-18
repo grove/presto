@@ -1140,11 +1140,9 @@ public abstract class Presto {
             if (actionNode.isObject()) {
                 String className = actionNode.path("class").getTextValue();
                 FieldAction fieldAction = Utils.newInstanceOf(className, FieldAction.class);
-                if (fieldAction != null) {
-                    fieldAction.setConfig((ObjectNode)actionNode);
-                    fieldAction.setPresto(this);
-                    return fieldAction;
-                }
+                fieldAction.setConfig((ObjectNode)actionNode);
+                fieldAction.setPresto(this);
+                return fieldAction;
             }
         }        
         return null;
