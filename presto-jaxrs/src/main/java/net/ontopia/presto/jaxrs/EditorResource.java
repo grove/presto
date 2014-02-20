@@ -503,8 +503,7 @@ public abstract class EditorResource {
                 return Response.status(Status.NOT_FOUND).build();
             }
             try {
-                boolean returnParent = true;
-                Object result = session.updateTopicView(context, topicView, returnParent);
+                Object result = session.updateTopicView(context, topicView);
                 session.commit();
 
                 return Response.ok(result).build();
