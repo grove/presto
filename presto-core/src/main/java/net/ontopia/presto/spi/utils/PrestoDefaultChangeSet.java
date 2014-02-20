@@ -260,7 +260,6 @@ public abstract class PrestoDefaultChangeSet implements PrestoChangeSet {
                 if (!topic.equals(valueTopic)) {
                     PrestoType valueType = field.getSchemaProvider().getTypeById(valueTopic.getTypeId());
                     PrestoField inverseField = valueType.getFieldById(inverseFieldId);
-
                     PrestoUpdate inverseUpdate = updateTopic(valueTopic, valueType);
                     inverseUpdate.addValues(inverseField, Collections.singleton(topic), PrestoDefaultChangeSet.DEFAULT_INDEX);
                 }

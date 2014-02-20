@@ -6,15 +6,18 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import net.ontopia.presto.spi.PrestoField;
+import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoView;
 
-public class PojoField implements PrestoField {
+public class PojoField implements PrestoFieldUsage {
 
     private String id;
     private String actualId;
+
+    private PojoType type;
+    private PojoView view;
 
     private PrestoSchemaProvider schemaProvider;
     private String name;
@@ -48,11 +51,10 @@ public class PojoField implements PrestoField {
     private Collection<PrestoType> availableFieldCreateTypes;
     private Collection<PrestoType> availableFieldValueTypes = new HashSet<PrestoType>();
 
-    // helper members
-    private Collection<PrestoView> definedInViews = new HashSet<PrestoView>();
-
-    PojoField(String id, PrestoSchemaProvider schemaProvider) {
+    PojoField(String id, PojoType type, PojoView view, PrestoSchemaProvider schemaProvider) {
         this.id = id;
+        this.type = type;
+        this.view = view;
         this.actualId = id;
         this.schemaProvider = schemaProvider;        
     }
@@ -233,11 +235,7 @@ public class PojoField implements PrestoField {
     // -- helper methods
 
     boolean isInView(PrestoView view) {
-        return definedInViews.contains(view);
-    }
-
-    protected void addDefinedInView(PrestoView view) {
-        this.definedInViews.add(view);
+        return this.view.equals(view);
     }
 
     public void setActualId(String actualId) {
@@ -374,5 +372,29 @@ public class PojoField implements PrestoField {
     public String toString() {
         return "PojoField[" + getId() + "|" + getName() + "]";
     }
-    
+
+    @Override
+    public PrestoType getType() {
+        return type;
+    }
+
+    @Override
+    public PrestoView getView() {
+        return view;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other instanceof PojoField) {
+            PojoField o = (PojoField)other;
+            return o.getId().equals(o.getId());
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return getId().hashCode();
+    }
+
 }

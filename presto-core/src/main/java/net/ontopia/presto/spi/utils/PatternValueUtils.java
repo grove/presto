@@ -12,6 +12,8 @@ import org.codehaus.jackson.node.ObjectNode;
 
 public class PatternValueUtils {
 
+    private static final Pattern PATTERN = Pattern.compile("\\$\\{([\\:\\.\\-\\w]+)\\}");
+
     public static String getValueByPattern(PrestoVariableResolver variableResolver, Object value, ObjectNode config) {
         if (config != null) {
             JsonNode patternNode = config.path("pattern");
@@ -26,12 +28,12 @@ public class PatternValueUtils {
     public static String getValueByPattern(PrestoSchemaProvider schemaProvider, PrestoContext context, String pattern) {
         PrestoVariableResolver variableResolver = new PrestoTopicWithParentFieldVariableResolver(schemaProvider, context);
         PrestoTopic topic = context.getTopic();
-        return PatternValueUtils.getValueByPattern(variableResolver, topic, pattern);
+        return getValueByPattern(variableResolver, topic, pattern);
     }
     
     private static String getValueByPattern(PrestoVariableResolver variableResolver, Object value, String pattern) {
         String result = pattern;
-        Matcher matcher = Pattern.compile("\\$\\{([\\:\\.\\-\\w]+)\\}").matcher(pattern);
+        Matcher matcher = PATTERN.matcher(pattern);
         while (matcher.find()) {
             String variable = matcher.group(1);
             String replacement = getValue(variableResolver, value, variable);

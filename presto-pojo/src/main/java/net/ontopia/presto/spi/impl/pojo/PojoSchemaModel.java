@@ -245,8 +245,7 @@ public class PojoSchemaModel {
         }
         
         private PojoField createField(PojoType type, PojoView view, boolean readOnlyDefault, String fieldId, ObjectNode fieldConfig) {
-            PojoField field = new PojoField(fieldId, schemaProvider);
-            field.addDefinedInView(view);
+            PojoField field = new PojoField(fieldId, type, view, schemaProvider);
             
             // actualId
             if (fieldConfig.has("actualId")) {

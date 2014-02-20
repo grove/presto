@@ -112,7 +112,7 @@ public class PojoType implements PrestoType {
         for (PrestoField field : fields) {
             PojoField pojoField = (PojoField)field;
             if (pojoField.isInView(fieldsView)) {
-                result.add(new PojoFieldUsage(pojoField, this, fieldsView));
+                result.add(pojoField);
             }
         }
         return result;
@@ -135,7 +135,7 @@ public class PojoType implements PrestoType {
         } else if (!field.isInView(view)) {
             throw new RuntimeException("Field '" + fieldId + "' in not defined in view " + view.getId() + " on type " + this.getId());
         }
-        return new PojoFieldUsage(field, this, view);
+        return field;
     }
 
     @Override

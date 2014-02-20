@@ -1,7 +1,7 @@
 package net.ontopia.presto.spi.utils;
 
 import net.ontopia.presto.spi.PrestoDataProvider;
-import net.ontopia.presto.spi.PrestoField;
+import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoView;
@@ -60,13 +60,13 @@ public class PrestoContextRules {
 
     public static interface FieldRule extends Handler {
 
-        public Boolean getValue(FieldFlag flag, PrestoContext context, PrestoField field);
+        public Boolean getValue(FieldFlag flag, PrestoContext context, PrestoFieldUsage field);
 
     }
 
     public static interface FieldValueRule extends Handler {
 
-        public Boolean getValue(FieldValueFlag flag, PrestoContext context, PrestoField field, Object value);
+        public Boolean getValue(FieldValueFlag flag, PrestoContext context, PrestoFieldUsage field, Object value);
 
     }
 
@@ -122,7 +122,7 @@ public class PrestoContextRules {
         return defaultValue;
     }
 
-    private boolean isFieldHandlerFlag(FieldFlag flag, PrestoField field, boolean defaultValue) {
+    private boolean isFieldHandlerFlag(FieldFlag flag, PrestoFieldUsage field, boolean defaultValue) {
         Boolean result = handler.getValue(flag, context, field);
         if (result != null) {
             return result;
@@ -130,7 +130,7 @@ public class PrestoContextRules {
         return defaultValue;
     }
 
-    private boolean isFieldValueHandlerFlag(FieldValueFlag flag, PrestoField field, Object value, boolean defaultValue) {
+    private boolean isFieldValueHandlerFlag(FieldValueFlag flag, PrestoFieldUsage field, Object value, boolean defaultValue) {
         Boolean result = handler.getValue(flag, context, field, value);
         if (result != null) {
             return result;
@@ -172,69 +172,69 @@ public class PrestoContextRules {
     //        return field.isEmbedded();
     //    }
 
-    public boolean isHiddenField(PrestoField field) {
+    public boolean isHiddenField(PrestoFieldUsage field) {
         return isFieldHandlerFlag(FieldFlag.isHiddenField, field, field.isHidden());
     }
 
-    public boolean isTraversableField(PrestoField field) {
+    public boolean isTraversableField(PrestoFieldUsage field) {
         return isFieldHandlerFlag(FieldFlag.isTraverableField, field, field.isTraversable());
     }
 
-    public boolean isSortedField(PrestoField field) {
+    public boolean isSortedField(PrestoFieldUsage field) {
         return isFieldHandlerFlag(FieldFlag.isSortedField, field, field.isSorted());
     }
 
-    public boolean isSortedAscendingField(PrestoField field) {
+    public boolean isSortedAscendingField(PrestoFieldUsage field) {
         return isFieldHandlerFlag(FieldFlag.isSortedAscendingField, field, field.isSortedAscending());
     }
 
-    public boolean isPageableField(PrestoField field) {
+    public boolean isPageableField(PrestoFieldUsage field) {
         return isFieldHandlerFlag(FieldFlag.isPageableField, field, field.isPageable());
     }
 
     // mutability
 
-    public boolean isReadOnlyField(PrestoField field) {
+    public boolean isReadOnlyField(PrestoFieldUsage field) {
         return isReadOnlyType() || isFieldHandlerFlag(FieldFlag.isReadOnlyField, field, field.isReadOnly());
     }
 
-    public boolean isEditableField(PrestoField field) {
+    public boolean isEditableField(PrestoFieldUsage field) {
         return isFieldHandlerFlag(FieldFlag.isEditableField, field, field.isEditable());
     }
 
-    public boolean isCreatableField(PrestoField field) {
+    public boolean isCreatableField(PrestoFieldUsage field) {
         return isFieldHandlerFlag(FieldFlag.isCreatableField, field, field.isCreatable());
     }
 
-    public boolean isAddableField(PrestoField field) {
+    public boolean isAddableField(PrestoFieldUsage field) {
         return isFieldHandlerFlag(FieldFlag.isAddableField, field, field.isAddable());
     }
 
-    public boolean isRemovableField(PrestoField field) {
+    public boolean isRemovableField(PrestoFieldUsage field) {
         return isFieldHandlerFlag(FieldFlag.isRemovableField, field, field.isRemovable());
     }
 
-    public boolean isMovableField(PrestoField field) {
+    public boolean isMovableField(PrestoFieldUsage field) {
         return isFieldHandlerFlag(FieldFlag.isMovableField, field, field.isMovable());
     }
 
-    public boolean isAddableFieldValue(PrestoField field, Object value) {
+    public boolean isAddableFieldValue(PrestoFieldUsage field, Object value) {
         return isFieldValueHandlerFlag(FieldValueFlag.isAddableFieldValue, field, value, field.isAddable());
     }
 
-    public boolean isRemovableFieldValue(PrestoField field, Object value) {
+    public boolean isRemovableFieldValue(PrestoFieldUsage field, Object value) {
         return isFieldValueHandlerFlag(FieldValueFlag.isRemovableFieldValue, field, value, field.isRemovable());
     }
 
-    public boolean isMovableFieldValue(PrestoField field, Object value) {
+    public boolean isMovableFieldValue(PrestoFieldUsage field, Object value) {
         return isFieldValueHandlerFlag(FieldValueFlag.isMovableFieldValue, field, value, field.isMovable());
     }
 
-    public boolean isEditableFieldValue(PrestoField field, Object value) {
+    public boolean isEditableFieldValue(PrestoFieldUsage field, Object value) {
         return isFieldValueHandlerFlag(FieldValueFlag.isEditableFieldValue, field, value, field.isEditable());
     }
 
-    public boolean isStorableFieldValue(PrestoField field, Object value) {
+    public boolean isStorableFieldValue(PrestoFieldUsage field, Object value) {
         return isFieldValueHandlerFlag(FieldValueFlag.isStorableFieldValue, field, value, true);
     }
 

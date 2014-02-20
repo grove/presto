@@ -1,6 +1,5 @@
 package net.ontopia.presto.spi.rules;
 
-import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoContextRules.TypeFlag;
 
@@ -13,8 +12,7 @@ public class HasFieldValuesTypeRule extends BooleanTypeRule {
         if (context.isNewTopic()) {
             return false;
         } else {
-            PrestoTopic topic = context.getTopic();
-            return HasFieldValues.hasFieldValues(getSchemaProvider(), topic, config);
+            return HasFieldValues.hasFieldValues(getDataProvider(), getSchemaProvider(), context, config);
         }
     }
 

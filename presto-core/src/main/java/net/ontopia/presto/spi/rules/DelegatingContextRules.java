@@ -1,6 +1,6 @@
 package net.ontopia.presto.spi.rules;
 
-import net.ontopia.presto.spi.PrestoField;
+import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoView;
 import net.ontopia.presto.spi.utils.AbstractHandler;
 import net.ontopia.presto.spi.utils.ExtraUtils;
@@ -49,7 +49,7 @@ public class DelegatingContextRules extends ContextRulesHandler {
     }
 
     @Override
-    public Boolean getValue(FieldFlag flag, PrestoContext context, PrestoField field) {
+    public Boolean getValue(FieldFlag flag, PrestoContext context, PrestoFieldUsage field) {
         JsonNode flagNode = getFlagNode(flag, context, field);
         if (flagNode != null && !flagNode.isMissingNode()) {
             for (FieldRule handler : AbstractHandler.getHandlers(getDataProvider(), getSchemaProvider(), FieldRule.class, flagNode)) {
@@ -63,7 +63,7 @@ public class DelegatingContextRules extends ContextRulesHandler {
     }
 
     @Override
-    public Boolean getValue(FieldValueFlag flag, PrestoContext context, PrestoField field, Object value) {
+    public Boolean getValue(FieldValueFlag flag, PrestoContext context, PrestoFieldUsage field, Object value) {
         JsonNode flagNode = getFlagNode(flag, context, field, value);
         if (flagNode != null && !flagNode.isMissingNode()) {
             for (FieldValueRule handler : AbstractHandler.getHandlers(getDataProvider(), getSchemaProvider(), FieldValueRule.class, flagNode)) {
@@ -92,7 +92,7 @@ public class DelegatingContextRules extends ContextRulesHandler {
         return null;
     }
 
-    protected JsonNode getFlagNode(FieldFlag flag, PrestoContext context, PrestoField field) {
+    protected JsonNode getFlagNode(FieldFlag flag, PrestoContext context, PrestoFieldUsage field) {
         // get config from field extra
         ObjectNode extra = (ObjectNode)field.getExtra();
         if (extra != null) {
@@ -101,7 +101,7 @@ public class DelegatingContextRules extends ContextRulesHandler {
         return null;
     }
 
-    protected JsonNode getFlagNode(FieldValueFlag flag, PrestoContext context, PrestoField field, Object value) {
+    protected JsonNode getFlagNode(FieldValueFlag flag, PrestoContext context, PrestoFieldUsage field, Object value) {
         // get config from field extra
         ObjectNode extra = (ObjectNode)field.getExtra();
         if (extra != null) {

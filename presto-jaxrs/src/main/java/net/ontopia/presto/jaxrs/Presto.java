@@ -27,7 +27,6 @@ import net.ontopia.presto.jaxrs.constraints.NotAddableValueConstraintException;
 import net.ontopia.presto.jaxrs.constraints.NotInlineTypeConstraintException;
 import net.ontopia.presto.jaxrs.constraints.NotMovableValueConstraintException;
 import net.ontopia.presto.jaxrs.constraints.NotRemovableValueConstraintException;
-import net.ontopia.presto.jaxrs.function.PrestoFieldFunction;
 import net.ontopia.presto.jaxrs.links.DefaultLinks;
 import net.ontopia.presto.jaxrs.links.Links;
 import net.ontopia.presto.jaxrs.process.ValueFactory;
@@ -46,6 +45,8 @@ import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
 import net.ontopia.presto.spi.PrestoView;
 import net.ontopia.presto.spi.PrestoView.ViewType;
+import net.ontopia.presto.spi.functions.PrestoFieldFunction;
+import net.ontopia.presto.spi.functions.PrestoFieldFunctionUtils;
 import net.ontopia.presto.spi.utils.AbstractHandler;
 import net.ontopia.presto.spi.utils.ExtraUtils;
 import net.ontopia.presto.spi.utils.PrestoContext;
@@ -524,7 +525,7 @@ public abstract class Presto {
         PrestoContext context = rules.getContext();
         PrestoTopic topic = context.getTopic();
         
-        PrestoFieldFunction function = createFieldFunction(field);
+        PrestoFieldFunction function = PrestoFieldFunctionUtils.createFieldFunction(getDataProvider(), getSchemaProvider(), field);
         if (function != null) {
             return function.execute(context, field);
         } else {
@@ -548,24 +549,6 @@ public abstract class Presto {
                 }
             }
         }
-    }
-    
-    private PrestoFieldFunction createFieldFunction(PrestoFieldUsage field) {
-        ObjectNode extra = ExtraUtils.getFieldExtraNode(field);
-        if (extra != null) {
-            JsonNode handlerNode = extra.path("function");
-            if (handlerNode.isObject()) {
-                PrestoFieldFunction handler = AbstractHandler.getHandler(dataProvider, schemaProvider, PrestoFieldFunction.class, (ObjectNode)handlerNode);
-                if (handler != null) {
-                    handler.setPresto(this);
-                    return handler;
-                }
-                log.warn("Not able to extract function instance from field " + field.getId() + ": " + extra);                    
-            } else if (!handlerNode.isMissingNode()) {
-                log.warn("Field " + field.getId() + " extra.function is not an object: " + extra);
-            }
-        }
-        return null;
     }
 
     public FieldDataValues setFieldDataValues(int offset, int limit,
@@ -654,7 +637,7 @@ public abstract class Presto {
             if (handlerNode.isObject()) {
                 SortKeyGenerator handler = AbstractHandler.getHandler(dataProvider, schemaProvider, SortKeyGenerator.class, (ObjectNode)handlerNode);
                 if (handler != null) {
-                    handler.setPresto(this);
+//                    handler.setPresto(this);
                     return handler;
                 }
                 log.warn("Not able to extract sortKeyGenerator instance from field " + field.getId() + ": " + extra);                    
