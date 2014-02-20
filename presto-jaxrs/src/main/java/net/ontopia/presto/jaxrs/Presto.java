@@ -1011,18 +1011,33 @@ public abstract class Presto {
         PrestoTopic topic = context.getTopic();
         PrestoType type = context.getType();
 
-        PrestoDataProvider dataProvider = getDataProvider();
-        PrestoChangeSet changeSet = dataProvider.newChangeSet(getChangeSetHandler());
-        PrestoUpdate update = changeSet.updateTopic(topic, type);        
-
-        if (index == null) {
-            update.addValues(field, addableValues);
+        PrestoTopic updatedTopic;
+        if (topic.isInline()) {
+            if (index != null && index >= 0) {
+                // TODO: implement support for moving values in inline topic field
+                throw new UnsupportedOperationException("Moving values in inline topic fields not yet supported.");
+            }
+            List<Object> values = new ArrayList<Object>(topic.getValues(field));
+            values.add(addableValues);
+            PrestoInlineTopicBuilder builder = dataProvider.createInlineTopic(type, topic.getId());
+            builder.setValues(field, values);
+            PrestoTopic newTopic = builder.build();
+            updatedTopic = mergeInlineTopic(newTopic, topic);
         } else {
-            update.addValues(field, addableValues, index);        
-        }
-        changeSet.save();
 
-        PrestoTopic updatedTopic = update.getTopicAfterSave();
+            PrestoDataProvider dataProvider = getDataProvider();
+            PrestoChangeSet changeSet = dataProvider.newChangeSet(getChangeSetHandler());
+            PrestoUpdate update = changeSet.updateTopic(topic, type);        
+
+            if (index == null) {
+                update.addValues(field, addableValues);
+            } else {
+                update.addValues(field, addableValues, index);        
+            }
+            changeSet.save();
+
+            updatedTopic = update.getTopicAfterSave();
+        }
         return updateParentContext(rules.getContext(), updatedTopic);
     }
 
@@ -1044,15 +1059,25 @@ public abstract class Presto {
         PrestoContext context = rules.getContext();
         PrestoTopic topic = context.getTopic();
         PrestoType type = context.getType();
-
-        PrestoDataProvider dataProvider = getDataProvider();
-        PrestoChangeSet changeSet = dataProvider.newChangeSet(getChangeSetHandler());
-        PrestoUpdate update = changeSet.updateTopic(topic, type);        
-
-        update.removeValues(field, removeableValues);
-        changeSet.save();
-
-        PrestoTopic updatedTopic = update.getTopicAfterSave();
+        
+        PrestoTopic updatedTopic;
+        if (topic.isInline()) {
+            List<? extends Object> values = topic.getValues(field);
+            values.removeAll(removeableValues);
+            PrestoInlineTopicBuilder builder = dataProvider.createInlineTopic(type, topic.getId());
+            builder.setValues(field, values);
+            PrestoTopic newTopic = builder.build();
+            updatedTopic = mergeInlineTopic(newTopic, topic);
+        } else {
+            PrestoDataProvider dataProvider = getDataProvider();
+            PrestoChangeSet changeSet = dataProvider.newChangeSet(getChangeSetHandler());
+            PrestoUpdate update = changeSet.updateTopic(topic, type);        
+    
+            update.removeValues(field, removeableValues);
+            changeSet.save();
+    
+            updatedTopic = update.getTopicAfterSave();
+        }
         return updateParentContext(rules.getContext(), updatedTopic);
     }
 
