@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Set;
 
 import net.ontopia.presto.spi.PrestoField;
-import net.ontopia.presto.spi.PrestoFieldUsage;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -54,7 +53,7 @@ public abstract class JacksonBucketDataStrategy implements JacksonDataStrategy {
     }
     
     @Override
-    public String getName(ObjectNode doc, PrestoFieldUsage field) {
+    public String getName(ObjectNode doc, PrestoField field) {
         return getName(doc);
     }
 

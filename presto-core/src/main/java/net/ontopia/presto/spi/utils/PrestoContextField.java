@@ -1,13 +1,13 @@
 package net.ontopia.presto.spi.utils;
 
-import net.ontopia.presto.spi.PrestoFieldUsage;
+import net.ontopia.presto.spi.PrestoField;
 
 public class PrestoContextField {
 
     private final PrestoContext context;
-    private final PrestoFieldUsage field;
+    private final PrestoField field;
     
-    public PrestoContextField(PrestoContext context, PrestoFieldUsage field) {
+    public PrestoContextField(PrestoContext context, PrestoField field) {
         this.context = context;
         this.field = field;
     }
@@ -16,7 +16,7 @@ public class PrestoContextField {
         return context;
     }
     
-    public PrestoFieldUsage getField() {
+    public PrestoField getField() {
         return field;
     }
     

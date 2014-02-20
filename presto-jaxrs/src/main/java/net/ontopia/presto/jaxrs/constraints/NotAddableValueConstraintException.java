@@ -2,7 +2,7 @@ package net.ontopia.presto.jaxrs.constraints;
 
 import org.codehaus.jackson.node.ObjectNode;
 
-import net.ontopia.presto.spi.PrestoFieldUsage;
+import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.utils.PrestoContext;
@@ -11,7 +11,7 @@ public class NotAddableValueConstraintException extends DefaultConstraintExcepti
 
     private Object addableValue;
 
-    public NotAddableValueConstraintException(PrestoContext context, PrestoFieldUsage field, Object addableValue) {
+    public NotAddableValueConstraintException(PrestoContext context, PrestoField field, Object addableValue) {
         super(context, field);
         this.addableValue = addableValue;
     }

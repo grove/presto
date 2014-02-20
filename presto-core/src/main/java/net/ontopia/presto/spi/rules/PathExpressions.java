@@ -9,11 +9,9 @@ import java.util.regex.Pattern;
 
 import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoField;
-import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
-import net.ontopia.presto.spi.PrestoView;
 import net.ontopia.presto.spi.functions.PrestoFieldFunction;
 import net.ontopia.presto.spi.functions.PrestoFieldFunctionUtils;
 import net.ontopia.presto.spi.utils.PrestoContext;
@@ -66,7 +64,6 @@ public class PathExpressions {
             for (PrestoContext context : contexts) {
                 PrestoTopic topic = context.getTopic();
                 PrestoType type = context.getType();
-                PrestoView view = context.getView();
 
                 if (":parent".equals(p)) {
                     PrestoContext nextContext = context.getParentContext();
@@ -75,7 +72,7 @@ public class PathExpressions {
                     }
                     nextContexts.add(nextContext);
                 } else if (p.startsWith("#")) {
-                    PrestoFieldUsage valueField = type.getFieldById(p.substring(1), view);
+                    PrestoField valueField = type.getFieldById(p.substring(1));
                     for (Object value : topic.getStoredValues(valueField)) {
                         if (value instanceof PrestoTopic) {
                             PrestoTopic valueTopic = (PrestoTopic)value;
@@ -83,7 +80,7 @@ public class PathExpressions {
                         }
                     }
                 } else {
-                    PrestoFieldUsage valueField = type.getFieldById(p, view);
+                    PrestoField valueField = type.getFieldById(p);
                     PrestoFieldFunction function = PrestoFieldFunctionUtils.createFieldFunction(dataProvider, schemaProvider, valueField);
                     List<? extends Object> fieldValues;
                     if (function != null) {
@@ -108,7 +105,6 @@ public class PathExpressions {
             for (PrestoContext context : contexts) {
                 PrestoTopic topic = context.getTopic();
                 PrestoType type = context.getType();
-                PrestoView view = context.getView();
 
                 if (p.equals(":id")) {
                     values.add(topic.getId());                
@@ -119,12 +115,12 @@ public class PathExpressions {
                 } else if (p.equals(":type-name")) {
                     values.add(type.getName());
                 } else if (p.startsWith("#")) {
-                    PrestoFieldUsage valueField = type.getFieldById(p.substring(1), view);
+                    PrestoField valueField = type.getFieldById(p.substring(1));
                     for (Object value : topic.getStoredValues(valueField)) {
                         values.add(value);
                     }
                 } else {
-                    PrestoFieldUsage field = type.getFieldById(p, view);
+                    PrestoField field = type.getFieldById(p);
                     PrestoFieldFunction function = PrestoFieldFunctionUtils.createFieldFunction(dataProvider, schemaProvider, field);
                     if (function != null) {
                         values.addAll(function.execute(context, field));

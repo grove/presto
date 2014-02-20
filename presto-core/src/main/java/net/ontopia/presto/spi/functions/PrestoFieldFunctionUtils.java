@@ -1,7 +1,7 @@
 package net.ontopia.presto.spi.functions;
 
 import net.ontopia.presto.spi.PrestoDataProvider;
-import net.ontopia.presto.spi.PrestoFieldUsage;
+import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.utils.AbstractHandler;
 import net.ontopia.presto.spi.utils.ExtraUtils;
@@ -15,7 +15,7 @@ public class PrestoFieldFunctionUtils {
 
     private static Logger log = LoggerFactory.getLogger(PrestoFieldFunctionUtils.class);
 
-    public static PrestoFieldFunction createFieldFunction(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, PrestoFieldUsage field) {
+    public static PrestoFieldFunction createFieldFunction(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, PrestoField field) {
         ObjectNode extra = ExtraUtils.getFieldExtraNode(field);
         if (extra != null) {
             JsonNode handlerNode = extra.path("function");

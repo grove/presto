@@ -7,7 +7,6 @@ import java.util.regex.Pattern;
 
 import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoField;
-import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
@@ -53,7 +52,7 @@ public class PathParser {
         
         PrestoType currentType = schemaProvider.getTypeById(startTypeId);
         PrestoView currentView = currentType.getViewById(startViewId);
-        PrestoFieldUsage currentField = currentType.getFieldById(startFieldId, currentView);
+        PrestoField currentField = currentType.getFieldById(startFieldId, currentView);
         
         PrestoContext currentContext;
         if (isNewTopic) {
@@ -103,7 +102,7 @@ public class PathParser {
         
         PrestoContext currentContext = contextField.getContext();
         PrestoTopic currentTopic = currentContext.getTopic();
-        PrestoFieldUsage currentField = contextField.getField();
+        PrestoField currentField = contextField.getField();
         
         PrestoTopic resultTopic = findInParentField(currentTopic, currentField, topicId);
         if (resultTopic == null) {

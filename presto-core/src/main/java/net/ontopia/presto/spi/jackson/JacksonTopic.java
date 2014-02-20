@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Set;
 
 import net.ontopia.presto.spi.PrestoField;
-import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.DefaultDataProvider;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.DefaultTopic;
@@ -77,7 +76,7 @@ public class JacksonTopic implements DefaultTopic {
     }
 
     @Override
-    public String getName(PrestoFieldUsage field) {
+    public String getName(PrestoField field) {
         return getDataStrategy().getName(getData(), field);
     }
 

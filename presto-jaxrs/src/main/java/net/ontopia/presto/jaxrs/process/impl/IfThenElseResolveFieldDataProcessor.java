@@ -10,7 +10,7 @@ import net.ontopia.presto.jaxb.Value;
 import net.ontopia.presto.jaxrs.process.FieldDataProcessor;
 import net.ontopia.presto.jaxrs.process.SubmittedState;
 import net.ontopia.presto.spi.PrestoDataProvider;
-import net.ontopia.presto.spi.PrestoFieldUsage;
+import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
 import net.ontopia.presto.spi.PrestoTopic.Paging;
@@ -27,7 +27,7 @@ import org.codehaus.jackson.node.ObjectNode;
 public abstract class IfThenElseResolveFieldDataProcessor extends FieldDataProcessor {
 
     @Override
-    public FieldData processFieldData(FieldData fieldData, PrestoContextRules rules, PrestoFieldUsage field) {
+    public FieldData processFieldData(FieldData fieldData, PrestoContextRules rules, PrestoField field) {
         if (isShouldRun(fieldData, rules, field)) {
             boolean result = getResult(fieldData, rules, field);
             if (result) {
@@ -40,11 +40,11 @@ public abstract class IfThenElseResolveFieldDataProcessor extends FieldDataProce
         }
     }
 
-    protected boolean isShouldRun(FieldData fieldData, PrestoContextRules rules, PrestoFieldUsage field) {
+    protected boolean isShouldRun(FieldData fieldData, PrestoContextRules rules, PrestoField field) {
         return true;
     }
     
-    protected boolean getResult(FieldData fieldData, PrestoContextRules rules, PrestoFieldUsage field) {
+    protected boolean getResult(FieldData fieldData, PrestoContextRules rules, PrestoField field) {
         ObjectNode config = getConfig();
         if (config != null) {
             PrestoDataProvider dataProvider = getDataProvider();
@@ -70,11 +70,11 @@ public abstract class IfThenElseResolveFieldDataProcessor extends FieldDataProce
         return false;
     }
 
-    protected FieldData thenProcessFieldData(FieldData fieldData, PrestoContextRules rules, PrestoFieldUsage field) {
+    protected FieldData thenProcessFieldData(FieldData fieldData, PrestoContextRules rules, PrestoField field) {
         return fieldData;
     }
 
-    protected FieldData elseProcessFieldData(FieldData fieldData, PrestoContextRules rules, PrestoFieldUsage field) {
+    protected FieldData elseProcessFieldData(FieldData fieldData, PrestoContextRules rules, PrestoField field) {
         return fieldData;
     }
 

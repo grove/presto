@@ -10,7 +10,7 @@ public interface PrestoTopic {
 
     String getName();
 
-    String getName(PrestoFieldUsage field);
+    String getName(PrestoField field);
 
     String getTypeId();
 

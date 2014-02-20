@@ -3,7 +3,6 @@ package net.ontopia.presto.spi.utils;
 import java.util.List;
 
 import net.ontopia.presto.spi.PrestoField;
-import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
@@ -60,7 +59,7 @@ public class Utils {
         }
     }
  
-    public static String getName(PrestoFieldUsage field, Object o) {
+    public static String getName(PrestoField field, Object o) {
         if (o instanceof PrestoTopic) {
             PrestoTopic topic = (PrestoTopic)o;
             return topic.getName(field);

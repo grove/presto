@@ -17,7 +17,7 @@ public interface PrestoDataProvider {
 
     Collection<PrestoTopic> getTopicsByIds(Collection<String> topicIds);
 
-    Collection<? extends Object> getAvailableFieldValues(PrestoTopic topic, PrestoFieldUsage field, String query);
+    Collection<? extends Object> getAvailableFieldValues(PrestoTopic topic, PrestoField field, String query);
 
     PrestoChangeSet newChangeSet();
 

@@ -38,7 +38,6 @@ import net.ontopia.presto.spi.PrestoChanges;
 import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoDataProvider.ChangeSetHandler;
 import net.ontopia.presto.spi.PrestoField;
-import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
@@ -224,7 +223,7 @@ public abstract class EditorResource {
                 return Response.status(Status.NOT_FOUND).build();
             }
 
-            PrestoFieldUsage field = context.getFieldById(fieldId);
+            PrestoField field = context.getFieldById(fieldId);
             if (field == null) {
                 return Response.status(Status.NOT_FOUND).build();
             }
@@ -277,7 +276,7 @@ public abstract class EditorResource {
                         PrestoTopic topic = context.getTopic();
                         if (type.isInline()) {
                             PrestoContext parentContext = context.getParentContext();
-                            PrestoFieldUsage parentField = context.getParentField();
+                            PrestoField parentField = context.getParentField();
                             PrestoContextRules parentRules = session.getPrestoContextRules(parentContext);
                             
                             PrestoContext updatedParentContext = session.removeFieldValues(parentRules, parentField, Collections.singletonList(topic));
@@ -563,7 +562,7 @@ public abstract class EditorResource {
                 return Response.status(Status.NOT_FOUND).build();
             }
 
-            PrestoFieldUsage field = context.getFieldById(fieldId);
+            PrestoField field = context.getFieldById(fieldId);
             PrestoContextRules rules = session.getPrestoContextRules(context);
 
             if (!rules.isReadOnlyField(field) &&
@@ -625,7 +624,7 @@ public abstract class EditorResource {
                 return Response.status(Status.NOT_FOUND).build();
             }
 
-            PrestoFieldUsage field = context.getFieldById(fieldId);
+            PrestoField field = context.getFieldById(fieldId);
             PrestoContextRules rules = session.getPrestoContextRules(context);
 
             if (!rules.isReadOnlyField(field) && 
@@ -686,7 +685,7 @@ public abstract class EditorResource {
                 return Response.status(Status.NOT_FOUND).build();
             }
 
-            PrestoFieldUsage field = context.getFieldById(fieldId);
+            PrestoField field = context.getFieldById(fieldId);
             PrestoContextRules rules = session.getPrestoContextRules(context);
 
             if (!rules.isReadOnlyField(field) && rules.isRemovableField(field)) {
@@ -774,7 +773,7 @@ public abstract class EditorResource {
                 return Response.status(Status.NOT_FOUND).build();
             }
 
-            PrestoFieldUsage field = context.getFieldById(fieldId);
+            PrestoField field = context.getFieldById(fieldId);
 
             PrestoContextRules rules = session.getPrestoContextRules(context);
             AvailableFieldValues result = session.getAvailableFieldValuesInfo(rules, field, query);
@@ -827,7 +826,7 @@ public abstract class EditorResource {
             }
 
             try {
-                PrestoFieldUsage field = context.getFieldById(fieldId);
+                PrestoField field = context.getFieldById(fieldId);
 
                 TopicView result = session.executeFieldAction(context, topicView, field, actionId);
                 session.commit();

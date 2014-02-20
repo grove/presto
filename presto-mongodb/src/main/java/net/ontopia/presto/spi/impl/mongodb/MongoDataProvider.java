@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.ontopia.presto.spi.PrestoFieldUsage;
+import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.jackson.JacksonDataProvider;
@@ -79,7 +79,7 @@ public abstract class MongoDataProvider extends JacksonDataProvider {
     }
 
     @Override
-    public Collection<? extends Object> getAvailableFieldValues(PrestoTopic topic, final PrestoFieldUsage field, String query) {
+    public Collection<? extends Object> getAvailableFieldValues(PrestoTopic topic, final PrestoField field, String query) {
         Collection<PrestoType> types = field.getAvailableFieldValueTypes();
         if (types.isEmpty()) {
             return Collections.emptyList();

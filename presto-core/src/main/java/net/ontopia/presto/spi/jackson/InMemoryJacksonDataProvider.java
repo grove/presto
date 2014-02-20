@@ -8,7 +8,7 @@ import java.util.Map;
 
 import org.codehaus.jackson.node.ObjectNode;
 
-import net.ontopia.presto.spi.PrestoFieldUsage;
+import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic;
 
 public abstract class InMemoryJacksonDataProvider extends JacksonDataProvider {
@@ -77,7 +77,7 @@ public abstract class InMemoryJacksonDataProvider extends JacksonDataProvider {
     }
 
     @Override
-    public Collection<? extends Object> getAvailableFieldValues(PrestoTopic topic, PrestoFieldUsage field, String query) {
+    public Collection<? extends Object> getAvailableFieldValues(PrestoTopic topic, PrestoField field, String query) {
         return Collections.emptyList();
     }
 

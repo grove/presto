@@ -1,6 +1,6 @@
 package net.ontopia.presto.spi.rules;
 
-import net.ontopia.presto.spi.PrestoFieldUsage;
+import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoView;
@@ -13,7 +13,7 @@ import org.codehaus.jackson.node.ObjectNode;
 public class HasFieldValuesFieldValueRule extends BooleanFieldValueRule {
 
     @Override
-    protected boolean getResult(FieldValueFlag flag, PrestoContext context, PrestoFieldUsage field, Object value, ObjectNode config) {
+    protected boolean getResult(FieldValueFlag flag, PrestoContext context, PrestoField field, Object value, ObjectNode config) {
         if (context.isNewTopic()) {
             return false;
         } else {

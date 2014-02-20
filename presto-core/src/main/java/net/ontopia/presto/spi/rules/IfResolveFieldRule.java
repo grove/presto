@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 import net.ontopia.presto.spi.PrestoDataProvider;
-import net.ontopia.presto.spi.PrestoFieldUsage;
+import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
 import net.ontopia.presto.spi.PrestoTopic.Paging;
@@ -21,7 +21,7 @@ import org.codehaus.jackson.node.ObjectNode;
 public class IfResolveFieldRule extends BooleanFieldRule {
 
     @Override
-    protected boolean getResult(FieldFlag flag, PrestoContext context, PrestoFieldUsage field, ObjectNode config) {
+    protected boolean getResult(FieldFlag flag, PrestoContext context, PrestoField field, ObjectNode config) {
         if (context.isNewTopic()) {
             return false;
         } else {
@@ -29,7 +29,7 @@ public class IfResolveFieldRule extends BooleanFieldRule {
         }
     }
 
-    private boolean ifResolve(PrestoContext context, PrestoFieldUsage field, ObjectNode config) {
+    private boolean ifResolve(PrestoContext context, PrestoField field, ObjectNode config) {
         if (config != null) {
             PrestoDataProvider dataProvider = getDataProvider();
    

@@ -1,7 +1,7 @@
 package net.ontopia.presto.spi.utils;
 
 import net.ontopia.presto.spi.PrestoDataProvider;
-import net.ontopia.presto.spi.PrestoFieldUsage;
+import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
@@ -20,7 +20,7 @@ public class PrestoContext {
     private final boolean isNewTopic;
     
     private PrestoContext parentContext;
-    private PrestoFieldUsage parentField;
+    private PrestoField parentField;
     
     private PrestoContext(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, String topicId, String viewId) {
         if (topicId == null) {
@@ -80,7 +80,7 @@ public class PrestoContext {
     
     public static PrestoContext newContext(PrestoContext context, PrestoTopic topic) {
         PrestoContext parentContext = context.getParentContext();
-        PrestoFieldUsage parentField = context.getParentField();
+        PrestoField parentField = context.getParentField();
         PrestoType type = context.getType();
         PrestoView view = context.getView();
         return PrestoContext.createSubContext(parentContext, parentField, topic, type, view);
@@ -88,7 +88,7 @@ public class PrestoContext {
     
     public static PrestoContext newContext(PrestoContext context, PrestoView view) {
         PrestoContext parentContext = context.getParentContext();
-        PrestoFieldUsage parentField = context.getParentField();
+        PrestoField parentField = context.getParentField();
         PrestoTopic topic = context.getTopic();
         PrestoType type = context.getType();
         return PrestoContext.createSubContext(parentContext, parentField, topic, type, view);
@@ -96,19 +96,20 @@ public class PrestoContext {
     
     // create subcontexts
     
-    public static PrestoContext createSubContext(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, PrestoContext parentContext, PrestoFieldUsage parentField, PrestoTopic topic) {
+    public static PrestoContext createSubContext(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, PrestoContext parentContext, PrestoField parentField, PrestoTopic topic) {
+        // ISSUE: shouldn't the view be parentField.getValueView(type) instead of type.getDefaultView()
         PrestoContext context = create(dataProvider, schemaProvider, topic);
         context.setParentContext(parentContext, parentField);
         return context;
     }
     
-    public static PrestoContext createSubContext(PrestoContext parentContext, PrestoFieldUsage parentField, PrestoTopic topic, PrestoType type, PrestoView view) {
+    public static PrestoContext createSubContext(PrestoContext parentContext, PrestoField parentField, PrestoTopic topic, PrestoType type, PrestoView view) {
         PrestoContext context = new PrestoContext(topic, type, view);
         context.setParentContext(parentContext, parentField);
         return context;
     }
     
-    public static PrestoContext createSubContext(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, PrestoContext parentContext, PrestoFieldUsage parentField, String topicId, String viewId) {
+    public static PrestoContext createSubContext(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, PrestoContext parentContext, PrestoField parentField, String topicId, String viewId) {
         PrestoContext context = new PrestoContext(dataProvider, schemaProvider, topicId, viewId);
         context.setParentContext(parentContext, parentField);
         return context;
@@ -137,11 +138,11 @@ public class PrestoContext {
         return parentContext;
     }
     
-    public PrestoFieldUsage getParentField() {
+    public PrestoField getParentField() {
         return parentField;
     }
     
-    private void setParentContext(PrestoContext parentContext, PrestoFieldUsage parentField) {
+    private void setParentContext(PrestoContext parentContext, PrestoField parentField) {
         this.parentContext = parentContext;
         this.parentField = parentField;
     }
@@ -170,7 +171,7 @@ public class PrestoContext {
         return view;
     }
 
-    public PrestoFieldUsage getFieldById(String fieldId) {
+    public PrestoField getFieldById(String fieldId) {
         return type.getFieldById(fieldId, view);
     }
     

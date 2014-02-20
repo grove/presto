@@ -5,12 +5,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.codehaus.jackson.node.ObjectNode;
-
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoInlineTopicBuilder;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
+
+import org.codehaus.jackson.node.ObjectNode;
 
 public class JacksonInlineTopicBuilder implements PrestoInlineTopicBuilder {
 

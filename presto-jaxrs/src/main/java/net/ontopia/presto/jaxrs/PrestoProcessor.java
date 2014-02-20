@@ -12,7 +12,7 @@ import net.ontopia.presto.jaxrs.process.SubmittedState;
 import net.ontopia.presto.jaxrs.process.TopicProcessor;
 import net.ontopia.presto.jaxrs.process.TopicViewProcessor;
 import net.ontopia.presto.spi.PrestoDataProvider;
-import net.ontopia.presto.spi.PrestoFieldUsage;
+import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
@@ -135,7 +135,7 @@ public class PrestoProcessor {
             for (FieldData fieldData : fields) {
     
                 String fieldId = fieldData.getId();
-                PrestoFieldUsage field = context.getFieldById(fieldId);
+                PrestoField field = context.getFieldById(fieldId);
     
                 // process field            
                 FieldData newField = processFieldData(sstate, fieldData, rules, field, processType, status);
@@ -150,20 +150,20 @@ public class PrestoProcessor {
         return topicView;
     }
     
-    public FieldData preProcessFieldData(FieldData fieldData, PrestoContextRules rules, PrestoFieldUsage field, Status status) {
+    public FieldData preProcessFieldData(FieldData fieldData, PrestoContextRules rules, PrestoField field, Status status) {
         return processFieldData(fieldData, rules, field, Type.PRE_PROCESS, status);
     }
 
-    public FieldData postProcessFieldData(FieldData fieldData, PrestoContextRules rules, PrestoFieldUsage field, Status status) {
+    public FieldData postProcessFieldData(FieldData fieldData, PrestoContextRules rules, PrestoField field, Status status) {
         return processFieldData(fieldData, rules, field, Type.POST_PROCESS, status);
     }
 
-    public FieldData processFieldData(FieldData fieldData, PrestoContextRules rules, PrestoFieldUsage field, Type processType, Status status) {
+    public FieldData processFieldData(FieldData fieldData, PrestoContextRules rules, PrestoField field, Type processType, Status status) {
         SubmittedState sstate = null;
         return processFieldData(sstate, fieldData, rules, field, processType, status);
     }
     
-    public FieldData processFieldData(SubmittedState sstate, FieldData fieldData, PrestoContextRules rules, PrestoFieldUsage field, Type processType, Status status) {
+    public FieldData processFieldData(SubmittedState sstate, FieldData fieldData, PrestoContextRules rules, PrestoField field, Type processType, Status status) {
         // process nested data first
         PrestoSchemaProvider schemaProvider = getSchemaProvider();
         PrestoDataProvider dataProvider = getDataProvider();
@@ -260,7 +260,7 @@ public class PrestoProcessor {
         return topicView;
     }
     
-    private FieldData processFieldDataExtra(SubmittedState sstate, FieldData fieldData, PrestoContextRules rules, PrestoFieldUsage field, ObjectNode extraNode, Type processType, Status status) {
+    private FieldData processFieldDataExtra(SubmittedState sstate, FieldData fieldData, PrestoContextRules rules, PrestoField field, ObjectNode extraNode, Type processType, Status status) {
         if (extraNode != null) {
             JsonNode processorsNode = getFieldDataProcessorsNode(extraNode, processType);
             if (!processorsNode.isMissingNode()) {

@@ -1,11 +1,11 @@
 package net.ontopia.presto.jaxrs.constraints;
 
-import net.ontopia.presto.spi.PrestoFieldUsage;
+import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.utils.PrestoContext;
 
 public class NotRemovableValueTypeConstraintException extends NotRemovableValueConstraintException {
 
-    public NotRemovableValueTypeConstraintException(PrestoContext context, PrestoFieldUsage field, Object removableValue) {
+    public NotRemovableValueTypeConstraintException(PrestoContext context, PrestoField field, Object removableValue) {
         super(context, field, removableValue);
     }
 

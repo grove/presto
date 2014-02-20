@@ -1,6 +1,6 @@
 package net.ontopia.presto.jaxrs.constraints;
 
-import net.ontopia.presto.spi.PrestoFieldUsage;
+import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.utils.PrestoContext;
 
@@ -11,13 +11,13 @@ public abstract class DefaultConstraintException extends ConstraintException {
 
     protected final PrestoSchemaProvider schemaProvider;
     protected PrestoContext context;
-    protected PrestoFieldUsage field;
+    protected PrestoField field;
 
     protected DefaultConstraintException(PrestoSchemaProvider schemaProvider) {
         this.schemaProvider = schemaProvider;
     }
     
-    protected DefaultConstraintException(PrestoContext context, PrestoFieldUsage field) {
+    protected DefaultConstraintException(PrestoContext context, PrestoField field) {
         this.schemaProvider = field.getSchemaProvider();
         this.context = context;
         this.field = field;
@@ -31,7 +31,7 @@ public abstract class DefaultConstraintException extends ConstraintException {
         return context;
     }
     
-    protected PrestoFieldUsage getField() {
+    protected PrestoField getField() {
         return field;
     }
     
