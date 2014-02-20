@@ -5,13 +5,13 @@ import java.util.Collection;
 import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxb.Value;
 import net.ontopia.presto.jaxrs.process.FieldDataProcessor;
-import net.ontopia.presto.spi.PrestoFieldUsage;
+import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
 
 public class FieldCardinalityValidator extends FieldDataProcessor {
 
     @Override
-    public FieldData processFieldData(FieldData fieldData, PrestoContextRules rules, PrestoFieldUsage field) {
+    public FieldData processFieldData(FieldData fieldData, PrestoContextRules rules, PrestoField field) {
         int minCardinality = field.getMinCardinality();
         int maxCardinality = field.getMaxCardinality();
         

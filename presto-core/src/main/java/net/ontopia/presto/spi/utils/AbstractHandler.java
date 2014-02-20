@@ -115,11 +115,9 @@ public class AbstractHandler implements Handler {
 
     public static <T extends Handler> T getHandlerInstance(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, Class<T> klass, String className, ObjectNode processorConfig) {
         T processor = Utils.newInstanceOf(className, klass);
-        if (processor != null) {
-            processor.setConfig(processorConfig);
-            processor.setDataProvider(dataProvider);
-            processor.setSchemaProvider(schemaProvider);
-        }
+        processor.setConfig(processorConfig);
+        processor.setDataProvider(dataProvider);
+        processor.setSchemaProvider(schemaProvider);
         return processor;
     }
 

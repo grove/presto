@@ -7,7 +7,7 @@ import net.ontopia.presto.jaxb.TopicView;
 import net.ontopia.presto.jaxb.utils.TopicViewUtils;
 import net.ontopia.presto.jaxrs.Presto;
 import net.ontopia.presto.spi.PrestoChangeSet;
-import net.ontopia.presto.spi.PrestoFieldUsage;
+import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
@@ -19,7 +19,7 @@ import org.codehaus.jackson.node.ObjectNode;
 public abstract class ClearValuesFieldAction extends FieldAction {
 
     @Override
-    public TopicView executeAction(PrestoContext context, TopicView topicView, PrestoFieldUsage field, String actionId) {
+    public TopicView executeAction(PrestoContext context, TopicView topicView, PrestoField field, String actionId) {
         PrestoTopic topic = context.getTopic();
         PrestoType type = context.getType();
         
@@ -44,7 +44,7 @@ public abstract class ClearValuesFieldAction extends FieldAction {
         return newTopicView;
     }
     
-    protected Set<String> getRefreshFieldIds(TopicView topicView, PrestoFieldUsage field, Presto session, PrestoContext newContext) {
+    protected Set<String> getRefreshFieldIds(TopicView topicView, PrestoField field, Presto session, PrestoContext newContext) {
         Set<String> result = new HashSet<String>();
         result.add(field.getId());
         ObjectNode config  = getConfig();

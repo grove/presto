@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 
 import net.ontopia.presto.spi.PrestoField;
-import net.ontopia.presto.spi.PrestoFieldUsage;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoView;
@@ -107,12 +106,12 @@ public class PojoType implements PrestoType {
     }
 
     @Override
-    public List<PrestoFieldUsage> getFields(PrestoView fieldsView) {
-        List<PrestoFieldUsage> result = new ArrayList<PrestoFieldUsage>();
+    public List<PrestoField> getFields(PrestoView fieldsView) {
+        List<PrestoField> result = new ArrayList<PrestoField>();
         for (PrestoField field : fields) {
             PojoField pojoField = (PojoField)field;
             if (pojoField.isInView(fieldsView)) {
-                result.add(new PojoFieldUsage(pojoField, this, fieldsView));
+                result.add(pojoField);
             }
         }
         return result;
@@ -128,14 +127,14 @@ public class PojoType implements PrestoType {
     }
 
     @Override
-    public PrestoFieldUsage getFieldById(String fieldId, PrestoView view) {
+    public PrestoField getFieldById(String fieldId, PrestoView view) {
         PojoField field = fieldsMap.get(fieldId);
         if (field == null) {
             throw new RuntimeException("Field '" + fieldId + "' in view " + view.getId() + " not found on type " + this.getId());
         } else if (!field.isInView(view)) {
             throw new RuntimeException("Field '" + fieldId + "' in not defined in view " + view.getId() + " on type " + this.getId());
         }
-        return new PojoFieldUsage(field, this, view);
+        return field;
     }
 
     @Override

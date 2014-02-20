@@ -3,7 +3,7 @@ package net.ontopia.presto.spi.impl.pojo;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.ontopia.presto.spi.PrestoFieldUsage;
+import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoView;
@@ -30,7 +30,7 @@ public class PojoSchemaProvider implements PrestoSchemaProvider {
 
     private void sanityCheck(PrestoType type) {
         for (PrestoView view : type.getViews(null)) {
-            for (PrestoFieldUsage field : type.getFields(view)) {
+            for (PrestoField field : type.getFields(view)) {
                 if (field.isCascadingDelete()) {
                     for (PrestoType valueType : field.getAvailableFieldValueTypes()) {
                         if (!valueType.isRemovableCascadingDelete()) {

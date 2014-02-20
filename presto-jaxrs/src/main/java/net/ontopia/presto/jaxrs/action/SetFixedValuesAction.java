@@ -6,7 +6,7 @@ import java.util.List;
 import net.ontopia.presto.jaxb.TopicView;
 import net.ontopia.presto.jaxrs.Presto;
 import net.ontopia.presto.spi.PrestoChangeSet;
-import net.ontopia.presto.spi.PrestoFieldUsage;
+import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
@@ -19,12 +19,12 @@ import org.codehaus.jackson.node.ObjectNode;
 public class SetFixedValuesAction extends FieldAction {
 
     @Override
-    public boolean isActive(PrestoContextRules rules, PrestoFieldUsage field, String actionId) {
+    public boolean isActive(PrestoContextRules rules, PrestoField field, String actionId) {
         return true;
     }
 
     @Override
-    public TopicView executeAction(PrestoContext context, TopicView topicView, PrestoFieldUsage field, String actionId) {
+    public TopicView executeAction(PrestoContext context, TopicView topicView, PrestoField field, String actionId) {
         PrestoTopic topic = context.getTopic();
         PrestoType type = context.getType();
 

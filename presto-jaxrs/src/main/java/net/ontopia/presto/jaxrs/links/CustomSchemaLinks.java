@@ -7,7 +7,6 @@ import java.util.Map;
 import net.ontopia.presto.jaxb.Link;
 import net.ontopia.presto.jaxrs.PathParser;
 import net.ontopia.presto.jaxrs.Presto;
-import net.ontopia.presto.jaxrs.Presto.Rel;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoView;

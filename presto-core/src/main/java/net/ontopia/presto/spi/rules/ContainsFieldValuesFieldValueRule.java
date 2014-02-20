@@ -10,7 +10,7 @@ import net.ontopia.presto.spi.utils.Utils;
 
 import org.codehaus.jackson.node.ObjectNode;
 
-public class HasFieldValuesFieldValueRule extends BooleanFieldValueRule {
+public class ContainsFieldValuesFieldValueRule extends BooleanFieldValueRule {
 
     @Override
     protected boolean getResult(FieldValueFlag flag, PrestoContext context, PrestoField field, Object value, ObjectNode config) {
@@ -22,7 +22,7 @@ public class HasFieldValuesFieldValueRule extends BooleanFieldValueRule {
                 PrestoType type = Utils.getTopicType(topic, getSchemaProvider());
                 PrestoView view = field.getValueView(type);
                 PrestoContext subContext = PrestoContext.createSubContext(context, field, topic, type, view);
-                return HasFieldValues.hasFieldValues(getDataProvider(), getSchemaProvider(), subContext, config);
+                return ContainsFieldValues.containsFieldValue(getDataProvider(), getSchemaProvider(), subContext, config);
             }
             return false;
         }

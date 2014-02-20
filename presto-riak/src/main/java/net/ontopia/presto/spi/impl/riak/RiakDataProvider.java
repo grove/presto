@@ -5,7 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.UUID;
 
-import net.ontopia.presto.spi.PrestoFieldUsage;
+import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.jackson.JacksonDataProvider;
 import net.ontopia.presto.spi.jackson.JacksonTopic;
@@ -67,7 +67,7 @@ public abstract class RiakDataProvider extends JacksonDataProvider {
     }
 
     @Override
-    public Collection<? extends Object> getAvailableFieldValues(PrestoTopic topic, PrestoFieldUsage field, String query) {
+    public Collection<? extends Object> getAvailableFieldValues(PrestoTopic topic, PrestoField field, String query) {
         // TODO: implement. use secondary indexes? or just leave it up to the users of this data provider.
         return Collections.emptyList();
     }

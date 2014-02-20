@@ -227,6 +227,9 @@ public abstract class PrestoDefaultChangeSet implements PrestoChangeSet {
             Change change = changes.get(0);
             if (change.isTopicUpdated()) {
                 PrestoTopic topic = change.getTopic();
+                if (topic.isInline()) {
+                    throw new RuntimeException("Cannot save inline topic directly: " + topic);
+                }
                 if (change.getType().equals(Change.Type.CREATE)) {
                     dataProvider.create(topic);                
                 } else if (change.getType().equals(Change.Type.UPDATE)) {
@@ -257,7 +260,6 @@ public abstract class PrestoDefaultChangeSet implements PrestoChangeSet {
                 if (!topic.equals(valueTopic)) {
                     PrestoType valueType = field.getSchemaProvider().getTypeById(valueTopic.getTypeId());
                     PrestoField inverseField = valueType.getFieldById(inverseFieldId);
-
                     PrestoUpdate inverseUpdate = updateTopic(valueTopic, valueType);
                     inverseUpdate.addValues(inverseField, Collections.singleton(topic), PrestoDefaultChangeSet.DEFAULT_INDEX);
                 }

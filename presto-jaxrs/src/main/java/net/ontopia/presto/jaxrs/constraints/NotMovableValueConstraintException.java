@@ -2,7 +2,7 @@ package net.ontopia.presto.jaxrs.constraints;
 
 import org.codehaus.jackson.node.ObjectNode;
 
-import net.ontopia.presto.spi.PrestoFieldUsage;
+import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.utils.PrestoContext;
@@ -11,7 +11,7 @@ public class NotMovableValueConstraintException extends DefaultConstraintExcepti
 
     private Object movableValue;
 
-    public NotMovableValueConstraintException(PrestoContext context, PrestoFieldUsage field, Object movableValue) {
+    public NotMovableValueConstraintException(PrestoContext context, PrestoField field, Object movableValue) {
         super(context, field);
         this.movableValue = movableValue;
     }

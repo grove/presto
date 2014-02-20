@@ -21,7 +21,7 @@ public abstract class BooleanViewRule extends AbstractHandler implements ViewRul
     }
     
     protected boolean evaluateView(ViewFlag flag, PrestoContext context, ObjectNode config, PrestoView view) {
-        return inverse(getResult(flag, context, config, view), config);
+        return inverse(getResult(flag, context, view, config), config);
     }
 
     private boolean inverse(boolean value, ObjectNode config) {
@@ -33,6 +33,6 @@ public abstract class BooleanViewRule extends AbstractHandler implements ViewRul
         }
     }
     
-    protected abstract boolean getResult(ViewFlag flag, PrestoContext context, ObjectNode config, PrestoView view);
+    protected abstract boolean getResult(ViewFlag flag, PrestoContext context, PrestoView view, ObjectNode config);
 
 }

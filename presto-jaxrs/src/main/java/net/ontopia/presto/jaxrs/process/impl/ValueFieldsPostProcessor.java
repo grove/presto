@@ -9,7 +9,7 @@ import net.ontopia.presto.jaxb.Value;
 import net.ontopia.presto.jaxrs.Presto;
 import net.ontopia.presto.jaxrs.Presto.FieldDataValues;
 import net.ontopia.presto.jaxrs.process.FieldDataProcessor;
-import net.ontopia.presto.spi.PrestoFieldUsage;
+import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoView;
@@ -19,7 +19,7 @@ import net.ontopia.presto.spi.utils.PrestoContextRules;
 public class ValueFieldsPostProcessor extends FieldDataProcessor {
 
     @Override
-    public FieldData processFieldData(FieldData fieldData, PrestoContextRules rules, PrestoFieldUsage field) {
+    public FieldData processFieldData(FieldData fieldData, PrestoContextRules rules, PrestoField field) {
         
         // ISSUE: using first value type for now
         Collection<PrestoType> availableFieldValueTypes = field.getAvailableFieldValueTypes();
@@ -29,11 +29,11 @@ public class ValueFieldsPostProcessor extends FieldDataProcessor {
         PrestoType type = availableFieldValueTypes.iterator().next();
         
         PrestoView valueView = field.getValueView(type);
-        List<PrestoFieldUsage> fields = type.getFields(valueView);
+        List<PrestoField> fields = type.getFields(valueView);
 
         // assign column value fields
         List<FieldData> valueFields = new ArrayList<FieldData>();
-        for (PrestoFieldUsage valueField : fields) {
+        for (PrestoField valueField : fields) {
             FieldData fd = getPresto().getFieldDataNoValues(rules, valueField);
             
             // process the value field
@@ -62,13 +62,13 @@ public class ValueFieldsPostProcessor extends FieldDataProcessor {
         return fieldData;
     }
 
-    private FieldDataValues setFieldDataValues(PrestoContextRules rules, PrestoFieldUsage field, FieldData fieldData) {
+    private FieldDataValues setFieldDataValues(PrestoContextRules rules, PrestoField field, FieldData fieldData) {
         int offset = 0;
         int limit = Presto.DEFAULT_LIMIT;
         return getPresto().setFieldDataValues(rules, field, offset, limit, fieldData);
     }
     
-    private Value postProcessValue(PrestoContextRules rules, PrestoFieldUsage field, Object inputValue, Value outputValue, List<PrestoFieldUsage> fields) {
+    private Value postProcessValue(PrestoContextRules rules, PrestoField field, Object inputValue, Value outputValue, List<PrestoField> fields) {
 
         if (field.isReferenceField()) {
             List<Value> values = new ArrayList<Value>();
@@ -77,7 +77,7 @@ public class ValueFieldsPostProcessor extends FieldDataProcessor {
             PrestoContext subcontext = PrestoContext.createSubContext(getDataProvider(), getSchemaProvider(), context, field, valueTopic);
             PrestoContextRules subrules = getPresto().getPrestoContextRules(subcontext);
             
-            for (PrestoFieldUsage valueField : fields) {
+            for (PrestoField valueField : fields) {
                 FieldDataValues fieldDataValues = setFieldDataValues(subrules, valueField, null);
                 if  (fieldDataValues.size() > 0) {
                     Value v = fieldDataValues.getOutputValue(0);

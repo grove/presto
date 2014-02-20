@@ -13,7 +13,7 @@ import net.ontopia.presto.jaxrs.PathParser;
 import net.ontopia.presto.jaxrs.Presto;
 import net.ontopia.presto.jaxrs.action.FieldAction;
 import net.ontopia.presto.jaxrs.process.FieldDataProcessor;
-import net.ontopia.presto.spi.PrestoFieldUsage;
+import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoView;
 import net.ontopia.presto.spi.utils.ExtraUtils;
 import net.ontopia.presto.spi.utils.PrestoContext;
@@ -28,7 +28,7 @@ public class FieldLinksPostProcessor extends FieldDataProcessor {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     @Override
-    public FieldData processFieldData(FieldData fieldData, PrestoContextRules rules, PrestoFieldUsage field) {
+    public FieldData processFieldData(FieldData fieldData, PrestoContextRules rules, PrestoField field) {
         ObjectNode extraNode = ExtraUtils.getFieldExtraNode(field);
         if (extraNode != null) {
             JsonNode linksNode = extraNode.path("links");
@@ -71,13 +71,13 @@ public class FieldLinksPostProcessor extends FieldDataProcessor {
         return fieldData;
     }
     
-    private String getActionLink(PrestoContext context, PrestoFieldUsage field, String actionId) {
+    private String getActionLink(PrestoContext context, PrestoField field, String actionId) {
         Presto session = getPresto();
         URI baseUri = session.getBaseUri();
         String databaseId = session.getDatabaseId();
         
         PrestoContext parentContext = context.getParentContext();
-        PrestoFieldUsage parentField = context.getParentField();
+        PrestoField parentField = context.getParentField();
 
         String topicId = context.getTopicId();
         PrestoView view = context.getView();

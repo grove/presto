@@ -23,11 +23,11 @@ public interface PrestoType {
 
     List<PrestoField> getFields();
 
-    List<PrestoFieldUsage> getFields(PrestoView fieldsView);
+    List<PrestoField> getFields(PrestoView fieldsView);
 
     PrestoField getFieldById(String fieldId);
 
-    PrestoFieldUsage getFieldById(String fieldId, PrestoView view);
+    PrestoField getFieldById(String fieldId, PrestoView view); // same as previous, but verifies that field is in view
 
     PrestoView getDefaultView();
 

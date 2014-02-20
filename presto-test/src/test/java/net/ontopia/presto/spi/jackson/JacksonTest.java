@@ -3,7 +3,6 @@ package net.ontopia.presto.spi.jackson;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Assert;
 import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic;
@@ -13,6 +12,7 @@ import net.ontopia.presto.spi.impl.pojo.PojoSchemaProvider;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 

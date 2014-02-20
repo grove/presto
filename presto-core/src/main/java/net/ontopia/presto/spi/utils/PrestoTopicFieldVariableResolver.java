@@ -1,6 +1,5 @@
 package net.ontopia.presto.spi.utils;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -19,19 +18,22 @@ public class PrestoTopicFieldVariableResolver implements PrestoVariableResolver 
     
     @Override
     public List<? extends Object> getValues(Object value, String variable) {
+        return getValues(schemaProvider, value, variable);
+    }
+    
+    public static List<? extends Object> getValues(PrestoSchemaProvider schemaProvider, 
+            Object value, String variable) {
         if (value instanceof PrestoTopic) {
-            List<String> result = new ArrayList<String>();
             PrestoTopic topic = (PrestoTopic)value;
-            String typeId = topic.getTypeId();
-            PrestoType type = schemaProvider.getTypeById(typeId);
+            PrestoType type = Utils.getTopicType(topic, schemaProvider);
             if (variable.equals(":id")) {
-                result.add(topic.getId());                
+                return Collections.singletonList(topic.getId());                
             } else if (variable.equals(":name")) {
-                result.add(topic.getName());                
+                return Collections.singletonList(topic.getName());                
             } else if (variable.equals(":type")) {
-                result.add(typeId);                
+                return Collections.singletonList(type.getId());                
             } else if (variable.equals(":type-name")) {
-                result.add(type.getName());
+                return Collections.singletonList(type.getName());
             } else if (variable.startsWith("#")) {
                 PrestoField valueField = type.getFieldById(variable.substring(1));
                 return topic.getStoredValues(valueField);
@@ -39,7 +41,6 @@ public class PrestoTopicFieldVariableResolver implements PrestoVariableResolver 
                 PrestoField valueField = type.getFieldById(variable);
                 return topic.getValues(valueField);
             }
-            return result;
         } else {
             if (value != null && variable.equals(":value")) {
                 return Collections.singletonList(value.toString()); 

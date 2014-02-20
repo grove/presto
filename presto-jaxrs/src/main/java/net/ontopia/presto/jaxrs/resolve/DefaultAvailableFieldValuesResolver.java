@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import net.ontopia.presto.spi.PrestoDataProvider;
-import net.ontopia.presto.spi.PrestoFieldUsage;
+import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
@@ -21,7 +21,7 @@ import org.codehaus.jackson.node.ObjectNode;
 public class DefaultAvailableFieldValuesResolver extends AvailableFieldValuesResolver {
 
     @Override
-    public Collection<? extends Object> getAvailableFieldValues(PrestoContext context, PrestoFieldUsage field, String query) {
+    public Collection<? extends Object> getAvailableFieldValues(PrestoContext context, PrestoField field, String query) {
         ObjectNode processorConfig = getConfig();
         if (processorConfig != null) {
             JsonNode resolveConfig = processorConfig.path("resolve");

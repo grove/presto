@@ -3,7 +3,7 @@ package net.ontopia.presto.jaxrs.process;
 import java.text.MessageFormat;
 
 import net.ontopia.presto.jaxb.FieldData;
-import net.ontopia.presto.spi.PrestoFieldUsage;
+import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
 
 import org.codehaus.jackson.JsonNode;
@@ -13,9 +13,9 @@ public abstract class FieldDataProcessor extends AbstractProcessor {
     
     private SubmittedState sstate;
     
-    public abstract FieldData processFieldData(FieldData fieldData, PrestoContextRules context, PrestoFieldUsage field);
+    public abstract FieldData processFieldData(FieldData fieldData, PrestoContextRules context, PrestoField field);
 
-    protected String getErrorMessage(String errorId, PrestoFieldUsage field, String defaultErrorMessage, Object... args) {
+    protected String getErrorMessage(String errorId, PrestoField field, String defaultErrorMessage, Object... args) {
         String errorMessage = getErrorMessageConfig(errorId, field, defaultErrorMessage);
         if (args != null && args.length > 0) {
             return MessageFormat.format(errorMessage, args);
@@ -24,7 +24,7 @@ public abstract class FieldDataProcessor extends AbstractProcessor {
         }
     }
     
-    private String getErrorMessageConfig(String errorId, PrestoFieldUsage field, String defaultErrorMessage) {
+    private String getErrorMessageConfig(String errorId, PrestoField field, String defaultErrorMessage) {
         ObjectNode config = getConfig();
         if (config != null) {
             JsonNode errorNode = config.path("error-messages").path(errorId);
