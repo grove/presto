@@ -1,6 +1,5 @@
 package net.ontopia.presto.spi.rules;
 
-import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoView;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoContextRules.ViewFlag;
@@ -14,8 +13,7 @@ public class ContainsFieldValuesViewRule extends BooleanViewRule {
         if (context.isNewTopic()) {
             return false;
         } else {
-            PrestoTopic topic = context.getTopic();
-            return ContainsFieldValues.containsFieldValue(getSchemaProvider(), topic, config);
+            return ContainsFieldValues.containsFieldValue(getDataProvider(), getSchemaProvider(), context, config);
         }
     }
     

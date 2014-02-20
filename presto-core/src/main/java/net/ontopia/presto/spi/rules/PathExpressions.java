@@ -40,7 +40,6 @@ public class PathExpressions {
     private static List<? extends Object> getValuesByExpression(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, 
             PrestoContext context, String expr) {
         Iterator<String> path = getPath(expr).iterator();
-        System.out.println("P: " + path);
 
         if (path.hasNext()) {
             return getValuesByExpression(dataProvider, schemaProvider, Collections.singletonList(context), path, expr);

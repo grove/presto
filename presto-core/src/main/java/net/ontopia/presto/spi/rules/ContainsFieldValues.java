@@ -6,52 +6,25 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
-import net.ontopia.presto.spi.PrestoType;
-import net.ontopia.presto.spi.utils.Utils;
+import net.ontopia.presto.spi.utils.PrestoContext;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ContainsFieldValues {
-    
-    private static Logger log = LoggerFactory.getLogger(ContainsFieldValues.class);
 
-    public static boolean containsFieldValue(PrestoSchemaProvider schemaProvider, PrestoTopic topic, PrestoField defaultField, ObjectNode config) {
-        PrestoField valueField = getValueField(schemaProvider, topic, config);
-        if (valueField == null) {
-            valueField = defaultField;
-        }
+    public static boolean containsFieldValue(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, PrestoContext context, ObjectNode config) {
+        return containsFieldValue(dataProvider, schemaProvider, context, null, config);
+    }
+
+    public static boolean containsFieldValue(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, PrestoContext context, PrestoField defaultField, ObjectNode config) {
+        List<? extends Object> values = HasFieldValues.getValues(dataProvider, schemaProvider, context, defaultField, config);
         Set<String> testValues = getTestValues(config);
-        List<? extends Object> fieldValues = topic.getValues(valueField);
-        return ContainsFieldValues.containsAllValues(fieldValues, testValues);
-    }
-
-    public static boolean containsFieldValue(PrestoSchemaProvider schemaProvider, PrestoTopic topic, ObjectNode config) {
-        PrestoField valueField = ContainsFieldValues.getValueField(schemaProvider, topic, config);
-        if (valueField != null) {
-            Set<String> testValues = ContainsFieldValues.getTestValues(config);
-            List<? extends Object> fieldValues = topic.getValues(valueField);
-            return ContainsFieldValues.containsAllValues(fieldValues, testValues);
-        } else {
-            log.warn("Not able to find field from configuration: " + config);
-            return false;
-        }
-    }
-
-    private static PrestoField getValueField(PrestoSchemaProvider schemaProvider, PrestoTopic topic, ObjectNode config) {
-        JsonNode fieldNode = config.path("field");
-        if (fieldNode.isTextual()) {
-            String fieldId = fieldNode.getTextValue();
-            PrestoType type = Utils.getTopicType(topic, schemaProvider);
-            return type.getFieldById(fieldId);
-        } else {
-            return null;
-        }
+        return ContainsFieldValues.containsAllValues(values, testValues);
     }
 
     private static Set<String> getTestValues(ObjectNode config) {
