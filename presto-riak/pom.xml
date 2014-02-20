@@ -4,14 +4,14 @@
   <parent>
     <groupId>net.ontopia.presto</groupId>
     <artifactId>presto</artifactId>
-    <version>0.7.16</version>
+    <version>0.7.17-SNAPSHOT</version>
   </parent>
 
   <name>Presto - Riak data provider</name>
   <groupId>net.ontopia.presto</groupId>
   <artifactId>presto-riak</artifactId>
   <packaging>jar</packaging>
-  <version>0.7.16</version>
+  <version>0.7.17-SNAPSHOT</version>
 
   <dependencies>
     <dependency>
