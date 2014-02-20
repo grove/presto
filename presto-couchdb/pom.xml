@@ -4,14 +4,14 @@
   <parent>
     <groupId>net.ontopia.presto</groupId>
     <artifactId>presto</artifactId>
-    <version>0.7.16-SNAPSHOT</version>
+    <version>0.7.16</version>
   </parent>
 
   <name>Presto - CouchDB data provider</name>
   <groupId>net.ontopia.presto</groupId>
   <artifactId>presto-couchdb</artifactId>
   <packaging>jar</packaging>
-  <version>0.7.16-SNAPSHOT</version>
+  <version>0.7.16</version>
 
   <dependencies>
     <dependency>
