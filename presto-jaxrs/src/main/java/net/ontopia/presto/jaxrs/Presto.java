@@ -1252,8 +1252,13 @@ public abstract class Presto {
         boolean validateValueTypes = true;
 
         if (type.isInline()) {
-            PrestoTopic inlineTopic = buildInlineTopic(context.getParentContext(), context.getParentField(), topicView, filterNonStorable, validateValueTypes);
-            return inlineTopic;
+            PrestoContext parentContext = context.getParentContext();
+            PrestoField parentField = context.getParentField();
+            PrestoTopic inlineTopic = buildInlineTopic(parentContext, parentField, topicView, filterNonStorable, validateValueTypes);
+
+            // merge inlineTopic with existing topic to avoid anemic topic
+            return rehydrateInlineTopic(parentContext, parentField, inlineTopic);
+
         } else {
             PrestoUpdate update;
             if (context.isNewTopic()) {
@@ -1284,7 +1289,7 @@ public abstract class Presto {
             return update.getTopicAfterSave();
         }
     }
-    
+
     public FieldData updateFieldValues(PrestoContextRules rules, PrestoField field, FieldData fieldData) {
         PrestoContext updatedContext = updatePrestoTopic(rules, fieldData);
 
@@ -1486,7 +1491,7 @@ public abstract class Presto {
         return builder.build();
     }
 
-    protected PrestoTopic mergeInlineTopic(PrestoTopic t1, PrestoTopic t2) {
+    private PrestoTopic mergeInlineTopic(PrestoTopic t1, PrestoTopic t2) {
         String topicId = t1.getId();
         if (Utils.different(topicId, t2.getId())) {
             throw new IllegalArgumentException("Cannot merge topics with different ids: '" + topicId + "' and '" + t2.getId() + "'");
@@ -1525,7 +1530,7 @@ public abstract class Presto {
         return builder.build();
     }
 
-    protected Collection<? extends Object> mergeInlineTopics(List<? extends Object> valuesNew, List<? extends Object> valuesExisting, 
+    private Collection<? extends Object> mergeInlineTopics(List<? extends Object> valuesNew, List<? extends Object> valuesExisting, 
             boolean includeExisting) {
         Map<String,Object> mapNew = toMapTopics(valuesNew);
         Map<String,Object> mapExisting = toMapTopics(valuesExisting);
@@ -1563,6 +1568,22 @@ public abstract class Presto {
             }
         }
         return result.values();
+    }
+    
+    protected PrestoTopic rehydrateInlineTopic(PrestoContext parentContext, PrestoField parentField, PrestoTopic inlineTopic) {
+        if (!parentContext.isNewTopic()) {
+            PrestoTopic parentTopic = parentContext.getTopic();
+            for (Object value : parentTopic.getValues(parentField)) {
+                if (value instanceof PrestoTopic) {
+                    PrestoTopic valueTopic = (PrestoTopic)value;
+                    String inlineTopicId = inlineTopic.getId();
+                    if (inlineTopicId != null && inlineTopicId.equals(valueTopic.getId())) {
+                        return mergeInlineTopic(inlineTopic, valueTopic);
+                    }
+                }
+            }
+        }
+        return inlineTopic;
     }
 
     private Map<String,Object> toMapTopics(List<? extends Object> values) {
