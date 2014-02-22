@@ -1013,12 +1013,13 @@ public abstract class Presto {
 
         PrestoTopic updatedTopic;
         if (topic.isInline()) {
-            if (index != null && index >= 0) {
-                // TODO: implement support for moving values in inline topic field
-                throw new UnsupportedOperationException("Moving values in inline topic fields not yet supported.");
-            }
             List<Object> values = new ArrayList<Object>(topic.getValues(field));
-            values.add(addableValues);
+            if (index != null) {
+                boolean allowAdd = !isMove;
+                values = Utils.moveValuesToIndex(values, addableValues, index, allowAdd);
+            } else {
+                values.add(addableValues);
+            }
             PrestoInlineTopicBuilder builder = dataProvider.createInlineTopic(type, topic.getId());
             builder.setValues(field, values);
             PrestoTopic newTopic = builder.build();
@@ -1232,7 +1233,7 @@ public abstract class Presto {
             PrestoChangeSet changeSet = dataProvider.newChangeSet(getChangeSetHandler());
             PrestoUpdate update = changeSet.updateTopic(topic, type);        
 
-            update.setValues(field, newValues); // TODO: check if inline field first?
+            update.setValues(field, newValues);
             changeSet.save();
 
             return update.getTopicAfterSave();

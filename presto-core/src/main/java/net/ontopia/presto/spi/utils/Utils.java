@@ -1,5 +1,6 @@
 package net.ontopia.presto.spi.utils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import net.ontopia.presto.spi.PrestoField;
@@ -78,5 +79,45 @@ public class Utils {
         PrestoField field = type.getFieldById(fieldId);
         return topic.getValues(field);
     }
-    
+ 
+    public static <T> List<T> moveValuesToIndex(List<? extends T> values, List<? extends T> moveValues, int index, boolean allowAdd) {
+        int size = values.size();
+        if (index > size) {
+            throw new ArrayIndexOutOfBoundsException("Index: " + index + ", Size: " + values.size());
+        }
+        List<T> result = new ArrayList<T>(values);
+        if (moveValues.isEmpty()) {
+            return result;
+        }
+
+        int beforeCount=0;
+
+        for (T moveValue : moveValues) {
+            int ix = result.indexOf(moveValue);
+            if (ix != -1) {
+                if (ix < index) {
+                    beforeCount++;
+                }
+                @SuppressWarnings("unused")
+                T removed = result.remove(ix);
+//                System.out.println("R: " + ix + " " + removed + " " + moveValue);
+            } else if (!allowAdd) {
+                throw new RuntimeException("Not allowed to add new values: " + moveValue);
+            }
+        }
+//        System.out.println("V: " + values + " " + moveValues + " " + result);
+//        System.out.println("IX: " + index + " AA: " + allowAdd);
+
+        int moveSize = moveValues.size();
+        int offset = Math.max(0, index-beforeCount);
+//        System.out.println("MS: " + moveSize + " BC: " + beforeCount + " OF: " + offset);
+//        System.out.println("OF: " + offset + " = " + index + "-" + beforeCount);
+        
+        for (int i=0; i < moveSize; i++) {
+//            System.out.println("A: " + (offset+1) + " " + moveValues.get(i));
+            result.add(offset+i, moveValues.get(i));
+        }
+        
+        return result;
+    }
 }

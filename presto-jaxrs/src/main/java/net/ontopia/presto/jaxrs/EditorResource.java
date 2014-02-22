@@ -565,7 +565,7 @@ public abstract class EditorResource {
             PrestoContextRules rules = session.getPrestoContextRules(context);
 
             if (!rules.isReadOnlyField(field) &&
-                    (isMove ?  rules.isMovableField(field) : (rules.isAddableField(field) || rules.isCreatableField(field)))) {
+                    (isMove ? rules.isMovableField(field) : (rules.isAddableField(field) || rules.isCreatableField(field)))) {
                 try {
                     FieldData result = session.addFieldValues(rules, field, index, fieldData, isMove);
 
