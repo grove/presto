@@ -51,6 +51,16 @@ public class UtilsTest {
     }
 
     @Test
+    public void moveValuesToLastIndex2() {
+        List<String> values = Arrays.asList("1", "2", "3", "4");
+        List<String> moveValues = Arrays.asList("3", "1");
+        List<String> expected = Arrays.asList("2", "4", "3", "1");
+        
+        boolean allowAdd = false;
+        assertEquals(expected, Utils.moveValuesToIndex(values, moveValues, values.size(), allowAdd));
+    }
+
+    @Test
     public void moveValuesToOutOfBoundsIndex() {
         List<String> values = Arrays.asList("1", "2", "3", "4");
         List<String> moveValues = Arrays.asList("1", "2");
