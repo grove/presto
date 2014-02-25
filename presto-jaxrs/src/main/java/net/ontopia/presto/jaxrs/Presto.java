@@ -1167,7 +1167,7 @@ public abstract class Presto {
             PrestoTopic updatedTopic = updatePrestoTopic(rules, topicView);
             PrestoContext newContext = updateParentContext(context, updatedTopic);
 
-            if (isReturnParentOnUpdate(newContext)) {
+            if (isReturnParentOnUpdate(context, newContext)) {
                 PrestoContext parentContext = newContext.getParentContext();
                 if (parentContext != null) {
                     newContext = parentContext;
@@ -1185,14 +1185,23 @@ public abstract class Presto {
         }
     }
 
-    private boolean isReturnParentOnUpdate(PrestoContext context) {
-        PrestoField parentField = context.getParentField();
+    private boolean isReturnParentOnUpdate(PrestoContext beforeContext, PrestoContext updatedContext) {
+
+        PrestoField parentField = updatedContext.getParentField();
         if (parentField != null) {
             ObjectNode extra = ExtraUtils.getFieldExtraNode(parentField);
             if (extra != null) {
-                JsonNode onUpdateNode = extra.path("returnParentOnUpdate");
-                if (onUpdateNode.isBoolean()) {
-                    return onUpdateNode.getBooleanValue();
+                boolean created = beforeContext.isNewTopic() && !updatedContext.isNewTopic();
+                if (created) {
+                    JsonNode onUpdateNode = extra.path("returnParentOnCreate");
+                    if (onUpdateNode.isBoolean()) {
+                        return onUpdateNode.getBooleanValue();
+                    }
+                } else {
+                    JsonNode onUpdateNode = extra.path("returnParentOnUpdate");
+                    if (onUpdateNode.isBoolean()) {
+                        return onUpdateNode.getBooleanValue();
+                    }
                 }
             }
         }
