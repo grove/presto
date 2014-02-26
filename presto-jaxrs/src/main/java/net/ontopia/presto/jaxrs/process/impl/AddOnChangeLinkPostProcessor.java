@@ -9,7 +9,6 @@ import net.ontopia.presto.jaxrs.Presto;
 import net.ontopia.presto.jaxrs.links.Links;
 import net.ontopia.presto.jaxrs.process.FieldDataProcessor;
 import net.ontopia.presto.spi.PrestoField;
-import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoView;
 import net.ontopia.presto.spi.utils.PrestoContext;
@@ -37,30 +36,26 @@ public class AddOnChangeLinkPostProcessor extends FieldDataProcessor {
     private FieldData addOnChangeLink(FieldData fieldData, PrestoContextRules rules, PrestoField field) {
         // TODO: may want to support this for inline *new* topics as well
         PrestoContext context = rules.getContext();
-        PrestoTopic topic = context.getTopic();
-        if (topic != null) {
-            Collection<Link> links = fieldData.getLinks();
-            if (links == null) {
-                links = new LinkedHashSet<Link>();
-            }
-            
-            Presto presto = getPresto();
-            
-            String topicId = topic.getId();
-            String typeId = topic.getTypeId();
-            PrestoType type = getSchemaProvider().getTypeById(typeId);
-            PrestoView view = field.getView();
-            PrestoContext parentContext = context.getParentContext();
-            PrestoField parentField = context.getParentField();
-            
-            Links lx = presto.getLinks();
-            Link link = lx.fieldOnChangeLink(parentContext, parentField, topicId, type, view, field);
-    
-            if (!links.contains(link)) {
-                links.add(link);
-            }
-            fieldData.setLinks(links);
+        Collection<Link> links = fieldData.getLinks();
+        if (links == null) {
+            links = new LinkedHashSet<Link>();
         }
+
+        Presto presto = getPresto();
+
+        String topicId = context.getTopicId();
+        PrestoType type = context.getType();
+        PrestoView view = field.getView();
+        PrestoContext parentContext = context.getParentContext();
+        PrestoField parentField = context.getParentField();
+
+        Links lx = presto.getLinks();
+        Link link = lx.fieldOnChangeLink(parentContext, parentField, topicId, type, view, field);
+
+        if (!links.contains(link)) {
+            links.add(link);
+        }
+        fieldData.setLinks(links);
         return fieldData;
     }
 
