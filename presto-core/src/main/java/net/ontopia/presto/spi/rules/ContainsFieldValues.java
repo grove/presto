@@ -17,11 +17,11 @@ import org.codehaus.jackson.node.ObjectNode;
 
 public class ContainsFieldValues {
 
-    public static boolean containsFieldValue(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, PrestoContext context, ObjectNode config) {
-        return containsFieldValue(dataProvider, schemaProvider, context, null, config);
+    public static boolean containsFieldValues(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, PrestoContext context, ObjectNode config) {
+        return containsFieldValues(dataProvider, schemaProvider, context, null, config);
     }
 
-    public static boolean containsFieldValue(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, PrestoContext context, PrestoField defaultField, ObjectNode config) {
+    public static boolean containsFieldValues(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, PrestoContext context, PrestoField defaultField, ObjectNode config) {
         List<? extends Object> values = HasFieldValues.getValues(dataProvider, schemaProvider, context, defaultField, config);
         Set<String> testValues = getTestValues(config);
         return ContainsFieldValues.containsAllValues(values, testValues);

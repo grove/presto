@@ -22,7 +22,7 @@ public class ContainsFieldValuesFieldValueRule extends BooleanFieldValueRule {
                 PrestoType type = Utils.getTopicType(topic, getSchemaProvider());
                 PrestoView view = field.getValueView(type);
                 PrestoContext subContext = PrestoContext.createSubContext(context, field, topic, type, view);
-                return ContainsFieldValues.containsFieldValue(getDataProvider(), getSchemaProvider(), subContext, config);
+                return ContainsFieldValues.containsFieldValues(getDataProvider(), getSchemaProvider(), subContext, config);
             }
             return false;
         }
