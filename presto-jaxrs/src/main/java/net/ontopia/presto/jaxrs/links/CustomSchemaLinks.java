@@ -231,6 +231,7 @@ public class CustomSchemaLinks implements Links {
             params.put("baseUri", getBaseUri());
             params.put("databaseId", getDatabaseId());
             params.put("typeId", type.getId());
+            params.put("topicId", "_" + type.getId()); // NOTE: not used by default
             params.put("viewId", view.getId());
             return new Link(rel, replaceUriPattern(href, params));
         }
@@ -246,6 +247,7 @@ public class CustomSchemaLinks implements Links {
             params.put("baseUri", getBaseUri());
             params.put("databaseId", getDatabaseId());
             params.put("typeId", type.getId());
+            params.put("topicId", "_" + type.getId()); // NOTE: not used by default
             params.put("viewId", view.getId());
             String path = getInlineTopicPath(parentContext, parentField);
             params.put("path", path);
