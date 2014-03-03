@@ -805,8 +805,8 @@ public abstract class Presto {
         if (result != null) {
             return result;
         }
-        PrestoTopic topic = rules.getContext().getTopic();
         if (!rules.isReadOnlyField(field) && rules.isAddableField(field)) {
+            PrestoTopic topic = rules.getContext().getTopic();
             return dataProvider.getAvailableFieldValues(topic, field, query);
         } else {
             return Collections.emptyList();
