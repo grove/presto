@@ -233,6 +233,7 @@ public class CustomSchemaLinks implements Links {
             params.put("typeId", type.getId());
             params.put("topicId", "_" + type.getId()); // NOTE: not used by default
             params.put("viewId", view.getId());
+            params.put("path", "_");
             return new Link(rel, replaceUriPattern(href, params));
         }
         return delegate.topicViewCreateLink(type, view);
