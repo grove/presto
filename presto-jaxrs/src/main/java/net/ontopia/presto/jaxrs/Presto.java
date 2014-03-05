@@ -11,6 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import net.ontopia.presto.jaxb.AvailableFieldValues;
 import net.ontopia.presto.jaxb.Database;
@@ -40,15 +41,18 @@ import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoInlineTopicBuilder;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
+import net.ontopia.presto.spi.PrestoTopic.Paging;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
 import net.ontopia.presto.spi.PrestoView;
 import net.ontopia.presto.spi.PrestoView.ViewType;
 import net.ontopia.presto.spi.functions.PrestoFieldFunction;
 import net.ontopia.presto.spi.functions.PrestoFieldFunctionUtils;
+import net.ontopia.presto.spi.rules.ContextPathExpressions;
 import net.ontopia.presto.spi.utils.AbstractHandler;
 import net.ontopia.presto.spi.utils.ExtraUtils;
 import net.ontopia.presto.spi.utils.PrestoContext;
+import net.ontopia.presto.spi.utils.PrestoContextField;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
 import net.ontopia.presto.spi.utils.Utils;
 
@@ -502,71 +506,206 @@ public abstract class Presto {
         }
     }
 
+    public static class FieldValues {
+        
+        public static final FieldValues EMPTY = new FieldValues(Collections.emptyList());
+        
+        private final List<? extends Object> values;
+        private final boolean isPaging;
+        private final int offset;
+        private final int limit;
+        private final int total;
+
+        private FieldValues(List<? extends Object> values) {
+            this.values = values;
+            this.isPaging = false;
+            this.offset = 0;
+            this.limit = DEFAULT_LIMIT;
+            this.total = values.size();
+        }
+        
+        private FieldValues(List<? extends Object> values, int offset, int limit, int total) {
+            this.values = values;
+            this.isPaging = true;
+            this.offset = offset;
+            this.limit = limit;
+            this.total = total;
+        }
+
+        public static FieldValues create (List<? extends Object> values) {
+            if (values.isEmpty()) {
+                return FieldValues.EMPTY;
+            } else {
+                return new FieldValues(values);
+            }
+        }
+
+        public static FieldValues create (List<? extends Object> values, int offset, int limit, int total) {
+            if (values.isEmpty()) {
+                return FieldValues.EMPTY;
+            } else {
+                return new FieldValues(values, offset, limit, total);
+            }
+        }
+        
+        public List<? extends Object> getValues() {
+            return values;
+        }
+
+        public boolean isPaging() {
+            return isPaging;
+        }
+        
+        public int getOffset() {
+            return offset;
+        }
+
+        public int getLimit() {
+            return limit;
+        }
+
+        public int getTotal() {
+            return total;
+        }
+        
+    }
+    
     public FieldDataValues setFieldDataValues(
             PrestoContextRules rules, final PrestoField field, int offset, int limit, FieldData fieldData) {
 
-        // TODO: refactor to return DTO instead of mutating FieldData here
-        List<? extends Object> fieldValues = getFieldValues(rules, field, offset, limit, fieldData);
-
-        return setFieldDataValues(offset, limit, rules, field, fieldData, fieldValues);
+        FieldValues fieldValues = getFieldValues(rules, field, offset, limit);
+        return setFieldDataValues(rules, field, fieldData, fieldValues);
     }
 
-    public List<? extends Object> getFieldValues(PrestoContextRules rules, final PrestoField field) {
+    public FieldValues getFieldValues(PrestoContextRules rules, PrestoField field) {
         return getFieldValues(rules, field, 0, DEFAULT_LIMIT);
     }
-
-    public List<? extends Object> getFieldValues(PrestoContextRules rules, final PrestoField field, int offset, int limit) {
-        return getFieldValues(rules, field, offset, limit, null);
-    }
     
-    private List<? extends Object> getFieldValues(PrestoContextRules rules, final PrestoField field, int offset, int limit, 
-            FieldData fieldData) {
+    private FieldValues getFieldValues(PrestoContextRules rules, PrestoField field, int offset, int limit) {
         PrestoContext context = rules.getContext();
-        PrestoTopic topic = context.getTopic();
+        
+        FieldValues result;
         
         PrestoFieldFunction function = PrestoFieldFunctionUtils.createFieldFunction(getDataProvider(), getSchemaProvider(), field);
         if (function != null) {
-            return function.execute(context, field);
+            result = FieldValues.create(function.execute(context, field));
         } else {
 
             if (context.isNewTopic()) {
-                return Collections.emptyList(); // TODO: support initial values
+                result = FieldValues.EMPTY; // TODO: support initial values
             } else {
+                PrestoTopic topic = context.getTopic();
+
                 // server-side paging (only if not sorting)
                 if (rules.isPageableField(field) && !rules.isSortedField(field)) {
                     int actualOffset = offset >= 0 ? offset : 0;
                     int actualLimit = limit > 0 ? limit : DEFAULT_LIMIT;
                     PrestoTopic.PagedValues pagedValues = topic.getValues(field, actualOffset, actualLimit);
-                    if (fieldData != null) {
-                        fieldData.setValuesOffset(pagedValues.getPaging().getOffset());
-                        fieldData.setValuesLimit(pagedValues.getPaging().getLimit());
-                        fieldData.setValuesTotal(pagedValues.getTotal());
-                    }
-                    return pagedValues.getValues();
+                    Paging paging = pagedValues.getPaging();
+                    result = FieldValues.create(pagedValues.getValues(), paging.getOffset(), paging.getLimit(), pagedValues.getTotal());
                 } else {
-                    return topic.getValues(field);
+                    result = FieldValues.create(topic.getValues(field));
                 }
             }
         }
+        return filterByInlineReferenced(context, field, result);
     }
 
-    public FieldDataValues setFieldDataValues(int offset, int limit,
-            PrestoContextRules rules, final PrestoField field, FieldData fieldData, List<? extends Object> fieldValues) {
+    private FieldValues filterByInlineReferenced(PrestoContext context, PrestoField field, FieldValues fieldValues) {
+        // if inline reference field then find intersection with referenced field
+        boolean inlineReference = field.getInlineReference() != null;
+        if (inlineReference) {
+
+            PrestoContextField valueContextField = getValueContextField(context, field);
+            PrestoContext valueContext = valueContextField.getContext();
+            PrestoField valueField = valueContextField.getField();
+            
+            if (!valueContext.isNewTopic()) {
+                PrestoTopic referenceTopic = valueContext.getTopic();
+                Set<String> referencedValueIds = toTopicIdSet(referenceTopic.getValues(valueField));
+                List<? extends Object> values = fieldValues.getValues();
+                
+                List<Object> intersection = new ArrayList<Object>(values.size());
+                
+                // should only contain strings as they are references
+                for (Object v : values) {
+                    if (v instanceof String) {
+                        if (referencedValueIds.contains(v)) {
+                            intersection.add(v);
+                        }
+                    }
+                }
+                if (fieldValues.isPaging()) {
+                    return FieldValues.create(intersection, fieldValues.getOffset(), fieldValues.getLimit(), fieldValues.getTotal());
+                } else {
+                    return FieldValues.create(intersection);
+                }
+            }
+        }
+        return fieldValues;
+    }
+    
+    private Set<String> toTopicIdSet(List<? extends Object> values) {
+        Set<String> result = new HashSet<String>(values.size());
+        for (Object v : values) {
+            if (v instanceof PrestoTopic) {
+                PrestoTopic topic = (PrestoTopic)v;
+                result.add(topic.getId());
+            }
+        }
+        return result;
+    }
+    
+//    private Map<String, PrestoTopic> toTopicIdMap(List<? extends Object> values) {
+//        Map<String, PrestoTopic> result = new HashMap<String, PrestoTopic>(values.size());
+//        for (Object v : values) {
+//            if (v instanceof PrestoTopic) {
+//                PrestoTopic topic = (PrestoTopic)v;
+//                result.put(topic.getId(), topic);
+//            }
+//        }
+//        return result;
+//    }
+
+//    private PrestoField getValueField(PrestoContext context, PrestoField field) {
+//        PrestoContextField contextField = null;
+//        String inlineReference = field.getInlineReference();
+//        if (inlineReference != null) {
+//            contextField = ContextPathExpressions.getContextField(context, inlineReference);
+//        }
+//        if (contextField != null) {
+//            return contextField.getField();
+//        }
+//        return field;
+//    }
+    
+    private PrestoContextField getValueContextField(PrestoContext context, PrestoField field) {
+        String inlineReference = field.getInlineReference();
+        if (inlineReference != null) {
+            return ContextPathExpressions.getContextField(context, inlineReference);
+        }
+        return new PrestoContextField(context, field);
+    }
+    
+    public FieldDataValues setFieldDataValues(PrestoContextRules rules, final PrestoField field, FieldData fieldData, FieldValues fieldValues) {
+
+        List<? extends Object> values = fieldValues.getValues();
+
         // sort the result
         if (rules.isSortedField(field)) {
-            sortFieldValues(rules, field, fieldValues, rules.isSortedAscendingField(field));
+            sortFieldValues(rules, field, values, rules.isSortedAscendingField(field));
         }
 
         ValueFactory valueFactory = createValueFactory(rules, field);
 
-        int size = fieldValues.size();
+        int size = values.size();
         int start = 0;
         int end = size;
 
         List<Object> inputValues = new ArrayList<Object>(size);
         List<Value> outputValues = new ArrayList<Value>(size);
         for (int i=start; i < end; i++) {
-            Object value = fieldValues.get(i);
+            Object value = values.get(i);
             if (value != null) {
                 Value efv = getExistingFieldValue(valueFactory, rules, field, value);
                 outputValues.add(efv);
@@ -580,13 +719,10 @@ public abstract class Presto {
             fieldData.setValues(outputValues);
 
             // figure out how to truncate result (offset/limit)
-            if (rules.isPageableField(field) && rules.isSortedField(field)) {
-                int _limit = limit > 0 ? limit : DEFAULT_LIMIT;
-                start = Math.min(Math.max(0, offset), size);
-                end = Math.min(start+_limit, size);
-                fieldData.setValuesOffset(start);
-                fieldData.setValuesLimit(_limit);
-                fieldData.setValuesTotal(size);
+            if (fieldValues.isPaging() && rules.isPageableField(field) && rules.isSortedField(field)) {
+                fieldData.setValuesOffset(fieldValues.getOffset());
+                fieldData.setValuesLimit(fieldValues.getLimit());
+                fieldData.setValuesTotal(fieldValues.getTotal());
             }
         }
         return new FieldDataValues(inputValues, outputValues);
@@ -716,7 +852,8 @@ public abstract class Presto {
         if (rules.isTraversableField(field)) {
             PrestoView fieldsView = field.getEditView(valueType);
             if (valueType.isInline()) {
-                links.add(lx.topicEditInlineLink(context, field, value.getId(), valueType, fieldsView, isReadOnlyMode()));
+                PrestoContextField contextField = getValueContextField(context, field);
+                links.add(lx.topicEditInlineLink(contextField.getContext(), contextField.getField(), value.getId(), valueType, fieldsView, isReadOnlyMode()));
             } else {
                 links.add(lx.topicEditLink(value.getId(), valueType, fieldsView, isReadOnlyMode()));
             }
@@ -1003,7 +1140,7 @@ public abstract class Presto {
 
         return getFieldDataAndProcess(updatedContext, field);
     }
-
+    
     public PrestoContext addFieldValues(PrestoContextRules rules, PrestoField field, List<? extends Object> addableValues, Integer index, boolean isMove) {
         validateAddableFieldValues(rules, field, addableValues, isMove);
 
@@ -1287,7 +1424,7 @@ public abstract class Presto {
                 if (!rules.isReadOnlyField(field) && !rules.isPageableField(field)) {
 
                     boolean resolveEmbedded = true;
-                    boolean includeExisting = false;
+                    boolean includeExisting = false; 
                     List<? extends Object> values = updateAndExtractValuesFromFieldData(rules, field, fieldData, resolveEmbedded, includeExisting, filterNonStorable, validateValueTypes);
                     
                     update.setValues(field, values);
@@ -1358,21 +1495,26 @@ public abstract class Presto {
             PrestoContext context = rules.getContext();
 
             if (field.isReferenceField()) {
+                boolean inlineReference = field.getInlineReference() != null;
                 if (field.isInline()) {
                     // build inline topics from field data
                     List<Object> newValues = new ArrayList<Object>();
                     for (Value value : values) {
-                        TopicView embeddedTopic = getEmbeddedTopic(value);
-                        if (embeddedTopic != null) {
-                            boolean filterNonStorableNested = true;
-                            newValues.add(buildInlineTopic(context, field, embeddedTopic, filterNonStorableNested, validateValueTypes));
+                        if (inlineReference) {
+                            newValues.add(value.getValue());
                         } else {
-                            String typeId = value.getType();
-                            PrestoType type = schemaProvider.getTypeById(typeId, null);
-                            if (type != null) {
-                                newValues.add(buildInlineTopic(context, type, value.getValue()));
+                            TopicView embeddedTopic = getEmbeddedTopic(value);
+                            if (embeddedTopic != null) {
+                                boolean filterNonStorableNested = true;
+                                newValues.add(buildInlineTopic(context, field, embeddedTopic, filterNonStorableNested, validateValueTypes));
                             } else {
-                                throw new InvalidValueTypeConstraintException(getSchemaProvider());
+                                String typeId = value.getType();
+                                PrestoType type = schemaProvider.getTypeById(typeId, null);
+                                if (type != null) {
+                                    newValues.add(buildInlineTopic(context, type, value.getValue()));
+                                } else {
+                                    throw new InvalidValueTypeConstraintException(getSchemaProvider());
+                                }
                             }
                         }
                     }
@@ -1382,7 +1524,11 @@ public abstract class Presto {
                     } else {
                         PrestoTopic topic = context.getTopic();
                         List<? extends Object> existingValues = topic.getValues(field);
-                        result.addAll(mergeInlineTopics(newValues, existingValues, includeExisting));
+                        if (inlineReference) {
+                            result.addAll(mergeInlineStrings(newValues, existingValues, includeExisting));
+                        } else {
+                            result.addAll(mergeInlineTopics(newValues, existingValues, includeExisting));
+                        }
                     }
                 } else {
                     List<String> valueIds = new ArrayList<String>(values.size());
@@ -1402,7 +1548,7 @@ public abstract class Presto {
                     }
                 }
                 // validate valueTypes
-                if (validateValueTypes) {
+                if (validateValueTypes && !inlineReference) {
                     validateValueTypes(context, field, result);
                 }
                 
@@ -1457,7 +1603,7 @@ public abstract class Presto {
         return builder.build();
     }
 
-    protected PrestoTopic buildInlineTopic(PrestoContext parentContext, PrestoField parentField, TopicView embeddedTopic, 
+    protected PrestoTopic buildInlineTopic(PrestoContext _parentContext, PrestoField _parentField, TopicView embeddedTopic, 
             boolean filterNonStorable, boolean validateValueTypes) {
 
         PrestoSchemaProvider schemaProvider = getSchemaProvider();
@@ -1472,6 +1618,10 @@ public abstract class Presto {
             throw new NotInlineTypeConstraintException(getSchemaProvider());
         }
 
+        PrestoContextField contextField = getValueContextField(_parentContext, _parentField);
+        PrestoContext parentContext = contextField.getContext();
+        PrestoField parentField = contextField.getField();
+        
         PrestoTopic topic;
         if (parentContext.isNewTopic() || topicId == null) {
             topic = null;
@@ -1525,7 +1675,13 @@ public abstract class Presto {
             if (hasValue1 && hasValue2) {
                 if (field.isInline()) {
                     boolean includeExisting = false;
-                    Collection<? extends Object> merged = mergeInlineTopics(t1.getValues(field), t2.getValues(field), includeExisting);
+                    boolean inlineReference = field.getInlineReference() != null;
+                    Collection<? extends Object> merged;
+                    if (inlineReference) {
+                        merged = mergeInlineStrings(t1.getValues(field), t2.getValues(field), includeExisting);
+                    } else {
+                        merged = mergeInlineTopics(t1.getValues(field), t2.getValues(field), includeExisting);
+                    }
                     builder.setValues(field, merged);
                 } else {
                     builder.setValues(field, t1.getValues(field));
@@ -1540,6 +1696,18 @@ public abstract class Presto {
         return builder.build();
     }
 
+    private Collection<? extends Object> mergeInlineStrings(List<? extends Object> valuesNew, List<? extends Object> valuesExisting, 
+            boolean includeExisting) {
+        if (includeExisting) {
+            List<Object> result = new ArrayList<Object>(valuesNew.size() + valuesExisting.size());
+            result.addAll(valuesExisting);
+            result.addAll(valuesNew);
+            return result;
+        } else {
+            return valuesNew;
+        }
+    }
+    
     private Collection<? extends Object> mergeInlineTopics(List<? extends Object> valuesNew, List<? extends Object> valuesExisting, 
             boolean includeExisting) {
         Map<String,Object> mapNew = toMapTopics(valuesNew);
