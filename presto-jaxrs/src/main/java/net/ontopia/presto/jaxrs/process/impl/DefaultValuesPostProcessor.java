@@ -43,9 +43,7 @@ public class DefaultValuesPostProcessor extends FieldDataProcessor {
                         }
                     }
                 }
-                int offset = 0;
-                int limit = Presto.DEFAULT_LIMIT;
-                getPresto().setFieldDataValues(offset, limit, rules, field, fieldData, values);
+                getPresto().setFieldDataValues(rules, field, fieldData, Presto.FieldValues.create(values));
             }
         }
         return fieldData;

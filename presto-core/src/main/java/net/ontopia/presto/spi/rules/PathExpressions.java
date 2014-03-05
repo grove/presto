@@ -39,7 +39,7 @@ public class PathExpressions {
 
     private static List<? extends Object> getValuesByExpression(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, 
             PrestoContext context, String expr) {
-        Iterator<String> path = getPath(expr).iterator();
+        Iterator<String> path = parsePath(expr).iterator();
 
         if (path.hasNext()) {
             return getValuesByExpression(dataProvider, schemaProvider, Collections.singletonList(context), path, expr);
@@ -132,7 +132,7 @@ public class PathExpressions {
         }
     }
 
-    private static List<String> getPath(String expr) {
+    static List<String> parsePath(String expr) {
         Matcher matcher = PATTERN.matcher(expr);
         if (matcher.find()) {
             String path = matcher.group(1);
@@ -155,7 +155,7 @@ public class PathExpressions {
 
     public static void main(String[] args) {
         String expr = "${partial_runs.blah.has_run.foo}";
-        System.out.println("X: " + getPath(expr));
+        System.out.println("X: " + parsePath(expr));
     }
 
 }

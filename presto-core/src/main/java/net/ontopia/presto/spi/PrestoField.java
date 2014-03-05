@@ -34,6 +34,8 @@ public interface PrestoField {
     
     boolean isInline();
 
+    String getInlineReference();
+    
     boolean isEmbedded();
 
     // characteristics

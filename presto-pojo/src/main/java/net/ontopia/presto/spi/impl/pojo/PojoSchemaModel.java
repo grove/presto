@@ -309,6 +309,9 @@ public class PojoSchemaModel {
             // isInline
             if (fieldConfig.has("inline")) {
                 field.setInline(fieldConfig.get("inline").getBooleanValue());
+                if (fieldConfig.has("inlineReference")) {
+                    field.setInlineReference(fieldConfig.get("inlineReference").getTextValue());
+                }
             }
             // isEmbedded
             if (fieldConfig.has("embedded")) {
