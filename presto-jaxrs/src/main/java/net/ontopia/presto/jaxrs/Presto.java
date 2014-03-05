@@ -656,29 +656,6 @@ public abstract class Presto {
         return result;
     }
     
-//    private Map<String, PrestoTopic> toTopicIdMap(List<? extends Object> values) {
-//        Map<String, PrestoTopic> result = new HashMap<String, PrestoTopic>(values.size());
-//        for (Object v : values) {
-//            if (v instanceof PrestoTopic) {
-//                PrestoTopic topic = (PrestoTopic)v;
-//                result.put(topic.getId(), topic);
-//            }
-//        }
-//        return result;
-//    }
-
-//    private PrestoField getValueField(PrestoContext context, PrestoField field) {
-//        PrestoContextField contextField = null;
-//        String inlineReference = field.getInlineReference();
-//        if (inlineReference != null) {
-//            contextField = ContextPathExpressions.getContextField(context, inlineReference);
-//        }
-//        if (contextField != null) {
-//            return contextField.getField();
-//        }
-//        return field;
-//    }
-    
     private PrestoContextField getValueContextField(PrestoContext context, PrestoField field) {
         String inlineReference = field.getInlineReference();
         if (inlineReference != null) {
