@@ -11,13 +11,9 @@
     <param-value>classpath*:applicationContext*.xml</param-value>
   </context-param>
   
-  <listener>
-    <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
-  </listener>
-  
   <servlet>
     <servlet-name>Presto Demo Web Application</servlet-name>
-    <servlet-class>com.sun.jersey.spi.spring.container.servlet.SpringServlet</servlet-class>
+    <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
     <init-param>
       <param-name>javax.ws.rs.Application</param-name>
       <param-value>net.ontopia.presto.webdemo.DemoApplication</param-value>

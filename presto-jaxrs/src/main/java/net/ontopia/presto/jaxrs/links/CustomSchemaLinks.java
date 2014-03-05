@@ -231,7 +231,9 @@ public class CustomSchemaLinks implements Links {
             params.put("baseUri", getBaseUri());
             params.put("databaseId", getDatabaseId());
             params.put("typeId", type.getId());
+            params.put("topicId", "_" + type.getId()); // NOTE: not used by default
             params.put("viewId", view.getId());
+            params.put("path", "_");
             return new Link(rel, replaceUriPattern(href, params));
         }
         return delegate.topicViewCreateLink(type, view);
@@ -246,6 +248,7 @@ public class CustomSchemaLinks implements Links {
             params.put("baseUri", getBaseUri());
             params.put("databaseId", getDatabaseId());
             params.put("typeId", type.getId());
+            params.put("topicId", "_" + type.getId()); // NOTE: not used by default
             params.put("viewId", view.getId());
             String path = getInlineTopicPath(parentContext, parentField);
             params.put("path", path);
@@ -315,11 +318,12 @@ public class CustomSchemaLinks implements Links {
     @Override
     public Link fieldAddValuesLink(PrestoContext parentContext, PrestoField parentField, String topicId, PrestoType type, PrestoView view, PrestoField field) {
         String rel = Presto.Rel.REL_ADD_FIELD_VALUES.getRel();
-        String href = getHref(new String[] { "fieldAddValuesLink" }, type, view);
+        String href = getHref(new String[] { "fieldAddValuesLink" }, type, view, field);
         if (href != null) {
             Map<String,String> params = new HashMap<String,String>();
             params.put("baseUri", getBaseUri());
             params.put("databaseId", getDatabaseId());
+            params.put("topicId", topicId);
             params.put("typeId", type.getId());
             params.put("viewId", view.getId());
             params.put("fieldId", field.getId());
@@ -333,11 +337,12 @@ public class CustomSchemaLinks implements Links {
     @Override
     public Link fieldAddValuesAtIndexLink(PrestoContext parentContext, PrestoField parentField, String topicId, PrestoType type, PrestoView view, PrestoField field) {
         String rel = Presto.Rel.REL_ADD_FIELD_VALUES_AT_INDEX.getRel();
-        String href = getHref(new String[] { "fieldAddValuesAtIndexLink" }, type, view);
+        String href = getHref(new String[] { "fieldAddValuesAtIndexLink" }, type, view, field);
         if (href != null) {
             Map<String,String> params = new HashMap<String,String>();
             params.put("baseUri", getBaseUri());
             params.put("databaseId", getDatabaseId());
+            params.put("topicId", topicId);
             params.put("typeId", type.getId());
             params.put("viewId", view.getId());
             params.put("fieldId", field.getId());
@@ -351,13 +356,15 @@ public class CustomSchemaLinks implements Links {
     @Override
     public Link fieldRemoveValuesLink(PrestoContext parentContext, PrestoField parentField, String topicId, PrestoType type, PrestoView view, PrestoField field) {
         String rel = Presto.Rel.REL_REMOVE_FIELD_VALUES.getRel();
-        String href = getHref(new String[] { "fieldRemoveValuesLink" }, type, view);
+        String href = getHref(new String[] { "fieldRemoveValuesLink" }, type, view, field);
         if (href != null) {
             Map<String,String> params = new HashMap<String,String>();
             params.put("baseUri", getBaseUri());
             params.put("databaseId", getDatabaseId());
+            params.put("topicId", topicId);
             params.put("typeId", type.getId());
             params.put("viewId", view.getId());
+            params.put("topicId", topicId);
             params.put("fieldId", field.getId());
             String path = getInlineTopicPath(parentContext, parentField);
             params.put("path", path);
@@ -369,11 +376,12 @@ public class CustomSchemaLinks implements Links {
     @Override
     public Link fieldMoveValuesToIndexLink(PrestoContext parentContext, PrestoField parentField, String topicId, PrestoType type, PrestoView view, PrestoField field) {
         String rel = Presto.Rel.REL_MOVE_FIELD_VALUES_TO_INDEX.getRel();
-        String href = getHref(new String[] { "fieldMoveValuesToIndexLink" }, type, view);
+        String href = getHref(new String[] { "fieldMoveValuesToIndexLink" }, type, view, field);
         if (href != null) {
             Map<String,String> params = new HashMap<String,String>();
             params.put("baseUri", getBaseUri());
             params.put("databaseId", getDatabaseId());
+            params.put("topicId", topicId);
             params.put("typeId", type.getId());
             params.put("viewId", view.getId());
             params.put("fieldId", field.getId());
@@ -387,11 +395,12 @@ public class CustomSchemaLinks implements Links {
     @Override
     public Link fieldPagingLink(PrestoContext parentContext, PrestoField parentField, String topicId, PrestoType type, PrestoView view, PrestoField field) {
         String rel = Presto.Rel.REL_FIELD_PAGING.getRel();
-        String href = getHref(new String[] { "fieldPagingLink" }, type, view);
+        String href = getHref(new String[] { "fieldPagingLink" }, type, view, field);
         if (href != null) {
             Map<String,String> params = new HashMap<String,String>();
             params.put("baseUri", getBaseUri());
             params.put("databaseId", getDatabaseId());
+            params.put("topicId", topicId);
             params.put("typeId", type.getId());
             params.put("viewId", view.getId());
             params.put("fieldId", field.getId());
@@ -405,11 +414,12 @@ public class CustomSchemaLinks implements Links {
     @Override
     public Link fieldAvailableValuesLink(PrestoContext parentContext, PrestoField parentField, String topicId, PrestoType type, PrestoView view, PrestoField field, boolean query) {
         String rel = Presto.Rel.REL_FIELD_PAGING.getRel();
-        String href = getHref(new String[] { "fieldAvailableValuesLink" }, type, view);
+        String href = getHref(new String[] { "fieldAvailableValuesLink" }, type, view, field);
         if (href != null) {
             Map<String,String> params = new HashMap<String,String>();
             params.put("baseUri", getBaseUri());
             params.put("databaseId", getDatabaseId());
+            params.put("topicId", topicId);
             params.put("typeId", type.getId());
             params.put("viewId", view.getId());
             params.put("fieldId", field.getId());

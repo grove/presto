@@ -12,7 +12,7 @@ public class ContainsFieldValuesTypeRule extends BooleanTypeRule {
         if (context.isNewTopic()) {
             return false;
         } else {
-            return ContainsFieldValues.containsFieldValue(getDataProvider(), getSchemaProvider(), context, config);
+            return ContainsFieldValues.containsFieldValues(getDataProvider(), getSchemaProvider(), context, config);
         }
     }
     

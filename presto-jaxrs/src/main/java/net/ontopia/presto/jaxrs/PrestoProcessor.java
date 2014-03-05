@@ -188,6 +188,10 @@ public class PrestoProcessor {
                                 boolean filterNonStorable = processType == Type.PRE_PROCESS;
                                 boolean validateValueTypes = false;
                                 valueTopic = presto.buildInlineTopic(context, field, embeddedTopic, filterNonStorable, validateValueTypes);
+
+                                // merge valueTopic with existing topic to avoid anemic topic
+                                valueTopic = presto.rehydrateInlineTopic(context.getParentContext(), context.getParentField(), valueTopic);
+
                             } else {
                                 valueTopic = dataProvider.getTopicById(topicId);
                             }

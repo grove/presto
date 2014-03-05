@@ -805,8 +805,8 @@ public abstract class Presto {
         if (result != null) {
             return result;
         }
-        PrestoTopic topic = rules.getContext().getTopic();
         if (!rules.isReadOnlyField(field) && rules.isAddableField(field)) {
+            PrestoTopic topic = rules.getContext().getTopic();
             return dataProvider.getAvailableFieldValues(topic, field, query);
         } else {
             return Collections.emptyList();
@@ -1011,18 +1011,34 @@ public abstract class Presto {
         PrestoTopic topic = context.getTopic();
         PrestoType type = context.getType();
 
-        PrestoDataProvider dataProvider = getDataProvider();
-        PrestoChangeSet changeSet = dataProvider.newChangeSet(getChangeSetHandler());
-        PrestoUpdate update = changeSet.updateTopic(topic, type);        
-
-        if (index == null) {
-            update.addValues(field, addableValues);
+        PrestoTopic updatedTopic;
+        if (topic.isInline()) {
+            List<Object> values = new ArrayList<Object>(topic.getValues(field));
+            if (index != null) {
+                boolean allowAdd = !isMove;
+                values = Utils.moveValuesToIndex(values, addableValues, index, allowAdd);
+            } else {
+                values.add(addableValues);
+            }
+            PrestoInlineTopicBuilder builder = dataProvider.createInlineTopic(type, topic.getId());
+            builder.setValues(field, values);
+            PrestoTopic newTopic = builder.build();
+            updatedTopic = mergeInlineTopic(newTopic, topic);
         } else {
-            update.addValues(field, addableValues, index);        
-        }
-        changeSet.save();
 
-        PrestoTopic updatedTopic = update.getTopicAfterSave();
+            PrestoDataProvider dataProvider = getDataProvider();
+            PrestoChangeSet changeSet = dataProvider.newChangeSet(getChangeSetHandler());
+            PrestoUpdate update = changeSet.updateTopic(topic, type);        
+
+            if (index == null) {
+                update.addValues(field, addableValues);
+            } else {
+                update.addValues(field, addableValues, index);        
+            }
+            changeSet.save();
+
+            updatedTopic = update.getTopicAfterSave();
+        }
         return updateParentContext(rules.getContext(), updatedTopic);
     }
 
@@ -1044,15 +1060,25 @@ public abstract class Presto {
         PrestoContext context = rules.getContext();
         PrestoTopic topic = context.getTopic();
         PrestoType type = context.getType();
-
-        PrestoDataProvider dataProvider = getDataProvider();
-        PrestoChangeSet changeSet = dataProvider.newChangeSet(getChangeSetHandler());
-        PrestoUpdate update = changeSet.updateTopic(topic, type);        
-
-        update.removeValues(field, removeableValues);
-        changeSet.save();
-
-        PrestoTopic updatedTopic = update.getTopicAfterSave();
+        
+        PrestoTopic updatedTopic;
+        if (topic.isInline()) {
+            List<? extends Object> values = topic.getValues(field);
+            values.removeAll(removeableValues);
+            PrestoInlineTopicBuilder builder = dataProvider.createInlineTopic(type, topic.getId());
+            builder.setValues(field, values);
+            PrestoTopic newTopic = builder.build();
+            updatedTopic = mergeInlineTopic(newTopic, topic);
+        } else {
+            PrestoDataProvider dataProvider = getDataProvider();
+            PrestoChangeSet changeSet = dataProvider.newChangeSet(getChangeSetHandler());
+            PrestoUpdate update = changeSet.updateTopic(topic, type);        
+    
+            update.removeValues(field, removeableValues);
+            changeSet.save();
+    
+            updatedTopic = update.getTopicAfterSave();
+        }
         return updateParentContext(rules.getContext(), updatedTopic);
     }
 
@@ -1130,7 +1156,7 @@ public abstract class Presto {
         return null;
     }
     
-    public Object updateTopicView(PrestoContext context, TopicView topicView, boolean returnParent) {
+    public Object updateTopicView(PrestoContext context, TopicView topicView) {
         PrestoContextRules rules = getPrestoContextRules(context);
         Status status = new Status();
 
@@ -1141,7 +1167,7 @@ public abstract class Presto {
             PrestoTopic updatedTopic = updatePrestoTopic(rules, topicView);
             PrestoContext newContext = updateParentContext(context, updatedTopic);
 
-            if (returnParent) {
+            if (isReturnParentOnUpdate(context, newContext)) {
                 PrestoContext parentContext = newContext.getParentContext();
                 if (parentContext != null) {
                     newContext = parentContext;
@@ -1159,6 +1185,29 @@ public abstract class Presto {
         }
     }
 
+    private boolean isReturnParentOnUpdate(PrestoContext beforeContext, PrestoContext updatedContext) {
+
+        PrestoField parentField = updatedContext.getParentField();
+        if (parentField != null) {
+            ObjectNode extra = ExtraUtils.getFieldExtraNode(parentField);
+            if (extra != null) {
+                boolean created = beforeContext.isNewTopic() && !updatedContext.isNewTopic();
+                if (created) {
+                    JsonNode onUpdateNode = extra.path("returnParentOnCreate");
+                    if (onUpdateNode.isBoolean()) {
+                        return onUpdateNode.getBooleanValue();
+                    }
+                } else {
+                    JsonNode onUpdateNode = extra.path("returnParentOnUpdate");
+                    if (onUpdateNode.isBoolean()) {
+                        return onUpdateNode.getBooleanValue();
+                    }
+                }
+            }
+        }
+        return true;
+    }
+    
     protected PrestoContext updateParentContext(PrestoContext oldContext, PrestoTopic updatedTopic) {
         PrestoContext oldParentContext = oldContext.getParentContext();
         PrestoField parentField = oldContext.getParentField();
@@ -1193,7 +1242,7 @@ public abstract class Presto {
             PrestoChangeSet changeSet = dataProvider.newChangeSet(getChangeSetHandler());
             PrestoUpdate update = changeSet.updateTopic(topic, type);        
 
-            update.setValues(field, newValues); // TODO: check if inline field first?
+            update.setValues(field, newValues);
             changeSet.save();
 
             return update.getTopicAfterSave();
@@ -1213,8 +1262,13 @@ public abstract class Presto {
         boolean validateValueTypes = true;
 
         if (type.isInline()) {
-            PrestoTopic inlineTopic = buildInlineTopic(context.getParentContext(), context.getParentField(), topicView, filterNonStorable, validateValueTypes);
-            return inlineTopic;
+            PrestoContext parentContext = context.getParentContext();
+            PrestoField parentField = context.getParentField();
+            PrestoTopic inlineTopic = buildInlineTopic(parentContext, parentField, topicView, filterNonStorable, validateValueTypes);
+
+            // merge inlineTopic with existing topic to avoid anemic topic
+            return rehydrateInlineTopic(parentContext, parentField, inlineTopic);
+
         } else {
             PrestoUpdate update;
             if (context.isNewTopic()) {
@@ -1245,7 +1299,7 @@ public abstract class Presto {
             return update.getTopicAfterSave();
         }
     }
-    
+
     public FieldData updateFieldValues(PrestoContextRules rules, PrestoField field, FieldData fieldData) {
         PrestoContext updatedContext = updatePrestoTopic(rules, fieldData);
 
@@ -1447,7 +1501,7 @@ public abstract class Presto {
         return builder.build();
     }
 
-    protected PrestoTopic mergeInlineTopic(PrestoTopic t1, PrestoTopic t2) {
+    private PrestoTopic mergeInlineTopic(PrestoTopic t1, PrestoTopic t2) {
         String topicId = t1.getId();
         if (Utils.different(topicId, t2.getId())) {
             throw new IllegalArgumentException("Cannot merge topics with different ids: '" + topicId + "' and '" + t2.getId() + "'");
@@ -1486,7 +1540,7 @@ public abstract class Presto {
         return builder.build();
     }
 
-    protected Collection<? extends Object> mergeInlineTopics(List<? extends Object> valuesNew, List<? extends Object> valuesExisting, 
+    private Collection<? extends Object> mergeInlineTopics(List<? extends Object> valuesNew, List<? extends Object> valuesExisting, 
             boolean includeExisting) {
         Map<String,Object> mapNew = toMapTopics(valuesNew);
         Map<String,Object> mapExisting = toMapTopics(valuesExisting);
@@ -1524,6 +1578,22 @@ public abstract class Presto {
             }
         }
         return result.values();
+    }
+    
+    protected PrestoTopic rehydrateInlineTopic(PrestoContext parentContext, PrestoField parentField, PrestoTopic inlineTopic) {
+        if (!parentContext.isNewTopic()) {
+            PrestoTopic parentTopic = parentContext.getTopic();
+            for (Object value : parentTopic.getValues(parentField)) {
+                if (value instanceof PrestoTopic) {
+                    PrestoTopic valueTopic = (PrestoTopic)value;
+                    String inlineTopicId = inlineTopic.getId();
+                    if (inlineTopicId != null && inlineTopicId.equals(valueTopic.getId())) {
+                        return mergeInlineTopic(inlineTopic, valueTopic);
+                    }
+                }
+            }
+        }
+        return inlineTopic;
     }
 
     private Map<String,Object> toMapTopics(List<? extends Object> values) {
