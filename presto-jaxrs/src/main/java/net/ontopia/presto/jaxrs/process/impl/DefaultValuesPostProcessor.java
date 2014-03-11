@@ -9,10 +9,10 @@ import org.codehaus.jackson.node.ObjectNode;
 
 import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxb.Value;
-import net.ontopia.presto.jaxrs.Presto;
 import net.ontopia.presto.jaxrs.process.FieldDataProcessor;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic;
+import net.ontopia.presto.spi.utils.FieldValues;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
 
@@ -43,7 +43,7 @@ public class DefaultValuesPostProcessor extends FieldDataProcessor {
                         }
                     }
                 }
-                getPresto().setFieldDataValues(rules, field, fieldData, Presto.FieldValues.create(values));
+                getPresto().setFieldDataValues(rules, field, fieldData, FieldValues.create(values));
             }
         }
         return fieldData;

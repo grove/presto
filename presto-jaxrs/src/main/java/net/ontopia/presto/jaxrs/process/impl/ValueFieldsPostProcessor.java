@@ -6,13 +6,13 @@ import java.util.List;
 
 import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxb.Value;
-import net.ontopia.presto.jaxrs.Presto;
 import net.ontopia.presto.jaxrs.Presto.FieldDataValues;
 import net.ontopia.presto.jaxrs.process.FieldDataProcessor;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoView;
+import net.ontopia.presto.spi.utils.FieldValues;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
 
@@ -64,7 +64,7 @@ public class ValueFieldsPostProcessor extends FieldDataProcessor {
 
     private FieldDataValues setFieldDataValues(PrestoContextRules rules, PrestoField field, FieldData fieldData) {
         int offset = 0;
-        int limit = Presto.DEFAULT_LIMIT;
+        int limit = FieldValues.DEFAULT_LIMIT;
         return getPresto().setFieldDataValues(rules, field, offset, limit, fieldData);
     }
     

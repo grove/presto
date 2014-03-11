@@ -3,6 +3,8 @@ package net.ontopia.presto.spi.utils;
 import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
+import net.ontopia.presto.spi.PrestoTopic;
+import net.ontopia.presto.spi.PrestoTopic.Paging;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoView;
 import net.ontopia.presto.spi.rules.DelegatingContextRules;
@@ -10,7 +12,7 @@ import net.ontopia.presto.spi.rules.DelegatingContextRules;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;
 
-public class PrestoContextRules {
+public abstract class PrestoContextRules {
 
     public enum TypeFlag {
         isReadOnlyType,
@@ -48,25 +50,25 @@ public class PrestoContextRules {
 
     public static interface TypeRule extends Handler {
 
-        public Boolean getValue(TypeFlag flag, PrestoContext context);
+        public Boolean getValue(TypeFlag flag, PrestoContextRules rules);
         
     }
 
     public static interface ViewRule extends Handler {
 
-        public Boolean getValue(ViewFlag flag, PrestoContext context, PrestoView view);
+        public Boolean getValue(ViewFlag flag, PrestoContextRules rules, PrestoView view);
         
     }
 
     public static interface FieldRule extends Handler {
 
-        public Boolean getValue(FieldFlag flag, PrestoContext context, PrestoField field);
+        public Boolean getValue(FieldFlag flag, PrestoContextRules rules, PrestoField field);
 
     }
 
     public static interface FieldValueRule extends Handler {
 
-        public Boolean getValue(FieldValueFlag flag, PrestoContext context, PrestoField field, Object value);
+        public Boolean getValue(FieldValueFlag flag, PrestoContextRules rules, PrestoField field, Object value);
 
     }
 
@@ -107,7 +109,7 @@ public class PrestoContextRules {
     }
 
     private boolean isTypeHandlerFlag(TypeFlag flag, boolean defaultValue) {
-        Boolean result = handler.getValue(flag, context);
+        Boolean result = handler.getValue(flag, this);
         if (result != null) {
             return result;
         }
@@ -115,7 +117,7 @@ public class PrestoContextRules {
     }
 
     private boolean isViewHandlerFlag(ViewFlag flag, PrestoView view, boolean defaultValue) {
-        Boolean result = handler.getValue(flag, context, view);
+        Boolean result = handler.getValue(flag, this, view);
         if (result != null) {
             return result;
         }
@@ -123,7 +125,7 @@ public class PrestoContextRules {
     }
 
     private boolean isFieldHandlerFlag(FieldFlag flag, PrestoField field, boolean defaultValue) {
-        Boolean result = handler.getValue(flag, context, field);
+        Boolean result = handler.getValue(flag, this, field);
         if (result != null) {
             return result;
         }
@@ -131,7 +133,7 @@ public class PrestoContextRules {
     }
 
     private boolean isFieldValueHandlerFlag(FieldValueFlag flag, PrestoField field, Object value, boolean defaultValue) {
-        Boolean result = handler.getValue(flag, context, field, value);
+        Boolean result = handler.getValue(flag, this, field, value);
         if (result != null) {
             return result;
         }
@@ -241,5 +243,57 @@ public class PrestoContextRules {
     //    public boolean isCascadingDeleteField(PrestoField field) {
     //        return field.isCascadingDelete();
     //    }
+
+    protected abstract PrestoAttributes getAttributes();
+
+    public abstract PrestoContextRules getPrestoContextRules(PrestoContext context);
+//
+//    private PrestoContextRules createSubContextRules(PrestoContext parentContext, PrestoField parentField, PrestoTopic topic, PrestoType type, PrestoView view) {
+//        PrestoContext subContext = PrestoContext.createSubContext(parentContext, parentField, topic, type, view);
+//        return getPrestoContextRules(subContext);
+//    }
+//
+//    public abstract PrestoContextRules getParentContextRules();
+//
+//    public abstract PrestoContextRules createSubContextRules(PrestoContext parentContext, PrestoField parentField, PrestoTopic topic, PrestoType type, PrestoView view);
+
+    public FieldValues getFieldValues(PrestoField field) {
+        return getFieldValues(field, 0, FieldValues.DEFAULT_LIMIT);
+    }
+    
+    public FieldValues getFieldValues(PrestoField field, int offset, int limit) {
+        if (context.isNewTopic()) {
+            return getDefaultFieldValues(field);
+        } else {
+            PrestoTopic topic = context.getTopic();
+
+            // server-side paging (only if not sorting)
+            if (isPageableField(field) && !isSortedField(field)) {
+                int actualOffset = offset >= 0 ? offset : 0;
+                int actualLimit = limit > 0 ? limit : FieldValues.DEFAULT_LIMIT;
+                PrestoTopic.PagedValues pagedValues = topic.getValues(field, actualOffset, actualLimit);
+                Paging paging = pagedValues.getPaging();
+                return FieldValues.create(pagedValues.getValues(), paging.getOffset(), paging.getLimit(), pagedValues.getTotal());
+            } else {
+                return FieldValues.create(topic.getValues(field));
+            }
+        }
+    }
+    
+    protected FieldValues getDefaultFieldValues(PrestoField field) {
+        ObjectNode extra = ExtraUtils.getFieldExtraNode(field);
+        if (extra != null) {
+            JsonNode defNode = extra.path("assignDefaultValues");
+            if (defNode.isTextual()) {
+                String key = defNode.getTextValue();
+                PrestoAttributes attributes = getAttributes();
+                Object defaultValues = attributes.getAttribute(key);
+                if (defaultValues instanceof FieldValues) {
+                    return (FieldValues) defaultValues;
+                }
+            }
+        }
+        return FieldValues.EMPTY; // TODO: support initial values;   
+    }
 
 }

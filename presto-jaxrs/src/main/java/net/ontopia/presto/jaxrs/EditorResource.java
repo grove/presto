@@ -42,6 +42,7 @@ import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
+import net.ontopia.presto.spi.utils.PrestoAttributes;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoContextField;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
@@ -848,8 +849,8 @@ public abstract class EditorResource {
 
     public abstract class EditorResourcePresto extends Presto {
 
-        public EditorResourcePresto(String databaseId, String databaseName, PrestoSchemaProvider schemaProvider, PrestoDataProvider dataProvider) {
-            super(databaseId, databaseName, schemaProvider, dataProvider);
+        public EditorResourcePresto(String databaseId, String databaseName, PrestoSchemaProvider schemaProvider, PrestoDataProvider dataProvider, PrestoAttributes attributes) {
+            super(databaseId, databaseName, schemaProvider, dataProvider, attributes);
         }
 
         @Override
@@ -904,8 +905,21 @@ public abstract class EditorResource {
         return Response.status(422).entity(entity).build();
     }
 
-    protected abstract Presto createPresto(String databaseId, boolean readOnlyMode);
+    protected PrestoAttributes getAttributes() {
+        return new PrestoAttributes() {
+            @Override
+            public Object getAttribute(String name) {
+                return request.getAttribute(name);
+//                if (val != null) {
+//                    return val;
+//                }
+//                return request.getParameterValues(name);
+            }
+        };
+    }
 
+    protected abstract Presto createPresto(String databaseId, boolean readOnlyMode);
+    
     protected abstract Collection<String> getDatabaseIds();
 
     protected abstract String getDatabaseName(String databaseId);

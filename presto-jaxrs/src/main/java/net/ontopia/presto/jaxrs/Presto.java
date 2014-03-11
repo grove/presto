@@ -41,7 +41,6 @@ import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoInlineTopicBuilder;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
-import net.ontopia.presto.spi.PrestoTopic.Paging;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
 import net.ontopia.presto.spi.PrestoView;
@@ -51,6 +50,8 @@ import net.ontopia.presto.spi.functions.PrestoFieldFunctionUtils;
 import net.ontopia.presto.spi.rules.ContextPathExpressions;
 import net.ontopia.presto.spi.utils.AbstractHandler;
 import net.ontopia.presto.spi.utils.ExtraUtils;
+import net.ontopia.presto.spi.utils.FieldValues;
+import net.ontopia.presto.spi.utils.PrestoAttributes;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoContextField;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
@@ -97,22 +98,22 @@ public abstract class Presto {
         
     }
 
-    public static final int DEFAULT_LIMIT = 100;
-
     private final String databaseId;
     private final String databaseName;
 
     private final PrestoSchemaProvider schemaProvider;
     private final PrestoDataProvider dataProvider;
-
+    private final PrestoAttributes attributes;
+    
     private final PrestoProcessor processor;
     private final Links lx;
 
-    public Presto(String databaseId, String databaseName, PrestoSchemaProvider schemaProvider, PrestoDataProvider dataProvider) {
+    public Presto(String databaseId, String databaseName, PrestoSchemaProvider schemaProvider, PrestoDataProvider dataProvider, PrestoAttributes attributes) {
         this.databaseId = databaseId;
         this.databaseName = databaseName;
         this.schemaProvider = schemaProvider;
         this.dataProvider = dataProvider;
+        this.attributes = attributes;
         this.processor = new PrestoProcessor(this);
         this.lx = createLinks(getBaseUri(), getDatabaseId());
     }
@@ -172,7 +173,7 @@ public abstract class Presto {
         String viewId = view.getId();
         result.setView(viewId);
 
-        ObjectNode extra = (ObjectNode)type.getExtra();
+        ObjectNode extra = ExtraUtils.getTypeExtraNode(type);
         Layout layout = getLayout(extra);
         if (layout != null) {
             result.setLayout(layout);
@@ -231,7 +232,7 @@ public abstract class Presto {
     }
 
     private boolean isRemoteLoadView(PrestoView v) {
-        ObjectNode viewExtra = (ObjectNode)v.getExtra();
+        ObjectNode viewExtra = ExtraUtils.getViewExtraNode(v);
         if (viewExtra != null) {
             JsonNode remoteView = viewExtra.path("remote-view");
             if (remoteView.isBoolean()) {
@@ -288,6 +289,14 @@ public abstract class Presto {
             public boolean isReadOnlyType() {
                 return isReadOnlyMode() || super.isReadOnlyType();
             }
+            @Override
+            protected PrestoAttributes getAttributes() {
+                return attributes;
+            }
+            @Override
+            public PrestoContextRules getPrestoContextRules(PrestoContext context) {
+                return Presto.this.getPrestoContextRules(context);
+            }
         };
     }
 
@@ -305,7 +314,7 @@ public abstract class Presto {
         result.setTopicId(topic.getId());
         result.setTopicTypeId(type.getId());
 
-        ObjectNode extra = (ObjectNode)view.getExtra();
+        ObjectNode extra = ExtraUtils.getViewExtraNode(view);
         Layout layout = getLayout(extra);
         if (layout != null) {
             result.setLayout(layout);
@@ -367,7 +376,7 @@ public abstract class Presto {
 
         result.setTopicTypeId(typeId);
 
-        ObjectNode extra = (ObjectNode)view.getExtra();
+        ObjectNode extra = ExtraUtils.getViewExtraNode(view);
         Layout layout = getLayout(extra);
         if (layout != null) {
             result.setLayout(layout);
@@ -413,7 +422,7 @@ public abstract class Presto {
 
         result.setTopicTypeId(typeId);
 
-        ObjectNode extra = (ObjectNode)view.getExtra();
+        ObjectNode extra = ExtraUtils.getViewExtraNode(view);
         Layout layout = getLayout(extra);
         if (layout != null) {
             result.setLayout(layout);
@@ -506,70 +515,6 @@ public abstract class Presto {
         }
     }
 
-    public static class FieldValues {
-        
-        public static final FieldValues EMPTY = new FieldValues(Collections.emptyList());
-        
-        private final List<? extends Object> values;
-        private final boolean isPaging;
-        private final int offset;
-        private final int limit;
-        private final int total;
-
-        private FieldValues(List<? extends Object> values) {
-            this.values = values;
-            this.isPaging = false;
-            this.offset = 0;
-            this.limit = DEFAULT_LIMIT;
-            this.total = values.size();
-        }
-        
-        private FieldValues(List<? extends Object> values, int offset, int limit, int total) {
-            this.values = values;
-            this.isPaging = true;
-            this.offset = offset;
-            this.limit = limit;
-            this.total = total;
-        }
-
-        public static FieldValues create (List<? extends Object> values) {
-            if (values.isEmpty()) {
-                return FieldValues.EMPTY;
-            } else {
-                return new FieldValues(values);
-            }
-        }
-
-        public static FieldValues create (List<? extends Object> values, int offset, int limit, int total) {
-            if (values.isEmpty()) {
-                return FieldValues.EMPTY;
-            } else {
-                return new FieldValues(values, offset, limit, total);
-            }
-        }
-        
-        public List<? extends Object> getValues() {
-            return values;
-        }
-
-        public boolean isPaging() {
-            return isPaging;
-        }
-        
-        public int getOffset() {
-            return offset;
-        }
-
-        public int getLimit() {
-            return limit;
-        }
-
-        public int getTotal() {
-            return total;
-        }
-        
-    }
-    
     public FieldDataValues setFieldDataValues(
             PrestoContextRules rules, final PrestoField field, int offset, int limit, FieldData fieldData) {
 
@@ -578,7 +523,7 @@ public abstract class Presto {
     }
 
     public FieldValues getFieldValues(PrestoContextRules rules, PrestoField field) {
-        return getFieldValues(rules, field, 0, DEFAULT_LIMIT);
+        return getFieldValues(rules, field, 0, FieldValues.DEFAULT_LIMIT);
     }
     
     private FieldValues getFieldValues(PrestoContextRules rules, PrestoField field, int offset, int limit) {
@@ -590,27 +535,11 @@ public abstract class Presto {
         if (function != null) {
             result = FieldValues.create(function.execute(context, field));
         } else {
-
-            if (context.isNewTopic()) {
-                result = FieldValues.EMPTY; // TODO: support initial values
-            } else {
-                PrestoTopic topic = context.getTopic();
-
-                // server-side paging (only if not sorting)
-                if (rules.isPageableField(field) && !rules.isSortedField(field)) {
-                    int actualOffset = offset >= 0 ? offset : 0;
-                    int actualLimit = limit > 0 ? limit : DEFAULT_LIMIT;
-                    PrestoTopic.PagedValues pagedValues = topic.getValues(field, actualOffset, actualLimit);
-                    Paging paging = pagedValues.getPaging();
-                    result = FieldValues.create(pagedValues.getValues(), paging.getOffset(), paging.getLimit(), pagedValues.getTotal());
-                } else {
-                    result = FieldValues.create(topic.getValues(field));
-                }
-            }
+            result = rules.getFieldValues(field, offset, limit);
         }
         return filterByInlineReferenced(context, field, result);
     }
-
+    
     private FieldValues filterByInlineReferenced(PrestoContext context, PrestoField field, FieldValues fieldValues) {
         // if inline reference field then find intersection with referenced field
         boolean inlineReference = field.getInlineReference() != null;
@@ -962,7 +891,7 @@ public abstract class Presto {
                 AvailableFieldValuesResolver handler = AbstractHandler.getHandler(dataProvider, schemaProvider, AvailableFieldValuesResolver.class, (ObjectNode)availableValuesNode);
                 if (handler != null) {
                     handler.setPresto(this);
-                    return handler.getAvailableFieldValues(rules.getContext(), field, query);
+                    return handler.getAvailableFieldValues(rules, field, query);
                 }
                 log.warn("Not able to extract availableValues instance from field " + field.getId() + ": " + extra);                    
             } else if (!availableValuesNode.isMissingNode()) {

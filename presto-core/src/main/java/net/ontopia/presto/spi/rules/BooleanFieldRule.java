@@ -2,7 +2,7 @@ package net.ontopia.presto.spi.rules;
 
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.utils.AbstractHandler;
-import net.ontopia.presto.spi.utils.PrestoContext;
+import net.ontopia.presto.spi.utils.PrestoContextRules;
 import net.ontopia.presto.spi.utils.PrestoContextRules.FieldFlag;
 import net.ontopia.presto.spi.utils.PrestoContextRules.FieldRule;
 
@@ -12,16 +12,16 @@ import org.codehaus.jackson.node.ObjectNode;
 public abstract class BooleanFieldRule extends AbstractHandler implements FieldRule {
 
     @Override
-    public Boolean getValue(FieldFlag flag, PrestoContext context, PrestoField field) {
+    public Boolean getValue(FieldFlag flag, PrestoContextRules rules, PrestoField field) {
         ObjectNode config = getConfig();
         if (config != null) {
-            return evaluateField(flag, context, field, config);
+            return evaluateField(flag, rules, field, config);
         }
         return null;
     }
 
-    protected boolean evaluateField(FieldFlag flag, PrestoContext context, PrestoField field, ObjectNode config) {
-        return inverse(getResult(flag, context, field, config), config);
+    protected boolean evaluateField(FieldFlag flag, PrestoContextRules rules, PrestoField field, ObjectNode config) {
+        return inverse(getResult(flag, rules, field, config), config);
     }
 
     private boolean inverse(boolean value, ObjectNode config) {
@@ -33,6 +33,6 @@ public abstract class BooleanFieldRule extends AbstractHandler implements FieldR
         }
     }
 
-    protected abstract boolean getResult(FieldFlag flag, PrestoContext context, PrestoField field, ObjectNode config);
+    protected abstract boolean getResult(FieldFlag flag, PrestoContextRules rules, PrestoField field, ObjectNode config);
 
 }
