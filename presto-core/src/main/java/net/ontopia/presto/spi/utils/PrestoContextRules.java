@@ -1,5 +1,8 @@
 package net.ontopia.presto.spi.utils;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
@@ -78,10 +81,15 @@ public abstract class PrestoContextRules {
     private ContextRulesHandler handler;
     private boolean readOnlyType;
 
-    private PrestoContext context;
-    private PrestoType type;
+    private final PrestoContext context;
+    private final PrestoType type;
+    
+    private final PrestoDataProvider dataProvider;
+    private final PrestoSchemaProvider schemaProvider;
 
     public PrestoContextRules(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, PrestoContext context) {
+        this.dataProvider = dataProvider;
+        this.schemaProvider = schemaProvider;
         this.context = context;
         this.type = context.getType();
 
@@ -247,15 +255,6 @@ public abstract class PrestoContextRules {
     protected abstract PrestoAttributes getAttributes();
 
     public abstract PrestoContextRules getPrestoContextRules(PrestoContext context);
-//
-//    private PrestoContextRules createSubContextRules(PrestoContext parentContext, PrestoField parentField, PrestoTopic topic, PrestoType type, PrestoView view) {
-//        PrestoContext subContext = PrestoContext.createSubContext(parentContext, parentField, topic, type, view);
-//        return getPrestoContextRules(subContext);
-//    }
-//
-//    public abstract PrestoContextRules getParentContextRules();
-//
-//    public abstract PrestoContextRules createSubContextRules(PrestoContext parentContext, PrestoField parentField, PrestoTopic topic, PrestoType type, PrestoView view);
 
     public FieldValues getFieldValues(PrestoField field) {
         return getFieldValues(field, 0, FieldValues.DEFAULT_LIMIT);
@@ -283,6 +282,23 @@ public abstract class PrestoContextRules {
     protected FieldValues getDefaultFieldValues(PrestoField field) {
         ObjectNode extra = ExtraUtils.getFieldExtraNode(field);
         if (extra != null) {
+            JsonNode dvNode = extra.path("defaultValues");
+            if (dvNode.isArray()) {
+                List<Object> values = new ArrayList<Object>(dvNode.size());
+                for (JsonNode valueNode : dvNode) {
+                    String textValue = valueNode.getTextValue();
+                    if (field.isReferenceField()) {
+                        PrestoTopic topic = getDataProvider().getTopicById(textValue);
+                        if (topic != null) {
+                            values.add(topic);
+                        }
+                    } else {
+                        values.add(textValue);
+                    }
+                }
+                return FieldValues.create(values);
+            }
+
             JsonNode defNode = extra.path("assignDefaultValues");
             if (defNode.isTextual()) {
                 String key = defNode.getTextValue();
@@ -293,7 +309,15 @@ public abstract class PrestoContextRules {
                 }
             }
         }
-        return FieldValues.EMPTY; // TODO: support initial values;   
+        return FieldValues.EMPTY;  
+    }
+
+    public PrestoDataProvider getDataProvider() {
+        return dataProvider;
+    }
+
+    public PrestoSchemaProvider getSchemaProvider() {
+        return schemaProvider;
     }
 
 }
