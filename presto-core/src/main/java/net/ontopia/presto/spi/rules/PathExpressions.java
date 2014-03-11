@@ -15,33 +15,34 @@ import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.functions.PrestoFieldFunction;
 import net.ontopia.presto.spi.functions.PrestoFieldFunctionUtils;
 import net.ontopia.presto.spi.utils.PrestoContext;
-import net.ontopia.presto.spi.utils.Utils;
+import net.ontopia.presto.spi.utils.PrestoContextRules;
 
 public class PathExpressions {
 
     private static final Pattern PATTERN = Pattern.compile("^\\$\\{([\\:\\.\\-\\w]+)\\}$");
 
-    public static List<? extends Object> getValues(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, PrestoContext context, String path) {
+    public static List<? extends Object> getValues(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, PrestoContextRules rules, String path) {
         if (path.charAt(0) == '$') {
-            return getValuesByExpression(dataProvider, schemaProvider, context, path);
+            return getValuesByExpression(dataProvider, schemaProvider, rules, path);
         } else {
-            return getValuesByField(dataProvider, schemaProvider, context, path);
+            return getValuesByField(dataProvider, schemaProvider, rules, path);
         }
     }
 
     private static List<? extends Object> getValuesByField(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, 
-            PrestoContext context, String fieldId) {
-        PrestoTopic topic = context.getTopic();
-        PrestoType type = Utils.getTopicType(topic, schemaProvider);
+            PrestoContextRules rules, String fieldId) {
+        PrestoContext context = rules.getContext();
+        PrestoType type = context.getType();
         PrestoField field = type.getFieldById(fieldId);
-        return topic.getValues(field);
+        return rules.getFieldValues(field).getValues();
     }
 
     private static List<? extends Object> getValuesByExpression(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, 
-            PrestoContext context, String expr) {
-        Iterator<String> path = getPath(expr).iterator();
+            PrestoContextRules rules, String expr) {
+        Iterator<String> path = parsePath(expr).iterator();
 
         if (path.hasNext()) {
+            PrestoContext context = rules.getContext();
             return getValuesByExpression(dataProvider, schemaProvider, Collections.singletonList(context), path, expr);
         } else {
             return Collections.emptyList();
@@ -132,7 +133,7 @@ public class PathExpressions {
         }
     }
 
-    private static List<String> getPath(String expr) {
+    static List<String> parsePath(String expr) {
         Matcher matcher = PATTERN.matcher(expr);
         if (matcher.find()) {
             String path = matcher.group(1);
@@ -155,7 +156,7 @@ public class PathExpressions {
 
     public static void main(String[] args) {
         String expr = "${partial_runs.blah.has_run.foo}";
-        System.out.println("X: " + getPath(expr));
+        System.out.println("X: " + parsePath(expr));
     }
 
 }

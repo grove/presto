@@ -12,6 +12,7 @@ import net.ontopia.presto.spi.PrestoTopic.PagedValues;
 import net.ontopia.presto.spi.PrestoTopic.Paging;
 import net.ontopia.presto.spi.jackson.JacksonDataProvider;
 import net.ontopia.presto.spi.utils.PrestoContext;
+import net.ontopia.presto.spi.utils.PrestoContextRules;
 import net.ontopia.presto.spi.utils.PrestoTopicFieldVariableResolver;
 import net.ontopia.presto.spi.utils.PrestoVariableResolver;
 
@@ -21,7 +22,7 @@ import org.codehaus.jackson.node.ObjectNode;
 public class DefaultAvailableFieldValuesResolver extends AvailableFieldValuesResolver {
 
     @Override
-    public Collection<? extends Object> getAvailableFieldValues(PrestoContext context, PrestoField field, String query) {
+    public Collection<? extends Object> getAvailableFieldValues(PrestoContextRules rules, PrestoField field, String query) {
         ObjectNode processorConfig = getConfig();
         if (processorConfig != null) {
             JsonNode resolveConfig = processorConfig.path("resolve");
@@ -32,6 +33,7 @@ public class DefaultAvailableFieldValuesResolver extends AvailableFieldValuesRes
                 
                 PrestoVariableResolver variableResolver = new QueryFilterVariableResolver(field.getSchemaProvider(), query);
                 
+                PrestoContext context = rules.getContext();
                 PrestoTopic topic = context.getTopic();
                 
                 Collection<? extends Object> objects = (topic == null ? Collections.emptyList() : Collections.singleton(topic));

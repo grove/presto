@@ -50,6 +50,7 @@ public class PojoField implements PrestoField {
 
     private Collection<PrestoType> availableFieldCreateTypes;
     private Collection<PrestoType> availableFieldValueTypes = new HashSet<PrestoType>();
+    private String inlineReference;
 
     PojoField(String id, PojoType type, PojoView view, PrestoSchemaProvider schemaProvider) {
         this.id = id;
@@ -395,6 +396,15 @@ public class PojoField implements PrestoField {
     @Override
     public int hashCode() {
         return getId().hashCode();
+    }
+
+    @Override
+    public String getInlineReference() {
+        return inlineReference;
+    }
+    
+    void setInlineReference(String inlineReference) {
+        this.inlineReference = inlineReference;
     }
 
 }

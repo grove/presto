@@ -58,7 +58,7 @@ public class DemoEditorResource extends EditorResource {
         // data stored in riak
 //        final RiakDataProvider dataProvider = createRiakDataProvider();
 
-        return new EditorResourcePresto(databaseId, getDatabaseName(databaseId), schemaProvider, dataProvider) {
+        return new EditorResourcePresto(databaseId, getDatabaseName(databaseId), schemaProvider, dataProvider, getAttributes()) {
             @Override
             public boolean isReadOnlyMode() {
                 return readOnlyMode;

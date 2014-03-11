@@ -5,31 +5,31 @@ import java.util.List;
 import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
-import net.ontopia.presto.spi.PrestoTopic;
-import net.ontopia.presto.spi.utils.PrestoContext;
+import net.ontopia.presto.spi.utils.FieldValues;
+import net.ontopia.presto.spi.utils.PrestoContextRules;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;
 
 public class HasFieldValues {
     
-    public static boolean hasFieldValues(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, PrestoContext context, ObjectNode config) {
-        return hasFieldValues(dataProvider, schemaProvider, context, null, config);
+    public static boolean hasFieldValues(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, PrestoContextRules rules, ObjectNode config) {
+        return hasFieldValues(dataProvider, schemaProvider, rules, null, config);
     }
 
-    public static boolean hasFieldValues(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, PrestoContext context, PrestoField defaultField, ObjectNode config) {
-        List<? extends Object> values = getValues(dataProvider, schemaProvider, context, defaultField, config);
+    public static boolean hasFieldValues(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, PrestoContextRules rules, PrestoField defaultField, ObjectNode config) {
+        List<? extends Object> values = getValues(dataProvider, schemaProvider, rules, defaultField, config);
         return !values.isEmpty();
     }
     
-    static List<? extends Object> getValues(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, PrestoContext context, PrestoField defaultField, ObjectNode config) {
+    static List<? extends Object> getValues(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, PrestoContextRules rules, PrestoField defaultField, ObjectNode config) {
         JsonNode fieldNode = config.path("field");
         if (fieldNode.isTextual()) {
             String fieldId = fieldNode.getTextValue();
-            return PathExpressions.getValues(dataProvider, schemaProvider, context, fieldId);
+            return PathExpressions.getValues(dataProvider, schemaProvider, rules, fieldId);
         } else if (defaultField != null) {
-            PrestoTopic topic = context.getTopic();
-            return topic.getValues(defaultField);
+            FieldValues fieldValues = rules.getFieldValues(defaultField);
+            return fieldValues.getValues();
         }
         throw new RuntimeException("Not able to find field from configuration: " + config);
     }

@@ -142,10 +142,17 @@ public class JacksonTopic implements DefaultTopic {
         if (fieldNode != null) { 
             if (field.isReferenceField()) {
                 if (field.isInline()) {
+                    boolean inlineReference = field.getInlineReference() != null;
                     for (int i=start; i < end; i ++) {
                         JsonNode value = fieldNode.get(i);
-                        if (value.isObject()) {
-                            values.add(new JacksonInlineTopic(dataProvider, (ObjectNode)value));
+                        if (inlineReference) {
+                            if (value.isTextual()) {
+                                values.add(value.getTextValue());
+                            }
+                        } else {
+                            if (value.isObject()) {
+                                values.add(new JacksonInlineTopic(dataProvider, (ObjectNode)value));
+                            }
                         }
                     }
                 } else {

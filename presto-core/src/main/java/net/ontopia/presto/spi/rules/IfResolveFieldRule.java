@@ -11,6 +11,7 @@ import net.ontopia.presto.spi.PrestoTopic.Paging;
 import net.ontopia.presto.spi.jackson.JacksonDataProvider;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoContextRules.FieldFlag;
+import net.ontopia.presto.spi.utils.PrestoContextRules;
 import net.ontopia.presto.spi.utils.PrestoPaging;
 import net.ontopia.presto.spi.utils.PrestoTopicWithParentFieldVariableResolver;
 import net.ontopia.presto.spi.utils.PrestoVariableResolver;
@@ -21,7 +22,8 @@ import org.codehaus.jackson.node.ObjectNode;
 public class IfResolveFieldRule extends BooleanFieldRule {
 
     @Override
-    protected boolean getResult(FieldFlag flag, PrestoContext context, PrestoField field, ObjectNode config) {
+    protected boolean getResult(FieldFlag flag, PrestoContextRules rules, PrestoField field, ObjectNode config) {
+        PrestoContext context = rules.getContext();
         if (context.isNewTopic()) {
             return false;
         } else {
