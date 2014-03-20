@@ -48,7 +48,7 @@ import net.ontopia.presto.spi.utils.PrestoContextField;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
 
 @Path("/editor")
-public abstract class EditorResource {
+public abstract class EditorResource implements PrestoAttributes {
 
     private static final String REL_AVAILABLE_DATABASES = "available-databases";
     private static final String REL_DATABASE_EDIT = "edit";
@@ -905,17 +905,17 @@ public abstract class EditorResource {
         return Response.status(422).entity(entity).build();
     }
 
+    @Override
+    public Object getAttribute(String name) {
+        return request.getAttribute(name);
+//      if (val != null) {
+//          return val;
+//      }
+//      return request.getParameterValues(name);
+    }
+    
     protected PrestoAttributes getAttributes() {
-        return new PrestoAttributes() {
-            @Override
-            public Object getAttribute(String name) {
-                return request.getAttribute(name);
-//                if (val != null) {
-//                    return val;
-//                }
-//                return request.getParameterValues(name);
-            }
-        };
+        return this;
     }
 
     protected abstract Presto createPresto(String databaseId, boolean readOnlyMode);

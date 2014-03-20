@@ -252,6 +252,10 @@ public abstract class PrestoContextRules {
     //        return field.isCascadingDelete();
     //    }
 
+    public Object getAttribute(String name) {
+        return getAttributes().getAttribute(name);
+    }
+    
     protected abstract PrestoAttributes getAttributes();
 
     public abstract PrestoContextRules getPrestoContextRules(PrestoContext context);

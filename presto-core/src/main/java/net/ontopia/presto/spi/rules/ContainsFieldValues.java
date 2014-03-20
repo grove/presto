@@ -23,11 +23,11 @@ public class ContainsFieldValues {
 
     public static boolean containsFieldValues(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, PrestoContextRules rules, PrestoField defaultField, ObjectNode config) {
         List<? extends Object> values = HasFieldValues.getValues(dataProvider, schemaProvider, rules, defaultField, config);
-        Set<String> testValues = getTestValues(config);
-        return ContainsFieldValues.containsAllValues(values, testValues);
+        Set<String> configValues = getConfigValues(config);
+        return ContainsFieldValues.containsAllValues(values, configValues);
     }
 
-    private static Set<String> getTestValues(ObjectNode config) {
+    public static Set<String> getConfigValues(ObjectNode config) {
         JsonNode valuesNode = config.path("values");
         if (valuesNode.isArray()) {
             Set<String> testValues = new LinkedHashSet<String>();
@@ -41,18 +41,18 @@ public class ContainsFieldValues {
         return Collections.emptySet();
     }
 
-    private static boolean containsAllValues(List<? extends Object> fieldValues, Collection<String> testValues) {
-        if (fieldValues.isEmpty()) {
-            return testValues.isEmpty();
+    public static boolean containsAllValues(Collection<? extends Object> values, Collection<? extends Object> configValues) {
+        if (values.isEmpty()) {
+            return configValues.isEmpty();
         }
-        for (Object value : fieldValues) {
+        for (Object value : values) {
             String v;
             if (value instanceof PrestoTopic) {
                 v = ((PrestoTopic)value).getId();
             } else {
                 v = value.toString();
             }
-            if (!testValues.contains(v)) {
+            if (!configValues.contains(v)) {
                 return false; 
             }
         }

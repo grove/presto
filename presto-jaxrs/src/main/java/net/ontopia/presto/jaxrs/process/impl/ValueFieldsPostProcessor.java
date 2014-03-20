@@ -31,15 +31,22 @@ public class ValueFieldsPostProcessor extends FieldDataProcessor {
         PrestoView valueView = field.getValueView(type);
         List<PrestoField> fields = type.getFields(valueView);
 
+        PrestoContext context = rules.getContext();
+        
+        PrestoContext subcontext = PrestoContext.createSubContext(context, context.getParentField(), type, valueView);
+        PrestoContextRules subrules = rules.getPrestoContextRules(subcontext);
+
         // assign column value fields
         List<FieldData> valueFields = new ArrayList<FieldData>();
         for (PrestoField valueField : fields) {
-            FieldData fd = getPresto().getFieldDataNoValues(rules, valueField);
-            
-            // process the value field
-            fd = getPresto().getProcessor().processFieldData(fd, rules, valueField, getType(), getStatus());
-
-            valueFields.add(fd);
+            if (!subrules.isHiddenField(valueField)) {
+                FieldData fd = getPresto().getFieldDataNoValues(rules, valueField);
+                
+                // process the value field
+                fd = getPresto().getProcessor().processFieldData(fd, rules, valueField, getType(), getStatus());
+    
+                valueFields.add(fd);
+            }
         }
         fieldData.setValueFields(valueFields);
  
