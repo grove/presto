@@ -1,4 +1,4 @@
-package net.ontopia.presto.spi.jackson;
+package net.ontopia.presto.jaxrs;
 
 import java.io.IOException;
 import java.io.InputStream;

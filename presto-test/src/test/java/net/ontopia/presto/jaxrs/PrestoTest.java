@@ -5,34 +5,20 @@ import java.util.Collection;
 import java.util.TreeSet;
 
 import net.ontopia.presto.spi.PrestoChangeSet;
-import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoField;
-import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
 
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-public class PrestoTest {
-    
-    private PrestoDataProvider dataProvider;
-    private PrestoSchemaProvider schemaProvider;
+public class PrestoTest extends AbstractPrestoTest {
 
     @Before 
     public void setUp() {
-        String databaseId = "test";
-        this.dataProvider = PrestoTestService.createDataProvider(databaseId);
-        this.schemaProvider = PrestoTestService.createSchemaProvider(databaseId);
-    }
-    
-    @After 
-    public void tearDown() {
-        this.dataProvider = null;
-        this.schemaProvider = null;
+        createProviders("test");
     }
     
     @Test 

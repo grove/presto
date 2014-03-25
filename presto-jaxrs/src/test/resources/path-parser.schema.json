@@ -1,0 +1,58 @@
+{ "id": "example",
+  "name": "Example schema",
+
+  "types": {
+    "p:root" : { 
+      "name" : "Root",
+      "views": [
+        { "id" : "pinfo",
+          "name": "Info",
+          "fields" : [
+            { "id" : "name",
+              "name" : "Name",
+              "nameField": true
+            },
+            { "id" : "children",
+              "name" : "Children",
+              "datatype" : "reference",
+              "valueTypes": ["p:child"]
+            }
+          ]
+        }
+      ]
+    },
+    "p:child" : { 
+      "name" : "Child",
+      "views": [
+        { "id" : "cinfo",
+          "name": "Info",
+          "fields" : [
+            { "id" : "name",
+              "name" : "Name",
+              "nameField": true
+            },
+            { "id" : "grandchildren",
+              "name" : "Grandchildren",
+              "datatype" : "reference",
+              "valueTypes": ["p:grandchild"]
+            }
+          ]
+        }
+      ]
+    },
+    "p:grandchild" : { 
+      "name" : "Grandchild",
+      "views": [
+        { "id" : "ginfo",
+          "name": "Info",
+          "fields" : [
+            { "id" : "name",
+              "name" : "Name",
+              "nameField": true
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

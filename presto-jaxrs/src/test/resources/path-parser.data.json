@@ -1,0 +1,20 @@
+[
+{ "_id" : "o:root",
+  ":type" : "p:root",
+  "name" : ["Root"],
+  "children" : ["o:child1", "o:child2"]
+},
+{ "_id" : "o:child1",
+  ":type" : "p:child",
+  "name" : ["Child1"],
+  "grandchildren" : ["o:grandchild1"]
+},
+{ "_id" : "o:child2",
+  ":type" : "p:child",
+  "name" : ["Child2"]
+},
+{ "_id" : "o:grandchild1",
+  ":type" : "p:grandchild",
+  "name" : ["Grandchild1"]
+}
+]
