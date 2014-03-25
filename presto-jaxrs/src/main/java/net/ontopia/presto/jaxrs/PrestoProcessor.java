@@ -190,7 +190,7 @@ public class PrestoProcessor {
                                 valueTopic = presto.buildInlineTopic(context, field, embeddedTopic, filterNonStorable, validateValueTypes);
 
                                 // merge valueTopic with existing topic to avoid anemic topic
-                                valueTopic = presto.rehydrateInlineTopic(context.getParentContext(), context.getParentField(), valueTopic);
+                                valueTopic = presto.rehydrateInlineTopic(context, field, valueTopic);
 
                             } else {
                                 valueTopic = dataProvider.getTopicById(topicId);
