@@ -70,8 +70,8 @@ public class PathParser {
             
             if (PrestoContext.isNewTopic(topicId)) {
                 currentTopic = null;
-                currentType = currentContext.getType();
-                currentView = currentContext.getView();
+                currentType = PrestoContext.getType(topicId, schemaProvider);
+                currentView = currentType.getViewById(viewId);
                 currentContext = PrestoContext.createSubContext(dataProvider, schemaProvider, currentContext, currentField, topicId, viewId);
             } else {
                 // find topic amongst parent field values
@@ -104,14 +104,18 @@ public class PathParser {
         PrestoTopic currentTopic = currentContext.getTopic();
         PrestoField currentField = contextField.getField();
         
-        PrestoTopic resultTopic = findInParentField(currentTopic, currentField, topicId);
-        if (resultTopic == null) {
+        if (PrestoContext.isNewTopic(topicId)) {
             return PrestoContext.createSubContext(dataProvider, schemaProvider, currentContext, currentField, PathParser.deskull(topicId), viewId);
         } else {
-            String resultTypeId = resultTopic.getTypeId();
-            PrestoType resultType = session.getSchemaProvider().getTypeById(resultTypeId);
-            PrestoView resultView = resultType.getViewById(viewId);
-            return PrestoContext.createSubContext(currentContext, currentField, resultTopic, resultType, resultView);
+            PrestoTopic resultTopic = findInParentField(currentTopic, currentField, topicId);
+            if (resultTopic == null) {
+                return null;
+            } else {
+                String resultTypeId = resultTopic.getTypeId();
+                PrestoType resultType = session.getSchemaProvider().getTypeById(resultTypeId);
+                PrestoView resultView = resultType.getViewById(viewId);
+                return PrestoContext.createSubContext(currentContext, currentField, resultTopic, resultType, resultView);
+            }
         }
     }
 
