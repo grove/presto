@@ -313,6 +313,10 @@ public class PojoSchemaModel {
                     field.setInlineReference(fieldConfig.get("inlineReference").getTextValue());
                 }
             }
+            // isParentRelation
+            if (fieldConfig.has("parentRelation")) {
+                field.setParentRelation(fieldConfig.get("parentRelation").getBooleanValue());
+            }
             // isEmbedded
             if (fieldConfig.has("embedded")) {
                 field.setEmbedded(fieldConfig.get("embedded").getBooleanValue());

@@ -30,6 +30,7 @@ public class PojoField implements PrestoField {
     private String dataType;
     private String validationType;
     private boolean isInline;
+    private boolean isParentRelation;
     private boolean isEmbedded;
     private boolean isHidden;
     private boolean isTraversable = true;
@@ -137,6 +138,11 @@ public class PojoField implements PrestoField {
     @Override
     public boolean isInline() {
         return isInline;
+    }
+
+    @Override
+    public boolean isParentRelation() {
+        return isParentRelation;
     }
 
     @Override
@@ -281,6 +287,10 @@ public class PojoField implements PrestoField {
 
     public void setInline(boolean isInline) {
         this.isInline = isInline;
+    }
+
+    public void setParentRelation(boolean isParentRelation) {
+        this.isParentRelation = isParentRelation;
     }
 
     public void setEmbedded(boolean isEmbedded) {

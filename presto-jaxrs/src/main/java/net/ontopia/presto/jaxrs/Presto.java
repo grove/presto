@@ -757,7 +757,7 @@ public abstract class Presto {
         List<Link> links = new ArrayList<Link>();
         if (rules.isTraversableField(field)) {
             PrestoView fieldsView = field.getEditView(valueType);
-            if (valueType.isInline()) {
+            if (valueType.isInline() || field.isParentRelation()) {
                 PrestoContextField contextField = getValueContextField(context, field);
                 links.add(lx.topicEditInlineLink(contextField.getContext(), contextField.getField(), value.getId(), valueType, fieldsView, isReadOnlyMode()));
             } else {
@@ -1270,8 +1270,8 @@ public abstract class Presto {
         PrestoContextRules rules = getPrestoContextRules(context);
 
         List<? extends Object> existingValues = topic.getValues(field);
-        boolean includeExisting = true;
-        Collection<? extends Object> newValues = mergeInlineTopics(updateableValues, existingValues, includeExisting);
+        List<? extends Object> newValues = mergeFieldValues(field, updateableValues, existingValues);
+
         filterNonStorableFieldValues(rules, field, newValues);
 
         if (topic.isInline()) {
@@ -1292,6 +1292,24 @@ public abstract class Presto {
         }
     }
 
+    private List<? extends Object> mergeFieldValues(PrestoField field, List<? extends Object> updateableValues, List<? extends Object> existingValues) {
+        List<Object> result;
+        if (field.isInline()) {
+            boolean includeExisting = true;
+            Collection<? extends Object> merged = mergeInlineTopics(updateableValues, existingValues, includeExisting);
+            result = new ArrayList<Object>(merged);
+        } else {
+            result = new ArrayList<Object>(existingValues.size()+updateableValues.size());
+            for (Object ev : existingValues) {
+                result.add(ev);
+            }
+            for (Object uv : updateableValues) {
+                result.add(uv);
+            }
+        }
+        return result;
+    }
+    
     protected PrestoTopic updatePrestoTopic(PrestoContextRules rules, TopicView topicView) {
 
         PrestoDataProvider dataProvider = getDataProvider();
@@ -1566,7 +1584,7 @@ public abstract class Presto {
         PrestoType type = schemaProvider.getTypeById(t1.getTypeId());
 
         if (!type.isInline()) {
-            log.warn("Attempted to merge non-inline topics: " + t1.getId() + " and " + t2.getId());
+            throw new RuntimeException("Attempted to merge non-inline topics: " + t1.getId() + " and " + t2.getId());
         }
         PrestoInlineTopicBuilder builder = dataProvider.createInlineTopic(type, topicId);
 
