@@ -340,7 +340,7 @@ public abstract class Presto {
         result.setFields(fields);
 
         List<Link> links = new ArrayList<Link>();
-        links.add(createLabel(type.getName()));
+        links.add(createLabel(type, view));
 
         if (!rules.isReadOnlyType()) {
             if (!allFieldsReadOnly && rules.isUpdatableType()) {
@@ -391,7 +391,7 @@ public abstract class Presto {
         result.setFields(fields);
 
         List<Link> links = new ArrayList<Link>();
-        links.add(createLabel(type.getName()));
+        links.add(createLabel(type, view));
 
         links.add(lx.topicViewCreateLink(type, view));
 
@@ -437,7 +437,7 @@ public abstract class Presto {
         result.setFields(fields);
 
         List<Link> links = new ArrayList<Link>();
-        links.add(createLabel(type.getName()));
+        links.add(createLabel(type, view));
 
         links.add(lx.topicViewCreateInlineLink(parentContext, parentField, type, view));
 
@@ -1787,7 +1787,18 @@ public abstract class Presto {
         throw new RuntimeException("Could not find inline topic '" + topicId + "'");
     }
     
-    private Link createLabel(String name) {
+    private Link createLabel(PrestoType type, PrestoView view) {
+        String name = null;
+        ObjectNode extra = ExtraUtils.getViewExtraNode(view);
+        if (extra != null) {
+            JsonNode labelNode = extra.path("label");
+            if (labelNode.isTextual()) {
+                name = labelNode.getTextValue();
+            }
+        }
+        if (name == null) {
+            name = type.getName();
+        }
         Link link = new Link();
         link.setName(name);
         link.setRel("label");
