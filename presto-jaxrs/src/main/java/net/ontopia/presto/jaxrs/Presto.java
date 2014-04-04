@@ -794,7 +794,11 @@ public abstract class Presto {
 
         Collection<Value> result = new ArrayList<Value>(availableFieldValues.size());
         for (Object value : availableFieldValues) {
-            result.add(getAllowedFieldValue(valueFactory, rules, field, value));
+            if (value instanceof Value) {
+                result.add((Value)value);
+            } else {
+                result.add(getAllowedFieldValue(valueFactory, rules, field, value));
+            }
         }
 
         return result;
