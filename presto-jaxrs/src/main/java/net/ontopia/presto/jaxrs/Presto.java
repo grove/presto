@@ -625,7 +625,7 @@ public abstract class Presto {
             fieldData.setValues(outputValues);
 
             // figure out how to truncate result (offset/limit)
-            if (fieldValues.isPaging() && rules.isPageableField(field) && rules.isSortedField(field)) {
+            if (fieldValues.isPaging() && rules.isPageableField(field) && !rules.isSortedField(field)) {
                 fieldData.setValuesOffset(fieldValues.getOffset());
                 fieldData.setValuesLimit(fieldValues.getLimit());
                 fieldData.setValuesTotal(fieldValues.getTotal());
