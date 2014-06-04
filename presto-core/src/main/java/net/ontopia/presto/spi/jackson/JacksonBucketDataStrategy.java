@@ -1,10 +1,10 @@
 package net.ontopia.presto.spi.jackson;
 
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 import net.ontopia.presto.spi.PrestoField;
+import net.ontopia.presto.spi.utils.ExtraUtils;
+import net.ontopia.presto.spi.utils.Utils;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -27,13 +27,13 @@ public abstract class JacksonBucketDataStrategy implements JacksonDataStrategy {
         this.mapper = mapper;
     }
     
-    protected ObjectMapper getObjectMapper() {
+    public ObjectMapper getObjectMapper() {
         return mapper;
     }
     
-    protected abstract List<String> getReadBucketIds(ObjectNode doc);
+    public abstract List<String> getReadBucketIds(ObjectNode doc);
 
-    protected abstract String getWriteBucketId(ObjectNode doc);
+    public abstract String getWriteBucketId(ObjectNode doc);
     
     @Override
     public String getId(ObjectNode doc) {
@@ -66,54 +66,30 @@ public abstract class JacksonBucketDataStrategy implements JacksonDataStrategy {
 
     @Override
     public ArrayNode getFieldValue(ObjectNode doc, PrestoField field) {
-        String fieldId = field.getActualId();
-        ObjectNode extra = (ObjectNode)field.getExtra();
-        return getFieldValue(doc, fieldId, extra);
-    }
-
-    protected ArrayNode getFieldValue(ObjectNode doc, String fieldId, ObjectNode extra) {
+        ObjectNode extra = ExtraUtils.getFieldExtraNode(field);
         if (extra != null) {
             JsonNode readStrategy = extra.path("readStrategy");
             if (readStrategy.isObject()) {
-                JsonNode nameNode = readStrategy.path("name");
-                if (nameNode.isTextual()) {
-                    String name = nameNode.getTextValue();
-                    if ("union-buckets".equals(name)) {
-                        return getFieldValueUnionBuckets(doc, fieldId);
+                String className = readStrategy.path("class").getTextValue();
+                if (className != null) {
+                    JacksonFieldDataStrategy fds = Utils.newInstanceOf(className, JacksonFieldDataStrategy.class, true);
+                    if (fds != null) {
+                        fds.setJacksonDataStrategy(this);
+                        return fds.getFieldValue(doc, field);
                     }
+                } else {
+                    log.warn("Not able to find read strategy from configuration: " + extra);
                 }
             }
         }
+        String fieldId = field.getActualId();
         return getFieldValuesDefault(doc, fieldId);
     }
-
-    private ArrayNode getFieldValuesDefault(ObjectNode doc, String fieldId) {
+    
+    protected ArrayNode getFieldValuesDefault(ObjectNode doc, String fieldId) {
         // Strategy: default: value of closest read bucket with value in field
         ObjectNode readBucket = getReadBucket(doc, fieldId, true);
         return getBucketFieldValue(fieldId, readBucket);
-    }
-
-    private ArrayNode getFieldValueUnionBuckets(ObjectNode doc, String fieldId) {
-        // Strategy: union-buckets: value is union of all read buckets
-        Set<JsonNode> values = new LinkedHashSet<JsonNode>();
-        for (String bucketId : getReadBucketIds(doc)) {
-            ObjectNode bucket = getBucket(bucketId, doc);
-            if (bucket != null) {
-                ArrayNode bucketFieldValues = getBucketFieldValue(fieldId, bucket);
-                if (bucketFieldValues != null) {
-                    for (JsonNode bucketFieldValue : bucketFieldValues) {
-                        if (bucketFieldValue.isTextual() || bucketFieldValue.isObject()) {
-                            if (!values.contains(bucketFieldValue)) {
-                                values.add(bucketFieldValue);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        ArrayNode result = getObjectMapper().createArrayNode();
-        result.addAll(values);
-        return result;
     }
     
     @Override
@@ -140,11 +116,11 @@ public abstract class JacksonBucketDataStrategy implements JacksonDataStrategy {
         }
     }
     
-    protected ObjectNode getBucket(String bucketId, ObjectNode doc) {
+    public ObjectNode getBucket(String bucketId, ObjectNode doc) {
         return (ObjectNode)doc.get(bucketId);
     }
     
-    protected ArrayNode getBucketFieldValue(String fieldId, ObjectNode bucketData) {
+    public ArrayNode getBucketFieldValue(String fieldId, ObjectNode bucketData) {
         if (bucketData != null) {
             return getFieldValueArrayNode(bucketData, fieldId);
         }
