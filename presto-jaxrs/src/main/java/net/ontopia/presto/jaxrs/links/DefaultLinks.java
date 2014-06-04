@@ -38,7 +38,7 @@ public class DefaultLinks implements Links {
     @Override
     public Link topicEditByIdLink() {
         UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor").path("topic").path(databaseId).path("{topicId}");
-        String href = builder.build().toString();
+        String href = builder.toTemplate();
         return new Link(Rel.REL_TOPIC_EDIT_BY_ID.getRel(), href);
     }
     
@@ -173,7 +173,7 @@ public class DefaultLinks implements Links {
         String fieldId = field.getId();
         UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor").path("add-field-values").path(databaseId).path(path).path(PathParser.skull(topicId)).path(viewId).path(fieldId);
         builder = builder.queryParam("index", "{index}");
-        String href = builder.build().toString();
+        String href = builder.toTemplate();
         String rel = Rel.REL_ADD_FIELD_VALUES_AT_INDEX.getRel();
         return new Link(rel, href);
     }
@@ -194,7 +194,7 @@ public class DefaultLinks implements Links {
         String viewId = view.getId();
         String fieldId = field.getId();
         UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor").path("move-field-values-to-index").path(databaseId).path(path).path(PathParser.skull(topicId)).path(viewId).path(fieldId).queryParam("index", "{index}");
-        String href = builder.build().toString();
+        String href = builder.toTemplate();
         return new Link(Rel.REL_MOVE_FIELD_VALUES_TO_INDEX.getRel(), href);
     }
 
@@ -204,7 +204,7 @@ public class DefaultLinks implements Links {
         String viewId = view.getId();
         String fieldId = field.getId();
         UriBuilder builder = UriBuilder.fromUri(baseUri).path("editor").path("paging-field").path(databaseId).path(path).path(PathParser.skull(topicId)).path(viewId).path(fieldId).path("{start}").path("{limit}");
-        String href = builder.build().toString();
+        String href = builder.toTemplate();
         return new Link(Rel.REL_FIELD_PAGING.getRel(), href);
     }
 
@@ -218,7 +218,7 @@ public class DefaultLinks implements Links {
         if (query) {
             builder = builder.queryParam("query", "{query}");
         }
-        String href = builder.build().toString();
+        String href = builder.toTemplate();
         return new Link(Rel.REL_AVAILABLE_FIELD_VALUES.getRel(), href);
     }
     

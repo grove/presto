@@ -5,7 +5,7 @@
   <groupId>net.ontopia.presto</groupId>
   <artifactId>presto</artifactId>
   <packaging>pom</packaging>
-  <version>0.7.20-SNAPSHOT</version>
+  <version>0.7.21-SNAPSHOT</version>
 
   <developers>
     <developer>
@@ -191,6 +191,7 @@
   <modules>
     <module>presto-core</module>
     <module>presto-pojo</module>
+    <module>presto-test</module>
     <!--module>presto-ontopoly</module-->
     <module>presto-couchdb</module>
     <module>presto-riak</module>
@@ -199,7 +200,6 @@
     <module>presto-jaxb</module>
     <module>presto-solr</module>
     <module>presto-webdemo</module>
-    <module>presto-test</module>
   </modules>
 
 </project>

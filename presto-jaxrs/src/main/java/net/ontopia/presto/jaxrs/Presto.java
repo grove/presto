@@ -340,7 +340,7 @@ public abstract class Presto {
         result.setFields(fields);
 
         List<Link> links = new ArrayList<Link>();
-        links.add(createLabel(type.getName()));
+        links.add(createLabel(type, view));
 
         if (!rules.isReadOnlyType()) {
             if (!allFieldsReadOnly && rules.isUpdatableType()) {
@@ -391,7 +391,7 @@ public abstract class Presto {
         result.setFields(fields);
 
         List<Link> links = new ArrayList<Link>();
-        links.add(createLabel(type.getName()));
+        links.add(createLabel(type, view));
 
         links.add(lx.topicViewCreateLink(type, view));
 
@@ -437,7 +437,7 @@ public abstract class Presto {
         result.setFields(fields);
 
         List<Link> links = new ArrayList<Link>();
-        links.add(createLabel(type.getName()));
+        links.add(createLabel(type, view));
 
         links.add(lx.topicViewCreateInlineLink(parentContext, parentField, type, view));
 
@@ -460,7 +460,7 @@ public abstract class Presto {
     }
 
     private Collection<? extends Link> getTopicTemplateFieldLinks(PrestoContext context, PrestoField field) {
-        Collection<PrestoType> availableFieldCreateTypes = getAvailableFieldCreateTypes(context, field);
+        Collection<? extends PrestoType> availableFieldCreateTypes = getAvailableFieldCreateTypes(context, field);
 
         if (availableFieldCreateTypes.isEmpty()) {
             return Collections.emptyList();
@@ -625,7 +625,7 @@ public abstract class Presto {
             fieldData.setValues(outputValues);
 
             // figure out how to truncate result (offset/limit)
-            if (fieldValues.isPaging() && rules.isPageableField(field) && rules.isSortedField(field)) {
+            if (fieldValues.isPaging() && rules.isPageableField(field) && !rules.isSortedField(field)) {
                 fieldData.setValuesOffset(fieldValues.getOffset());
                 fieldData.setValuesLimit(fieldValues.getLimit());
                 fieldData.setValuesTotal(fieldValues.getTotal());
@@ -757,7 +757,7 @@ public abstract class Presto {
         List<Link> links = new ArrayList<Link>();
         if (rules.isTraversableField(field)) {
             PrestoView fieldsView = field.getEditView(valueType);
-            if (valueType.isInline()) {
+            if (valueType.isInline() || field.isParentRelation()) {
                 PrestoContextField contextField = getValueContextField(context, field);
                 links.add(lx.topicEditInlineLink(contextField.getContext(), contextField.getField(), value.getId(), valueType, fieldsView, isReadOnlyMode()));
             } else {
@@ -794,7 +794,11 @@ public abstract class Presto {
 
         Collection<Value> result = new ArrayList<Value>(availableFieldValues.size());
         for (Object value : availableFieldValues) {
-            result.add(getAllowedFieldValue(valueFactory, rules, field, value));
+            if (value instanceof Value) {
+                result.add((Value)value);
+            } else {
+                result.add(getAllowedFieldValue(valueFactory, rules, field, value));
+            }
         }
 
         return result;
@@ -1270,8 +1274,8 @@ public abstract class Presto {
         PrestoContextRules rules = getPrestoContextRules(context);
 
         List<? extends Object> existingValues = topic.getValues(field);
-        boolean includeExisting = true;
-        Collection<? extends Object> newValues = mergeInlineTopics(updateableValues, existingValues, includeExisting);
+        List<? extends Object> newValues = mergeFieldValues(field, updateableValues, existingValues);
+
         filterNonStorableFieldValues(rules, field, newValues);
 
         if (topic.isInline()) {
@@ -1292,6 +1296,24 @@ public abstract class Presto {
         }
     }
 
+    private List<? extends Object> mergeFieldValues(PrestoField field, List<? extends Object> updateableValues, List<? extends Object> existingValues) {
+        List<Object> result;
+        if (field.isInline()) {
+            boolean includeExisting = true;
+            Collection<? extends Object> merged = mergeInlineTopics(updateableValues, existingValues, includeExisting);
+            result = new ArrayList<Object>(merged);
+        } else {
+            result = new ArrayList<Object>(existingValues.size()+updateableValues.size());
+            for (Object ev : existingValues) {
+                result.add(ev);
+            }
+            for (Object uv : updateableValues) {
+                result.add(uv);
+            }
+        }
+        return result;
+    }
+    
     protected PrestoTopic updatePrestoTopic(PrestoContextRules rules, TopicView topicView) {
 
         PrestoDataProvider dataProvider = getDataProvider();
@@ -1566,7 +1588,7 @@ public abstract class Presto {
         PrestoType type = schemaProvider.getTypeById(t1.getTypeId());
 
         if (!type.isInline()) {
-            log.warn("Attempted to merge non-inline topics: " + t1.getId() + " and " + t2.getId());
+            throw new RuntimeException("Attempted to merge non-inline topics: " + t1.getId() + " and " + t2.getId());
         }
         PrestoInlineTopicBuilder builder = dataProvider.createInlineTopic(type, topicId);
 
@@ -1749,15 +1771,15 @@ public abstract class Presto {
         return field.getAvailableFieldValueTypes();
     }
 
-    protected Collection<PrestoType> getAvailableFieldCreateTypes(PrestoContext context, PrestoField field) {
-        Collection<PrestoType> result = getCustomAvailableFieldCreateTypes(context, field);
+    protected Collection<? extends PrestoType> getAvailableFieldCreateTypes(PrestoContext context, PrestoField field) {
+        Collection<? extends PrestoType> result = getCustomAvailableFieldCreateTypes(context, field);
         if (result != null) {
             return result;
         }
         return field.getAvailableFieldCreateTypes();
     }
 
-    private Collection<PrestoType> getCustomAvailableFieldCreateTypes(PrestoContext context, PrestoField field) {
+    private Collection<? extends PrestoType> getCustomAvailableFieldCreateTypes(PrestoContext context, PrestoField field) {
         ObjectNode extra = ExtraUtils.getFieldExtraNode(field);
         if (extra != null) {
             JsonNode handlerNode = extra.path("createTypes");
@@ -1787,7 +1809,18 @@ public abstract class Presto {
         throw new RuntimeException("Could not find inline topic '" + topicId + "'");
     }
     
-    private Link createLabel(String name) {
+    private Link createLabel(PrestoType type, PrestoView view) {
+        String name = null;
+        ObjectNode extra = ExtraUtils.getViewExtraNode(view);
+        if (extra != null) {
+            JsonNode labelNode = extra.path("label");
+            if (labelNode.isTextual()) {
+                name = labelNode.getTextValue();
+            }
+        }
+        if (name == null) {
+            name = type.getName();
+        }
         Link link = new Link();
         link.setName(name);
         link.setRel("label");

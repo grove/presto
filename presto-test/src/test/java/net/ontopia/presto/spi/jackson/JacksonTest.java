@@ -3,6 +3,7 @@ package net.ontopia.presto.spi.jackson;
 import java.util.Arrays;
 import java.util.List;
 
+import net.ontopia.presto.jaxrs.DataLoader;
 import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic;
