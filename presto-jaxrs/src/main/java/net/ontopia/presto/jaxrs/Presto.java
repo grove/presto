@@ -460,7 +460,7 @@ public abstract class Presto {
     }
 
     private Collection<? extends Link> getTopicTemplateFieldLinks(PrestoContext context, PrestoField field) {
-        Collection<PrestoType> availableFieldCreateTypes = getAvailableFieldCreateTypes(context, field);
+        Collection<? extends PrestoType> availableFieldCreateTypes = getAvailableFieldCreateTypes(context, field);
 
         if (availableFieldCreateTypes.isEmpty()) {
             return Collections.emptyList();
@@ -1771,15 +1771,15 @@ public abstract class Presto {
         return field.getAvailableFieldValueTypes();
     }
 
-    protected Collection<PrestoType> getAvailableFieldCreateTypes(PrestoContext context, PrestoField field) {
-        Collection<PrestoType> result = getCustomAvailableFieldCreateTypes(context, field);
+    protected Collection<? extends PrestoType> getAvailableFieldCreateTypes(PrestoContext context, PrestoField field) {
+        Collection<? extends PrestoType> result = getCustomAvailableFieldCreateTypes(context, field);
         if (result != null) {
             return result;
         }
         return field.getAvailableFieldCreateTypes();
     }
 
-    private Collection<PrestoType> getCustomAvailableFieldCreateTypes(PrestoContext context, PrestoField field) {
+    private Collection<? extends PrestoType> getCustomAvailableFieldCreateTypes(PrestoContext context, PrestoField field) {
         ObjectNode extra = ExtraUtils.getFieldExtraNode(field);
         if (extra != null) {
             JsonNode handlerNode = extra.path("createTypes");

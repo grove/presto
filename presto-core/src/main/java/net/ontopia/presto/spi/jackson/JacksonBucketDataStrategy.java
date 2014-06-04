@@ -109,7 +109,6 @@ public abstract class JacksonBucketDataStrategy implements JacksonDataStrategy {
                         }
                     }
                 }
-
             }
         }
         ArrayNode result = getObjectMapper().createArrayNode();

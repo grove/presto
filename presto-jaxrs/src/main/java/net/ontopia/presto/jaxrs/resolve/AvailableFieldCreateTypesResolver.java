@@ -9,6 +9,6 @@ import net.ontopia.presto.spi.utils.PrestoContext;
 
 public abstract class AvailableFieldCreateTypesResolver extends AbstractPrestoHandler {
 
-    public abstract Collection<PrestoType> getAvailableFieldCreateTypes(PrestoContext context, PrestoField field);
+    public abstract Collection<? extends PrestoType> getAvailableFieldCreateTypes(PrestoContext context, PrestoField field);
 
 }
