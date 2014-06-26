@@ -9,7 +9,7 @@ import java.util.List;
 
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
-import net.ontopia.presto.spi.PrestoTopic.Paging;
+import net.ontopia.presto.spi.PrestoTopic.Projection;
 import net.ontopia.presto.spi.resolve.PrestoFieldResolver;
 import net.ontopia.presto.spi.utils.PrestoPagedValues;
 import net.ontopia.presto.spi.utils.PrestoVariableContext;
@@ -41,13 +41,13 @@ public abstract class SolrFieldResolver extends PrestoFieldResolver {
     @Override
     public PagedValues resolve(Collection<? extends Object> objects,
             PrestoField field, boolean isReference,
-            Paging paging, PrestoVariableResolver variableResolver) {
+            Projection projection, PrestoVariableResolver variableResolver) {
 
         ObjectNode config = getConfig();
         
         CharSequence q_query = expandQuery(variableResolver, " AND ", objects, config.path("q"));
         if (isEmpty(q_query)) {
-            return new PrestoPagedValues(Collections.emptyList(), paging, 0);
+            return new PrestoPagedValues(Collections.emptyList(), projection, 0);
         }
 
         SolrQuery solrQuery = new SolrQuery();
@@ -75,9 +75,9 @@ public abstract class SolrFieldResolver extends PrestoFieldResolver {
         if (orderBy != null) {
             solrQuery.addSort(SortClause.asc(orderBy));
         }
-        if (paging != null) {
-            solrQuery.setStart(paging.getOffset());
-            solrQuery.setRows(paging.getLimit());
+        if (projection != null) {
+            solrQuery.setStart(projection.getOffset());
+            solrQuery.setRows(projection.getLimit());
         } else {
             int rows = getIntValue("rows", config, 100);
             solrQuery.setRows(rows);
@@ -116,11 +116,11 @@ public abstract class SolrFieldResolver extends PrestoFieldResolver {
             }
 
             int total = (int)results.getNumFound();
-            return new PrestoPagedValues(result, paging, total);
+            return new PrestoPagedValues(result, projection, total);
 
         } catch (SolrServerException e) {
             log.error("QE: " + solrServerUrl + "/select?" + solrQuery + "&echoParams=explicit", e);
-            return new PrestoPagedValues(Collections.emptyList(), paging, 0);
+            return new PrestoPagedValues(Collections.emptyList(), projection, 0);
         }
     }
 

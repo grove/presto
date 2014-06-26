@@ -14,26 +14,27 @@ public interface PrestoTopic {
 
     String getTypeId();
 
+    public interface PagedValues {
+        Projection getProjection();
+        List<? extends Object> getValues();
+        int getTotal();
+    }
+
+    public interface Projection {
+        int getOffset();
+        int getLimit();
+        String getOrderBy();
+    }
+
     boolean hasValue(PrestoField field);
     
     List<? extends Object> getValues(PrestoField field);
 
-    PagedValues getValues(PrestoField field, int offset, int limit);
-
-    public static interface PagedValues {
-        List<? extends Object> getValues();
-        Paging getPaging();
-        int getTotal();
-    }
-
-    public static interface Paging {
-        int getOffset();
-        int getLimit();
-    }
-
+    PagedValues getValues(PrestoField field, Projection projection);
+    
     List<? extends Object> getStoredValues(PrestoField field);
     
-    PagedValues getStoredValues(PrestoField field, int offset, int limit);
+    PagedValues getStoredValues(PrestoField field, Projection projection);
 
     Object getInternalData(); // WARN: be careful, no guarantees given
 

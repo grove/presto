@@ -40,12 +40,14 @@ import net.ontopia.presto.spi.PrestoDataProvider.ChangeSetHandler;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
+import net.ontopia.presto.spi.PrestoTopic.Projection;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
 import net.ontopia.presto.spi.utils.PrestoAttributes;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoContextField;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
+import net.ontopia.presto.spi.utils.PrestoProjection;
 
 @Path("/editor")
 public abstract class EditorResource implements PrestoAttributes {
@@ -231,7 +233,8 @@ public abstract class EditorResource implements PrestoAttributes {
 
             PrestoContextRules rules = session.getPrestoContextRules(context);
 
-            FieldData result = session.getFieldData(rules, field, start, limit, true);
+            Projection projection = new PrestoProjection(start, limit);
+            FieldData result = session.getFieldData(rules, field, projection, true);
             return Response.ok(result).build();
 
         } catch (Exception e) {

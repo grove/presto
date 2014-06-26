@@ -8,7 +8,7 @@ import java.util.List;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
-import net.ontopia.presto.spi.PrestoTopic.Paging;
+import net.ontopia.presto.spi.PrestoTopic.Projection;
 import net.ontopia.presto.spi.resolve.PrestoFieldResolver;
 import net.ontopia.presto.spi.utils.PrestoPagedValues;
 import net.ontopia.presto.spi.utils.PrestoVariableContext;
@@ -24,7 +24,7 @@ public class CouchViewResolver extends PrestoFieldResolver {
 
     @Override
     public PagedValues resolve(Collection<? extends Object> objects,
-            PrestoField field, boolean isReference, Paging paging, PrestoVariableResolver variableResolver) {
+            PrestoField field, boolean isReference, Projection projection, PrestoVariableResolver variableResolver) {
 
         PrestoVariableContext context = getVariableContext();
         ObjectNode config = getConfig();
@@ -48,7 +48,7 @@ public class CouchViewResolver extends PrestoFieldResolver {
         if (config.has("key")) {
             keys = context.replaceVariables(variableResolver, objects, config.get("key"));
             if (keys.isEmpty()) {
-                return new PrestoPagedValues(Collections.emptyList(), paging, 0);
+                return new PrestoPagedValues(Collections.emptyList(), projection, 0);
             }
             query = query.keys(keys);
 
@@ -61,7 +61,7 @@ public class CouchViewResolver extends PrestoFieldResolver {
             }
             
             if (startKeys.isEmpty()) {
-                return new PrestoPagedValues(Collections.emptyList(), paging, 0);
+                return new PrestoPagedValues(Collections.emptyList(), projection, 0);
             }
             
             if (startKeys.size() > 1) {
@@ -85,12 +85,12 @@ public class CouchViewResolver extends PrestoFieldResolver {
             query = query.keys(keys);
         }
 
-        if (paging != null) {
-            int offset = paging.getOffset();
+        if (projection != null) {
+            int offset = projection.getOffset();
             if (offset > 0) {
                 query = query.skip(offset);
             }
-            int limit = paging.getLimit();
+            int limit = projection.getLimit();
             if (limit > 0) {
                 query = query.limit(limit);
             }
@@ -137,8 +137,8 @@ public class CouchViewResolver extends PrestoFieldResolver {
             result.removeAll(objects);
         }
         int totalSize = viewResult.getSize();
-        if (paging != null) {
-            if (totalSize >= paging.getLimit()) {
+        if (projection != null) {
+            if (totalSize >= projection.getLimit()) {
                 if (config.has("count") && config.get("count").getTextValue().equals("reduce-value")) {
                     ViewQuery countQuery = new ViewQuery()
                     .designDocId(designDocId)
@@ -153,10 +153,10 @@ public class CouchViewResolver extends PrestoFieldResolver {
                     }
                 }
             } else {
-                totalSize += paging.getOffset();
+                totalSize += projection.getOffset();
             }
         }
-        return new PrestoPagedValues(result, paging, totalSize);
+        return new PrestoPagedValues(result, projection, totalSize);
     }
 
 }

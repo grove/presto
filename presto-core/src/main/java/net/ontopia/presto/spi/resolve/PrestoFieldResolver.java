@@ -5,7 +5,7 @@ import java.util.Collection;
 import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
-import net.ontopia.presto.spi.PrestoTopic.Paging;
+import net.ontopia.presto.spi.PrestoTopic.Projection;
 import net.ontopia.presto.spi.utils.PrestoVariableContext;
 import net.ontopia.presto.spi.utils.PrestoVariableResolver;
 
@@ -35,6 +35,6 @@ public abstract class PrestoFieldResolver {
     }
 
     public abstract PagedValues resolve(Collection<? extends Object> objects,
-            PrestoField field, boolean isReference, Paging paging, PrestoVariableResolver variableResolver);
+            PrestoField field, boolean isReference, Projection projection, PrestoVariableResolver variableResolver);
 
 }

@@ -7,7 +7,7 @@ import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
-import net.ontopia.presto.spi.PrestoTopic.Paging;
+import net.ontopia.presto.spi.PrestoTopic.Projection;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoView;
 import net.ontopia.presto.spi.rules.DelegatingContextRules;
@@ -261,10 +261,10 @@ public abstract class PrestoContextRules {
     public abstract PrestoContextRules getPrestoContextRules(PrestoContext context);
 
     public FieldValues getFieldValues(PrestoField field) {
-        return getFieldValues(field, 0, FieldValues.DEFAULT_LIMIT);
+        return getFieldValues(field, null);
     }
     
-    public FieldValues getFieldValues(PrestoField field, int offset, int limit) {
+    public FieldValues getFieldValues(PrestoField field, Projection projection) {
         if (context.isNewTopic()) {
             return getDefaultFieldValues(field);
         } else {
@@ -272,10 +272,13 @@ public abstract class PrestoContextRules {
 
             // server-side paging (only if not sorting)
             if (isPageableField(field) && !isSortedField(field)) {
-                int actualOffset = offset >= 0 ? offset : 0;
-                int actualLimit = limit > 0 ? limit : FieldValues.DEFAULT_LIMIT;
-                PrestoTopic.PagedValues pagedValues = topic.getValues(field, actualOffset, actualLimit);
-                Paging paging = pagedValues.getPaging();
+                PrestoTopic.PagedValues pagedValues;
+                if (projection == null) {
+                    pagedValues = topic.getValues(field, PrestoProjection.FIRST_PAGE);
+                } else {
+                    pagedValues = topic.getValues(field, projection);
+                }
+                Projection paging = pagedValues.getProjection();
                 return FieldValues.create(pagedValues.getValues(), paging.getOffset(), paging.getLimit(), pagedValues.getTotal());
             } else {
                 return FieldValues.create(topic.getValues(field));

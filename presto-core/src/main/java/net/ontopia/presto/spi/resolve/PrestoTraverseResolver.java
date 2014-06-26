@@ -8,7 +8,7 @@ import java.util.List;
 
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
-import net.ontopia.presto.spi.PrestoTopic.Paging;
+import net.ontopia.presto.spi.PrestoTopic.Projection;
 import net.ontopia.presto.spi.utils.PrestoPagedValues;
 import net.ontopia.presto.spi.utils.PrestoVariableResolver;
 
@@ -19,7 +19,7 @@ public class PrestoTraverseResolver extends PrestoFieldResolver {
 
     @Override
     public PagedValues resolve(Collection<? extends Object> objects,
-            PrestoField field, boolean isReference, Paging paging, PrestoVariableResolver variableResolver) {
+            PrestoField field, boolean isReference, Projection projection, PrestoVariableResolver variableResolver) {
         
         ObjectNode config = getConfig();
         
@@ -33,10 +33,10 @@ public class PrestoTraverseResolver extends PrestoFieldResolver {
                     rs = traverseField(rs, fieldId, variableResolver);
                 }
                 List<Object> result = new ArrayList<Object>(rs);
-                return new PrestoPagedValues(result, paging, result.size());
+                return new PrestoPagedValues(result, projection, result.size());
             }
         }
-        return new PrestoPagedValues(Collections.emptyList(), paging, 0);        
+        return new PrestoPagedValues(Collections.emptyList(), projection, 0);        
     }
 
     private Collection<Object> traverseField(Collection<Object> objects, String fieldId, PrestoVariableResolver variableResolver) {

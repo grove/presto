@@ -8,7 +8,7 @@ import java.util.List;
 import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
-import net.ontopia.presto.spi.PrestoTopic.Paging;
+import net.ontopia.presto.spi.PrestoTopic.Projection;
 import net.ontopia.presto.spi.utils.PrestoPagedValues;
 import net.ontopia.presto.spi.utils.PrestoVariableResolver;
 
@@ -19,7 +19,7 @@ public class PrestoIntersectionResolver extends PrestoFieldResolver {
 
     @Override
     public PagedValues resolve(Collection<? extends Object> objects,
-            PrestoField field, boolean isReference, Paging paging, PrestoVariableResolver variableResolver) {
+            PrestoField field, boolean isReference, Projection projection, PrestoVariableResolver variableResolver) {
 
         ObjectNode config = getConfig();
 
@@ -30,7 +30,7 @@ public class PrestoIntersectionResolver extends PrestoFieldResolver {
             if (resolveParentConfig.isArray()) {
                 PrestoDataProvider dataProvider = getDataProvider();
                 for (JsonNode resolveConfig : resolveParentConfig) {
-                    PagedValues values = dataProvider.resolveValues(objects, field, paging, resolveConfig, variableResolver);
+                    PagedValues values = dataProvider.resolveValues(objects, field, projection, resolveConfig, variableResolver);
                     if (result == null) {
                         result = new ArrayList<Object>(values.getValues());
                     } else {
@@ -40,9 +40,9 @@ public class PrestoIntersectionResolver extends PrestoFieldResolver {
             }
         }
         if (result != null) {
-            return new PrestoPagedValues(result, paging, 0);
+            return new PrestoPagedValues(result, projection, 0);
         } else {
-            return new PrestoPagedValues(Collections.emptyList(), paging, 0);
+            return new PrestoPagedValues(Collections.emptyList(), projection, 0);
         }
     }
     

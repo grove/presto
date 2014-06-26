@@ -8,7 +8,7 @@ import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoInlineTopicBuilder;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
-import net.ontopia.presto.spi.PrestoTopic.Paging;
+import net.ontopia.presto.spi.PrestoTopic.Projection;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.resolve.PrestoResolver;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet;
@@ -165,14 +165,14 @@ public abstract class JacksonDataProvider implements DefaultDataProvider {
     }
 
     @Override
-    public PagedValues resolveValues(PrestoTopic topic, PrestoField field, int offset, int limit) {
-        return resolver.resolveValues(topic, field, offset, limit);
+    public PagedValues resolveValues(PrestoTopic topic, PrestoField field, Projection projection) {
+        return resolver.resolveValues(topic, field, projection);
     }
 
     @Override
-    public PagedValues resolveValues(Collection<? extends Object> objects, PrestoField field, Paging paging, 
+    public PagedValues resolveValues(Collection<? extends Object> objects, PrestoField field, Projection projection, 
             JsonNode resolveConfig, PrestoVariableResolver variableResolver) {
-        return resolver.resolveValues(objects, field, paging, resolveConfig, variableResolver);
+        return resolver.resolveValues(objects, field, projection, resolveConfig, variableResolver);
     }
 
 }

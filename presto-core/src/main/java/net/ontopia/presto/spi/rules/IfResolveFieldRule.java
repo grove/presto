@@ -7,12 +7,12 @@ import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
-import net.ontopia.presto.spi.PrestoTopic.Paging;
+import net.ontopia.presto.spi.PrestoTopic.Projection;
 import net.ontopia.presto.spi.jackson.JacksonDataProvider;
 import net.ontopia.presto.spi.utils.PrestoContext;
-import net.ontopia.presto.spi.utils.PrestoContextRules.FieldFlag;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
-import net.ontopia.presto.spi.utils.PrestoPaging;
+import net.ontopia.presto.spi.utils.PrestoContextRules.FieldFlag;
+import net.ontopia.presto.spi.utils.PrestoProjection;
 import net.ontopia.presto.spi.utils.PrestoTopicWithParentFieldVariableResolver;
 import net.ontopia.presto.spi.utils.PrestoVariableResolver;
 
@@ -37,7 +37,7 @@ public class IfResolveFieldRule extends BooleanFieldRule {
    
             if (dataProvider instanceof JacksonDataProvider) {
    
-                Paging paging = new PrestoPaging(0, 1);
+                Projection projection = PrestoProjection.FIRST_ELEMENT;
    
                 PrestoVariableResolver variableResolver = new PrestoTopicWithParentFieldVariableResolver(getSchemaProvider(), context);
    
@@ -46,7 +46,7 @@ public class IfResolveFieldRule extends BooleanFieldRule {
                 Collection<? extends Object> objects = (topic == null ? Collections.emptyList() : Collections.singleton(topic));
    
                 JsonNode resolveConfig = config.path("resolve");
-                PagedValues values = dataProvider.resolveValues(objects, field, paging, resolveConfig, variableResolver);
+                PagedValues values = dataProvider.resolveValues(objects, field, projection, resolveConfig, variableResolver);
    
                 return !values.getValues().isEmpty();
             }

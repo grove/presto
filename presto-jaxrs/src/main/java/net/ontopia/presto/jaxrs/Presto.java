@@ -41,6 +41,7 @@ import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoInlineTopicBuilder;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
+import net.ontopia.presto.spi.PrestoTopic.Projection;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
 import net.ontopia.presto.spi.PrestoView;
@@ -516,17 +517,17 @@ public abstract class Presto {
     }
 
     public FieldDataValues setFieldDataValues(
-            PrestoContextRules rules, final PrestoField field, int offset, int limit, FieldData fieldData) {
+            PrestoContextRules rules, final PrestoField field, Projection projection, FieldData fieldData) {
 
-        FieldValues fieldValues = getFieldValues(rules, field, offset, limit);
+        FieldValues fieldValues = getFieldValues(rules, field, projection);
         return setFieldDataValues(rules, field, fieldData, fieldValues);
     }
 
     public FieldValues getFieldValues(PrestoContextRules rules, PrestoField field) {
-        return getFieldValues(rules, field, 0, FieldValues.DEFAULT_LIMIT);
+        return getFieldValues(rules, field, null);
     }
     
-    private FieldValues getFieldValues(PrestoContextRules rules, PrestoField field, int offset, int limit) {
+    private FieldValues getFieldValues(PrestoContextRules rules, PrestoField field, Projection projection) {
         PrestoContext context = rules.getContext();
         
         FieldValues result;
@@ -535,7 +536,7 @@ public abstract class Presto {
         if (function != null) {
             result = FieldValues.create(function.execute(context, field));
         } else {
-            result = rules.getFieldValues(field, offset, limit);
+            result = rules.getFieldValues(field, projection);
         }
         return filterByInlineReferenced(context, field, result);
     }
@@ -906,15 +907,17 @@ public abstract class Presto {
     }
 
     public FieldData getFieldData(PrestoContextRules rules, PrestoField field) {
-        return getFieldData(rules, field, 0, -1, true);
+        Projection projection = null;
+        return getFieldData(rules, field, projection, true);
     }
 
     public FieldData getFieldDataNoValues(PrestoContextRules rules, PrestoField field) {
-        return getFieldData(rules, field, 0, -1, false);
+        Projection projection = null;
+        return getFieldData(rules, field, projection, false);
     }
 
     public FieldData getFieldData(PrestoContextRules rules, PrestoField field, 
-            int offset, int limit, boolean includeValues) {
+            Projection projection, boolean includeValues) {
 
         PrestoContext context = rules.getContext();
 
@@ -1023,7 +1026,7 @@ public abstract class Presto {
 
         // get values (truncated if neccessary)
         if (includeValues) {
-            setFieldDataValues(rules, field, offset, limit, fieldData);
+            setFieldDataValues(rules, field, projection, fieldData);
         }
 
         //        fieldData = processor.postProcessFieldData(fieldData, topic, field, null);
