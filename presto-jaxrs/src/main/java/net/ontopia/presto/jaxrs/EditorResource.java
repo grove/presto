@@ -55,8 +55,8 @@ public abstract class EditorResource implements PrestoAttributes {
 
     public final static String APPLICATION_JSON_UTF8 = "application/json;charset=UTF-8";
 
-    @Context HttpServletRequest request;
-    private @Context UriInfo uriInfo;
+    protected @Context HttpServletRequest request;
+    protected @Context UriInfo uriInfo;
 
     @GET
     @Produces(APPLICATION_JSON_UTF8)
