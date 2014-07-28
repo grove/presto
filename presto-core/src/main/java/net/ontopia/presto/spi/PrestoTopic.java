@@ -21,6 +21,8 @@ public interface PrestoTopic {
     }
 
     public interface Projection {
+        boolean isPaged();
+        boolean isSorted();
         int getOffset();
         int getLimit();
         String getOrderBy();

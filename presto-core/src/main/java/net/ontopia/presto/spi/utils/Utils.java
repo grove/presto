@@ -79,6 +79,17 @@ public class Utils {
         PrestoField field = type.getFieldById(fieldId);
         return topic.getValues(field);
     }
+
+    public static Object getFieldValue(PrestoTopic topic, String fieldId, PrestoSchemaProvider schemaProvider) {
+        PrestoType type = getTopicType(topic, schemaProvider);
+        PrestoField field = type.getFieldById(fieldId);
+        List<? extends Object> values = topic.getValues(field);
+        if (values.isEmpty()) {
+            return null;
+        } else {
+            return values.get(0);
+        }
+    }
  
     public static <T> List<T> moveValuesToIndex(List<? extends T> values, List<? extends T> moveValues, int index, boolean allowAdd) {
         int size = values.size();
