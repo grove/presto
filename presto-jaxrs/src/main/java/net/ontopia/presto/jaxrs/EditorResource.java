@@ -43,6 +43,7 @@ import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoTopic.Projection;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
+import net.ontopia.presto.spi.PrestoView;
 import net.ontopia.presto.spi.utils.PrestoAttributes;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoContextField;
@@ -178,7 +179,45 @@ public abstract class EditorResource implements PrestoAttributes {
             }
 
             PrestoContextField contextField = PathParser.getContextField(session, path);
-            TopicView result = session.getTopicViewTemplateField(contextField.getContext(), contextField.getField(), type);
+
+            PrestoField parentField = contextField.getField();
+            PrestoView view = parentField.getCreateView(type);
+            TopicView result = session.getTopicViewTemplateField(contextField.getContext(), parentField, type, view);
+
+            return Response.ok(result).build();
+
+        } catch (Exception e) {
+            session.abort();
+            throw e;
+        } finally {
+            session.close();      
+        }
+    }
+    
+    @GET
+    @Produces(APPLICATION_JSON_UTF8)
+    @Path("topic-template-field/{databaseId}/{path}/{typeId}/{viewId}")
+    public Response getTopicTemplateField(
+            @PathParam("databaseId") final String databaseId,
+            @PathParam("path") final String path,
+            @PathParam("typeId") final String typeId,
+            @PathParam("viewId") final String viewId) throws Exception {
+
+        boolean readOnly = false;
+        Presto session = createPresto(databaseId, readOnly);
+
+        try {
+            PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
+
+            PrestoType type = schemaProvider.getTypeById(typeId);
+            if (type == null) {
+                return Response.status(Status.NOT_FOUND).build();
+            }
+
+            PrestoContextField contextField = PathParser.getContextField(session, path);
+            PrestoField parentField = contextField.getField();
+            PrestoView view = type.getViewById(viewId);
+            TopicView result = session.getTopicViewTemplateField(contextField.getContext(), parentField, type, view);
 
             return Response.ok(result).build();
 

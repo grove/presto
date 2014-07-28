@@ -405,10 +405,8 @@ public abstract class Presto {
         return result;
     }
 
-    public TopicView getTopicViewTemplateField(PrestoContext parentContext, PrestoField parentField, PrestoType type) {
-
-        PrestoView view = parentField.getCreateView(type);
-
+    public TopicView getTopicViewTemplateField(PrestoContext parentContext, PrestoField parentField, PrestoType type, PrestoView view) {
+        
         String typeId = type.getId();
         String viewId = view.getId();
 
