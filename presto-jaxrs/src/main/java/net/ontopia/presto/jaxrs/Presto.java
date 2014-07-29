@@ -33,6 +33,7 @@ import net.ontopia.presto.jaxrs.links.Links;
 import net.ontopia.presto.jaxrs.process.ValueFactory;
 import net.ontopia.presto.jaxrs.resolve.AvailableFieldCreateTypesResolver;
 import net.ontopia.presto.jaxrs.resolve.AvailableFieldValuesResolver;
+import net.ontopia.presto.jaxrs.sort.DefaultSortKeyGenerator;
 import net.ontopia.presto.jaxrs.sort.SortKeyGenerator;
 import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoDataProvider;
@@ -339,7 +340,7 @@ public abstract class Presto {
             }
         }
         result.setFields(fields);
-
+        
         List<Link> links = new ArrayList<Link>();
         links.add(createLabel(type, view));
 
@@ -637,114 +638,19 @@ public abstract class Presto {
     private void sortFieldValues(final PrestoContextRules rules, final PrestoField field, final Projection projection,
             List<? extends Object> fieldValues) {
 
-        final boolean isSortedAscendingField = rules.isSortedAscendingField(field);
-        final SortKeyGenerator sortKeyGenerator = createSortKeyGenerator(field);
-        if (sortKeyGenerator == null) {
-            if (field.isReferenceField() && projection.isSorted()) {
-                Collections.sort(fieldValues, new Comparator<Object>() {
-                    public int compare(Object o1, Object o2) {
-                        PrestoTopic t1 = (PrestoTopic)o1;
-                        PrestoTopic t2 = (PrestoTopic)o2;
-                        String n1 = null;
-                        String n2 = null;
-                        String orderBy = projection.getOrderBy();
-                        boolean ascending = isSortedAscendingField;
-                        if (orderBy != null) {
-                            String[] split = orderBy.split(" ");
-                            String orderField = split[0];
-                            String orderDirection = split[1];
-                            if (orderDirection != null) {
-                                ascending = !orderDirection.equals("desc");
-                            }
-                            System.out.println("t1: " + t1 + " " + orderField);
-                            System.out.println("t2: " + t2 + " " + orderField);
-                            n1 = getComparable(t1, orderField);
-                            n2 = getComparable(t2, orderField);
-                            System.out.println("n1: " + n1 + " n2: " + n2);
-                        }
-                        if (ascending) {
-                            return compareComparables(n1, n2);
-                        } else {
-                            return compareComparables(n1, n2) * -1;
-                        }
-                    }
-                    private String getComparable(PrestoTopic valueTopic, String valueFieldId) {
-                        PrestoContext context = rules.getContext();
-                        String valueTypeId = valueTopic.getTypeId();
-                        PrestoType valueType = schemaProvider.getTypeById(valueTypeId);
-                        PrestoField valueField = valueType.getFieldById(valueFieldId);
-
-                        PrestoContext subcontext = PrestoContext.createSubContext(getDataProvider(), getSchemaProvider(), context, field, valueTopic);
-                        PrestoContextRules subrules = getPrestoContextRules(subcontext);
-                        
-                        FieldValues fieldValues = getFieldValues(subrules, valueField);
-                        
-                        List<? extends Object> values = fieldValues.getValues();
-                        Object value = values.isEmpty() ? null : values.get(0);
-                        if (value instanceof PrestoTopic) {
-                            return ((PrestoTopic) value).getName();
-                        } else {
-                            return value == null ? null : value.toString();
-                        }
-                    }
-                });
-
-            } else {
-                Collections.sort(fieldValues, new Comparator<Object>() {
-                    public int compare(Object o1, Object o2) {
-                        String n1 = getSortKey(projection, o1);
-                        String n2 = getSortKey(projection, o2);
-                        if (isSortedAscendingField) {
-                            return compareComparables(n1, n2);
-                        } else {
-                            return compareComparables(n1, n2) * -1;
-                        }
-                    }
-                    private String getSortKey(Projection projection, Object value) {
-                        if (value instanceof PrestoTopic) {
-                            PrestoTopic topic = (PrestoTopic)value;
-                            return topic.getName(field);
-                        } else {
-                            return value == null ? null : value.toString();
-                        }
-                    }
-                });
-            }
-        } else {
-            Collections.sort(fieldValues, new Comparator<Object>() {
-                public int compare(Object o1, Object o2) {
-                    PrestoContext context = rules.getContext();
-                    String n1 = sortKeyGenerator.getSortKey(context, field, o1);
-                    String n2 = sortKeyGenerator.getSortKey(context, field, o2);
-                    if (isSortedAscendingField) {
-                        return compareComparables(n1, n2);
-                    } else {
-                        return compareComparables(n1, n2) * -1;
-                    }
-                }
-            });
-
-        }
+        SortKeyGenerator sortKeyGenerator = createSortKeyGenerator(rules, field, projection);
+        Comparator<Object> comp = sortKeyGenerator.getComparator(rules, field, projection);
+        Collections.sort(fieldValues, comp);
     }
 
-    protected <T extends Comparable<T>> int compareComparables(T o1, T o2) {
-        if (o1 == null) {
-            return (o2 == null ? 0 : -1);
-        } else if (o2 == null){ 
-            return 1;
-        } else {
-            return o1.compareTo(o2);
-        }
-    }
-
-    private SortKeyGenerator createSortKeyGenerator(PrestoField field) {
+    private SortKeyGenerator createSortKeyGenerator(PrestoContextRules rules, PrestoField field, Projection projection) {
         ObjectNode extra = ExtraUtils.getFieldExtraNode(field);
         if (extra != null) {
             JsonNode handlerNode = extra.path("sortKeyGenerator");
             if (handlerNode.isObject()) {
                 SortKeyGenerator handler = AbstractHandler.getHandler(dataProvider, schemaProvider, SortKeyGenerator.class, (ObjectNode)handlerNode);
                 if (handler != null) {
-//                    handler.setPresto(this);
+                    handler.setPresto(this);
                     return handler;
                 }
                 log.warn("Not able to extract sortKeyGenerator instance from field " + field.getId() + ": " + extra);                    
@@ -752,7 +658,11 @@ public abstract class Presto {
                 log.warn("Field " + field.getId() + " extra.sortKeyGenerator is not an object: " + extra);
             }
         }
-        return null;
+        SortKeyGenerator result = new DefaultSortKeyGenerator();
+        result.setPresto(this);
+        result.setDataProvider(dataProvider);
+        result.setSchemaProvider(schemaProvider);
+        return result;
     }
 
     private ValueFactory createValueFactory(PrestoContextRules rules, PrestoField field) {

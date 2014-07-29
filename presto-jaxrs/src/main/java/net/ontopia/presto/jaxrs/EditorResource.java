@@ -274,6 +274,7 @@ public abstract class EditorResource implements PrestoAttributes {
 
             Projection projection = new PrestoProjection(start, limit, orderBy);
             FieldData result = session.getFieldDataAndProcess(context, field, projection);
+
             return Response.ok(result).build();
 
         } catch (Exception e) {

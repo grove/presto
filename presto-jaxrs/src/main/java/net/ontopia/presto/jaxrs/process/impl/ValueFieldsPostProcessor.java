@@ -16,7 +16,6 @@ import net.ontopia.presto.jaxrs.Presto;
 import net.ontopia.presto.jaxrs.Presto.FieldDataValues;
 import net.ontopia.presto.jaxrs.PrestoProcessor;
 import net.ontopia.presto.jaxrs.process.FieldDataProcessor;
-import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoTopic.Projection;
@@ -25,6 +24,7 @@ import net.ontopia.presto.spi.PrestoView;
 import net.ontopia.presto.spi.utils.FieldValues;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
+import net.ontopia.presto.spi.utils.Utils;
 
 public class ValueFieldsPostProcessor extends FieldDataProcessor {
 
@@ -74,13 +74,15 @@ public class ValueFieldsPostProcessor extends FieldDataProcessor {
                 String sortAscUrl = UriBuilder.fromUri(baseUri)
                         .path("editor").path("paging-field").path(databaseId)
                         .path(path).path(topicId).path(viewId).path(fieldId)
-                        .path(start).path(limit).queryParam("orderBy", valueFieldId + " asc").toString();
+                        .path(start).path(limit)
+                        .queryParam("orderBy", valueFieldId + " asc").queryParam("format", "topic-view").toString();
                 Link sortAscLink = new Link("sort-asc", sortAscUrl);
                 links.add(sortAscLink);
                 String sortDescUrl = UriBuilder.fromUri(baseUri)
                         .path("editor").path("paging-field").path(databaseId)
                         .path(path).path(topicId).path(viewId).path(fieldId)
-                        .path(start).path(limit).queryParam("orderBy", valueFieldId + " desc").toString();
+                        .path(start).path(limit)
+                        .queryParam("orderBy", valueFieldId + " desc").queryParam("format", "topic-view").toString();
                 Link sortDescLink = new Link("sort-desc", sortDescUrl);
                 links.add(sortDescLink);
                 fd.setLinks(links);
@@ -108,9 +110,8 @@ public class ValueFieldsPostProcessor extends FieldDataProcessor {
 
         if (field.isReferenceField()) {
             List<Value> values = new ArrayList<Value>();
-            PrestoDataProvider dataProvider = getDataProvider();
             String valueId = outputValue.getValue();
-            PrestoTopic valueTopic = dataProvider.getTopicById(valueId);
+            PrestoTopic valueTopic = Utils.getContextualValueTopic(rules, field, valueId);
 
             PrestoContext context = rules.getContext();
             PrestoContext subcontext = PrestoContext.createSubContext(getDataProvider(), getSchemaProvider(), context, field, valueTopic);

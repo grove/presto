@@ -13,6 +13,7 @@ import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.jackson.JacksonDataProvider;
 import net.ontopia.presto.spi.jackson.JacksonTopic;
+import net.ontopia.presto.spi.utils.Utils;
 import net.vz.mongodb.jackson.DBCursor;
 import net.vz.mongodb.jackson.JacksonDBCollection;
 
@@ -90,7 +91,7 @@ public abstract class MongoDataProvider extends JacksonDataProvider {
         Collections.sort(result, new Comparator<PrestoTopic>() {
             @Override
             public int compare(PrestoTopic o1, PrestoTopic o2) {
-                return compareComparables(o1.getName(field), o2.getName(field));
+                return Utils.compareComparables(o1.getName(field), o2.getName(field));
             }
         });
         return result;
