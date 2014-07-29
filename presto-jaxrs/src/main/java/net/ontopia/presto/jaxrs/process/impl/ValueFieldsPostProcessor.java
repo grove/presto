@@ -26,10 +26,12 @@ import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
 import net.ontopia.presto.spi.utils.Utils;
 
+import org.codehaus.jackson.node.ObjectNode;
+
 public class ValueFieldsPostProcessor extends FieldDataProcessor {
 
     @Override
-    public FieldData processFieldData(FieldData fieldData, PrestoContextRules rules, PrestoField field) {
+    public FieldData processFieldData(FieldData fieldData, PrestoContextRules rules, PrestoField field, Projection projection) {
         
         // ISSUE: using first value type for now
         Collection<PrestoType> availableFieldValueTypes = field.getAvailableFieldValueTypes();
@@ -49,6 +51,11 @@ public class ValueFieldsPostProcessor extends FieldDataProcessor {
         PrestoContext subcontext = PrestoContext.createSubContext(context, context.getParentField(), type, valueView);
         PrestoContextRules subrules = rules.getPrestoContextRules(subcontext);
 
+        boolean sortableColumns = false;
+        ObjectNode config = getConfig();
+        if (config != null) {
+            sortableColumns = config.path("sortable-columns").asBoolean(false);
+        }
         // assign column value fields
         List<FieldData> valueFields = new ArrayList<FieldData>();
         for (PrestoField valueField : fields) {
@@ -56,36 +63,38 @@ public class ValueFieldsPostProcessor extends FieldDataProcessor {
                 FieldData fd = presto.getFieldDataNoValues(rules, valueField);
                 
                 // process the value field
-                fd = processor.processFieldData(fd, rules, valueField, getType(), getStatus());
+                fd = processor.processFieldData(fd, rules, valueField, projection, getType(), getStatus());
     
                 // add column sorting links
-                String databaseId = presto.getDatabaseId();
-                String path = PathParser.getInlineTopicPath(context.getParentContext(), context.getParentField());
-                String topicId = context.getTopicId();
-                String viewId = context.getView().getId();
-                String fieldId = field.getId();
-                String start = "0";
-                String limit = Integer.toString(FieldValues.DEFAULT_LIMIT);
-                Collection<Link> links = fd.getLinks();
-                if (links == null) {
-                    links = new LinkedHashSet<Link>();
+                if (sortableColumns) {
+                    String databaseId = presto.getDatabaseId();
+                    String path = PathParser.getInlineTopicPath(context.getParentContext(), context.getParentField());
+                    String topicId = context.getTopicId();
+                    String viewId = context.getView().getId();
+                    String fieldId = field.getId();
+                    String start = "0";
+                    String limit = Integer.toString(FieldValues.DEFAULT_LIMIT);
+                    Collection<Link> links = fd.getLinks();
+                    if (links == null) {
+                        links = new LinkedHashSet<Link>();
+                    }
+                    String valueFieldId = valueField.getId();
+                    String sortAscUrl = UriBuilder.fromUri(baseUri)
+                            .path("editor").path("paging-field").path(databaseId)
+                            .path(path).path(topicId).path(viewId).path(fieldId)
+                            .path(start).path(limit)
+                            .queryParam("orderBy", valueFieldId + " asc").queryParam("format", "topic-view").toString();
+                    Link sortAscLink = new Link("sort-asc", sortAscUrl);
+                    links.add(sortAscLink);
+                    String sortDescUrl = UriBuilder.fromUri(baseUri)
+                            .path("editor").path("paging-field").path(databaseId)
+                            .path(path).path(topicId).path(viewId).path(fieldId)
+                            .path(start).path(limit)
+                            .queryParam("orderBy", valueFieldId + " desc").queryParam("format", "topic-view").toString();
+                    Link sortDescLink = new Link("sort-desc", sortDescUrl);
+                    links.add(sortDescLink);
+                    fd.setLinks(links);
                 }
-                String valueFieldId = valueField.getId();
-                String sortAscUrl = UriBuilder.fromUri(baseUri)
-                        .path("editor").path("paging-field").path(databaseId)
-                        .path(path).path(topicId).path(viewId).path(fieldId)
-                        .path(start).path(limit)
-                        .queryParam("orderBy", valueFieldId + " asc").queryParam("format", "topic-view").toString();
-                Link sortAscLink = new Link("sort-asc", sortAscUrl);
-                links.add(sortAscLink);
-                String sortDescUrl = UriBuilder.fromUri(baseUri)
-                        .path("editor").path("paging-field").path(databaseId)
-                        .path(path).path(topicId).path(viewId).path(fieldId)
-                        .path(start).path(limit)
-                        .queryParam("orderBy", valueFieldId + " desc").queryParam("format", "topic-view").toString();
-                Link sortDescLink = new Link("sort-desc", sortDescUrl);
-                links.add(sortDescLink);
-                fd.setLinks(links);
                 valueFields.add(fd);
             }
         }

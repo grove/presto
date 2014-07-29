@@ -1014,7 +1014,7 @@ public abstract class Presto {
 
         FieldData result = getFieldData(rules, field);
 
-        return processor.postProcessFieldData(result, rules, field, null);
+        return processor.postProcessFieldData(result, rules, field, null, null);
     }
 
     public FieldData getFieldDataAndProcess(PrestoContext context, PrestoField field, Projection projection) {
@@ -1022,7 +1022,7 @@ public abstract class Presto {
 
         FieldData result = getFieldData(rules, field, projection, true);
 
-        return processor.postProcessFieldData(result, rules, field, null);
+        return processor.postProcessFieldData(result, rules, field, projection, null);
     }
     
     public FieldData addFieldValues(PrestoContextRules rules, PrestoField field, Integer index, FieldData fieldData, boolean isMove) {
@@ -1166,8 +1166,8 @@ public abstract class Presto {
         
         FieldAction fieldAction = getFieldAction(field, actionId);
         
-        if (fieldAction != null && fieldAction.isActive(rules, field, actionId)) {
-            System.out.println("Executing action: "+ actionId);
+        if (fieldAction != null && fieldAction.isActive(rules, field, null, actionId)) {
+            log.debug("Executing action: "+ actionId);
             topicView = fieldAction.executeAction(context, topicView, field, actionId);
         }
         
