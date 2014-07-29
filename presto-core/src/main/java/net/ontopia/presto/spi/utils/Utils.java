@@ -1,8 +1,10 @@
 package net.ontopia.presto.spi.utils;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
+import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
@@ -25,7 +27,25 @@ public class Utils {
     public static final <T> T newInstanceOf(String className, Class<T> type) {
         return newInstanceOf(className, type, true);
     }
+
+    public static final int compareComparables(String o1, String o2) {
+        if (o1 == null)
+            return (o2 == null ? 0 : -1);
+        else if (o2 == null)
+            return 1;
+        else
+            return o1.compareTo(o2);
+    }
     
+    public static final int compareComparables(String o1, String o2, Comparator<String> c) {
+        if (o1 == null)
+            return (o2 == null ? 0 : -1);
+        else if (o2 == null)
+            return 1;
+        else
+            return c.compare(o1, o2);
+    }
+
     @SuppressWarnings("unchecked")
     public static final <T> T newInstanceOf(String className, Class<T> type, boolean warnIfDifferentType) {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
@@ -79,7 +99,36 @@ public class Utils {
         PrestoField field = type.getFieldById(fieldId);
         return topic.getValues(field);
     }
- 
+
+    public static Object getFieldValue(PrestoTopic topic, String fieldId, PrestoSchemaProvider schemaProvider) {
+        PrestoType type = getTopicType(topic, schemaProvider);
+        PrestoField field = type.getFieldById(fieldId);
+        List<? extends Object> values = topic.getValues(field);
+        if (values.isEmpty()) {
+            return null;
+        } else {
+            return values.get(0);
+        }
+    }
+    
+    public static PrestoTopic getContextualValueTopic(PrestoContextRules rules, PrestoField field, String valueId) {
+        if (field.isInline()) {
+            FieldValues fieldValues = rules.getFieldValues(field);
+            for (Object value : fieldValues.getValues()) {
+                if (value instanceof PrestoTopic) {
+                    PrestoTopic valueTopic = (PrestoTopic)value;
+                    if (valueTopic.getId().equals(valueId)) {
+                        return valueTopic;
+                    }
+                }
+            }
+            return null;
+        } else {
+            PrestoDataProvider dataProvider = rules.getDataProvider();
+            return dataProvider.getTopicById(valueId);
+        }
+    }
+
     public static <T> List<T> moveValuesToIndex(List<? extends T> values, List<? extends T> moveValues, int index, boolean allowAdd) {
         int size = values.size();
         if (index > size) {

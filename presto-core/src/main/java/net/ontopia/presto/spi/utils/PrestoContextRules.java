@@ -190,8 +190,9 @@ public abstract class PrestoContextRules {
         return isFieldHandlerFlag(FieldFlag.isTraverableField, field, field.isTraversable());
     }
 
-    public boolean isSortedField(PrestoField field) {
-        return isFieldHandlerFlag(FieldFlag.isSortedField, field, field.isSorted());
+    public boolean isSortedField(PrestoField field, Projection projection) {
+        boolean defaultValue = (projection != null && projection.isSorted()) || field.isSorted();
+        return isFieldHandlerFlag(FieldFlag.isSortedField, field, defaultValue);
     }
 
     public boolean isSortedAscendingField(PrestoField field) {
@@ -271,7 +272,7 @@ public abstract class PrestoContextRules {
             PrestoTopic topic = context.getTopic();
 
             // server-side paging (only if not sorting)
-            if (isPageableField(field) && !isSortedField(field)) {
+            if (isPageableField(field) && !isSortedField(field, projection)) {
                 PrestoTopic.PagedValues pagedValues;
                 if (projection == null) {
                     pagedValues = topic.getValues(field, PrestoProjection.FIRST_PAGE);

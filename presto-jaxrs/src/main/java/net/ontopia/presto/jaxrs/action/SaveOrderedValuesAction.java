@@ -1,23 +1,24 @@
 package net.ontopia.presto.jaxrs.action;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
+import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxb.TopicView;
+import net.ontopia.presto.jaxb.Value;
 import net.ontopia.presto.jaxrs.Presto;
 import net.ontopia.presto.spi.PrestoChangeSet;
+import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic;
+import net.ontopia.presto.spi.PrestoTopic.Projection;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
-import net.ontopia.presto.spi.PrestoTopic.Projection;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ObjectNode;
-
-public class SetFixedValuesAction extends FieldAction {
+public class SaveOrderedValuesAction extends FieldAction {
 
     @Override
     public boolean isActive(PrestoContextRules rules, PrestoField field, Projection projection, String actionId) {
@@ -34,7 +35,7 @@ public class SetFixedValuesAction extends FieldAction {
         PrestoChangeSet changeSet = session.newChangeSet();
         PrestoUpdate update = changeSet.updateTopic(topic, type);
 
-        update.setValues(field, getFixedValues());
+        update.setValues(field, getOrderedValues(topicView, field));
 
         changeSet.save();
 
@@ -44,17 +45,24 @@ public class SetFixedValuesAction extends FieldAction {
         return session.getTopicViewAndProcess(newContext);
     }
 
-    private List<? extends Object> getFixedValues() {
+    private Collection<?> getOrderedValues(TopicView topicView, PrestoField field) {
+        Presto presto = getPresto();
+        PrestoDataProvider dataProvider = presto.getDataProvider();
+        boolean isReference = field.isReferenceField();
         List<Object> values = new ArrayList<Object>();
-
-        ObjectNode config = getConfig();
-        JsonNode valuesNode = config.path("values");
-        if (valuesNode.isArray()) {
-            for (JsonNode valueNode : valuesNode) {
-                if (valueNode.isTextual()) {
-                    String value = valueNode.getTextValue();
-                    if (value != null) {
-                        values.add(value);
+        for (FieldData fd : topicView.getFields()) {
+            if (field.getId().equals(fd.getId())) {
+                for (Value value : fd.getValues()) {
+                    String v = value.getValue();
+                    if (v != null) {
+                        if (isReference) {
+                            PrestoTopic vt = dataProvider.getTopicById(v);
+                            if (vt != null) {
+                                values.add(vt);
+                            }
+                        } else {
+                            values.add(v);
+                        }
                     }
                 }
             }

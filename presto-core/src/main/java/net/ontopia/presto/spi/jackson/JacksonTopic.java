@@ -133,7 +133,7 @@ public class JacksonTopic implements DefaultTopic {
         int size = fieldNode == null ? 0 : fieldNode.size();
         int start = 0;
         int end = size;
-        if (projection != null) {
+        if (projection != null && projection.isPaged()) {
             start = Math.min(Math.max(0, projection.getOffset()), size);
             end = Math.min(projection.getLimit()+start, size);
         }

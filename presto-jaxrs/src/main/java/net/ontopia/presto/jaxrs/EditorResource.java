@@ -238,9 +238,10 @@ public abstract class EditorResource implements PrestoAttributes {
             @PathParam("viewId") final String viewId,
             @PathParam("fieldId") final String fieldId, 
             @PathParam("start") final int start, 
-            @PathParam("limit") final int limit) throws Exception {
+            @PathParam("limit") final int limit,
+            @QueryParam("orderBy") final String orderBy) throws Exception {
         String path = null;
-        return getFieldPagingPath(databaseId, path, topicId, viewId, fieldId, start, limit);
+        return getFieldPagingPath(databaseId, path, topicId, viewId, fieldId, start, limit, orderBy);
     }
 
     @GET
@@ -253,7 +254,8 @@ public abstract class EditorResource implements PrestoAttributes {
             @PathParam("viewId") final String viewId,
             @PathParam("fieldId") final String fieldId, 
             @PathParam("start") final int start, 
-            @PathParam("limit") final int limit) throws Exception {
+            @PathParam("limit") final int limit,
+            @QueryParam("orderBy") final String orderBy) throws Exception {
 
         boolean readOnly = false;
         Presto session = createPresto(databaseId, readOnly);
@@ -270,10 +272,9 @@ public abstract class EditorResource implements PrestoAttributes {
                 return Response.status(Status.NOT_FOUND).build();
             }
 
-            PrestoContextRules rules = session.getPrestoContextRules(context);
+            Projection projection = new PrestoProjection(start, limit, orderBy);
+            FieldData result = session.getFieldDataAndProcess(context, field, projection);
 
-            Projection projection = new PrestoProjection(start, limit);
-            FieldData result = session.getFieldData(rules, field, projection, true);
             return Response.ok(result).build();
 
         } catch (Exception e) {

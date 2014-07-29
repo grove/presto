@@ -12,6 +12,7 @@ import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.jackson.JacksonDataProvider;
 import net.ontopia.presto.spi.jackson.JacksonTopic;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.Change;
+import net.ontopia.presto.spi.utils.Utils;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;
@@ -115,7 +116,7 @@ public abstract class CouchDataProvider extends JacksonDataProvider {
         Collections.sort(result, new Comparator<PrestoTopic>() {
             @Override
             public int compare(PrestoTopic o1, PrestoTopic o2) {
-                return compareComparables(o1.getName(field), o2.getName(field));
+                return Utils.compareComparables(o1.getName(field), o2.getName(field));
             }
         });
         return result;

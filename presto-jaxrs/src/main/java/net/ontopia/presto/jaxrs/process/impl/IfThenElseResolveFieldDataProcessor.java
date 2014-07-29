@@ -27,7 +27,7 @@ import org.codehaus.jackson.node.ObjectNode;
 public abstract class IfThenElseResolveFieldDataProcessor extends FieldDataProcessor {
 
     @Override
-    public FieldData processFieldData(FieldData fieldData, PrestoContextRules rules, PrestoField field) {
+    public FieldData processFieldData(FieldData fieldData, PrestoContextRules rules, PrestoField field, Projection projection) {
         if (isShouldRun(fieldData, rules, field)) {
             boolean result = getResult(fieldData, rules, field);
             if (result) {

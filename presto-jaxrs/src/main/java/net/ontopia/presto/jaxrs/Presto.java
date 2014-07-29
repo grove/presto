@@ -33,6 +33,7 @@ import net.ontopia.presto.jaxrs.links.Links;
 import net.ontopia.presto.jaxrs.process.ValueFactory;
 import net.ontopia.presto.jaxrs.resolve.AvailableFieldCreateTypesResolver;
 import net.ontopia.presto.jaxrs.resolve.AvailableFieldValuesResolver;
+import net.ontopia.presto.jaxrs.sort.DefaultSortKeyGenerator;
 import net.ontopia.presto.jaxrs.sort.SortKeyGenerator;
 import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoDataProvider;
@@ -339,7 +340,7 @@ public abstract class Presto {
             }
         }
         result.setFields(fields);
-
+        
         List<Link> links = new ArrayList<Link>();
         links.add(createLabel(type, view));
 
@@ -518,7 +519,7 @@ public abstract class Presto {
             PrestoContextRules rules, final PrestoField field, Projection projection, FieldData fieldData) {
 
         FieldValues fieldValues = getFieldValues(rules, field, projection);
-        return setFieldDataValues(rules, field, fieldData, fieldValues);
+        return setFieldDataValues(rules, field, projection, fieldData, fieldValues);
     }
 
     public FieldValues getFieldValues(PrestoContextRules rules, PrestoField field) {
@@ -592,13 +593,14 @@ public abstract class Presto {
         return new PrestoContextField(context, field);
     }
     
-    public FieldDataValues setFieldDataValues(PrestoContextRules rules, final PrestoField field, FieldData fieldData, FieldValues fieldValues) {
+    public FieldDataValues setFieldDataValues(PrestoContextRules rules, final PrestoField field, Projection projection,
+            FieldData fieldData, FieldValues fieldValues) {
 
         List<? extends Object> values = fieldValues.getValues();
 
         // sort the result
-        if (rules.isSortedField(field)) {
-            sortFieldValues(rules, field, values, rules.isSortedAscendingField(field));
+        if (rules.isSortedField(field, projection)) {
+            sortFieldValues(rules, field, projection, values);
         }
 
         ValueFactory valueFactory = createValueFactory(rules, field);
@@ -624,7 +626,7 @@ public abstract class Presto {
             fieldData.setValues(outputValues);
 
             // figure out how to truncate result (offset/limit)
-            if (fieldValues.isPaging() && rules.isPageableField(field) && !rules.isSortedField(field)) {
+            if (fieldValues.isPaging() && rules.isPageableField(field) && !rules.isSortedField(field, projection)) {
                 fieldData.setValuesOffset(fieldValues.getOffset());
                 fieldData.setValuesLimit(fieldValues.getLimit());
                 fieldData.setValuesTotal(fieldValues.getTotal());
@@ -633,51 +635,22 @@ public abstract class Presto {
         return new FieldDataValues(inputValues, outputValues);
     }
 
-    private void sortFieldValues(final PrestoContextRules rules, final PrestoField field, List<? extends Object> fieldValues, final boolean ascending) {
-        final SortKeyGenerator sortKeyGenerator = createSortKeyGenerator(field);
-        if (sortKeyGenerator == null) {
-            Collections.sort(fieldValues, new Comparator<Object>() {
-                public int compare(Object o1, Object o2) {
-                    String n1 = (o1 instanceof PrestoTopic) ? ((PrestoTopic)o1).getName(field) : (o1 == null ? null : o1.toString());
-                    String n2 = (o2 instanceof PrestoTopic) ? ((PrestoTopic)o2).getName(field) : (o2 == null ? null : o2.toString());
-                    return compareComparables(n1, n2);
-                }
-            });
-        } else {
-            Collections.sort(fieldValues, new Comparator<Object>() {
-                public int compare(Object o1, Object o2) {
-                    PrestoContext context = rules.getContext();
-                    String n1 = sortKeyGenerator.getSortKey(context, field, ((PrestoTopic)o1));
-                    String n2 = sortKeyGenerator.getSortKey(context, field, ((PrestoTopic)o2));
-                    if (ascending) {
-                        return compareComparables(n1, n2);
-                    } else {
-                        return compareComparables(n1, n2) * -1;
-                    }
-                }
-            });
+    private void sortFieldValues(final PrestoContextRules rules, final PrestoField field, final Projection projection,
+            List<? extends Object> fieldValues) {
 
-        }
+        SortKeyGenerator sortKeyGenerator = createSortKeyGenerator(rules, field, projection);
+        Comparator<Object> comp = sortKeyGenerator.getComparator(rules, field, projection);
+        Collections.sort(fieldValues, comp);
     }
 
-    protected int compareComparables(String o1, String o2) {
-        if (o1 == null) {
-            return (o2 == null ? 0 : -1);
-        } else if (o2 == null){ 
-            return 1;
-        } else {
-            return o1.compareTo(o2);
-        }
-    }
-
-    private SortKeyGenerator createSortKeyGenerator(PrestoField field) {
+    private SortKeyGenerator createSortKeyGenerator(PrestoContextRules rules, PrestoField field, Projection projection) {
         ObjectNode extra = ExtraUtils.getFieldExtraNode(field);
         if (extra != null) {
             JsonNode handlerNode = extra.path("sortKeyGenerator");
             if (handlerNode.isObject()) {
                 SortKeyGenerator handler = AbstractHandler.getHandler(dataProvider, schemaProvider, SortKeyGenerator.class, (ObjectNode)handlerNode);
                 if (handler != null) {
-//                    handler.setPresto(this);
+                    handler.setPresto(this);
                     return handler;
                 }
                 log.warn("Not able to extract sortKeyGenerator instance from field " + field.getId() + ": " + extra);                    
@@ -685,7 +658,11 @@ public abstract class Presto {
                 log.warn("Field " + field.getId() + " extra.sortKeyGenerator is not an object: " + extra);
             }
         }
-        return null;
+        SortKeyGenerator result = new DefaultSortKeyGenerator();
+        result.setPresto(this);
+        result.setDataProvider(dataProvider);
+        result.setSchemaProvider(schemaProvider);
+        return result;
     }
 
     private ValueFactory createValueFactory(PrestoContextRules rules, PrestoField field) {
@@ -914,7 +891,7 @@ public abstract class Presto {
         return getFieldData(rules, field, projection, false);
     }
 
-    public FieldData getFieldData(PrestoContextRules rules, PrestoField field, 
+    private FieldData getFieldData(PrestoContextRules rules, PrestoField field, 
             Projection projection, boolean includeValues) {
 
         PrestoContext context = rules.getContext();
@@ -981,7 +958,7 @@ public abstract class Presto {
             }
         }
         if (!isReadOnly) {
-            boolean isSorted = rules.isSortedField(field);
+            boolean isSorted = rules.isSortedField(field, projection);
 
             boolean allowRemove = rules.isRemovableField(field);
             boolean allowMove = !isSorted && rules.isMovableField(field);
@@ -1037,7 +1014,15 @@ public abstract class Presto {
 
         FieldData result = getFieldData(rules, field);
 
-        return processor.postProcessFieldData(result, rules, field, null);
+        return processor.postProcessFieldData(result, rules, field, null, null);
+    }
+
+    public FieldData getFieldDataAndProcess(PrestoContext context, PrestoField field, Projection projection) {
+        PrestoContextRules rules = getPrestoContextRules(context);
+
+        FieldData result = getFieldData(rules, field, projection, true);
+
+        return processor.postProcessFieldData(result, rules, field, projection, null);
     }
     
     public FieldData addFieldValues(PrestoContextRules rules, PrestoField field, Integer index, FieldData fieldData, boolean isMove) {
@@ -1181,8 +1166,8 @@ public abstract class Presto {
         
         FieldAction fieldAction = getFieldAction(field, actionId);
         
-        if (fieldAction != null && fieldAction.isActive(rules, field, actionId)) {
-            System.out.println("Executing action: "+ actionId);
+        if (fieldAction != null && fieldAction.isActive(rules, field, null, actionId)) {
+            log.debug("Executing action: "+ actionId);
             topicView = fieldAction.executeAction(context, topicView, field, actionId);
         }
         
