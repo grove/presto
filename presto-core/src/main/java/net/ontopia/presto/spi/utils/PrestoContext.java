@@ -191,7 +191,7 @@ public class PrestoContext {
             sb.append(parentField.getId());
             sb.append("$");
         }
-        sb.append(topic.getId());
+        sb.append(topicId);
         sb.append("$");
         sb.append(view.getId());
         return sb.toString();
