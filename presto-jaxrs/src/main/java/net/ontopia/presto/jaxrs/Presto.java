@@ -47,8 +47,6 @@ import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
 import net.ontopia.presto.spi.PrestoView;
 import net.ontopia.presto.spi.PrestoView.ViewType;
-import net.ontopia.presto.spi.functions.PrestoFieldFunction;
-import net.ontopia.presto.spi.functions.PrestoFieldFunctionUtils;
 import net.ontopia.presto.spi.rules.ContextPathExpressions;
 import net.ontopia.presto.spi.utils.AbstractHandler;
 import net.ontopia.presto.spi.utils.ExtraUtils;
@@ -150,6 +148,10 @@ public abstract class Presto {
 
     public PrestoSchemaProvider getSchemaProvider() {
         return schemaProvider;
+    }
+
+    public PrestoAttributes getAttributes() {
+        return attributes;
     }
 
     public PrestoProcessor getProcessor() {
@@ -292,8 +294,8 @@ public abstract class Presto {
                 return isReadOnlyMode() || super.isReadOnlyType();
             }
             @Override
-            protected PrestoAttributes getAttributes() {
-                return attributes;
+            public PrestoAttributes getAttributes() {
+                return Presto.this.getAttributes();
             }
             @Override
             public PrestoContextRules getPrestoContextRules(PrestoContext context) {
@@ -527,19 +529,11 @@ public abstract class Presto {
     }
     
     private FieldValues getFieldValues(PrestoContextRules rules, PrestoField field, Projection projection) {
+        FieldValues result = rules.getFieldValues(field, projection);
         PrestoContext context = rules.getContext();
-        
-        FieldValues result;
-        
-        PrestoFieldFunction function = PrestoFieldFunctionUtils.createFieldFunction(getDataProvider(), getSchemaProvider(), field);
-        if (function != null) {
-            result = FieldValues.create(function.execute(context, field));
-        } else {
-            result = rules.getFieldValues(field, projection);
-        }
         return filterByInlineReferenced(context, field, result);
     }
-    
+
     private FieldValues filterByInlineReferenced(PrestoContext context, PrestoField field, FieldValues fieldValues) {
         // if inline reference field then find intersection with referenced field
         boolean inlineReference = field.getInlineReference() != null;
@@ -596,14 +590,14 @@ public abstract class Presto {
     public FieldDataValues setFieldDataValues(PrestoContextRules rules, final PrestoField field, Projection projection,
             FieldData fieldData, FieldValues fieldValues) {
 
+        ValueFactory valueFactory = createValueFactory(rules, field);
+
         List<? extends Object> values = fieldValues.getValues();
 
         // sort the result
         if (rules.isSortedField(field, projection)) {
             sortFieldValues(rules, field, projection, values);
         }
-
-        ValueFactory valueFactory = createValueFactory(rules, field);
 
         int size = values.size();
         int start = 0;

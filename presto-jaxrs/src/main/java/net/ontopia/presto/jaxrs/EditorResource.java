@@ -900,7 +900,7 @@ public abstract class EditorResource implements PrestoAttributes {
         public URI getBaseUri() {
             return uriInfo.getBaseUri();
         }
-
+        
         @Override
         protected ChangeSetHandler getChangeSetHandler() {
             return new DefaultChangeSetHandler() {
@@ -925,19 +925,17 @@ public abstract class EditorResource implements PrestoAttributes {
                     }
                 }
 
+                @SuppressWarnings("unchecked")
                 @Override
-                protected Collection<String> getVariableValues(PrestoTopic topic, PrestoType type, PrestoField field, String variable) {
-                    if (variable.equals("now")) {
-                        return Collections.singletonList(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new Date()));
-                    } else if (variable.equals("username")) {
-                        if (request != null) {
-                            String remoteUser = request.getRemoteUser();
-                            if (remoteUser != null) {
-                                return Collections.singletonList(remoteUser);
-                            }
-                        }
+                protected Collection<? extends Object> getVariableValues(PrestoTopic topic, PrestoType type, PrestoField field, String variable) {
+                    Object value = getAttribute(variable);
+                    if (value instanceof Collection) {
+                        return (Collection<? extends Object>)value;
+                    } else if (value != null) {
+                        return Collections.singleton(value);
+                    } else {
+                        return Collections.emptyList();
                     }
-                    return Collections.emptyList();
                 }
             };
         }
@@ -950,13 +948,22 @@ public abstract class EditorResource implements PrestoAttributes {
 
     @Override
     public Object getAttribute(String name) {
-        return request.getAttribute(name);
-//      if (val != null) {
-//          return val;
-//      }
-//      return request.getParameterValues(name);
+        Object result = request.getAttribute(name);
+        if (result == null) {
+            if (name.equals("now")) {
+                result = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new Date());
+            } else if (name.equals("username")) {
+                if (request != null) {
+                    String remoteUser = request.getRemoteUser();
+                    if (remoteUser != null) {
+                        result = remoteUser;
+                    }
+                }
+            }
+        }
+        return result;
     }
-    
+
     protected PrestoAttributes getAttributes() {
         return this;
     }

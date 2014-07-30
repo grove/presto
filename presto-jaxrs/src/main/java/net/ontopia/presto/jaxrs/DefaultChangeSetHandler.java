@@ -20,7 +20,7 @@ public abstract class DefaultChangeSetHandler implements ChangeSetHandler {
 
     protected abstract PrestoSchemaProvider getSchemaProvider();
     
-    protected abstract Collection<String> getVariableValues(PrestoTopic topic, PrestoType type, PrestoField field, String variable);
+    protected abstract Collection<? extends Object> getVariableValues(PrestoTopic topic, PrestoType type, PrestoField field, String variable);
 
     @Override
     public void onBeforeSave(PrestoChangeSet changeSet, PrestoChanges changes) {
@@ -117,7 +117,7 @@ public abstract class DefaultChangeSetHandler implements ChangeSetHandler {
             if (value != null) {
                 if (value.charAt(0) == '$') {
                     String variable = value.substring(1);
-                    for (String varValue : getVariableValues(topic, type, field, variable)) {
+                    for (Object varValue : getVariableValues(topic, type, field, variable)) {
                         if (varValue != null) {
                             result.add(varValue);
                         }

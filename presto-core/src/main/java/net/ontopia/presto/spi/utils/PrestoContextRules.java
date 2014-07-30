@@ -10,6 +10,8 @@ import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoTopic.Projection;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoView;
+import net.ontopia.presto.spi.functions.PrestoFieldFunction;
+import net.ontopia.presto.spi.functions.PrestoFieldFunctionUtils;
 import net.ontopia.presto.spi.rules.DelegatingContextRules;
 
 import org.codehaus.jackson.JsonNode;
@@ -252,12 +254,8 @@ public abstract class PrestoContextRules {
     //    public boolean isCascadingDeleteField(PrestoField field) {
     //        return field.isCascadingDelete();
     //    }
-
-    public Object getAttribute(String name) {
-        return getAttributes().getAttribute(name);
-    }
     
-    protected abstract PrestoAttributes getAttributes();
+    public abstract PrestoAttributes getAttributes();
 
     public abstract PrestoContextRules getPrestoContextRules(PrestoContext context);
 
@@ -266,25 +264,32 @@ public abstract class PrestoContextRules {
     }
     
     public FieldValues getFieldValues(PrestoField field, Projection projection) {
-        if (context.isNewTopic()) {
-            return getDefaultFieldValues(field);
+        FieldValues result;
+        PrestoFieldFunction function = PrestoFieldFunctionUtils.createFieldFunction(getDataProvider(), getSchemaProvider(), getAttributes(), field);
+        if (function != null) {
+            result = FieldValues.create(function.execute(context, field, projection));
         } else {
-            PrestoTopic topic = context.getTopic();
-
-            // server-side paging (only if not sorting)
-            if (isPageableField(field) && !isSortedField(field, projection)) {
-                PrestoTopic.PagedValues pagedValues;
-                if (projection == null) {
-                    pagedValues = topic.getValues(field, PrestoProjection.FIRST_PAGE);
-                } else {
-                    pagedValues = topic.getValues(field, projection);
-                }
-                Projection paging = pagedValues.getProjection();
-                return FieldValues.create(pagedValues.getValues(), paging.getOffset(), paging.getLimit(), pagedValues.getTotal());
+            if (context.isNewTopic()) {
+                return getDefaultFieldValues(field);
             } else {
-                return FieldValues.create(topic.getValues(field));
+                PrestoTopic topic = context.getTopic();
+
+                // server-side paging (only if not sorting)
+                if (isPageableField(field) && !isSortedField(field, projection)) {
+                    PrestoTopic.PagedValues pagedValues;
+                    if (projection == null) {
+                        pagedValues = topic.getValues(field, PrestoProjection.FIRST_PAGE);
+                    } else {
+                        pagedValues = topic.getValues(field, projection);
+                    }
+                    Projection paging = pagedValues.getProjection();
+                    result = FieldValues.create(pagedValues.getValues(), paging.getOffset(), paging.getLimit(), pagedValues.getTotal());
+                } else {
+                    result = FieldValues.create(topic.getValues(field));
+                }
             }
         }
+        return result;
     }
     
     protected FieldValues getDefaultFieldValues(PrestoField field) {

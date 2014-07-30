@@ -14,6 +14,7 @@ import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.functions.PrestoFieldFunction;
 import net.ontopia.presto.spi.functions.PrestoFieldFunctionUtils;
+import net.ontopia.presto.spi.utils.PrestoAttributes;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
 
@@ -42,15 +43,16 @@ public class PathExpressions {
         Iterator<String> path = parsePath(expr).iterator();
 
         if (path.hasNext()) {
+            PrestoAttributes attributes = rules.getAttributes();
             PrestoContext context = rules.getContext();
-            return getValuesByExpression(dataProvider, schemaProvider, Collections.singletonList(context), path, expr);
+            return getValuesByExpression(dataProvider, schemaProvider, attributes, Collections.singletonList(context), path, expr);
         } else {
             return Collections.emptyList();
         }
     }
 
     private static List<? extends Object> getValuesByExpression(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, 
-            List<PrestoContext> contexts, Iterator<String> path, String expr) {
+            PrestoAttributes attributes, List<PrestoContext> contexts, Iterator<String> path, String expr) {
 
         if (contexts.isEmpty()) {
             return Collections.emptyList();
@@ -81,10 +83,10 @@ public class PathExpressions {
                     }
                 } else {
                     PrestoField valueField = type.getFieldById(p);
-                    PrestoFieldFunction function = PrestoFieldFunctionUtils.createFieldFunction(dataProvider, schemaProvider, valueField);
+                    PrestoFieldFunction function = PrestoFieldFunctionUtils.createFieldFunction(dataProvider, schemaProvider, attributes, valueField);
                     List<? extends Object> fieldValues;
                     if (function != null) {
-                        fieldValues = function.execute(context, valueField);
+                        fieldValues = function.execute(context, valueField, null);
                     } else {
                         fieldValues = topic.getValues(valueField);
                     }
@@ -97,7 +99,7 @@ public class PathExpressions {
                 }
             }
             
-            return getValuesByExpression(dataProvider, schemaProvider, nextContexts, path, expr);
+            return getValuesByExpression(dataProvider, schemaProvider, attributes, nextContexts, path, expr);
         } else {
 
             List<Object> values = new ArrayList<Object>();
@@ -121,9 +123,9 @@ public class PathExpressions {
                     }
                 } else {
                     PrestoField field = type.getFieldById(p);
-                    PrestoFieldFunction function = PrestoFieldFunctionUtils.createFieldFunction(dataProvider, schemaProvider, field);
+                    PrestoFieldFunction function = PrestoFieldFunctionUtils.createFieldFunction(dataProvider, schemaProvider, attributes, field);
                     if (function != null) {
-                        values.addAll(function.execute(context, field));
+                        values.addAll(function.execute(context, field, null));
                     } else {
                         values.addAll(topic.getValues(field));
                     }
