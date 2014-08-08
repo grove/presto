@@ -46,11 +46,7 @@ public class DefaultSortKeyGenerator extends SortKeyGenerator {
         public int compare(Object o1, Object o2) {
             String n1 = getSortKey(o1);
             String n2 = getSortKey(o2);
-            if (ascending) {
-                return Utils.compareComparables(n1, n2);
-            } else {
-                return Utils.compareComparables(n1, n2) * -1;
-            }
+            return Utils.compareComparables(n1, n2, ascending);
         }
 
         private String getSortKey(Object value) {

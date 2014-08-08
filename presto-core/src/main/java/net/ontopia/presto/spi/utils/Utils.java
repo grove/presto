@@ -28,6 +28,14 @@ public class Utils {
         return newInstanceOf(className, type, true);
     }
 
+    public static final int compareComparables(String o1, String o2, boolean ascending) {
+        if (ascending) {
+            return Utils.compareComparables(o1, o2);
+        } else {
+            return Utils.compareComparables(o1, o2) * -1;
+        }
+    }
+    
     public static final int compareComparables(String o1, String o2) {
         if (o1 == null)
             return (o2 == null ? 0 : -1);
