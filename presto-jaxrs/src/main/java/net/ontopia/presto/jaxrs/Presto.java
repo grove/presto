@@ -1040,7 +1040,7 @@ public abstract class Presto {
 
         PrestoTopic updatedTopic;
         if (topic.isInline()) {
-            List<Object> values = new ArrayList<Object>(topic.getValues(field));
+            List<Object> values = new ArrayList<Object>(topic.getStoredValues(field));
             if (index != null) {
                 boolean allowAdd = !isMove;
                 values = Utils.moveValuesToIndex(values, addableValues, index, allowAdd);
@@ -1090,7 +1090,7 @@ public abstract class Presto {
         
         PrestoTopic updatedTopic;
         if (topic.isInline()) {
-            List<? extends Object> values = topic.getValues(field);
+            List<? extends Object> values = topic.getStoredValues(field);
             values.removeAll(removeableValues);
             PrestoInlineTopicBuilder builder = dataProvider.createInlineTopic(type, topic.getId());
             builder.setValues(field, values);
@@ -1253,7 +1253,7 @@ public abstract class Presto {
         
         PrestoContextRules rules = getPrestoContextRules(context);
 
-        List<? extends Object> existingValues = topic.getValues(field);
+        List<? extends Object> existingValues = topic.getStoredValues(field);
         List<? extends Object> newValues = mergeFieldValues(field, updateableValues, existingValues);
 
         filterNonStorableFieldValues(rules, field, newValues);
@@ -1431,7 +1431,7 @@ public abstract class Presto {
                         result.addAll(newValues);
                     } else {
                         PrestoTopic topic = context.getTopic();
-                        List<? extends Object> existingValues = topic.getValues(field);
+                        List<? extends Object> existingValues = topic.getStoredValues(field);
                         if (inlineReference) {
                             result.addAll(mergeInlineStrings(newValues, existingValues, includeExisting));
                         } else {
@@ -1586,18 +1586,18 @@ public abstract class Presto {
                     boolean inlineReference = field.getInlineReference() != null;
                     Collection<? extends Object> merged;
                     if (inlineReference) {
-                        merged = mergeInlineStrings(t1.getValues(field), t2.getValues(field), includeExisting);
+                        merged = mergeInlineStrings(t1.getStoredValues(field), t2.getStoredValues(field), includeExisting);
                     } else {
-                        merged = mergeInlineTopics(t1.getValues(field), t2.getValues(field), includeExisting);
+                        merged = mergeInlineTopics(t1.getStoredValues(field), t2.getStoredValues(field), includeExisting);
                     }
                     builder.setValues(field, merged);
                 } else {
-                    builder.setValues(field, t1.getValues(field));
+                    builder.setValues(field, t1.getStoredValues(field));
                 }
             } else if (hasValue1) {
-                builder.setValues(field, t1.getValues(field));
+                builder.setValues(field, t1.getStoredValues(field));
             } else if (hasValue2) {
-                builder.setValues(field, t2.getValues(field));
+                builder.setValues(field, t2.getStoredValues(field));
             }
         }
 
