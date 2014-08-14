@@ -218,7 +218,7 @@ public abstract class PrestoDefaultChangeSet implements PrestoChangeSet {
         }
 
         if (handler != null) {
-            handler.onBeforeSave(this, this.getPrestoChanges());
+            handler.onBeforeSave(this);
         }
         
         this.saved = true;
@@ -245,7 +245,7 @@ public abstract class PrestoDefaultChangeSet implements PrestoChangeSet {
         }
         
         if (handler != null) {
-            handler.onAfterSave(this, this.getPrestoChanges());
+            handler.onAfterSave(this);
         }
     }
 
@@ -289,7 +289,8 @@ public abstract class PrestoDefaultChangeSet implements PrestoChangeSet {
         }
     }
 
-    protected PrestoChanges getPrestoChanges() {
+    @Override
+    public PrestoChanges getPrestoChanges() {
         return new PrestoChanges() {
             @Override
             public Collection<? extends PrestoUpdate> getCreated() {

@@ -29,9 +29,9 @@ public interface PrestoDataProvider {
 
     public static interface ChangeSetHandler {
 
-        public void onBeforeSave(PrestoChangeSet changeSet, PrestoChanges changes);
+        public void onBeforeSave(PrestoChangeSet changeSet);
 
-        public void onAfterSave(PrestoChangeSet changeSet, PrestoChanges changes);
+        public void onAfterSave(PrestoChangeSet changeSet);
         
     }
 

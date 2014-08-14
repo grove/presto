@@ -14,4 +14,6 @@ public interface PrestoChangeSet {
 
     void save();
 
+    PrestoChanges getPrestoChanges();
+
 }

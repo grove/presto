@@ -23,7 +23,8 @@ public abstract class DefaultChangeSetHandler implements ChangeSetHandler {
     protected abstract Collection<? extends Object> getVariableValues(PrestoTopic topic, PrestoType type, PrestoField field, String variable);
 
     @Override
-    public void onBeforeSave(PrestoChangeSet changeSet, PrestoChanges changes) {
+    public void onBeforeSave(PrestoChangeSet changeSet) {
+        PrestoChanges changes = changeSet.getPrestoChanges();
         for (PrestoUpdate update : changes.getCreated()) {
             assignDefaultValues(update);
         }
@@ -35,7 +36,7 @@ public abstract class DefaultChangeSetHandler implements ChangeSetHandler {
     }
 
     @Override
-    public void onAfterSave(PrestoChangeSet changeSet, PrestoChanges changes) {
+    public void onAfterSave(PrestoChangeSet changeSet) {
     }
 
     protected void assignDefaultValues(PrestoUpdate update) {

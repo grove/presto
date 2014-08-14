@@ -911,7 +911,9 @@ public abstract class EditorResource implements PrestoAttributes {
                 }
 
                 @Override
-                public void onAfterSave(PrestoChangeSet changeSet, PrestoChanges changes) {
+                public void onAfterSave(PrestoChangeSet changeSet) {
+                    super.onAfterSave(changeSet);
+                    PrestoChanges changes = changeSet.getPrestoChanges();
                     for (PrestoUpdate create : changes.getCreated()) {
                         EditorResource.this.onTopicCreated(create.getTopicAfterSave());
                     }
