@@ -43,23 +43,44 @@ public abstract class DefaultChangeSetHandler implements ChangeSetHandler {
         PrestoTopic topic = update.getTopic();
         PrestoSchemaProvider schemaProvider = getSchemaProvider();
         PrestoType type = schemaProvider.getTypeById(topic.getTypeId());
-        boolean isNewTopic = update.isNewTopic();
 
         for (PrestoField field : type.getFields()) {
-            ObjectNode extra = (ObjectNode)field.getExtra();
-            if (extra != null) {
-                JsonNode assignment = extra.path("assignment");
-                if (assignment.isObject()) {
-                    List<Object> defaultValues = null;
+            assignDefaultValues(update, topic, type, field);
+        }
+    }
 
-                    String valuesAssignmentType = assignment.get("type").getTextValue();
+    private void assignDefaultValues(PrestoUpdate update, PrestoTopic topic,
+            PrestoType type, PrestoField field) {
+        ObjectNode extra = (ObjectNode)field.getExtra();
+        if (extra != null) {
+            JsonNode assignment = extra.path("assignment");
+            if (assignment.isObject()) {
+                List<Object> defaultValues = null;
 
-                    if (valuesAssignmentType.equals("create")) {
-                        if (isNewTopic) {
-                            defaultValues = getDefaultValues(topic, type, field, assignment);                    
+                String valuesAssignmentType = assignment.get("type").getTextValue();
+
+                if (valuesAssignmentType.equals("create")) {
+                    if (update.isNewTopic()) {
+                        defaultValues = getDefaultValues(topic, type, field, assignment);                    
+                    }
+                
+                } else if (valuesAssignmentType.equals("update")) {
+                    JsonNode fields = assignment.path("fields");
+                    if (fields.isArray()) {
+                        // update only if any of the given fields are updated 
+                        for (JsonNode fieldNode : fields) {
+                            String fieldId = fieldNode.getTextValue();
+                            PrestoField fieldById = type.getFieldById(fieldId);
+                            if (update.isFieldUpdated(fieldById)) {
+                                defaultValues = getDefaultValues(topic, type, field, assignment);
+                            }
                         }
-                    
-                    } else if (valuesAssignmentType.equals("update")) {
+                    } else {
+                        defaultValues = getDefaultValues(topic, type, field, assignment);
+                    }
+
+                } else if (valuesAssignmentType.equals("first-update")) {
+                    if (topic.getValues(field).isEmpty()) {
                         JsonNode fields = assignment.path("fields");
                         if (fields.isArray()) {
                             // update only if any of the given fields are updated 
@@ -73,27 +94,10 @@ public abstract class DefaultChangeSetHandler implements ChangeSetHandler {
                         } else {
                             defaultValues = getDefaultValues(topic, type, field, assignment);
                         }
-
-                    } else if (valuesAssignmentType.equals("first-update")) {
-                        if (topic.getValues(field).isEmpty()) {
-                            JsonNode fields = assignment.path("fields");
-                            if (fields.isArray()) {
-                                // update only if any of the given fields are updated 
-                                for (JsonNode fieldNode : fields) {
-                                    String fieldId = fieldNode.getTextValue();
-                                    PrestoField fieldById = type.getFieldById(fieldId);
-                                    if (update.isFieldUpdated(fieldById)) {
-                                        defaultValues = getDefaultValues(topic, type, field, assignment);
-                                    }
-                                }
-                            } else {
-                                defaultValues = getDefaultValues(topic, type, field, assignment);
-                            }
-                        }
                     }
-                    if (defaultValues != null) {
-                        update.setValues(field, defaultValues);                
-                    }
+                }
+                if (defaultValues != null) {
+                    update.setValues(field, defaultValues);                
                 }
             }
         }
