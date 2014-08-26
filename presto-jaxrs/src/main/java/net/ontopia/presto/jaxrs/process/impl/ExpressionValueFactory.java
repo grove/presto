@@ -42,7 +42,8 @@ public class ExpressionValueFactory extends ValueFactory {
 
     @Override
     public Value createValue(PrestoContextRules rules, PrestoField field, PrestoTopic value) {
-        throw new UnsupportedOperationException();
+        String topicId = value.getId();
+        return createValue(rules, field, topicId);
     }
 
     public static List<? extends Object> getValues(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, 
