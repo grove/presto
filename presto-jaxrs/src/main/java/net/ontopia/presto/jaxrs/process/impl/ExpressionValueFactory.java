@@ -31,7 +31,8 @@ public class ExpressionValueFactory extends ValueFactory {
             PrestoTopic t = (PrestoTopic) object;
             if (t.getId().equals(value)) {
                 Value result = new Value();
-                result.setValue(getName(schemaProvider, rules, field, t, config)); 
+                result.setValue(value);
+                result.setName(getName(schemaProvider, rules, field, t, config)); 
                 return result;
             }
         }
