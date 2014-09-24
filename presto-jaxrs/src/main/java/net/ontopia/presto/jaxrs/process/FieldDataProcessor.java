@@ -4,6 +4,7 @@ import java.text.MessageFormat;
 
 import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.spi.PrestoField;
+import net.ontopia.presto.spi.PrestoTopic.Projection;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
 
 import org.codehaus.jackson.JsonNode;
@@ -13,7 +14,7 @@ public abstract class FieldDataProcessor extends AbstractProcessor {
     
     private SubmittedState sstate;
     
-    public abstract FieldData processFieldData(FieldData fieldData, PrestoContextRules context, PrestoField field);
+    public abstract FieldData processFieldData(FieldData fieldData, PrestoContextRules context, PrestoField field, Projection projection);
 
     protected String getErrorMessage(String errorId, PrestoField field, String defaultErrorMessage, Object... args) {
         String errorMessage = getErrorMessageConfig(errorId, field, defaultErrorMessage);

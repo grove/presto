@@ -15,7 +15,9 @@ import net.ontopia.presto.jaxrs.action.FieldAction;
 import net.ontopia.presto.jaxrs.process.FieldDataProcessor;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoView;
+import net.ontopia.presto.spi.PrestoTopic.Projection;
 import net.ontopia.presto.spi.utils.ExtraUtils;
+import net.ontopia.presto.spi.utils.PatternValueUtils;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
 
@@ -28,7 +30,7 @@ public class FieldLinksPostProcessor extends FieldDataProcessor {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     @Override
-    public FieldData processFieldData(FieldData fieldData, PrestoContextRules rules, PrestoField field) {
+    public FieldData processFieldData(FieldData fieldData, PrestoContextRules rules, PrestoField field, Projection projection) {
         ObjectNode extraNode = ExtraUtils.getFieldExtraNode(field);
         if (extraNode != null) {
             JsonNode linksNode = extraNode.path("links");
@@ -39,6 +41,7 @@ public class FieldLinksPostProcessor extends FieldDataProcessor {
                 }
                 for (JsonNode linkNode : linksNode) {
                     if (linkNode.isObject()) {
+                        PrestoContext context = rules.getContext();
                         Link link = null;
                         if (linkNode.has("action")) {
                             
@@ -46,9 +49,8 @@ public class FieldLinksPostProcessor extends FieldDataProcessor {
                             Presto session = getPresto();
                             
                             FieldAction fieldAction = session.getFieldAction(field, actionId);
-                            if (fieldAction != null && fieldAction.isActive(rules, field, actionId)) {
+                            if (fieldAction != null && fieldAction.isActive(rules, field, projection, actionId)) {
                                 String rel = "action";
-                                PrestoContext context = rules.getContext();
                                 String href = getActionLink(context, field, actionId);
                                 String name = linkNode.path("name").getTextValue();
                                 link = new Link(rel, href);
@@ -58,7 +60,7 @@ public class FieldLinksPostProcessor extends FieldDataProcessor {
                                 // TODO: support nested links?
                             }
                         } else {
-                            link = getLink(linkNode);
+                            link = getLink(context, linkNode);
                         }
                         if (link != null) {
                             links.add(link);
@@ -90,9 +92,15 @@ public class FieldLinksPostProcessor extends FieldDataProcessor {
         return builder.build().toString();        
     }
 
-    private Link getLink(JsonNode link) {
+    private Link getLink(PrestoContext context, JsonNode linkNode) {
         try {
-            return mapper.readValue(link, Link.class);
+            Link link = mapper.readValue(linkNode, Link.class);
+            String href = link.getHref();
+            if (href != null) {
+                href = PatternValueUtils.getValueByPattern(getSchemaProvider(), context, href);
+                link.setHref(href);
+            }
+            return link;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

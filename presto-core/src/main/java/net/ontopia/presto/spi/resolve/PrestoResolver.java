@@ -8,10 +8,9 @@ import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
-import net.ontopia.presto.spi.PrestoTopic.Paging;
+import net.ontopia.presto.spi.PrestoTopic.Projection;
 import net.ontopia.presto.spi.jackson.JacksonDataProvider;
 import net.ontopia.presto.spi.utils.PrestoPagedValues;
-import net.ontopia.presto.spi.utils.PrestoPaging;
 import net.ontopia.presto.spi.utils.PrestoTopicFieldVariableResolver;
 import net.ontopia.presto.spi.utils.PrestoVariableContext;
 import net.ontopia.presto.spi.utils.PrestoVariableResolver;
@@ -34,44 +33,43 @@ public abstract class PrestoResolver {
         ObjectNode extra = (ObjectNode)field.getExtra();
         if (extra != null && extra.has("resolve")) {
             JsonNode resolveConfig = extra.get("resolve");
-            PrestoPaging paging = null;
+            Projection projection = null;
             PrestoVariableResolver variableResolver = new PrestoTopicFieldVariableResolver(field.getSchemaProvider());
-            return resolveValues(Collections.singleton(topic), field, paging, resolveConfig, variableResolver).getValues();
+            return resolveValues(Collections.singleton(topic), field, projection, resolveConfig, variableResolver).getValues();
         }
         return topic.getStoredValues(field);
     }
 
-    public PagedValues resolveValues(PrestoTopic topic, PrestoField field, int offset, int limit) {
+    public PagedValues resolveValues(PrestoTopic topic, PrestoField field, Projection projection) {
         // get field values from data provider
         ObjectNode extra = (ObjectNode)field.getExtra();
         if (extra != null && extra.has("resolve")) {
             JsonNode resolveConfig = extra.get("resolve");
-            PrestoPaging paging = new PrestoPaging(offset, limit);
             PrestoVariableResolver variableResolver = new PrestoTopicFieldVariableResolver(field.getSchemaProvider());
-            return resolveValues(Collections.singleton(topic), field, paging, resolveConfig, variableResolver);
+            return resolveValues(Collections.singleton(topic), field, projection, resolveConfig, variableResolver);
         }
-        return topic.getStoredValues(field, offset, limit);
+        return topic.getStoredValues(field, projection);
     }
 
     public PagedValues resolveValues(Collection<? extends Object> objects, 
-            PrestoField field, Paging paging, JsonNode resolveConfig, PrestoVariableResolver variableResolver) {
+            PrestoField field, Projection projection, JsonNode resolveConfig, PrestoVariableResolver variableResolver) {
         if (resolveConfig.isArray()) {
             ArrayNode resolveArray = (ArrayNode)resolveConfig;
-            return resolveValues(objects, field, resolveArray, paging, variableResolver);
+            return resolveValues(objects, field, resolveArray, projection, variableResolver);
         } else {
             throw new RuntimeException("resolve on field " + field.getId() + " is not an array: " + resolveConfig);
         }
     }
 
     private PagedValues resolveValues(Collection<? extends Object> objects, 
-            PrestoField field, ArrayNode resolveArray, Paging paging, PrestoVariableResolver variableResolver) {
+            PrestoField field, ArrayNode resolveArray, Projection projection, PrestoVariableResolver variableResolver) {
         PagedValues result = null;
         int size = resolveArray.size();
         for (int i=0; i < size; i++) {
             boolean isLast = (i == size-1);
             boolean isReference = field.isReferenceField() || !isLast;
             ObjectNode resolveConfig = (ObjectNode)resolveArray.get(i);
-            result = resolveValues(objects, field, isReference, resolveConfig, paging, variableResolver);
+            result = resolveValues(objects, field, isReference, resolveConfig, projection, variableResolver);
             objects = result.getValues();
         }
         return result;
@@ -79,13 +77,13 @@ public abstract class PrestoResolver {
 
     private PagedValues resolveValues(Collection<? extends Object> objects,
             PrestoField field, boolean isReference, ObjectNode resolveConfig, 
-            Paging paging, PrestoVariableResolver variableResolver) {
+            Projection projection, PrestoVariableResolver variableResolver) {
 
         PrestoFieldResolver resolver = createFieldResolver(field.getSchemaProvider(), resolveConfig);
         if (resolver == null) {
-            return new PrestoPagedValues(Collections.emptyList(), paging, 0);            
+            return new PrestoPagedValues(Collections.emptyList(), projection, 0);            
         } else {
-            return resolver.resolve(objects, field, isReference, paging, variableResolver);
+            return resolver.resolve(objects, field, isReference, projection, variableResolver);
         }
     }
 

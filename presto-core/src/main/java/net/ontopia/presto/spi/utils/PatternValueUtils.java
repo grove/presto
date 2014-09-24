@@ -26,12 +26,16 @@ public class PatternValueUtils {
     }
 
     public static String getValueByPattern(PrestoSchemaProvider schemaProvider, PrestoContext context, String pattern) {
-        PrestoVariableResolver variableResolver = new PrestoTopicWithParentFieldVariableResolver(schemaProvider, context);
         PrestoTopic topic = context.getTopic();
-        return getValueByPattern(variableResolver, topic, pattern);
+        return getValueByPattern(schemaProvider, context, topic, pattern);
     }
-    
-    private static String getValueByPattern(PrestoVariableResolver variableResolver, Object value, String pattern) {
+
+    public static String getValueByPattern(PrestoSchemaProvider schemaProvider, PrestoContext context, Object value, String pattern) {
+        PrestoVariableResolver variableResolver = new PrestoTopicWithParentFieldVariableResolver(schemaProvider, context);
+        return PatternValueUtils.getValueByPattern(variableResolver, value, pattern);
+    }
+
+    public static String getValueByPattern(PrestoVariableResolver variableResolver, Object value, String pattern) {
         String result = pattern;
         Matcher matcher = PATTERN.matcher(pattern);
         while (matcher.find()) {

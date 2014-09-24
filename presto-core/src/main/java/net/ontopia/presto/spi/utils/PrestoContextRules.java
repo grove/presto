@@ -7,9 +7,11 @@ import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
-import net.ontopia.presto.spi.PrestoTopic.Paging;
+import net.ontopia.presto.spi.PrestoTopic.Projection;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoView;
+import net.ontopia.presto.spi.functions.PrestoFieldFunction;
+import net.ontopia.presto.spi.functions.PrestoFieldFunctionUtils;
 import net.ontopia.presto.spi.rules.DelegatingContextRules;
 
 import org.codehaus.jackson.JsonNode;
@@ -190,8 +192,9 @@ public abstract class PrestoContextRules {
         return isFieldHandlerFlag(FieldFlag.isTraverableField, field, field.isTraversable());
     }
 
-    public boolean isSortedField(PrestoField field) {
-        return isFieldHandlerFlag(FieldFlag.isSortedField, field, field.isSorted());
+    public boolean isSortedField(PrestoField field, Projection projection) {
+        boolean defaultValue = (projection != null && projection.isSorted()) || field.isSorted();
+        return isFieldHandlerFlag(FieldFlag.isSortedField, field, defaultValue);
     }
 
     public boolean isSortedAscendingField(PrestoField field) {
@@ -251,36 +254,42 @@ public abstract class PrestoContextRules {
     //    public boolean isCascadingDeleteField(PrestoField field) {
     //        return field.isCascadingDelete();
     //    }
-
-    public Object getAttribute(String name) {
-        return getAttributes().getAttribute(name);
-    }
     
-    protected abstract PrestoAttributes getAttributes();
+    public abstract PrestoAttributes getAttributes();
 
     public abstract PrestoContextRules getPrestoContextRules(PrestoContext context);
 
     public FieldValues getFieldValues(PrestoField field) {
-        return getFieldValues(field, 0, FieldValues.DEFAULT_LIMIT);
+        return getFieldValues(field, null);
     }
     
-    public FieldValues getFieldValues(PrestoField field, int offset, int limit) {
-        if (context.isNewTopic()) {
-            return getDefaultFieldValues(field);
+    public FieldValues getFieldValues(PrestoField field, Projection projection) {
+        FieldValues result;
+        PrestoFieldFunction function = PrestoFieldFunctionUtils.createFieldFunction(getDataProvider(), getSchemaProvider(), getAttributes(), field);
+        if (function != null) {
+            result = FieldValues.create(function.execute(context, field, projection));
         } else {
-            PrestoTopic topic = context.getTopic();
-
-            // server-side paging (only if not sorting)
-            if (isPageableField(field) && !isSortedField(field)) {
-                int actualOffset = offset >= 0 ? offset : 0;
-                int actualLimit = limit > 0 ? limit : FieldValues.DEFAULT_LIMIT;
-                PrestoTopic.PagedValues pagedValues = topic.getValues(field, actualOffset, actualLimit);
-                Paging paging = pagedValues.getPaging();
-                return FieldValues.create(pagedValues.getValues(), paging.getOffset(), paging.getLimit(), pagedValues.getTotal());
+            if (context.isNewTopic()) {
+                return getDefaultFieldValues(field);
             } else {
-                return FieldValues.create(topic.getValues(field));
+                PrestoTopic topic = context.getTopic();
+
+                // server-side paging (only if not sorting)
+                if (isPageableField(field) && !isSortedField(field, projection)) {
+                    PrestoTopic.PagedValues pagedValues;
+                    if (projection == null) {
+                        pagedValues = topic.getValues(field, PrestoProjection.FIRST_PAGE);
+                    } else {
+                        pagedValues = topic.getValues(field, projection);
+                    }
+                    Projection paging = pagedValues.getProjection();
+                    result = FieldValues.create(pagedValues.getValues(), paging.getOffset(), paging.getLimit(), pagedValues.getTotal());
+                } else {
+                    result = FieldValues.create(topic.getValues(field));
+                }
             }
         }
+        return result;
     }
     
     protected FieldValues getDefaultFieldValues(PrestoField field) {

@@ -5,12 +5,8 @@ import java.util.Collection;
 
 import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxrs.AbstractPrestoHandler;
-import net.ontopia.presto.jaxrs.Presto;
 import net.ontopia.presto.jaxrs.PrestoProcessor.Status;
 import net.ontopia.presto.jaxrs.PrestoProcessor.Type;
-import net.ontopia.presto.spi.utils.AbstractHandler;
-
-import org.codehaus.jackson.JsonNode;
 
 public class AbstractProcessor extends AbstractPrestoHandler {
     

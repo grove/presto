@@ -5,6 +5,7 @@ import org.codehaus.jackson.node.ObjectNode;
 import net.ontopia.presto.jaxb.TopicView;
 import net.ontopia.presto.jaxrs.Presto;
 import net.ontopia.presto.spi.PrestoField;
+import net.ontopia.presto.spi.PrestoTopic.Projection;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
 
@@ -14,7 +15,7 @@ public abstract class FieldAction {
 
     private Presto presto;
 
-    public abstract boolean isActive(PrestoContextRules rules, PrestoField field, String actionId);
+    public abstract boolean isActive(PrestoContextRules rules, PrestoField field, Projection projection, String actionId);
     
     public abstract TopicView executeAction(PrestoContext context, TopicView topicView, PrestoField field, String actionId);
 

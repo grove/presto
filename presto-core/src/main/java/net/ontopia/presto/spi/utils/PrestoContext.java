@@ -185,14 +185,12 @@ public class PrestoContext {
         StringBuilder sb = new StringBuilder();
         if (parentContext != null) {
             sb.append(parentContext.toString());
-            sb.append("$");
-        }
-        if (parentField != null) {
+            sb.append("\n $(");
             sb.append(parentField.getId());
-            sb.append("$");
+            sb.append(")");
         }
-        sb.append(topic.getId());
-        sb.append("$");
+        sb.append(topicId);
+        sb.append("/");
         sb.append(view.getId());
         return sb.toString();
     }

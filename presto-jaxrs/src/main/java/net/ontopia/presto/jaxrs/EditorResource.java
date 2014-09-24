@@ -40,12 +40,15 @@ import net.ontopia.presto.spi.PrestoDataProvider.ChangeSetHandler;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
+import net.ontopia.presto.spi.PrestoTopic.Projection;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
+import net.ontopia.presto.spi.PrestoView;
 import net.ontopia.presto.spi.utils.PrestoAttributes;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoContextField;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
+import net.ontopia.presto.spi.utils.PrestoProjection;
 
 @Path("/editor")
 public abstract class EditorResource implements PrestoAttributes {
@@ -176,7 +179,45 @@ public abstract class EditorResource implements PrestoAttributes {
             }
 
             PrestoContextField contextField = PathParser.getContextField(session, path);
-            TopicView result = session.getTopicViewTemplateField(contextField.getContext(), contextField.getField(), type);
+
+            PrestoField parentField = contextField.getField();
+            PrestoView view = parentField.getCreateView(type);
+            TopicView result = session.getTopicViewTemplateField(contextField.getContext(), parentField, type, view);
+
+            return Response.ok(result).build();
+
+        } catch (Exception e) {
+            session.abort();
+            throw e;
+        } finally {
+            session.close();      
+        }
+    }
+    
+    @GET
+    @Produces(APPLICATION_JSON_UTF8)
+    @Path("topic-template-field/{databaseId}/{path}/{typeId}/{viewId}")
+    public Response getTopicTemplateField(
+            @PathParam("databaseId") final String databaseId,
+            @PathParam("path") final String path,
+            @PathParam("typeId") final String typeId,
+            @PathParam("viewId") final String viewId) throws Exception {
+
+        boolean readOnly = false;
+        Presto session = createPresto(databaseId, readOnly);
+
+        try {
+            PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
+
+            PrestoType type = schemaProvider.getTypeById(typeId);
+            if (type == null) {
+                return Response.status(Status.NOT_FOUND).build();
+            }
+
+            PrestoContextField contextField = PathParser.getContextField(session, path);
+            PrestoField parentField = contextField.getField();
+            PrestoView view = type.getViewById(viewId);
+            TopicView result = session.getTopicViewTemplateField(contextField.getContext(), parentField, type, view);
 
             return Response.ok(result).build();
 
@@ -197,9 +238,10 @@ public abstract class EditorResource implements PrestoAttributes {
             @PathParam("viewId") final String viewId,
             @PathParam("fieldId") final String fieldId, 
             @PathParam("start") final int start, 
-            @PathParam("limit") final int limit) throws Exception {
+            @PathParam("limit") final int limit,
+            @QueryParam("orderBy") final String orderBy) throws Exception {
         String path = null;
-        return getFieldPagingPath(databaseId, path, topicId, viewId, fieldId, start, limit);
+        return getFieldPagingPath(databaseId, path, topicId, viewId, fieldId, start, limit, orderBy);
     }
 
     @GET
@@ -212,7 +254,8 @@ public abstract class EditorResource implements PrestoAttributes {
             @PathParam("viewId") final String viewId,
             @PathParam("fieldId") final String fieldId, 
             @PathParam("start") final int start, 
-            @PathParam("limit") final int limit) throws Exception {
+            @PathParam("limit") final int limit,
+            @QueryParam("orderBy") final String orderBy) throws Exception {
 
         boolean readOnly = false;
         Presto session = createPresto(databaseId, readOnly);
@@ -229,9 +272,9 @@ public abstract class EditorResource implements PrestoAttributes {
                 return Response.status(Status.NOT_FOUND).build();
             }
 
-            PrestoContextRules rules = session.getPrestoContextRules(context);
+            Projection projection = new PrestoProjection(start, limit, orderBy);
+            FieldData result = session.getFieldDataAndProcess(context, field, projection);
 
-            FieldData result = session.getFieldData(rules, field, start, limit, true);
             return Response.ok(result).build();
 
         } catch (Exception e) {
@@ -857,7 +900,7 @@ public abstract class EditorResource implements PrestoAttributes {
         public URI getBaseUri() {
             return uriInfo.getBaseUri();
         }
-
+        
         @Override
         protected ChangeSetHandler getChangeSetHandler() {
             return new DefaultChangeSetHandler() {
@@ -868,7 +911,9 @@ public abstract class EditorResource implements PrestoAttributes {
                 }
 
                 @Override
-                public void onAfterSave(PrestoChangeSet changeSet, PrestoChanges changes) {
+                public void onAfterSave(PrestoChangeSet changeSet) {
+                    super.onAfterSave(changeSet);
+                    PrestoChanges changes = changeSet.getPrestoChanges();
                     for (PrestoUpdate create : changes.getCreated()) {
                         EditorResource.this.onTopicCreated(create.getTopicAfterSave());
                     }
@@ -882,19 +927,17 @@ public abstract class EditorResource implements PrestoAttributes {
                     }
                 }
 
+                @SuppressWarnings("unchecked")
                 @Override
-                protected Collection<String> getVariableValues(PrestoTopic topic, PrestoType type, PrestoField field, String variable) {
-                    if (variable.equals("now")) {
-                        return Collections.singletonList(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new Date()));
-                    } else if (variable.equals("username")) {
-                        if (request != null) {
-                            String remoteUser = request.getRemoteUser();
-                            if (remoteUser != null) {
-                                return Collections.singletonList(remoteUser);
-                            }
-                        }
+                protected Collection<? extends Object> getVariableValues(PrestoTopic topic, PrestoType type, PrestoField field, String variable) {
+                    Object value = getAttribute(variable);
+                    if (value instanceof Collection) {
+                        return (Collection<? extends Object>)value;
+                    } else if (value != null) {
+                        return Collections.singleton(value);
+                    } else {
+                        return Collections.emptyList();
                     }
-                    return Collections.emptyList();
                 }
             };
         }
@@ -907,13 +950,22 @@ public abstract class EditorResource implements PrestoAttributes {
 
     @Override
     public Object getAttribute(String name) {
-        return request.getAttribute(name);
-//      if (val != null) {
-//          return val;
-//      }
-//      return request.getParameterValues(name);
+        Object result = request.getAttribute(name);
+        if (result == null) {
+            if (name.equals("now")) {
+                result = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new Date());
+            } else if (name.equals("username")) {
+                if (request != null) {
+                    String remoteUser = request.getRemoteUser();
+                    if (remoteUser != null) {
+                        result = remoteUser;
+                    }
+                }
+            }
+        }
+        return result;
     }
-    
+
     protected PrestoAttributes getAttributes() {
         return this;
     }

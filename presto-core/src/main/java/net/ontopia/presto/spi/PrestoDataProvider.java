@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.List;
 
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
-import net.ontopia.presto.spi.PrestoTopic.Paging;
+import net.ontopia.presto.spi.PrestoTopic.Projection;
 import net.ontopia.presto.spi.utils.PrestoVariableResolver;
 
 import org.codehaus.jackson.JsonNode;
@@ -29,17 +29,17 @@ public interface PrestoDataProvider {
 
     public static interface ChangeSetHandler {
 
-        public void onBeforeSave(PrestoChangeSet changeSet, PrestoChanges changes);
+        public void onBeforeSave(PrestoChangeSet changeSet);
 
-        public void onAfterSave(PrestoChangeSet changeSet, PrestoChanges changes);
+        public void onAfterSave(PrestoChangeSet changeSet);
         
     }
 
     List<? extends Object> resolveValues(PrestoTopic topic, PrestoField field);
 
-    PagedValues resolveValues(PrestoTopic topic, PrestoField field, int offset, int limit);
+    PagedValues resolveValues(PrestoTopic topic, PrestoField field, Projection projection);
 
     PagedValues resolveValues(Collection<? extends Object> objects,
-            PrestoField field, Paging paging, JsonNode resolveConfig, PrestoVariableResolver variableResolver);
+            PrestoField field, Projection projection, JsonNode resolveConfig, PrestoVariableResolver variableResolver);
     
 }

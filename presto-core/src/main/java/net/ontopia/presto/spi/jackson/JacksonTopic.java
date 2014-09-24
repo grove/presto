@@ -13,7 +13,6 @@ import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.DefaultDataProvider;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.DefaultTopic;
 import net.ontopia.presto.spi.utils.PrestoPagedValues;
-import net.ontopia.presto.spi.utils.PrestoPaging;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
@@ -112,8 +111,8 @@ public class JacksonTopic implements DefaultTopic {
     }
 
     @Override
-    public PagedValues getValues(PrestoField field, int offset, int limit) {
-        return dataProvider.resolveValues(this, field, offset, limit);
+    public PagedValues getValues(PrestoField field, Projection projection) {
+        return dataProvider.resolveValues(this, field, projection);
     }
     
     @Override
@@ -122,11 +121,11 @@ public class JacksonTopic implements DefaultTopic {
     }
 
     @Override
-    public PagedValues getStoredValues(PrestoField field, int offset, int limit) {
-        return getValuesFromField(field, new PrestoPaging(offset, limit));
+    public PagedValues getStoredValues(PrestoField field, Projection projection) {
+        return getValuesFromField(field, projection);
     }
 
-    private PagedValues getValuesFromField(PrestoField field, Paging paging) {
+    private PagedValues getValuesFromField(PrestoField field, Projection projection) {
         // get field values from topic data
         List<Object> values = new ArrayList<Object>();
         ArrayNode fieldNode = getFieldValue(field);
@@ -134,9 +133,9 @@ public class JacksonTopic implements DefaultTopic {
         int size = fieldNode == null ? 0 : fieldNode.size();
         int start = 0;
         int end = size;
-        if (paging != null) {
-            start = Math.min(Math.max(0, paging.getOffset()), size);
-            end = Math.min(paging.getLimit()+start, size);
+        if (projection != null && projection.isPaged()) {
+            start = Math.min(Math.max(0, projection.getOffset()), size);
+            end = Math.min(projection.getLimit()+start, size);
         }
 
         if (fieldNode != null) { 
@@ -176,7 +175,7 @@ public class JacksonTopic implements DefaultTopic {
                 }
             }
         }
-        return new PrestoPagedValues(values, paging, size);
+        return new PrestoPagedValues(values, projection, size);
     }
 
     // --- DefaultTopic implementation

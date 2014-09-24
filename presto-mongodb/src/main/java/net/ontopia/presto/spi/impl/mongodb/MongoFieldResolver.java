@@ -10,7 +10,7 @@ import java.util.List;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
-import net.ontopia.presto.spi.PrestoTopic.Paging;
+import net.ontopia.presto.spi.PrestoTopic.Projection;
 import net.ontopia.presto.spi.resolve.PrestoFieldResolver;
 import net.ontopia.presto.spi.utils.PrestoPagedValues;
 import net.ontopia.presto.spi.utils.PrestoVariableContext;
@@ -49,7 +49,7 @@ public abstract class MongoFieldResolver extends PrestoFieldResolver {
 
     @Override
     public PagedValues resolve(Collection<? extends Object> objects,
-            PrestoField field, boolean isReference, Paging paging, PrestoVariableResolver variableResolver) {
+            PrestoField field, boolean isReference, Projection projection, PrestoVariableResolver variableResolver) {
 
         PrestoVariableContext context = getVariableContext();
         ObjectNode config = getConfig();
@@ -77,7 +77,7 @@ public abstract class MongoFieldResolver extends PrestoFieldResolver {
             }
             DBObject q;
             if (qvalues.isEmpty()) {
-                return new PrestoPagedValues(Collections.emptyList(), paging, 0);
+                return new PrestoPagedValues(Collections.emptyList(), projection, 0);
             } else if (qvalues.size() == 1) {
                 q = convertToDbObject(replaceKeywords(qvalues.iterator().next()));
             } else {
@@ -124,13 +124,13 @@ public abstract class MongoFieldResolver extends PrestoFieldResolver {
                         result.add(valueId);
                     }
                 }
-                return new PrestoPagedValues(result, paging, total);
+                return new PrestoPagedValues(result, projection, total);
             } finally {
                 cursor.close();
             }
         } catch (Exception e) {
             log.error("QE: " + config, e);
-            return new PrestoPagedValues(Collections.emptyList(), paging, 0);
+            return new PrestoPagedValues(Collections.emptyList(), projection, 0);
         }
     }
 

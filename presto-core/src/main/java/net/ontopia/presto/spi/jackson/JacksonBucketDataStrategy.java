@@ -75,6 +75,7 @@ public abstract class JacksonBucketDataStrategy implements JacksonDataStrategy {
                     JacksonFieldDataStrategy fds = Utils.newInstanceOf(className, JacksonFieldDataStrategy.class, true);
                     if (fds != null) {
                         fds.setJacksonDataStrategy(this);
+                        fds.setConfig((ObjectNode)readStrategy);
                         return fds.getFieldValue(doc, field);
                     }
                 } else {

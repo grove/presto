@@ -21,7 +21,7 @@ public class ContainsAttributeFieldRule extends BooleanFieldRule {
         JsonNode fieldNode = config.path("attribute");
         if (fieldNode.isTextual()) {
             String name = fieldNode.getTextValue();
-            Object value = rules.getAttribute(name);
+            Object value = rules.getAttributes().getAttribute(name);
             Set<String> configValues = ContainsFieldValues.getConfigValues(config);
             return ContainsFieldValues.containsAllValues(Collections.singletonList(value), configValues);
         }
