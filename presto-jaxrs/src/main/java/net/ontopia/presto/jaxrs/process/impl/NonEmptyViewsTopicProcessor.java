@@ -12,9 +12,9 @@ import net.ontopia.presto.jaxb.TopicView;
 import net.ontopia.presto.jaxrs.process.TopicProcessor;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ArrayNode;
-import org.codehaus.jackson.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class NonEmptyViewsTopicProcessor extends TopicProcessor {
 
@@ -42,7 +42,7 @@ public class NonEmptyViewsTopicProcessor extends TopicProcessor {
         Set<String> result = new HashSet<String>(node.size());
         for (JsonNode viewNode : node) {
             if (viewNode.isTextual()) {
-                result.add(viewNode.getTextValue());
+                result.add(viewNode.textValue());
             }
         }
         return result;

@@ -12,8 +12,8 @@ import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ContainsFieldValues {
 
@@ -33,7 +33,7 @@ public class ContainsFieldValues {
             Set<String> testValues = new LinkedHashSet<String>();
             for (JsonNode valueNode : valuesNode) {
                 if (valueNode.isTextual()) {
-                    testValues.add(valueNode.getTextValue());
+                    testValues.add(valueNode.textValue());
                 }
             }
             return testValues;

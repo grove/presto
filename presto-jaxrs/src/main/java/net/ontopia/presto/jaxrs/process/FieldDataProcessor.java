@@ -7,8 +7,8 @@ import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic.Projection;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public abstract class FieldDataProcessor extends AbstractProcessor {
     
@@ -30,7 +30,7 @@ public abstract class FieldDataProcessor extends AbstractProcessor {
         if (config != null) {
             JsonNode errorNode = config.path("error-messages").path(errorId);
             if (errorNode.isTextual()) {
-                return errorNode.getTextValue();
+                return errorNode.textValue();
             }
         }
         return defaultErrorMessage;

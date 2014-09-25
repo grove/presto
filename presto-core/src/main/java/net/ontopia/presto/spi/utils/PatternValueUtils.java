@@ -7,8 +7,8 @@ import java.util.regex.Pattern;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class PatternValueUtils {
 
@@ -18,7 +18,7 @@ public class PatternValueUtils {
         if (config != null) {
             JsonNode patternNode = config.path("pattern");
             if (patternNode.isTextual()) {
-                String pattern = patternNode.getTextValue();
+                String pattern = patternNode.textValue();
                 return getValueByPattern(variableResolver, value, pattern);
             }
         }

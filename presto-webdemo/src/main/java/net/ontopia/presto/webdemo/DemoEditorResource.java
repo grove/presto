@@ -18,13 +18,14 @@ import net.ontopia.presto.spi.jackson.IdentityStrategy;
 import net.ontopia.presto.spi.jackson.JacksonBucketDataStrategy;
 import net.ontopia.presto.spi.jackson.JacksonDataStrategy;
 
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.node.ObjectNode;
 import org.ektorp.CouchDbConnector;
 import org.ektorp.CouchDbInstance;
 import org.ektorp.http.HttpClient;
 import org.ektorp.http.StdHttpClient;
 import org.ektorp.impl.StdCouchDbInstance;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @Path("/editor")
 public class DemoEditorResource extends EditorResource {

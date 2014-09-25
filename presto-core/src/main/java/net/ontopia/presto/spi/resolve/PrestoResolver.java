@@ -16,11 +16,12 @@ import net.ontopia.presto.spi.utils.PrestoVariableContext;
 import net.ontopia.presto.spi.utils.PrestoVariableResolver;
 import net.ontopia.presto.spi.utils.Utils;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ArrayNode;
-import org.codehaus.jackson.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public abstract class PrestoResolver {
 
@@ -88,7 +89,7 @@ public abstract class PrestoResolver {
     }
 
     protected PrestoFieldResolver createFieldResolver(PrestoSchemaProvider schemaProvider, ObjectNode resolveConfig) {
-        String type = resolveConfig.get("type").getTextValue();
+        String type = resolveConfig.get("type").textValue();
         if (type == null) {
             log.error("'type' not specified on resolve item: " + resolveConfig);
             return null;
@@ -118,7 +119,7 @@ public abstract class PrestoResolver {
             if (resolvers.isObject()) {
                 JsonNode classNode = resolvers.path(type).path("class");
                 if (classNode.isTextual()) {
-                    return classNode.getTextValue();
+                    return classNode.textValue();
                 }
             }
         }

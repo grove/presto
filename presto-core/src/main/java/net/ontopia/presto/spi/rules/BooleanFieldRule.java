@@ -6,8 +6,8 @@ import net.ontopia.presto.spi.utils.PrestoContextRules;
 import net.ontopia.presto.spi.utils.PrestoContextRules.FieldFlag;
 import net.ontopia.presto.spi.utils.PrestoContextRules.FieldRule;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public abstract class BooleanFieldRule extends AbstractHandler implements FieldRule {
 
@@ -26,7 +26,7 @@ public abstract class BooleanFieldRule extends AbstractHandler implements FieldR
 
     private boolean inverse(boolean value, ObjectNode config) {
         JsonNode inverseNode = config.path("inverse");
-        if (inverseNode.isBoolean() && inverseNode.getBooleanValue()) {
+        if (inverseNode.isBoolean() && inverseNode.booleanValue()) {
             return !value;
         } else {
             return value;

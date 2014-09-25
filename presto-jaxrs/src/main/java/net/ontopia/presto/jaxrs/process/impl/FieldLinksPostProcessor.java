@@ -14,16 +14,16 @@ import net.ontopia.presto.jaxrs.Presto;
 import net.ontopia.presto.jaxrs.action.FieldAction;
 import net.ontopia.presto.jaxrs.process.FieldDataProcessor;
 import net.ontopia.presto.spi.PrestoField;
-import net.ontopia.presto.spi.PrestoView;
 import net.ontopia.presto.spi.PrestoTopic.Projection;
+import net.ontopia.presto.spi.PrestoView;
 import net.ontopia.presto.spi.utils.ExtraUtils;
 import net.ontopia.presto.spi.utils.PatternValueUtils;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class FieldLinksPostProcessor extends FieldDataProcessor {
 
@@ -45,14 +45,14 @@ public class FieldLinksPostProcessor extends FieldDataProcessor {
                         Link link = null;
                         if (linkNode.has("action")) {
                             
-                            String actionId = linkNode.path("action").getTextValue();
+                            String actionId = linkNode.path("action").textValue();
                             Presto session = getPresto();
                             
                             FieldAction fieldAction = session.getFieldAction(field, actionId);
                             if (fieldAction != null && fieldAction.isActive(rules, field, projection, actionId)) {
                                 String rel = "action";
                                 String href = getActionLink(context, field, actionId);
-                                String name = linkNode.path("name").getTextValue();
+                                String name = linkNode.path("name").textValue();
                                 link = new Link(rel, href);
                                 link.setName(name);
                                 Map<String, Object> params = ExtraUtils.getParamsMap(linkNode.path("params"));
@@ -94,7 +94,7 @@ public class FieldLinksPostProcessor extends FieldDataProcessor {
 
     private Link getLink(PrestoContext context, JsonNode linkNode) {
         try {
-            Link link = mapper.readValue(linkNode, Link.class);
+            Link link = mapper.convertValue(linkNode, Link.class);
             String href = link.getHref();
             if (href != null) {
                 href = PatternValueUtils.getValueByPattern(getSchemaProvider(), context, href);

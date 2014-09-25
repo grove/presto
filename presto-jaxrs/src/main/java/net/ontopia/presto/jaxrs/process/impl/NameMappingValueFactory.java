@@ -6,8 +6,8 @@ import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class NameMappingValueFactory extends ValueFactory {
     
@@ -33,7 +33,7 @@ public class NameMappingValueFactory extends ValueFactory {
             JsonNode mappingNode = config.get("mapping");
             JsonNode mappedNode = mappingNode.path(value);
             if (mappedNode.isTextual()) {
-                return mappedNode.getTextValue();
+                return mappedNode.textValue();
             }
         }
         return value;

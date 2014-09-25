@@ -11,7 +11,7 @@ import net.ontopia.presto.spi.utils.PrestoContextRules;
 import net.ontopia.presto.spi.utils.PrestoTopicWithParentFieldVariableResolver;
 import net.ontopia.presto.spi.utils.PrestoVariableResolver;
 
-import org.codehaus.jackson.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class NamePatternValueFactory extends ValueFactory {
     

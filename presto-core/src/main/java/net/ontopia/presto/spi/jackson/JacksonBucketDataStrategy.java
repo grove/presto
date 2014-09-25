@@ -6,12 +6,13 @@ import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.utils.ExtraUtils;
 import net.ontopia.presto.spi.utils.Utils;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.node.ArrayNode;
-import org.codehaus.jackson.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public abstract class JacksonBucketDataStrategy implements JacksonDataStrategy {
     
@@ -38,18 +39,18 @@ public abstract class JacksonBucketDataStrategy implements JacksonDataStrategy {
     @Override
     public String getId(ObjectNode doc) {
         JsonNode node = doc.get(ID_DEFAULT_FIELD);
-        return node == null ? null : node.getTextValue();
+        return node == null ? null : node.textValue();
     }
     
     @Override
     public String getTypeId(ObjectNode doc) {
-        return doc.get(TYPE_DEFAULT_FIELD).getTextValue();
+        return doc.get(TYPE_DEFAULT_FIELD).textValue();
     }
     
     @Override
     public String getName(ObjectNode doc) {
         JsonNode node = doc.get(NAME_DEFAULT_FIELD);
-        return node == null ? null : node.getTextValue();
+        return node == null ? null : node.textValue();
     }
     
     @Override
@@ -70,7 +71,7 @@ public abstract class JacksonBucketDataStrategy implements JacksonDataStrategy {
         if (extra != null) {
             JsonNode readStrategy = extra.path("readStrategy");
             if (readStrategy.isObject()) {
-                String className = readStrategy.path("class").getTextValue();
+                String className = readStrategy.path("class").textValue();
                 if (className != null) {
                     JacksonFieldDataStrategy fds = Utils.newInstanceOf(className, JacksonFieldDataStrategy.class, true);
                     if (fds != null) {

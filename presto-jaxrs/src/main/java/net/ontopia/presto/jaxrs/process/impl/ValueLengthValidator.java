@@ -7,8 +7,8 @@ import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic.Projection;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ValueLengthValidator extends FieldDataProcessor {
 
@@ -48,7 +48,7 @@ public class ValueLengthValidator extends FieldDataProcessor {
     private int getInt(ObjectNode extraNode, String name, int defaultValue) {
         JsonNode node = extraNode.path(name);
         if (node.isInt()) {
-            return node.getIntValue();
+            return node.intValue();
         }
         return defaultValue;
     }

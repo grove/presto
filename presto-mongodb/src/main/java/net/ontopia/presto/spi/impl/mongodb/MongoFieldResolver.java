@@ -16,18 +16,18 @@ import net.ontopia.presto.spi.utils.PrestoPagedValues;
 import net.ontopia.presto.spi.utils.PrestoVariableContext;
 import net.ontopia.presto.spi.utils.PrestoVariableResolver;
 import net.ontopia.presto.spi.utils.Utils;
-import net.vz.mongodb.jackson.JacksonDBCollection;
-import net.vz.mongodb.jackson.MongoJsonMappingException;
-import net.vz.mongodb.jackson.internal.object.BsonObjectGenerator;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.node.ArrayNode;
-import org.codehaus.jackson.node.ObjectNode;
+import org.mongojack.JacksonDBCollection;
+import org.mongojack.MongoJsonMappingException;
+import org.mongojack.internal.object.BsonObjectGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
@@ -57,7 +57,7 @@ public abstract class MongoFieldResolver extends PrestoFieldResolver {
         try {
             DB db = getDB();
             
-            String coll = config.path("coll").getTextValue();
+            String coll = config.path("coll").textValue();
             DBCollection collection = db.getCollection(coll);
 
             JsonNode qNode = config.path("q");
@@ -89,7 +89,7 @@ public abstract class MongoFieldResolver extends PrestoFieldResolver {
                 q = new BasicDBObject("$or", qAlternatives);
             }
             JacksonDBCollection<ObjectNode, String> jCollection = JacksonDBCollection.wrap(collection, ObjectNode.class, String.class);
-            net.vz.mongodb.jackson.DBCursor<ObjectNode> cursor;
+            org.mongojack.DBCursor<ObjectNode> cursor;
 
             JsonNode keysNode = config.path("keys");
             if (keysNode.isObject()) {
@@ -111,16 +111,16 @@ public abstract class MongoFieldResolver extends PrestoFieldResolver {
                     if (isReference) {
                         result.add(existingTopic(next));
                     } else if (keysNode.isObject()){
-                        Iterator<String> fieldNames = keysNode.getFieldNames();
+                        Iterator<String> fieldNames = keysNode.fieldNames();
                         while (fieldNames.hasNext()) {
                             for (JsonNode valueNode : next.path(fieldNames.next())) {
                                 if (valueNode.isTextual()) {
-                                    result.add(valueNode.getTextValue());
+                                    result.add(valueNode.textValue());
                                 }
                             }
                         }
                     } else {
-                        String valueId = next.get("_id").getTextValue();
+                        String valueId = next.get("_id").textValue();
                         result.add(valueId);
                     }
                 }
@@ -145,7 +145,7 @@ public abstract class MongoFieldResolver extends PrestoFieldResolver {
             return list;
         } else if (o.isObject()) {
             ObjectNode obj = getObjectMapper().createObjectNode();
-            Iterator<String> iter = o.getFieldNames();
+            Iterator<String> iter = o.fieldNames();
             while (iter.hasNext()) {
                 String fieldName = iter.next();
                 if (fieldName.startsWith("$$")) {

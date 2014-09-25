@@ -14,13 +14,13 @@ import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.jackson.JacksonDataProvider;
 import net.ontopia.presto.spi.jackson.JacksonTopic;
 import net.ontopia.presto.spi.utils.Utils;
-import net.vz.mongodb.jackson.DBCursor;
-import net.vz.mongodb.jackson.JacksonDBCollection;
 
-import org.codehaus.jackson.node.ObjectNode;
+import org.mongojack.DBCursor;
+import org.mongojack.JacksonDBCollection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;

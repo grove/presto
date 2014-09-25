@@ -8,8 +8,8 @@ import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.utils.FieldValues;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class HasFieldValues {
     
@@ -25,7 +25,7 @@ public class HasFieldValues {
     static List<? extends Object> getValues(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, PrestoContextRules rules, PrestoField defaultField, ObjectNode config) {
         JsonNode fieldNode = config.path("field");
         if (fieldNode.isTextual()) {
-            String fieldId = fieldNode.getTextValue();
+            String fieldId = fieldNode.textValue();
             return PathExpressions.getValues(dataProvider, schemaProvider, rules, fieldId);
         } else if (defaultField != null) {
             FieldValues fieldValues = rules.getFieldValues(defaultField);

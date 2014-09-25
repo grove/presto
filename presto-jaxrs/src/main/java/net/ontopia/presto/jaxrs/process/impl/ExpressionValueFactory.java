@@ -14,8 +14,8 @@ import net.ontopia.presto.spi.utils.PatternValueUtils;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ExpressionValueFactory extends ValueFactory {
     
@@ -53,7 +53,7 @@ public class ExpressionValueFactory extends ValueFactory {
         if (pathNode.isMissingNode()) {
             path = field.getInlineReference();
         } else {
-            path = pathNode.getTextValue();
+            path = pathNode.textValue();
         }
         if (path == null) {
             return Collections.emptyList();
@@ -65,7 +65,7 @@ public class ExpressionValueFactory extends ValueFactory {
             PrestoContextRules rules, PrestoField field, PrestoTopic topic, ObjectNode config) {
         JsonNode namePatternNode = config.path("name-pattern");
         if (namePatternNode.isTextual()) {
-            String namePattern = namePatternNode.getTextValue();
+            String namePattern = namePatternNode.textValue();
             PrestoContext context = rules.getContext();
             return PatternValueUtils.getValueByPattern(schemaProvider, context, topic, namePattern);
         } else {

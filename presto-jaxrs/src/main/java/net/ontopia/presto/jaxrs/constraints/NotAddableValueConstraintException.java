@@ -1,11 +1,11 @@
 package net.ontopia.presto.jaxrs.constraints;
 
-import org.codehaus.jackson.node.ObjectNode;
-
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.utils.PrestoContext;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class NotAddableValueConstraintException extends DefaultConstraintException {
 

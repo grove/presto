@@ -2,11 +2,12 @@ package net.ontopia.presto.spi.jackson;
 
 import net.ontopia.presto.spi.PrestoField;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ArrayNode;
-import org.codehaus.jackson.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class JacksonDefaultDataStrategy implements JacksonDataStrategy {
     
@@ -18,12 +19,12 @@ public class JacksonDefaultDataStrategy implements JacksonDataStrategy {
 
     @Override
     public String getId(ObjectNode doc) {
-        return doc.get(ID_DEFAULT_FIELD).getTextValue();
+        return doc.get(ID_DEFAULT_FIELD).textValue();
     }
     
     @Override
     public String getTypeId(ObjectNode doc) {
-        return doc.get(TYPE_DEFAULT_FIELD).getTextValue();
+        return doc.get(TYPE_DEFAULT_FIELD).textValue();
     }
     
     @Override

@@ -6,8 +6,8 @@ import net.ontopia.presto.spi.utils.PrestoContextRules;
 import net.ontopia.presto.spi.utils.PrestoContextRules.ViewFlag;
 import net.ontopia.presto.spi.utils.PrestoContextRules.ViewRule;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class OrViewRule extends BooleanViewRule {
 

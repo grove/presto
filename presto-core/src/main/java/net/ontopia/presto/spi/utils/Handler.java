@@ -3,7 +3,7 @@ package net.ontopia.presto.spi.utils;
 import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 
-import org.codehaus.jackson.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public interface Handler {
 

@@ -7,8 +7,8 @@ import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
 import net.ontopia.presto.spi.utils.PrestoContextRules.FieldFlag;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ContainsAttributeFieldRule extends BooleanFieldRule {
 
@@ -20,7 +20,7 @@ public class ContainsAttributeFieldRule extends BooleanFieldRule {
     private boolean isAttributeEquals(PrestoContextRules rules, ObjectNode config) {
         JsonNode fieldNode = config.path("attribute");
         if (fieldNode.isTextual()) {
-            String name = fieldNode.getTextValue();
+            String name = fieldNode.textValue();
             Object value = rules.getAttributes().getAttribute(name);
             Set<String> configValues = ContainsFieldValues.getConfigValues(config);
             return ContainsFieldValues.containsAllValues(Collections.singletonList(value), configValues);

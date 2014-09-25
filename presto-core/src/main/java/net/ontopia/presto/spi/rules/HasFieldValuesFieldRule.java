@@ -4,7 +4,7 @@ import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
 import net.ontopia.presto.spi.utils.PrestoContextRules.FieldFlag;
 
-import org.codehaus.jackson.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class HasFieldValuesFieldRule extends BooleanFieldRule {
 

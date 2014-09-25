@@ -16,11 +16,12 @@ import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoView.ViewType;
 import net.ontopia.presto.spi.utils.Utils;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ArrayNode;
-import org.codehaus.jackson.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class PojoSchemaModel {
 
@@ -81,7 +82,7 @@ public class PojoSchemaModel {
             boolean defaultsReadOnly = false;
             JsonNode defaultsReadOnlyNode = schema.path("defaults").path("readOnly");
             if (defaultsReadOnlyNode.isBoolean()) {
-                defaultsReadOnly = defaultsReadOnlyNode.getBooleanValue();
+                defaultsReadOnly = defaultsReadOnlyNode.booleanValue();
             } else if (!defaultsReadOnlyNode.isMissingNode()) {
                 throw new RuntimeException("defaults.readOnly must be a boolean: " + defaultsReadOnlyNode);
             }
@@ -109,38 +110,38 @@ public class PojoSchemaModel {
             }
 
             // name
-            String name = typeConfig.get("name").getTextValue();
+            String name = typeConfig.get("name").textValue();
             type.setName(name);
 
             // readOnly
             if (typeConfig.has("readOnly")) {
-                readOnlyDefault = typeConfig.get("readOnly").getBooleanValue();
+                readOnlyDefault = typeConfig.get("readOnly").booleanValue();
             }
             
             // inline
             if (typeConfig.has("inline")) {
-                type.setInline(typeConfig.get("inline").getBooleanValue());
+                type.setInline(typeConfig.get("inline").booleanValue());
             }
             // hidden
             if (typeConfig.has("hidden")) {
-                type.setHidden(typeConfig.get("hidden").getBooleanValue());
+                type.setHidden(typeConfig.get("hidden").booleanValue());
             }
             // creatable
             if (typeConfig.has("creatable")) {
-                type.setCreatable(typeConfig.get("creatable").getBooleanValue());
+                type.setCreatable(typeConfig.get("creatable").booleanValue());
             }
             // removable
             if (typeConfig.has("removable")) {
-                type.setRemovable(typeConfig.get("removable").getBooleanValue());
+                type.setRemovable(typeConfig.get("removable").booleanValue());
             }
             // removableCascadingDelete
             if (typeConfig.has("removableCascadingDelete")) {
-                type.setRemovableCascadingDelete(typeConfig.get("removableCascadingDelete").getBooleanValue());
+                type.setRemovableCascadingDelete(typeConfig.get("removableCascadingDelete").booleanValue());
             }
 
             // extends
             if (typeConfig.has("extends")) {
-                String superTypeId = typeConfig.get("extends").getTextValue();
+                String superTypeId = typeConfig.get("extends").textValue();
                 verifyDeclaredType(superTypeId, typesMap, "extends", type);
                 PojoType superType = getPojoType(superTypeId, types, schemaProvider);
                 //                type.setSuperType(superType);
@@ -149,12 +150,12 @@ public class PojoSchemaModel {
             // defaultView
             String defaultViewId = null;
             if (typeConfig.has("defaultView")) {
-                defaultViewId = typeConfig.get("defaultView").getTextValue();
+                defaultViewId = typeConfig.get("defaultView").textValue();
                 type.setDefaultViewId(defaultViewId);
             } 
             // createView
             if (typeConfig.has("createView")) {
-                String createViewId = typeConfig.get("createView").getTextValue();
+                String createViewId = typeConfig.get("createView").textValue();
                 type.setCreateViewId(createViewId);
             } else if (defaultViewId != null){
                 type.setCreateViewId(defaultViewId);
@@ -175,11 +176,11 @@ public class PojoSchemaModel {
 
                 // view
                 if (viewNode.isTextual()) {
-                    viewId = viewNode.getTextValue();                        
+                    viewId = viewNode.textValue();                        
                     viewConfig = viewsMap.get(viewId);
                 } else if (viewNode.isObject()) {
                     viewConfig = (ObjectNode)viewNode;
-                    viewId = viewConfig.get("id").getTextValue();
+                    viewId = viewConfig.get("id").textValue();
                 } else {
                     throw new RuntimeException("Invalid view declaration or view reference: " + viewNode);
                 }
@@ -188,18 +189,18 @@ public class PojoSchemaModel {
                 type.addView(view);
 
                 // name
-                String viewName = viewConfig.get("name").getTextValue();
+                String viewName = viewConfig.get("name").textValue();
                 view.setName(viewName);
 
                 // readOnly
                 if (viewConfig.has("readOnly")) {
-                    readOnlyDefault = viewConfig.get("readOnly").getBooleanValue();
+                    readOnlyDefault = viewConfig.get("readOnly").booleanValue();
                 }
 
                 // type
                 ViewType viewType = ViewType.NORMAL_VIEW;
                 if (viewConfig.has("type")) {
-                    viewType = ViewType.findByTypeId(viewConfig.get("type").getTextValue());
+                    viewType = ViewType.findByTypeId(viewConfig.get("type").textValue());
                 }
                 view.setType(viewType);
                 
@@ -227,11 +228,11 @@ public class PojoSchemaModel {
             String fieldId;
             ObjectNode fieldConfig;
             if (fieldNode.isTextual()) {
-                fieldId = fieldNode.getTextValue();                        
+                fieldId = fieldNode.textValue();                        
                 fieldConfig = fieldsMap.get(fieldId);
             } else if (fieldNode.isObject()) {
                 fieldConfig = (ObjectNode)fieldNode;
-                fieldId = fieldConfig.get("id").getTextValue();
+                fieldId = fieldConfig.get("id").textValue();
             } else {
                 throw new RuntimeException("Invalid field declaration or field reference: " + fieldNode);
             }
@@ -249,26 +250,26 @@ public class PojoSchemaModel {
             
             // actualId
             if (fieldConfig.has("actualId")) {
-                field.setActualId(fieldConfig.get("actualId").getTextValue());
+                field.setActualId(fieldConfig.get("actualId").textValue());
             }
 
             // name
             if (fieldConfig.has("name")) {
-                String fieldName = fieldConfig.get("name").getTextValue();                        
+                String fieldName = fieldConfig.get("name").textValue();                        
                 field.setName(fieldName);
             } else {
                 field.setName(fieldId);
             }
             // isNameField
             if (fieldConfig.has("nameField")) {
-                field.setNameField(fieldConfig.get("nameField").getBooleanValue());
+                field.setNameField(fieldConfig.get("nameField").booleanValue());
             }
 
             // isPrimitiveField/isReferenceField
 
             // dataType
             if (fieldConfig.has("datatype")) {
-                String datatype = fieldConfig.get("datatype").getTextValue();
+                String datatype = fieldConfig.get("datatype").textValue();
                 field.setDataType(datatype);
             } else {
                 field.setDataType("http://www.w3.org/2001/XMLSchema#string");
@@ -279,105 +280,105 @@ public class PojoSchemaModel {
             }
             // valueView (using current view for now)
             if (fieldConfig.has("valueView")) {
-                String valueViewId = fieldConfig.get("valueView").getTextValue();
+                String valueViewId = fieldConfig.get("valueView").textValue();
                 field.setValueViewId(valueViewId);
             } 
             // editView (using current view for now)
             if (fieldConfig.has("editView")) {
-                String editViewId = fieldConfig.get("editView").getTextValue();
+                String editViewId = fieldConfig.get("editView").textValue();
                 field.setEditViewId(editViewId);
             } 
             // createView (using current view for now)
             if (fieldConfig.has("createView")) {
-                String createViewId = fieldConfig.get("createView").getTextValue();
+                String createViewId = fieldConfig.get("createView").textValue();
                 field.setCreateViewId(createViewId);
             } 
 
             // minCardinality
             if (fieldConfig.has("minCardinality")) {
-                field.setMinCardinality(fieldConfig.get("minCardinality").getIntValue());
+                field.setMinCardinality(fieldConfig.get("minCardinality").intValue());
             }
             // maxCardinality
             if (fieldConfig.has("maxCardinality")) {
-                field.setMaxCardinality(fieldConfig.get("maxCardinality").getIntValue());
+                field.setMaxCardinality(fieldConfig.get("maxCardinality").intValue());
             }
             // validationType
             if (fieldConfig.has("validationType")) {
-                String validationType = fieldConfig.get("validationType").getTextValue();
+                String validationType = fieldConfig.get("validationType").textValue();
                 field.setValidationType(validationType);
             }           
             // isInline
             if (fieldConfig.has("inline")) {
-                field.setInline(fieldConfig.get("inline").getBooleanValue());
+                field.setInline(fieldConfig.get("inline").booleanValue());
                 if (fieldConfig.has("inlineReference")) {
-                    field.setInlineReference(fieldConfig.get("inlineReference").getTextValue());
+                    field.setInlineReference(fieldConfig.get("inlineReference").textValue());
                 }
             }
             // isParentRelation
             if (fieldConfig.has("parentRelation")) {
-                field.setParentRelation(fieldConfig.get("parentRelation").getBooleanValue());
+                field.setParentRelation(fieldConfig.get("parentRelation").booleanValue());
             }
             // isEmbedded
             if (fieldConfig.has("embedded")) {
-                field.setEmbedded(fieldConfig.get("embedded").getBooleanValue());
+                field.setEmbedded(fieldConfig.get("embedded").booleanValue());
             }
             // isHidden
             if (fieldConfig.has("hidden")) {
-                field.setHidden(fieldConfig.get("hidden").getBooleanValue());
+                field.setHidden(fieldConfig.get("hidden").booleanValue());
             }
             // isTraversable
             if (fieldConfig.has("traversable")) {
-                field.setTraversable(fieldConfig.get("traversable").getBooleanValue());
+                field.setTraversable(fieldConfig.get("traversable").booleanValue());
             }
             // isReadOnly            
             if (fieldConfig.has("readOnly")) {
-                field.setReadOnly(fieldConfig.get("readOnly").getBooleanValue());
+                field.setReadOnly(fieldConfig.get("readOnly").booleanValue());
             } else {
                 field.setReadOnly(readOnlyDefault);
             }
             // isSorted
             if (fieldConfig.has("sorted")) {
-                field.setSorted(fieldConfig.get("sorted").getBooleanValue());
+                field.setSorted(fieldConfig.get("sorted").booleanValue());
             }
             // isSortOrderAscending
             if (fieldConfig.has("sortedAscending")) {
-                field.setSortAscending(fieldConfig.get("sortedAscending").getBooleanValue());
+                field.setSortAscending(fieldConfig.get("sortedAscending").booleanValue());
             }
             // isPageable
             if (fieldConfig.has("pageable")) {
-                field.setPageable(fieldConfig.get("pageable").getBooleanValue());
+                field.setPageable(fieldConfig.get("pageable").booleanValue());
             }
             // limit
             if (fieldConfig.has("limit")) {
-                field.setLimit(fieldConfig.get("limit").getIntValue());
+                field.setLimit(fieldConfig.get("limit").intValue());
             }
             // isCascadingDelete
             if (fieldConfig.has("cascadingDelete")) {
-                field.setCascadingDelete(fieldConfig.get("cascadingDelete").getBooleanValue());
+                field.setCascadingDelete(fieldConfig.get("cascadingDelete").booleanValue());
             }
             // inverseFieldId
             if (fieldConfig.has("inverseFieldId")) {
-                field.setInverseFieldId(fieldConfig.get("inverseFieldId").getTextValue());
+                field.setInverseFieldId(fieldConfig.get("inverseFieldId").textValue());
             }
             // isEdittable
             if (fieldConfig.has("editable")) {
-                field.setEditable(fieldConfig.get("editable").getBooleanValue());
+                field.setEditable(fieldConfig.get("editable").booleanValue());
             }
             // isCreatable
             if (fieldConfig.has("creatable")) {
-                field.setCreatable(fieldConfig.get("creatable").getBooleanValue());
+                field.setCreatable(fieldConfig.get("creatable").booleanValue());
             }
             // isAddable
             if (fieldConfig.has("addable")) {
-                field.setAddable(fieldConfig.get("addable").getBooleanValue());
+                field.setAddable(fieldConfig.get("addable").booleanValue());
             }
             // isRemovable
             if (fieldConfig.has("removable")) {
-                field.setRemovable(fieldConfig.get("removable").getBooleanValue());
+                field.setRemovable(fieldConfig.get("removable").booleanValue());
             }
             // interfaceControl
             if (fieldConfig.has("interfaceControl")) {
-                String interfaceControl = fieldConfig.get("interfaceControl").getTextValue();
+                String interfaceControl = fieldConfig.get("interfaceControl").textValue();
                 field.setInterfaceControl(interfaceControl);
             }
 
@@ -388,7 +389,7 @@ public class PojoSchemaModel {
                 if (fieldConfig.has("valueTypes")) {
                     ArrayNode valueTypesArray = (ArrayNode)fieldConfig.get("valueTypes");
                     for (JsonNode valueTypeIdNode : valueTypesArray) {
-                        String valueTypeId = valueTypeIdNode.getTextValue();
+                        String valueTypeId = valueTypeIdNode.textValue();
                         verifyDeclaredType(valueTypeId, typesMap, "valueTypes", type, field);
                         PojoType valueType = getPojoType(valueTypeId, types, schemaProvider);
                         valueTypes.add(valueType);
@@ -401,7 +402,7 @@ public class PojoSchemaModel {
                 if (fieldConfig.has("createTypes")) {
                     ArrayNode createTypesArray = (ArrayNode)fieldConfig.get("createTypes");
                     for (JsonNode createTypeIdNode : createTypesArray) {
-                        String createTypeId = createTypeIdNode.getTextValue();
+                        String createTypeId = createTypeIdNode.textValue();
                         verifyDeclaredType(createTypeId, typesMap, "createTypes", type, field);
                         PojoType createType = getPojoType(createTypeId, types, schemaProvider);
                         createTypes.add(createType);
@@ -416,7 +417,7 @@ public class PojoSchemaModel {
             Map<String,ObjectNode> typesMap = new HashMap<String,ObjectNode>();
             if (json.has("types")) {
                 ObjectNode typesNode = (ObjectNode)json.get("types");
-                Iterator<String> typeNames = typesNode.getFieldNames();
+                Iterator<String> typeNames = typesNode.fieldNames();
                 while (typeNames.hasNext()) {
                     String typeName = typeNames.next();
                     ObjectNode typeConfig = (ObjectNode)typesNode.get(typeName);
@@ -430,7 +431,7 @@ public class PojoSchemaModel {
             Map<String,ObjectNode> fieldsMap = new HashMap<String,ObjectNode>();
             if (json.has("fields")) {
                 ObjectNode fieldsNode = (ObjectNode)json.get("fields");
-                Iterator<String> fieldNames = fieldsNode.getFieldNames();
+                Iterator<String> fieldNames = fieldsNode.fieldNames();
                 while (fieldNames.hasNext()) {
                     String fieldName = fieldNames.next();
                     ObjectNode fieldConfig = (ObjectNode)fieldsNode.get(fieldName);
@@ -444,7 +445,7 @@ public class PojoSchemaModel {
             Map<String,ObjectNode> viewsMap = new HashMap<String,ObjectNode>();
             if (json.has("views")) {
                 ObjectNode viewsNode = (ObjectNode)json.get("views");
-                Iterator<String> fieldNames = viewsNode.getFieldNames();
+                Iterator<String> fieldNames = viewsNode.fieldNames();
                 while (fieldNames.hasNext()) {
                     String fieldName = fieldNames.next();
                     ObjectNode viewConfig = (ObjectNode)viewsNode.get(fieldName);

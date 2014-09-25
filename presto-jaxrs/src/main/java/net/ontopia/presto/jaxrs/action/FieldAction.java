@@ -1,13 +1,13 @@
 package net.ontopia.presto.jaxrs.action;
 
-import org.codehaus.jackson.node.ObjectNode;
-
 import net.ontopia.presto.jaxb.TopicView;
 import net.ontopia.presto.jaxrs.Presto;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic.Projection;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public abstract class FieldAction {
 

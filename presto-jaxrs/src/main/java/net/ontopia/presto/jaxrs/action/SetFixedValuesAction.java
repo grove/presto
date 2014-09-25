@@ -8,14 +8,14 @@ import net.ontopia.presto.jaxrs.Presto;
 import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic;
+import net.ontopia.presto.spi.PrestoTopic.Projection;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
-import net.ontopia.presto.spi.PrestoTopic.Projection;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class SetFixedValuesAction extends FieldAction {
 
@@ -52,7 +52,7 @@ public class SetFixedValuesAction extends FieldAction {
         if (valuesNode.isArray()) {
             for (JsonNode valueNode : valuesNode) {
                 if (valueNode.isTextual()) {
-                    String value = valueNode.getTextValue();
+                    String value = valueNode.textValue();
                     if (value != null) {
                         values.add(value);
                     }

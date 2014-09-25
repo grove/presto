@@ -13,8 +13,8 @@ import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public abstract class DefaultChangeSetHandler implements ChangeSetHandler {
 
@@ -57,7 +57,7 @@ public abstract class DefaultChangeSetHandler implements ChangeSetHandler {
             if (assignment.isObject()) {
                 List<Object> defaultValues = null;
 
-                String valuesAssignmentType = assignment.get("type").getTextValue();
+                String valuesAssignmentType = assignment.get("type").textValue();
 
                 if (valuesAssignmentType.equals("create")) {
                     if (update.isNewTopic()) {
@@ -69,7 +69,7 @@ public abstract class DefaultChangeSetHandler implements ChangeSetHandler {
                     if (fields.isArray()) {
                         // update only if any of the given fields are updated 
                         for (JsonNode fieldNode : fields) {
-                            String fieldId = fieldNode.getTextValue();
+                            String fieldId = fieldNode.textValue();
                             PrestoField fieldById = type.getFieldById(fieldId);
                             if (update.isFieldUpdated(fieldById)) {
                                 defaultValues = getDefaultValues(topic, type, field, assignment);
@@ -85,7 +85,7 @@ public abstract class DefaultChangeSetHandler implements ChangeSetHandler {
                         if (fields.isArray()) {
                             // update only if any of the given fields are updated 
                             for (JsonNode fieldNode : fields) {
-                                String fieldId = fieldNode.getTextValue();
+                                String fieldId = fieldNode.textValue();
                                 PrestoField fieldById = type.getFieldById(fieldId);
                                 if (update.isFieldUpdated(fieldById)) {
                                     defaultValues = getDefaultValues(topic, type, field, assignment);
@@ -107,7 +107,7 @@ public abstract class DefaultChangeSetHandler implements ChangeSetHandler {
 //        ObjectNode extra = (ObjectNode)field.getExtra();
 //        JsonNode assignment = extra.path("assigment");
 //        if (assignment.isObject()) {
-//            String valuesAssignmentType = assignment.get("type").getTextValue();
+//            String valuesAssignmentType = assignment.get("type").textValue();
 //            if (valuesAssignmentType.equals("initial")) {
 //                return getDefaultValues(null, type, field, assignment);                    
 //            }
@@ -118,7 +118,7 @@ public abstract class DefaultChangeSetHandler implements ChangeSetHandler {
     protected List<Object> getDefaultValues(PrestoTopic topic, PrestoType type, PrestoField field, JsonNode assignment) {
         List<Object> result = new ArrayList<Object>();
         for (JsonNode valueNode : assignment.get("values")) {
-            String value = valueNode.getTextValue();
+            String value = valueNode.textValue();
             if (value != null) {
                 if (value.charAt(0) == '$') {
                     String variable = value.substring(1);

@@ -10,13 +10,12 @@ import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.jackson.JacksonDataProvider;
 import net.ontopia.presto.spi.jackson.JacksonTopic;
 
-import org.codehaus.jackson.node.ObjectNode;
-
 import com.basho.riak.client.IRiakClient;
 import com.basho.riak.client.RiakException;
 import com.basho.riak.client.RiakFactory;
 import com.basho.riak.client.RiakRetryFailedException;
 import com.basho.riak.client.bucket.Bucket;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public abstract class RiakDataProvider extends JacksonDataProvider {
 

@@ -6,7 +6,8 @@ import java.util.Collection;
 import net.ontopia.presto.spi.jackson.IdentityStrategy;
 
 import org.bson.types.ObjectId;
-import org.codehaus.jackson.node.ObjectNode;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ObjectIdIdentityStrategy implements IdentityStrategy {
     

@@ -3,7 +3,7 @@ package net.ontopia.presto.spi.rules;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
 import net.ontopia.presto.spi.utils.PrestoContextRules.TypeFlag;
 
-import org.codehaus.jackson.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ContainsFieldValuesTypeRule extends BooleanTypeRule {
     

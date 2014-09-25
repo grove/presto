@@ -17,8 +17,8 @@ import net.ontopia.presto.spi.rules.PathExpressions;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ExpressionAvailableFieldValuesResolver extends AvailableFieldValuesResolver {
 
@@ -35,7 +35,7 @@ public class ExpressionAvailableFieldValuesResolver extends AvailableFieldValues
         
         JsonNode excludePathNode = config.path("excludePath");
         if (!excludePathNode.isMissingNode()) {
-            String excludePath = excludePathNode.getTextValue();
+            String excludePath = excludePathNode.textValue();
             List<? extends Object> excludeValues = PathExpressions.getValues(dataProvider, schemaProvider, rules, excludePath);
             if (!excludeValues.isEmpty()) {
                 
@@ -73,7 +73,7 @@ public class ExpressionAvailableFieldValuesResolver extends AvailableFieldValues
 //            PrestoContext context = rules.getContext();
 //            PrestoContext parentContext = context.getParentContext();
 //            PrestoContextRules parentRules = rules.getPrestoContextRules(parentContext);
-//            String fieldId = fieldNode.getTextValue();
+//            String fieldId = fieldNode.textValue();
 //            return PathExpressions.getValues(dataProvider, schemaProvider, parentRules, fieldId);
 //        } 
 //        throw new RuntimeException("Not able to find field from configuration: " + config);
