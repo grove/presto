@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import net.ontopia.presto.jaxb.FieldData;
+import net.ontopia.presto.jaxb.FieldData.Message;
 import net.ontopia.presto.jaxb.Topic;
 import net.ontopia.presto.jaxb.TopicView;
 import net.ontopia.presto.jaxb.Value;
@@ -22,6 +23,7 @@ import net.ontopia.presto.spi.utils.AbstractHandler;
 import net.ontopia.presto.spi.utils.ExtraUtils;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
+import net.ontopia.presto.spi.utils.Utils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -216,7 +218,16 @@ public class PrestoProcessor {
         // reset errors when pre-process
         if (processType == Type.PRE_PROCESS) {
             fieldData.setErrors(null);
-            fieldData.setMessages(null);
+            Collection<Message> oldMessages = fieldData.getMessages();
+            if (oldMessages != null && !oldMessages.isEmpty()) {
+                Collection<Message> newMessages = new ArrayList<Message>(oldMessages.size());
+                for (Message message : oldMessages) {
+                    if (Utils.different("error", message.getType())) {
+                        newMessages.add(message);
+                    }
+                }
+                fieldData.setMessages(newMessages);
+            }
         }
 
         // process field
