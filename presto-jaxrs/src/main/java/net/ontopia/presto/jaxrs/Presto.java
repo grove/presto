@@ -1432,7 +1432,7 @@ public abstract class Presto {
                         result.addAll(newValues);
                     } else {
                         PrestoTopic topic = context.getTopic();
-                        List<? extends Object> existingValues = topic.getStoredValues(field);
+                        List<? extends Object> existingValues = topic.getValues(field);
                         if (inlineReference) {
                             result.addAll(mergeInlineStrings(newValues, existingValues, includeExisting));
                         } else {
