@@ -14,8 +14,8 @@ import net.ontopia.presto.spi.functions.PrestoFieldFunction;
 import net.ontopia.presto.spi.functions.PrestoFieldFunctionUtils;
 import net.ontopia.presto.spi.rules.DelegatingContextRules;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public abstract class PrestoContextRules {
 
@@ -299,7 +299,7 @@ public abstract class PrestoContextRules {
             if (dvNode.isArray()) {
                 List<Object> values = new ArrayList<Object>(dvNode.size());
                 for (JsonNode valueNode : dvNode) {
-                    String textValue = valueNode.getTextValue();
+                    String textValue = valueNode.textValue();
                     if (field.isReferenceField()) {
                         PrestoTopic topic = getDataProvider().getTopicById(textValue);
                         if (topic != null) {
@@ -314,7 +314,7 @@ public abstract class PrestoContextRules {
 
             JsonNode defNode = extra.path("assignDefaultValues");
             if (defNode.isTextual()) {
-                String key = defNode.getTextValue();
+                String key = defNode.textValue();
                 PrestoAttributes attributes = getAttributes();
                 Object defaultValues = attributes.getAttribute(key);
                 if (defaultValues instanceof FieldValues) {

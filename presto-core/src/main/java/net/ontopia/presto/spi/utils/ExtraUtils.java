@@ -9,8 +9,8 @@ import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoView;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ExtraUtils {
 
@@ -71,7 +71,7 @@ public class ExtraUtils {
         if (params.isObject()) {
             JsonNode paramNode = params.path(paramKey);
             if (paramNode.isTextual()) {
-                return paramNode.getTextValue();
+                return paramNode.textValue();
             }
         }
         return null;
@@ -85,7 +85,7 @@ public class ExtraUtils {
     public static Map<String,Object> getParamsMap(JsonNode params) {
         if (params.isObject()) {
             Map<String,Object> result = new LinkedHashMap<String,Object>();
-            Iterator<String> pnIter = params.getFieldNames();
+            Iterator<String> pnIter = params.fieldNames();
             while (pnIter.hasNext()) {
                 String pn = pnIter.next();
                 result.put(pn, params.get(pn));

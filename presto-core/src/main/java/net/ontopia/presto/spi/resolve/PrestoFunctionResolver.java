@@ -11,8 +11,8 @@ import net.ontopia.presto.spi.utils.PrestoPagedValues;
 import net.ontopia.presto.spi.utils.PrestoVariableResolver;
 import net.ontopia.presto.spi.utils.Utils;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class PrestoFunctionResolver extends PrestoFieldResolver {
 
@@ -32,7 +32,7 @@ public class PrestoFunctionResolver extends PrestoFieldResolver {
     private PrestoResolverFunction getFunction(ObjectNode resolveConfig) {
         JsonNode nameNode = resolveConfig.path("class");
         if (nameNode.isTextual()) {
-            String className = nameNode.getTextValue();
+            String className = nameNode.textValue();
             if (className != null) {
                 return Utils.newInstanceOf(className, PrestoResolverFunction.class);
             }

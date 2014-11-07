@@ -2,7 +2,7 @@ package net.ontopia.presto.spi.jackson;
 
 import java.util.Collection;
 
-import org.codehaus.jackson.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public interface IdentityStrategy {
 

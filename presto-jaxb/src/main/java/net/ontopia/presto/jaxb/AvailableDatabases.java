@@ -3,7 +3,7 @@ package net.ontopia.presto.jaxb;
 import java.util.Collection;
 import java.util.Collections;
 
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
 public class AvailableDatabases extends Document {

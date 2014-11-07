@@ -12,8 +12,8 @@ import net.ontopia.presto.spi.PrestoTopic.Projection;
 import net.ontopia.presto.spi.utils.PrestoPagedValues;
 import net.ontopia.presto.spi.utils.PrestoVariableResolver;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class PrestoTraverseResolver extends PrestoFieldResolver {
 
@@ -29,7 +29,7 @@ public class PrestoTraverseResolver extends PrestoFieldResolver {
                 Collection<Object> rs = new HashSet<Object>(objects);
                 for (JsonNode fieldItem : pathNode) {
                     // TODO: allow optional recursion
-                    String fieldId = fieldItem.getTextValue();
+                    String fieldId = fieldItem.textValue();
                     rs = traverseField(rs, fieldId, variableResolver);
                 }
                 List<Object> result = new ArrayList<Object>(rs);

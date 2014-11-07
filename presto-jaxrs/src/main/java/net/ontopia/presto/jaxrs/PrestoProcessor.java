@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import net.ontopia.presto.jaxb.FieldData;
+import net.ontopia.presto.jaxb.FieldData.Message;
 import net.ontopia.presto.jaxb.Topic;
 import net.ontopia.presto.jaxb.TopicView;
 import net.ontopia.presto.jaxb.Value;
@@ -15,16 +16,17 @@ import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
+import net.ontopia.presto.spi.PrestoTopic.Projection;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoView;
-import net.ontopia.presto.spi.PrestoTopic.Projection;
 import net.ontopia.presto.spi.utils.AbstractHandler;
 import net.ontopia.presto.spi.utils.ExtraUtils;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
+import net.ontopia.presto.spi.utils.Utils;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class PrestoProcessor {
     
@@ -216,7 +218,16 @@ public class PrestoProcessor {
         // reset errors when pre-process
         if (processType == Type.PRE_PROCESS) {
             fieldData.setErrors(null);
-            fieldData.setMessages(null);
+            Collection<Message> oldMessages = fieldData.getMessages();
+            if (oldMessages != null && !oldMessages.isEmpty()) {
+                Collection<Message> newMessages = new ArrayList<Message>(oldMessages.size());
+                for (Message message : oldMessages) {
+                    if (Utils.different("error", message.getType())) {
+                        newMessages.add(message);
+                    }
+                }
+                fieldData.setMessages(newMessages);
+            }
         }
 
         // process field

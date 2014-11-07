@@ -22,9 +22,9 @@ import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
 import net.ontopia.presto.spi.utils.Utils;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ArrayNode;
-import org.codehaus.jackson.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class DataLoader {
 
@@ -95,7 +95,7 @@ public class DataLoader {
         PrestoType type = schemaProvider.getTypeById(typeId);
         PrestoUpdate topic = createUpdate(changeSet, type, topicId);
 
-        Iterator<String> fieldIds = doc.getFieldNames();
+        Iterator<String> fieldIds = doc.fieldNames();
         while (fieldIds.hasNext()) {
             String fieldId = fieldIds.next();
             if (!IGNORE_FIELDS.contains(fieldId)) {
@@ -116,7 +116,7 @@ public class DataLoader {
 
         PrestoInlineTopicBuilder builder = dataProvider.createInlineTopic(type, topicId);
 
-        Iterator<String> fieldIds = doc.getFieldNames();
+        Iterator<String> fieldIds = doc.fieldNames();
         while (fieldIds.hasNext()) {
             String fieldId = fieldIds.next();
             if (!IGNORE_FIELDS.contains(fieldId)) {

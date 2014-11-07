@@ -7,8 +7,8 @@ import java.util.List;
 import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class AbstractHandler implements Handler {
 
@@ -69,18 +69,18 @@ public class AbstractHandler implements Handler {
     
     public static <T extends Handler> T getHandler(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, Class<T> klass, JsonNode processorNode) {
         if (processorNode.isTextual()) {
-            String className = processorNode.getTextValue();
+            String className = processorNode.textValue();
             if (className != null) {
                 return getHandlerInstance(dataProvider, schemaProvider, klass, className, null);
             }
         } else if (processorNode.isObject()) {
             if (processorNode.has("class")) {
-                String className = processorNode.path("class").getTextValue();
+                String className = processorNode.path("class").textValue();
                 if (className != null) {
                     return getHandlerInstance(dataProvider, schemaProvider, klass, className, (ObjectNode)processorNode);
                 }
             } else if (processorNode.has("processor")) {
-                String ref = processorNode.path("processor").getTextValue();
+                String ref = processorNode.path("processor").textValue();
                 ObjectNode extra = (ObjectNode)schemaProvider.getExtra();
                 if (extra != null) {
                     JsonNode globalProcessorNode = extra.path("processors").path(ref);

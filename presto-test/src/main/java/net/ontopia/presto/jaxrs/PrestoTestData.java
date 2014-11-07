@@ -17,11 +17,12 @@ import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoUpdate;
 import net.ontopia.presto.spi.utils.Utils;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.JsonToken;
-import org.codehaus.jackson.node.ObjectNode;
 import org.junit.Test;
+
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class PrestoTestData {
 
@@ -60,7 +61,7 @@ public class PrestoTestData {
         PrestoType type = schemaProvider.getTypeById(typeId);
         PrestoChangeSet changeSet = dataProvider.newChangeSet();
         PrestoUpdate topic = changeSet.createTopic(type, topicId);
-        Iterator<String> fieldIds = doc.getFieldNames();
+        Iterator<String> fieldIds = doc.fieldNames();
         while (fieldIds.hasNext()) {
             String fieldId = fieldIds.next();
             

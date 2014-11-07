@@ -13,11 +13,11 @@ import java.util.Map.Entry;
 import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.node.ArrayNode;
-import org.codehaus.jackson.node.JsonNodeFactory;
-import org.codehaus.jackson.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class PrestoVariableContext {
 
@@ -97,7 +97,7 @@ public class PrestoVariableContext {
         if (node.isObject()) {
             ObjectNode onode = (ObjectNode)node;
             List<String> keys = new ArrayList<String>(onode.size());
-            Iterator<String> kiter = onode.getFieldNames();
+            Iterator<String> kiter = onode.fieldNames();
             while (kiter.hasNext()) {
                 keys.add(kiter.next());
             }
@@ -120,7 +120,7 @@ public class PrestoVariableContext {
             }
             return result;
         } else if (node.isTextual()) {
-            String key = node.getTextValue();
+            String key = node.textValue();
             if (isVariable(key)) {
                 Object text = variables.get(getVariable(key));
                 return nodeFactory.textNode(toValueString(text));
@@ -137,13 +137,13 @@ public class PrestoVariableContext {
     
     private void findVariables(JsonNode node, Collection<String> variables) {
         if (node.isTextual()) {
-            String key = node.getTextValue();
+            String key = node.textValue();
             if (isVariable(key)) {
                 variables.add(getVariable(key));
             }            
         } else if (node.isObject()) {
             ObjectNode onode = (ObjectNode)node;
-            Iterator<Entry<String, JsonNode>> fields = onode.getFields();
+            Iterator<Entry<String, JsonNode>> fields = onode.fields();
             while (fields.hasNext()) {
                 Entry<String,JsonNode> field = fields.next();
                 String key = field.getKey();

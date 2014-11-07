@@ -2,19 +2,22 @@ package net.ontopia.presto.jaxrs.process.impl;
 
 import java.util.Collection;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import net.ontopia.presto.jaxb.FieldData;
 import net.ontopia.presto.jaxb.Value;
 import net.ontopia.presto.jaxrs.process.FieldDataProcessor;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic.Projection;
+import net.ontopia.presto.spi.utils.ExtraUtils;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
 
 public class FieldCardinalityValidator extends FieldDataProcessor {
 
     @Override
     public FieldData processFieldData(FieldData fieldData, PrestoContextRules rules, PrestoField field, Projection projection) {
-        int minCardinality = field.getMinCardinality();
-        int maxCardinality = field.getMaxCardinality();
+        int minCardinality = getMinCardinality(fieldData, rules, field, projection);
+        int maxCardinality = getMaxCardinality(fieldData, rules, field, projection);
         
         Collection<Value> values = fieldData.getValues();
         int cardinality = values.size();
@@ -40,4 +43,20 @@ public class FieldCardinalityValidator extends FieldDataProcessor {
         return fieldData;
     }
 
+    protected int getMinCardinality(FieldData fieldData, PrestoContextRules rules, PrestoField field, Projection projection) {
+        ObjectNode extra = ExtraUtils.getFieldExtraNode(field);
+        if (extra != null && extra.has("minCardinality")) {
+            return extra.path("minCardinality").intValue();
+        }
+        return field.getMinCardinality();
+    }
+
+    protected int getMaxCardinality(FieldData fieldData, PrestoContextRules rules, PrestoField field, Projection projection) {
+        ObjectNode extra = ExtraUtils.getFieldExtraNode(field);
+        if (extra != null && extra.has("maxCardinality")) {
+            return extra.path("maxCardinality").intValue();
+        }
+        return field.getMaxCardinality();
+    }
+    
 }

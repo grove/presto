@@ -4,10 +4,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class DoubleFieldValueComparator extends FieldValueComparator {
 
@@ -22,7 +23,7 @@ public class DoubleFieldValueComparator extends FieldValueComparator {
         JsonNode defaults = config.path("defaults");
         if (defaults.isObject()) {
             ObjectNode map = (ObjectNode)defaults;
-            Iterator<String> iter = map.getFieldNames();
+            Iterator<String> iter = map.fieldNames();
             while (iter.hasNext()) {
                 String key = iter.next();
                 double value = map.path(key).asDouble();

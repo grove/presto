@@ -12,14 +12,14 @@ import net.ontopia.presto.jaxrs.Presto;
 import net.ontopia.presto.jaxrs.links.Links;
 import net.ontopia.presto.jaxrs.process.FieldDataProcessor;
 import net.ontopia.presto.spi.PrestoField;
+import net.ontopia.presto.spi.PrestoTopic.Projection;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoView;
-import net.ontopia.presto.spi.PrestoTopic.Projection;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class AddOnChangeLinkPostProcessor extends FieldDataProcessor {
 
@@ -67,7 +67,7 @@ public class AddOnChangeLinkPostProcessor extends FieldDataProcessor {
         Link link = null;
         ObjectNode config = getConfig();
         if (config != null) {
-            String href = config.path("href").getTextValue();
+            String href = config.path("href").textValue();
             if (href != null) {
                 Map<String,String> params = new HashMap<String,String>();
                 params.put("baseUri", presto.getBaseUri().toASCIIString());

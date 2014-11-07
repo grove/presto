@@ -16,8 +16,8 @@ import net.ontopia.presto.spi.utils.PrestoContextRules;
 import net.ontopia.presto.spi.utils.PrestoTopicFieldVariableResolver;
 import net.ontopia.presto.spi.utils.PrestoVariableResolver;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class DefaultAvailableFieldValuesResolver extends AvailableFieldValuesResolver {
 

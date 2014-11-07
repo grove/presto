@@ -13,8 +13,8 @@ import net.ontopia.presto.spi.PrestoView;
 import net.ontopia.presto.spi.utils.ExtraUtils;
 import net.ontopia.presto.spi.utils.PrestoContext;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 // NOTE: this class is EXPERIMENTAL.
 
@@ -100,7 +100,7 @@ public class CustomSchemaLinks implements Links {
             if (rels.isObject()) {
                 JsonNode relNode = rels.path(rel);
                 if (relNode.isTextual()) {
-                    return relNode.getTextValue();
+                    return relNode.textValue();
                 }
             }
         }

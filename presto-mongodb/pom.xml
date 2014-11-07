@@ -4,14 +4,14 @@
   <parent>
     <groupId>net.ontopia.presto</groupId>
     <artifactId>presto</artifactId>
-    <version>0.7.23-SNAPSHOT</version>
+    <version>0.7.24-SNAPSHOT</version>
   </parent>
 
   <name>Presto - MongoDB data provider</name>
   <groupId>net.ontopia.presto</groupId>
   <artifactId>presto-mongodb</artifactId>
   <packaging>jar</packaging>
-  <version>0.7.23-SNAPSHOT</version>
+  <version>0.7.24-SNAPSHOT</version>
 
   <dependencies>
     <dependency>
@@ -24,8 +24,8 @@
       <artifactId>mongo-java-driver</artifactId>
     </dependency>
     <dependency>
-      <groupId>net.vz.mongodb.jackson</groupId>
-      <artifactId>mongo-jackson-mapper</artifactId>
+      <groupId>org.mongojack</groupId>
+      <artifactId>mongojack</artifactId>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>

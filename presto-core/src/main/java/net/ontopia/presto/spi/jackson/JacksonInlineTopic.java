@@ -1,6 +1,6 @@
 package net.ontopia.presto.spi.jackson;
 
-import org.codehaus.jackson.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class JacksonInlineTopic extends JacksonTopic {
 

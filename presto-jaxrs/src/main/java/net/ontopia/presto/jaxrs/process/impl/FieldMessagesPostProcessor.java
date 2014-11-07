@@ -10,8 +10,8 @@ import net.ontopia.presto.spi.PrestoTopic.Projection;
 import net.ontopia.presto.spi.utils.ExtraUtils;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class FieldMessagesPostProcessor extends FieldDataProcessor {
 
@@ -24,8 +24,8 @@ public class FieldMessagesPostProcessor extends FieldDataProcessor {
             if (messagesNode.isArray()) {
                 List<FieldData.Message> messages = new ArrayList<FieldData.Message>();
                 for (JsonNode messageNode : messagesNode) {
-                    String type = messageNode.get("type").getTextValue();
-                    String message = messageNode.get("message").getTextValue();
+                    String type = messageNode.get("type").textValue();
+                    String message = messageNode.get("message").textValue();
                     messages.add(new FieldData.Message(type, message));
                 }
                 if (fieldData.getMessages() != null) {
@@ -42,7 +42,7 @@ public class FieldMessagesPostProcessor extends FieldDataProcessor {
         String result = null;
         ObjectNode config = getConfig();
         if (config != null && config.has("key")) {
-            result = config.get("key").getTextValue();
+            result = config.get("key").textValue();
         }
         return result == null ? "messages" : result;
     }

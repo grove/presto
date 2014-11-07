@@ -2,7 +2,7 @@ package net.ontopia.presto.jaxb;
 
 import java.util.Collection;
 
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
 public class RootInfo extends Document {

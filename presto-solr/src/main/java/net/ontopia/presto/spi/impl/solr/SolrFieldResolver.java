@@ -24,11 +24,12 @@ import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ArrayNode;
-import org.codehaus.jackson.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public abstract class SolrFieldResolver extends PrestoFieldResolver {
 
@@ -208,13 +209,13 @@ public abstract class SolrFieldResolver extends PrestoFieldResolver {
                 continue;
             } else if (jn.isObject()) {
                 ObjectNode qv = (ObjectNode)jn;
-                Iterator<String> fieldNames = qv.getFieldNames();
+                Iterator<String> fieldNames = qv.fieldNames();
                 if (qv.size() > 1) {
                     sb.append('(');
                 }
                 while (fieldNames.hasNext()) {
                     String fieldName = fieldNames.next();
-                    String fieldValue = qv.get(fieldName).getTextValue();
+                    String fieldValue = qv.get(fieldName).textValue();
                     sb.append(fieldName).append(':').append(ClientUtils.escapeQueryChars(fieldValue));
                     foundItems = true;
                     if (fieldNames.hasNext()) {
@@ -225,7 +226,7 @@ public abstract class SolrFieldResolver extends PrestoFieldResolver {
                     sb.append(')');
                 }
             } else if (jn.isTextual()) {
-                sb.append(jn.getTextValue());
+                sb.append(jn.textValue());
             } else {
                 log.warn("Unknown node: {}", jn);
             }
@@ -240,7 +241,7 @@ public abstract class SolrFieldResolver extends PrestoFieldResolver {
     private String getStringValue(String field, ObjectNode config) {
         JsonNode fieldNode = config.path(field);
         if (fieldNode.isTextual()) {
-            return fieldNode.getTextValue();
+            return fieldNode.textValue();
         } else {
             throw new RuntimeException("'" + field + "' missing on field resolver: " + config);
         }
@@ -249,7 +250,7 @@ public abstract class SolrFieldResolver extends PrestoFieldResolver {
     private String getStringValue(String field, ObjectNode config, String default_) {
         JsonNode fieldNode = config.path(field);
         if (fieldNode.isTextual()) {
-            return fieldNode.getTextValue();
+            return fieldNode.textValue();
         } else {
             return default_;
         }
@@ -258,7 +259,7 @@ public abstract class SolrFieldResolver extends PrestoFieldResolver {
     private int getIntValue(String field, ObjectNode config, int default_) {
         JsonNode fieldNode = config.path(field);
         if (fieldNode.isNumber()) {
-            return fieldNode.getIntValue();
+            return fieldNode.intValue();
         } else {
             return default_;
         }

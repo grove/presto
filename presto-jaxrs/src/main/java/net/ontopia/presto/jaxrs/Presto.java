@@ -57,11 +57,12 @@ import net.ontopia.presto.spi.utils.PrestoContextField;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
 import net.ontopia.presto.spi.utils.Utils;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public abstract class Presto {
 
@@ -226,7 +227,7 @@ public abstract class Presto {
             if (layoutNode.isObject()) {
                 ObjectMapper mapper = new ObjectMapper();
                 try {
-                    layout = mapper.readValue(layoutNode, Layout.class);
+                    layout = mapper.convertValue(layoutNode, Layout.class);
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
@@ -240,7 +241,7 @@ public abstract class Presto {
         if (viewExtra != null) {
             JsonNode remoteView = viewExtra.path("remote-view");
             if (remoteView.isBoolean()) {
-                return remoteView.getBooleanValue();
+                return remoteView.booleanValue();
             }
         }
         return true;
@@ -835,7 +836,7 @@ public abstract class Presto {
         if (extra != null) {
             JsonNode availableValuesNode = extra.path("availableValues");
             if (availableValuesNode.isObject()) {
-                return availableValuesNode.path("query").getBooleanValue();
+                return availableValuesNode.path("query").booleanValue();
             }
         }
         return false;
@@ -850,7 +851,7 @@ public abstract class Presto {
                 List<Object> result = new ArrayList<Object>();
                 final boolean isReferenceField = field.isReferenceField();
                 for (JsonNode availableValueNode : availableValuesNode) {
-                    String availableValue = availableValueNode.getTextValue();
+                    String availableValue = availableValueNode.textValue();
                     if (isReferenceField) {
                         PrestoTopic topicValue = dataProvider.getTopicById(availableValue);
                         if (topicValue != null) {
@@ -1173,7 +1174,7 @@ public abstract class Presto {
         if (extra != null) {
             JsonNode actionNode = extra.path("actions").path(actionId);
             if (actionNode.isObject()) {
-                String className = actionNode.path("class").getTextValue();
+                String className = actionNode.path("class").textValue();
                 FieldAction fieldAction = Utils.newInstanceOf(className, FieldAction.class);
                 fieldAction.setConfig((ObjectNode)actionNode);
                 fieldAction.setPresto(this);
@@ -1222,12 +1223,12 @@ public abstract class Presto {
                 if (created) {
                     JsonNode onUpdateNode = extra.path("returnParentOnCreate");
                     if (onUpdateNode.isBoolean()) {
-                        return onUpdateNode.getBooleanValue();
+                        return onUpdateNode.booleanValue();
                     }
                 } else {
                     JsonNode onUpdateNode = extra.path("returnParentOnUpdate");
                     if (onUpdateNode.isBoolean()) {
-                        return onUpdateNode.getBooleanValue();
+                        return onUpdateNode.booleanValue();
                     }
                 }
             }
@@ -1795,7 +1796,7 @@ public abstract class Presto {
         if (extra != null) {
             JsonNode labelNode = extra.path("label");
             if (labelNode.isTextual()) {
-                name = labelNode.getTextValue();
+                name = labelNode.textValue();
             }
         }
         if (name == null) {

@@ -14,11 +14,12 @@ import net.ontopia.presto.spi.utils.PrestoPagedValues;
 import net.ontopia.presto.spi.utils.PrestoVariableContext;
 import net.ontopia.presto.spi.utils.PrestoVariableResolver;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ObjectNode;
 import org.ektorp.ViewQuery;
 import org.ektorp.ViewResult;
 import org.ektorp.ViewResult.Row;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class CouchViewResolver extends PrestoFieldResolver {
 
@@ -29,10 +30,10 @@ public class CouchViewResolver extends PrestoFieldResolver {
         PrestoVariableContext context = getVariableContext();
         ObjectNode config = getConfig();
         
-        String designDocId = config.get("designDocId").getTextValue();
-        String viewName = config.get("viewName").getTextValue();
+        String designDocId = config.get("designDocId").textValue();
+        String viewName = config.get("viewName").textValue();
 
-        boolean includeDocs = config.has("includeDocs") && config.get("includeDocs").getBooleanValue();
+        boolean includeDocs = config.has("includeDocs") && config.get("includeDocs").booleanValue();
 
         ViewQuery query = new ViewQuery()
         .designDocId(designDocId)
@@ -108,7 +109,7 @@ public class CouchViewResolver extends PrestoFieldResolver {
                     if (docNode.isObject()) {
                         result.add(dataProvider.existing((ObjectNode)docNode));
                     } else {
-                        result.add(docNode.getTextValue());
+                        result.add(docNode.textValue());
                     }
                 }
             }
@@ -118,7 +119,7 @@ public class CouchViewResolver extends PrestoFieldResolver {
                 JsonNode valueNode = row.getValueAsNode();
                 if (valueNode != null) {
                     if (valueNode.isTextual()) {
-                        String textValue = valueNode.getTextValue();
+                        String textValue = valueNode.textValue();
                         if (textValue != null) {
                             result.add(textValue);
                         }
@@ -133,13 +134,13 @@ public class CouchViewResolver extends PrestoFieldResolver {
                 result.addAll(values);
             }
         }
-        if (config.has("excludeSelf") && config.get("excludeSelf").getBooleanValue()) {
+        if (config.has("excludeSelf") && config.get("excludeSelf").booleanValue()) {
             result.removeAll(objects);
         }
         int totalSize = viewResult.getSize();
         if (projection != null) {
             if (totalSize >= projection.getLimit()) {
-                if (config.has("count") && config.get("count").getTextValue().equals("reduce-value")) {
+                if (config.has("count") && config.get("count").textValue().equals("reduce-value")) {
                     ViewQuery countQuery = new ViewQuery()
                     .designDocId(designDocId)
                     .viewName(viewName)                

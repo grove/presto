@@ -4,14 +4,14 @@
   <parent>
     <groupId>net.ontopia.presto</groupId>
     <artifactId>presto</artifactId>
-    <version>0.7.23-SNAPSHOT</version>
+    <version>0.7.24-SNAPSHOT</version>
   </parent>
 
   <name>Presto - Riak data provider</name>
   <groupId>net.ontopia.presto</groupId>
   <artifactId>presto-riak</artifactId>
   <packaging>jar</packaging>
-  <version>0.7.23-SNAPSHOT</version>
+  <version>0.7.24-SNAPSHOT</version>
 
   <dependencies>
     <dependency>
@@ -20,12 +20,12 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-core-asl</artifactId>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-mapper-asl</artifactId>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>

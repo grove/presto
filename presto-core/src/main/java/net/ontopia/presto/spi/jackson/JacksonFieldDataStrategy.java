@@ -2,8 +2,8 @@ package net.ontopia.presto.spi.jackson;
 
 import net.ontopia.presto.spi.PrestoField;
 
-import org.codehaus.jackson.node.ArrayNode;
-import org.codehaus.jackson.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public abstract class JacksonFieldDataStrategy {
     

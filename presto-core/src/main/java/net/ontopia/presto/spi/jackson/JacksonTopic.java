@@ -14,9 +14,9 @@ import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.DefaultDataProvider;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.DefaultTopic;
 import net.ontopia.presto.spi.utils.PrestoPagedValues;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ArrayNode;
-import org.codehaus.jackson.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class JacksonTopic implements DefaultTopic {
 
@@ -146,7 +146,7 @@ public class JacksonTopic implements DefaultTopic {
                         JsonNode value = fieldNode.get(i);
                         if (inlineReference) {
                             if (value.isTextual()) {
-                                values.add(value.getTextValue());
+                                values.add(value.textValue());
                             }
                         } else {
                             if (value.isObject()) {
@@ -159,7 +159,7 @@ public class JacksonTopic implements DefaultTopic {
                     for (int i=start; i < end; i ++) {
                         JsonNode value = fieldNode.get(i);
                         if (value.isTextual()) {
-                            topicIds.add(value.getTextValue());
+                            topicIds.add(value.textValue());
                         }
                     }
                     values.addAll(dataProvider.getTopicsByIds(topicIds));
@@ -168,7 +168,7 @@ public class JacksonTopic implements DefaultTopic {
                 for (int i=start; i < end; i ++) {
                     JsonNode value = fieldNode.get(i);
                     if (value.isTextual()) {
-                        values.add(value.getTextValue());
+                        values.add(value.textValue());
                     } else {
                         values.add(value.toString());
                     }
@@ -226,7 +226,7 @@ public class JacksonTopic implements DefaultTopic {
     private String getNeutralValueKey(PrestoField field, Object value) {
         if (field.isInline()) {
             ObjectNode node = (ObjectNode)value;
-            String id = node.path("_id").getTextValue();
+            String id = node.path("_id").textValue();
             if (id != null) {
                 return id;
             } else {

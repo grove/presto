@@ -47,9 +47,9 @@ public class AbstractProcessor extends AbstractPrestoHandler {
         Collection<String> errors = fieldData.getErrors();
         if (errors == null) {
             errors = new ArrayList<String>();
-            fieldData.setErrors(errors);
         }
         errors.add(error);
+        fieldData.setErrors(errors);
     }
 
 //    // -- statics

@@ -4,14 +4,14 @@
   <parent>
     <groupId>net.ontopia.presto</groupId>
     <artifactId>presto</artifactId>
-    <version>0.7.23-SNAPSHOT</version>
+    <version>0.7.24-SNAPSHOT</version>
   </parent>
 
   <name>Presto - Test suite</name>
   <groupId>net.ontopia.presto</groupId>
   <artifactId>presto-test</artifactId>
   <packaging>jar</packaging>
-  <version>0.7.23-SNAPSHOT</version>
+  <version>0.7.24-SNAPSHOT</version>
 
   <dependencies>
     <dependency>
@@ -44,9 +44,21 @@
       <artifactId>org.ektorp</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-mapper-asl</artifactId>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+    </dependency>  
+    <dependency>
+      <groupId>com.fasterxml.jackson.module</groupId>
+      <artifactId>jackson-module-jaxb-annotations</artifactId>
+    </dependency>  
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>

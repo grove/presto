@@ -6,10 +6,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.codehaus.jackson.node.ObjectNode;
-
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public abstract class InMemoryJacksonDataProvider extends JacksonDataProvider {
 

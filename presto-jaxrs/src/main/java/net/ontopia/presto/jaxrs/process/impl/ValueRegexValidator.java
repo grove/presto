@@ -10,8 +10,8 @@ import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic.Projection;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ValueRegexValidator extends FieldDataProcessor {
 
@@ -37,7 +37,7 @@ public class ValueRegexValidator extends FieldDataProcessor {
     private String getString(ObjectNode extraNode, String name, String defaultValue) {
         JsonNode node = extraNode.path(name);
         if (node.isTextual()) {
-            return node.getTextValue();
+            return node.textValue();
         }
         return defaultValue;
     }

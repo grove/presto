@@ -64,7 +64,6 @@ public class PathExpressions {
             List<PrestoContext> nextContexts = new ArrayList<PrestoContext>();
 
             for (PrestoContext context : contexts) {
-                PrestoTopic topic = context.getTopic();
                 PrestoType type = context.getType();
 
                 if (":parent".equals(p)) {
@@ -74,26 +73,32 @@ public class PathExpressions {
                     }
                     nextContexts.add(nextContext);
                 } else if (p.startsWith("#")) {
-                    PrestoField valueField = type.getFieldById(p.substring(1));
-                    for (Object value : topic.getStoredValues(valueField)) {
-                        if (value instanceof PrestoTopic) {
-                            PrestoTopic valueTopic = (PrestoTopic)value;
-                            nextContexts.add(PrestoContext.createSubContext(dataProvider, schemaProvider, context, valueField, valueTopic));
+                    if (!context.isNewTopic()) {
+                        PrestoField valueField = type.getFieldById(p.substring(1));
+                        PrestoTopic topic = context.getTopic();
+                        for (Object value : topic.getStoredValues(valueField)) {
+                            if (value instanceof PrestoTopic) {
+                                PrestoTopic valueTopic = (PrestoTopic)value;
+                                nextContexts.add(PrestoContext.createSubContext(dataProvider, schemaProvider, context, valueField, valueTopic));
+                            }
                         }
                     }
                 } else {
                     PrestoField valueField = type.getFieldById(p);
                     PrestoFieldFunction function = PrestoFieldFunctionUtils.createFieldFunction(dataProvider, schemaProvider, attributes, valueField);
-                    List<? extends Object> fieldValues;
+                    List<? extends Object> fieldValues  = null;
                     if (function != null) {
                         fieldValues = function.execute(context, valueField, null);
-                    } else {
+                    } else if (!context.isNewTopic()) {
+                        PrestoTopic topic = context.getTopic();
                         fieldValues = topic.getValues(valueField);
                     }
-                    for (Object value : fieldValues) {
-                        if (value instanceof PrestoTopic) {
-                            PrestoTopic valueTopic = (PrestoTopic)value;
-                            nextContexts.add(PrestoContext.createSubContext(dataProvider, schemaProvider, context, valueField, valueTopic));
+                    if (fieldValues != null) {
+                        for (Object value : fieldValues) {
+                            if (value instanceof PrestoTopic) {
+                                PrestoTopic valueTopic = (PrestoTopic)value;
+                                nextContexts.add(PrestoContext.createSubContext(dataProvider, schemaProvider, context, valueField, valueTopic));
+                            }
                         }
                     }
                 }
@@ -105,29 +110,33 @@ public class PathExpressions {
             List<Object> values = new ArrayList<Object>();
             
             for (PrestoContext context : contexts) {
-                PrestoTopic topic = context.getTopic();
                 PrestoType type = context.getType();
 
-                if (p.equals(":id")) {
+                boolean isNew = context.isNewTopic();
+                PrestoTopic topic = context.getTopic();
+
+                if (!isNew && p.equals(":id")) {
                     values.add(topic.getId());                
-                } else if (p.equals(":name")) {
+                } else if (!isNew && p.equals(":name")) {
                     values.add(topic.getName());                
-                } else if (p.equals(":type")) {
-                    values.add(type.getId());                
-                } else if (p.equals(":type-name")) {
-                    values.add(type.getName());
-                } else if (p.startsWith("#")) {
+                } else if (!isNew && p.startsWith("#")) {
                     PrestoField valueField = type.getFieldById(p.substring(1));
                     for (Object value : topic.getStoredValues(valueField)) {
                         values.add(value);
                     }
+                } else if (p.equals(":type")) {
+                    values.add(type.getId());                
+                } else if (p.equals(":type-name")) {
+                    values.add(type.getName());
                 } else {
                     PrestoField field = type.getFieldById(p);
                     PrestoFieldFunction function = PrestoFieldFunctionUtils.createFieldFunction(dataProvider, schemaProvider, attributes, field);
                     if (function != null) {
                         values.addAll(function.execute(context, field, null));
                     } else {
-                        values.addAll(topic.getValues(field));
+                        if (!isNew) {
+                            values.addAll(topic.getValues(field));
+                        }
                     }
                 }
             }
