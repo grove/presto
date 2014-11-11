@@ -1,6 +1,7 @@
 package net.ontopia.presto.spi.utils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import net.ontopia.presto.spi.PrestoDataProvider;
@@ -269,7 +270,7 @@ public abstract class PrestoContextRules {
         if (function != null) {
             result = FieldValues.create(function.execute(context, field, projection));
         } else {
-            if (context.isNewTopic()) {
+            if (context.isNewTopic() || context.isLazyTopic()) {
                 return getDefaultFieldValues(field);
             } else {
                 PrestoTopic topic = context.getTopic();
@@ -293,6 +294,7 @@ public abstract class PrestoContextRules {
     }
     
     protected FieldValues getDefaultFieldValues(PrestoField field) {
+        // TODO: this code should be made extendable
         ObjectNode extra = ExtraUtils.getFieldExtraNode(field);
         if (extra != null) {
             JsonNode dvNode = extra.path("defaultValues");
@@ -321,6 +323,16 @@ public abstract class PrestoContextRules {
                     return (FieldValues) defaultValues;
                 }
             }
+            
+            if (context.isLazyTopic()) {
+                JsonNode lazyDefaultValue = extra.path("lazyDefaultValue");
+                if (lazyDefaultValue.isTextual()) {
+                    String defaultValue = lazyDefaultValue.textValue();
+                    if (Utils.equals("name", defaultValue)) {
+                        return FieldValues.create(Collections.singletonList(context.getLazyTopicName()));
+                    }
+                }
+            }            
         }
         return FieldValues.EMPTY;  
     }

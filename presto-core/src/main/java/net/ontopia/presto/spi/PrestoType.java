@@ -15,6 +15,8 @@ public interface PrestoType {
 
     boolean isHidden(); // will it show up? instances will show up if exposed as field values though.
 
+    boolean isLazy(); // will be created/materialized on when neccessary
+    
     boolean isCreatable(); // standalone creatable. default is yes. may still be created through a field if in createTypes.
 
     boolean isRemovable();

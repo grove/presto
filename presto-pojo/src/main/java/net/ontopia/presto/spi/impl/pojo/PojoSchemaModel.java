@@ -126,6 +126,10 @@ public class PojoSchemaModel {
             if (typeConfig.has("hidden")) {
                 type.setHidden(typeConfig.get("hidden").booleanValue());
             }
+            // lazy
+            if (typeConfig.has("lazy")) {
+                type.setLazy(typeConfig.get("lazy").booleanValue());
+            }
             // creatable
             if (typeConfig.has("creatable")) {
                 type.setCreatable(typeConfig.get("creatable").booleanValue());

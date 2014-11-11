@@ -172,9 +172,15 @@ public abstract class Presto {
         PrestoView view = context.getView();
 
         Topic result = new Topic();
-        result.setId(topic.getId());
-        result.setName(topic.getName());
+        String topicId = context.getTopicId();
+        result.setId(topicId);
 
+        if (context.isLazyTopic()) {
+            result.setName(context.getLazyTopicName());
+        } else {
+            result.setName(topic.getName());
+        }
+        
         String viewId = view.getId();
         result.setView(viewId);
 
@@ -189,10 +195,7 @@ public abstract class Presto {
         List<TopicView> topicViews = new ArrayList<TopicView>(views.size()); 
         for (PrestoView v : views) {
             if (!rules.isHiddenView(v)) {
-                PrestoContext parentContext = context.getParentContext();
-                PrestoField parentField = context.getParentField();
-
-                PrestoContext subcontext = PrestoContext.createSubContext(parentContext, parentField, topic, type, v);
+                PrestoContext subcontext = PrestoContext.newContext(getDataProvider(), getSchemaProvider(), context, v.getId()); 
                 PrestoContextRules subrules = getPrestoContextRules(subcontext);
 
                 ViewType viewType = v.getType();
@@ -264,7 +267,6 @@ public abstract class Presto {
     public TopicView getTopicViewRemote(PrestoContextRules rules, boolean external) {
         PrestoContext context = rules.getContext();
 
-        PrestoTopic topic = context.getTopic();
         PrestoType type = context.getType();
         PrestoView view = context.getView();
 
@@ -272,13 +274,14 @@ public abstract class Presto {
 
         result.setId(view.getId());
         result.setName(view.getName());
-        result.setTopicId(topic.getId());
+
+        String topicId = context.getTopicId();
+        result.setTopicId(topicId);
 
         String href;
         if (external) {
             href = lx.topicViewExternalHref(context);
         } else {
-            String topicId = context.getTopicId();
             PrestoContext parentContext = context.getParentContext();
             PrestoField parentField = context.getParentField();
             href = lx.topicViewHref(parentContext, parentField, topicId, type, view, isReadOnlyMode());
@@ -308,7 +311,6 @@ public abstract class Presto {
     public TopicView getTopicView(PrestoContextRules rules) {
         PrestoContext context = rules.getContext();
 
-        PrestoTopic topic = context.getTopic();
         PrestoType type = context.getType();
         PrestoView view = context.getView();
 
@@ -316,7 +318,8 @@ public abstract class Presto {
         result.setId(view.getId());
         result.setName(view.getName());
 
-        result.setTopicId(topic.getId());
+        String topicId = context.getTopicId();
+        result.setTopicId(topicId);
         result.setTopicTypeId(type.getId());
 
         ObjectNode extra = ExtraUtils.getViewExtraNode(view);
@@ -325,7 +328,6 @@ public abstract class Presto {
             result.setLayout(layout);
         }
 
-        String topicId = context.getTopicId();
         PrestoContext parentContext = context.getParentContext();
         PrestoField parentField = context.getParentField();
         String href = lx.topicViewHref(parentContext, parentField, topicId, type, view, isReadOnlyMode());
@@ -376,9 +378,11 @@ public abstract class Presto {
         String viewId = view.getId();
 
         TopicView result = TopicView.view();
+
         result.setId(viewId);
         result.setName("*" + type.getName() + "*");
-
+        result.setHref(lx.topicTemplateHref(type));
+        
         result.setTopicTypeId(typeId);
 
         ObjectNode extra = ExtraUtils.getViewExtraNode(view);
@@ -400,7 +404,6 @@ public abstract class Presto {
 
         links.add(lx.topicViewCreateLink(type, view));
 
-        result.setHref(lx.topicTemplateHref(type));
         result.setLinks(links);
 
         //        Status status = new Status();
@@ -891,7 +894,6 @@ public abstract class Presto {
 
         PrestoContext context = rules.getContext();
 
-        PrestoTopic topic = context.getTopic();
         PrestoType type = context.getType();
         PrestoView view = context.getView();
 
@@ -901,7 +903,7 @@ public abstract class Presto {
         if (isNewTopic) {
             topicId = "_" + type.getId();
         } else {
-            topicId = topic.getId();
+            topicId = context.getTopicId();
         }
 
         FieldData fieldData = new FieldData();
@@ -1320,6 +1322,8 @@ public abstract class Presto {
             if (context.isNewTopic()) {
                 // TODO: add support for assigning topic ids?
                 update = changeSet.createTopic(type);
+            } else if (context.isLazyTopic()) {
+                update = changeSet.createTopic(type, context.getTopicId());                
             } else {
                 update = changeSet.updateTopic(context.getTopic(), type);
             }
@@ -1330,7 +1334,7 @@ public abstract class Presto {
                 PrestoField field = type.getFieldById(fieldId, view);
 
                 // ignore read-only or pageable fields 
-                if (!rules.isReadOnlyField(field) && !rules.isPageableField(field)) {
+                if ((!rules.isReadOnlyField(field) || context.isLazyTopic()) && !rules.isPageableField(field)) {
 
                     boolean resolveEmbedded = true;
                     boolean includeExisting = false; 
@@ -1379,7 +1383,7 @@ public abstract class Presto {
             PrestoField field = type.getFieldById(fieldId, view);
 
             // ignore read-only or pageable fields 
-            if (!rules.isReadOnlyField(field) && !rules.isPageableField(field)) {
+            if ((!rules.isReadOnlyField(field) || context.isLazyTopic()) && !rules.isPageableField(field)) {
 
                 boolean resolveEmbedded = true;
                 boolean includeExisting = false;

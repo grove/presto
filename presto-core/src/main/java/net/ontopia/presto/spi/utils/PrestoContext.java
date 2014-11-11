@@ -26,12 +26,16 @@ public class PrestoContext {
         if (topicId == null) {
             throw new RuntimeException("topicId cannot be null");
         } else if (isNewTopic(topicId)) {
-            type = getType(topicId, schemaProvider);
+            type = getTypeOfNewTopic(topicId, schemaProvider);
             topic = null;
             isNewTopic = true;
         } else {
             topic = dataProvider.getTopicById(topicId);
-            type = topic == null ? null : schemaProvider.getTypeById(topic.getTypeId());
+            if (topic == null) {
+                type = getTypeOfLazyTopic(topicId, schemaProvider);
+            } else {
+                type = schemaProvider.getTypeById(topic.getTypeId());
+            }
             isNewTopic = false;
         }
         if (type != null) {
@@ -86,12 +90,11 @@ public class PrestoContext {
         return PrestoContext.createSubContext(parentContext, parentField, topic, type, view);
     }
     
-    public static PrestoContext newContext(PrestoContext context, PrestoView view) {
+    public static PrestoContext newContext(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, PrestoContext context, String viewId) {
         PrestoContext parentContext = context.getParentContext();
         PrestoField parentField = context.getParentField();
-        PrestoTopic topic = context.getTopic();
-        PrestoType type = context.getType();
-        return PrestoContext.createSubContext(parentContext, parentField, topic, type, view);
+        String topicId = context.getTopicId();
+        return PrestoContext.createSubContext(dataProvider, schemaProvider, parentContext, parentField, topicId, viewId);
     }
     
     // create subcontexts
@@ -127,9 +130,25 @@ public class PrestoContext {
         return topicId.startsWith(NEW_TOPICID_PREFIX);
     }
  
-    public static PrestoType getType(String topicId, PrestoSchemaProvider schemaProvider) {
+    public static PrestoType getTypeOfNewTopic(String topicId, PrestoSchemaProvider schemaProvider) {
         String typeId = topicId.substring(1);
         return schemaProvider.getTypeById(typeId);
+    }
+    
+    public static PrestoType getTypeOfLazyTopic(String topicId, PrestoSchemaProvider schemaProvider) {
+        int ix = 0;
+        while (true) {
+            ix = topicId.indexOf(":", ix+1);
+            if (ix < 0) {
+                break;
+            }
+            String typeId = topicId.substring(0, ix);
+            PrestoType type = schemaProvider.getTypeById(typeId, null);
+            if (type != null && type.isLazy()) {
+                return type;
+            }
+        }
+        throw new RuntimeException("Not able to extract type id from topic id '" + topicId + "'");
     }
     
     public static String getTypeId(String topicId) {
@@ -160,7 +179,23 @@ public class PrestoContext {
     public boolean isNewTopic() {
         return isNewTopic;
     }
+
+    public boolean isLazyTopic() {
+        return topic == null && type.isLazy();
+    }
     
+    private static final String NAME_PREFIX = "name:";
+    
+    public String getLazyTopicName() {
+        int typeIdLength = type.getId().length();
+        String name = topicId.substring(typeIdLength+1);
+        if (name.startsWith(NAME_PREFIX)) {
+            return name.substring(NAME_PREFIX.length());
+        } else {
+            return name;
+        }
+    }
+
     public PrestoTopic getTopic() {
         return topic;
     }

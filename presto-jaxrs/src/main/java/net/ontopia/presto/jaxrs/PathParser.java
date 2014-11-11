@@ -70,7 +70,7 @@ public class PathParser {
             
             if (PrestoContext.isNewTopic(topicId)) {
                 currentTopic = null;
-                currentType = PrestoContext.getType(topicId, schemaProvider);
+                currentType = PrestoContext.getTypeOfNewTopic(topicId, schemaProvider);
                 currentView = currentType.getViewById(viewId);
                 currentContext = PrestoContext.createSubContext(dataProvider, schemaProvider, currentContext, currentField, topicId, viewId);
             } else {

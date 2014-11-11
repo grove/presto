@@ -263,7 +263,7 @@ public abstract class EditorResource implements PrestoAttributes {
         try {
             PrestoContext context = PathParser.getTopicByPath(session, path, topicId, viewId);
 
-            if (context == null || context.isMissingTopic()) {
+            if (context == null || (context.isMissingTopic() && !context.isLazyTopic())) {
                 return Response.status(Status.NOT_FOUND).build();
             }
 
@@ -311,7 +311,7 @@ public abstract class EditorResource implements PrestoAttributes {
         try {
             PrestoContext context = PathParser.getTopicByPath(session, path, topicId, viewId);
 
-            if (context == null || context.isMissingTopic()) {
+            if (context == null || (context.isMissingTopic() && !context.isLazyTopic())) {
                 return Response.status(Status.NOT_FOUND).build();        
             } else {
                 PrestoType type = context.getType();
@@ -389,7 +389,7 @@ public abstract class EditorResource implements PrestoAttributes {
         try {
             PrestoContext context = PathParser.getTopicByPath(session, path, topicId, viewId);
 
-            if (context == null || context.isMissingTopic()) {
+            if (context == null || (context.isMissingTopic() && !context.isLazyTopic())) {
                 return Response.status(Status.NOT_FOUND).build();
             }
 
@@ -444,7 +444,7 @@ public abstract class EditorResource implements PrestoAttributes {
         try {
             PrestoContext context = PathParser.getTopicByPath(session, path, topicId, viewId);
 
-            if (context == null || context.isMissingTopic()) {
+            if (context == null || (context.isMissingTopic() && !context.isLazyTopic())) {
                 return Response.status(Status.NOT_FOUND).build();
             }
 
@@ -493,7 +493,7 @@ public abstract class EditorResource implements PrestoAttributes {
 
             PrestoContext context = PathParser.getTopicByPath(session, path, topicViewTopicId, viewId);
 
-            if (context == null || context.isMissingTopic()) {
+            if (context == null || (context.isMissingTopic() && !context.isLazyTopic())) {
                 return Response.status(Status.NOT_FOUND).build();
             }
 
@@ -543,7 +543,7 @@ public abstract class EditorResource implements PrestoAttributes {
         try {
             PrestoContext context = PathParser.getTopicByPath(session, path, topicId, viewId);
 
-            if (context == null || context.isMissingTopic()) {
+            if (context == null || (context.isMissingTopic() && !context.isLazyTopic())) {
                 return Response.status(Status.NOT_FOUND).build();
             }
             try {
@@ -601,7 +601,7 @@ public abstract class EditorResource implements PrestoAttributes {
         try {
             PrestoContext context = PathParser.getTopicByPath(session, path, topicId, viewId);
 
-            if (context == null || context.isMissingTopic()) {
+            if (context == null || (context.isMissingTopic() && !context.isLazyTopic())) {
                 return Response.status(Status.NOT_FOUND).build();
             }
 
@@ -663,7 +663,7 @@ public abstract class EditorResource implements PrestoAttributes {
         try {
             PrestoContext context = PathParser.getTopicByPath(session, path, topicId, viewId);
 
-            if (context == null || context.isMissingTopic()) {
+            if (context == null || (context.isMissingTopic() && !context.isLazyTopic())) {
                 return Response.status(Status.NOT_FOUND).build();
             }
 
@@ -724,7 +724,7 @@ public abstract class EditorResource implements PrestoAttributes {
         try {
             PrestoContext context = PathParser.getTopicByPath(session, path, topicId, viewId);
 
-            if (context == null || context.isMissingTopic()) {
+            if (context == null || (context.isMissingTopic() && !context.isLazyTopic())) {
                 return Response.status(Status.NOT_FOUND).build();
             }
 
@@ -812,7 +812,7 @@ public abstract class EditorResource implements PrestoAttributes {
         try {
             PrestoContext context = PathParser.getTopicByPath(session, path, topicId, viewId);
 
-            if (context == null || context.isMissingTopic()) {
+            if (context == null || (context.isMissingTopic() && !context.isLazyTopic())) {
                 return Response.status(Status.NOT_FOUND).build();
             }
 
@@ -864,7 +864,7 @@ public abstract class EditorResource implements PrestoAttributes {
         try {
             PrestoContext context = PathParser.getTopicByPath(session, path, topicId, viewId);
 
-            if (context == null || context.isMissingTopic()) {
+            if (context == null || (context.isMissingTopic() && !context.isLazyTopic())) {
                 return Response.status(Status.NOT_FOUND).build();
             }
 
