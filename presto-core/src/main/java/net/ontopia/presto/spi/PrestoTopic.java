@@ -6,6 +6,8 @@ public interface PrestoTopic {
 
     boolean isInline();
 
+    boolean isLazy();
+    
     String getId();
 
     String getName();

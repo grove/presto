@@ -6,10 +6,12 @@ import java.util.List;
 
 import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoField;
+import net.ontopia.presto.spi.PrestoLazyTopicBuilder;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
 import net.ontopia.presto.spi.PrestoTopic.Projection;
+import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoPagedValues;
 import net.ontopia.presto.spi.utils.PrestoTopicFieldVariableResolver;
@@ -148,6 +150,28 @@ public class PrestoResolver {
             }
         }
         return null;
+    }
+    
+    private static final String NAME_PREFIX = "name:";
+    
+    private String getLazyTopicName(PrestoType type, String topicId) {
+        int typeIdLength = type.getId().length();
+        String name = topicId.substring(typeIdLength+1);
+        if (name.startsWith(NAME_PREFIX)) {
+            return name.substring(NAME_PREFIX.length());
+        } else {
+            return name;
+        }
+    }
+
+    public PrestoTopic buildLazyTopic(PrestoType type, String topicId) {
+        PrestoField nameField = type.getFieldById("name");
+        PrestoLazyTopicBuilder builder = dataProvider.createLazyTopic(type, topicId);
+        String name = getLazyTopicName(type, topicId);
+        if (name != null) {
+            builder.setValues(nameField, Collections.singletonList(name));
+        }
+        return builder.build();
     }
 
 }

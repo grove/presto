@@ -5,6 +5,7 @@ import java.util.List;
 import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoInlineTopicBuilder;
+import net.ontopia.presto.spi.PrestoLazyTopicBuilder;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
@@ -104,10 +105,14 @@ public abstract class JacksonDataProvider implements DefaultDataProvider {
         return new JacksonChangeSet(this, handler);
     }
 
-
     @Override
     public PrestoInlineTopicBuilder createInlineTopic(PrestoType type, String topicId) {
         return new JacksonInlineTopicBuilder(this, type, topicId);
+    }
+
+    @Override
+    public PrestoLazyTopicBuilder createLazyTopic(PrestoType type, String topicId) {
+        return new JacksonLazyTopicBuilder(this, type, topicId);
     }
 
     private static final class JacksonChangeSet extends PrestoDefaultChangeSet {

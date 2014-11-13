@@ -1,7 +1,6 @@
 package net.ontopia.presto.spi.utils;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import net.ontopia.presto.spi.PrestoDataProvider;
@@ -275,7 +274,7 @@ public abstract class PrestoContextRules {
         if (function != null) {
             result = FieldValues.create(function.execute(context, field, projection));
         } else {
-            if (context.isNewTopic() || context.isLazyTopic()) {
+            if (context.isNewTopic()) {
                 return getDefaultFieldValues(field, projection);
             } else {
                 return getResolveFieldValues(field, projection);
@@ -331,16 +330,17 @@ public abstract class PrestoContextRules {
                 }
             }
             
-            if (context.isLazyTopic()) {
-                JsonNode lazyDefaultValue = extra.path("lazyDefaultValue");
-                if (lazyDefaultValue.isTextual()) {
-                    String defaultValue = lazyDefaultValue.textValue();
-                    if (Utils.equals("name", defaultValue)) {
-                        return FieldValues.create(Collections.singletonList(context.getLazyTopicName()));
-                    }
-                }
-                return getResolveFieldValues(field, projection);
-            }            
+//            if (context.isLazyTopic()) {
+//                JsonNode lazyDefaultValue = extra.path("lazyDefaultValue");
+//                if (lazyDefaultValue.isTextual()) {
+//                    String defaultValue = lazyDefaultValue.textValue();
+//                    if (Utils.equals("name", defaultValue)) {
+//                        PrestoTopic topic = context.getTopic();
+//                        return FieldValues.create(Collections.singletonList(topic.getName(field)));
+//                    }
+//                }
+//                return getResolveFieldValues(field, projection);
+//            }            
         }
         return FieldValues.EMPTY;  
     }

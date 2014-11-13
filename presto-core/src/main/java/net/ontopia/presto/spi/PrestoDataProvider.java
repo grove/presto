@@ -20,6 +20,8 @@ public interface PrestoDataProvider {
 
     PrestoInlineTopicBuilder createInlineTopic(PrestoType type, String topicId);
 
+    PrestoLazyTopicBuilder createLazyTopic(PrestoType type, String topicId);
+
     void close();
 
     public static interface ChangeSetHandler {

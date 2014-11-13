@@ -43,12 +43,16 @@ public class PrestoContext {
             topic = null;
             isNewTopic = true;
         } else {
-            topic = dataProvider.getTopicById(topicId);
-            if (topic == null) {
+            PrestoTopic t = dataProvider.getTopicById(topicId);
+            if (t == null) {
                 type = getTypeOfLazyTopic(topicId, schemaProvider);
+                if (type != null) {
+                    t = resolver.buildLazyTopic(type, topicId);
+                }
             } else {
-                type = schemaProvider.getTypeById(topic.getTypeId());
+                type = schemaProvider.getTypeById(t.getTypeId());
             }
+            topic = t;
             isNewTopic = false;
         }
         if (type != null) {
@@ -111,7 +115,7 @@ public class PrestoContext {
         PrestoContext parentContext = context.getParentContext();
         PrestoField parentField = context.getParentField();
         PrestoContext result;
-        if (context.isNewTopic() || context.isLazyTopic()) {
+        if (context.isNewTopic()) {
             String topicId = context.getTopicId();
             result = new PrestoContext(context.getResolver(), topicId, viewId);
         } else {
@@ -206,22 +210,6 @@ public class PrestoContext {
     
     public boolean isNewTopic() {
         return isNewTopic;
-    }
-
-    public boolean isLazyTopic() {
-        return topic == null && type.isLazy();
-    }
-    
-    private static final String NAME_PREFIX = "name:";
-    
-    public String getLazyTopicName() {
-        int typeIdLength = type.getId().length();
-        String name = topicId.substring(typeIdLength+1);
-        if (name.startsWith(NAME_PREFIX)) {
-            return name.substring(NAME_PREFIX.length());
-        } else {
-            return name;
-        }
     }
 
     public PrestoTopic getTopic() {

@@ -60,6 +60,11 @@ public class JacksonTopic implements DefaultTopic {
         return false;
     }
 
+    @Override
+    public boolean isLazy() {
+        return false;
+    }
+
     protected JacksonDataStrategy getDataStrategy() {
         return dataProvider.getDataStrategy();
     }

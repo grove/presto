@@ -179,12 +179,7 @@ public abstract class Presto {
         Topic result = new Topic();
         String topicId = context.getTopicId();
         result.setId(topicId);
-
-        if (context.isLazyTopic()) {
-            result.setName(context.getLazyTopicName());
-        } else {
-            result.setName(topic.getName());
-        }
+        result.setName(topic.getName());
         
         String viewId = view.getId();
         result.setView(viewId);
@@ -1326,10 +1321,13 @@ public abstract class Presto {
             if (context.isNewTopic()) {
                 // TODO: add support for assigning topic ids?
                 update = changeSet.createTopic(type);
-            } else if (context.isLazyTopic()) {
-                update = changeSet.createTopic(type, context.getTopicId());                
             } else {
-                update = changeSet.updateTopic(context.getTopic(), type);
+                PrestoTopic topic = context.getTopic();
+                if (topic.isLazy()) {
+                    update = changeSet.createTopic(type, context.getTopicId());
+                } else {
+                    update = changeSet.updateTopic(topic, type);
+                }
             }
 
             for (FieldData fieldData : topicView.getFields()) {
@@ -1338,7 +1336,7 @@ public abstract class Presto {
                 PrestoField field = type.getFieldById(fieldId, view);
 
                 // ignore read-only or pageable fields 
-                if ((!rules.isReadOnlyField(field) || context.isLazyTopic()) && !rules.isPageableField(field)) {
+                if (!rules.isReadOnlyField(field) && !rules.isPageableField(field)) {
 
                     boolean resolveEmbedded = true;
                     boolean includeExisting = false; 
@@ -1379,17 +1377,20 @@ public abstract class Presto {
             if (context.isNewTopic()) {
                 // TODO: add support for assigning topic ids?
                 update = changeSet.createTopic(type);
-            } else if (context.isLazyTopic()) {
-                update = changeSet.createTopic(type, context.getTopicId());                
             } else {
-                update = changeSet.updateTopic(context.getTopic(), type);
+                PrestoTopic topic = context.getTopic();
+                if (topic.isLazy()) {
+                    update = changeSet.createTopic(type, context.getTopicId());
+                } else {
+                    update = changeSet.updateTopic(topic, type);
+                }
             }
 
             String fieldId = fieldData.getId();
             PrestoField field = type.getFieldById(fieldId, view);
 
             // ignore read-only or pageable fields 
-            if ((!rules.isReadOnlyField(field) || context.isLazyTopic()) && !rules.isPageableField(field)) {
+            if (!rules.isReadOnlyField(field) && !rules.isPageableField(field)) {
 
                 boolean resolveEmbedded = true;
                 boolean includeExisting = false;
