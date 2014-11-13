@@ -44,13 +44,10 @@ public class PrestoContext {
             isNewTopic = true;
         } else {
             PrestoTopic t = dataProvider.getTopicById(topicId);
-            if (t == null) {
-                type = getTypeOfLazyTopic(topicId, schemaProvider);
-                if (type != null) {
-                    t = resolver.buildLazyTopic(type, topicId);
-                }
-            } else {
+            if (t != null) {
                 type = schemaProvider.getTypeById(t.getTypeId());
+            } else {
+                type = null;
             }
             topic = t;
             isNewTopic = false;
@@ -164,23 +161,6 @@ public class PrestoContext {
     public static PrestoType getTypeOfNewTopic(String topicId, PrestoSchemaProvider schemaProvider) {
         String typeId = topicId.substring(1);
         return schemaProvider.getTypeById(typeId);
-    }
-    
-    private static PrestoType getTypeOfLazyTopic(String topicId, PrestoSchemaProvider schemaProvider) {
-        int ix = 0;
-        while (true) {
-            ix = topicId.indexOf(":", ix+1);
-            if (ix < 0) {
-                break;
-            }
-            String typeId = topicId.substring(0, ix);
-            PrestoType type = schemaProvider.getTypeById(typeId, null);
-            if (type != null && type.isLazy()) {
-                return type;
-            }
-        }
-        return null;
-//        throw new RuntimeException("Not able to extract type id from topic id '" + topicId + "'");
     }
     
     public static String getTypeId(String topicId) {

@@ -66,7 +66,11 @@ public abstract class InMemoryJacksonDataProvider extends JacksonDataProvider {
 
     @Override
     public PrestoTopic getTopicById(String topicId) {
-        return topics.get(topicId);
+        PrestoTopic topic = topics.get(topicId);
+        if (topic == null) {
+            topic = lazyLoad(topicId);
+        }
+        return topic;
     }
 
     @Override
@@ -78,7 +82,7 @@ public abstract class InMemoryJacksonDataProvider extends JacksonDataProvider {
                 result.add(topic);
             }
         }
-        return result;
+        return includeLazyTopics(result, topicIds);
     }
 
     @Override

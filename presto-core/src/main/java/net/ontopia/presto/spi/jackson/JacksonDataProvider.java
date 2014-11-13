@@ -1,6 +1,10 @@
 package net.ontopia.presto.spi.jackson;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoField;
@@ -162,4 +166,51 @@ public abstract class JacksonDataProvider implements DefaultDataProvider {
         return resolver.resolveValues(topic, field, projection);
     }
 
+    // lazy topics
+    protected PrestoTopic lazyLoad(String topicId) {
+        PrestoType type = getTypeOfLazyTopic(topicId, schemaProvider);
+        if (type != null) {
+            return resolver.buildLazyTopic(type, topicId);
+        }
+        return null;
+    }
+    
+    private static PrestoType getTypeOfLazyTopic(String topicId, PrestoSchemaProvider schemaProvider) {
+        int ix = 0;
+        while (true) {
+            ix = topicId.indexOf(":", ix+1);
+            if (ix < 0) {
+                break;
+            }
+            String typeId = topicId.substring(0, ix);
+            PrestoType type = schemaProvider.getTypeById(typeId, null);
+            if (type != null && type.isLazy()) {
+                return type;
+            }
+        }
+        return null;
+//        throw new RuntimeException("Not able to extract type id from topic id '" + topicId + "'");
+    }
+
+    protected Collection<PrestoTopic> includeLazyTopics(Collection<PrestoTopic> found, Collection<String> topicIds) {
+        if (found.size() < topicIds.size()) {
+            Collection<PrestoTopic> result = new ArrayList<PrestoTopic>(found);
+            Map<String,PrestoTopic> foundIds = new HashMap<String,PrestoTopic>(topicIds.size());
+            for (PrestoTopic topic : found) {
+                foundIds.put(topic.getId(), topic);
+            }
+            for (String topicId : topicIds) {                
+                if (!foundIds.containsKey(topicId)) {
+                    PrestoTopic topic = lazyLoad(topicId);
+                    if (topic != null) {
+                        result.add(topic);
+                    }
+                }
+            }
+            return result;
+        } else {
+            return found;
+        }
+    }
+    
 }

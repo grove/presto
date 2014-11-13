@@ -69,6 +69,10 @@ public abstract class MongoDataProvider extends JacksonDataProvider {
             doc = findTopicById(topicId);
         }
         if (doc == null) {
+            PrestoTopic topic = lazyLoad(topicId);
+            if (topic != null) {
+                return topic;
+            }
             log.warn("Topic with id '" + topicId + "' not found.");
         }
         return existing(doc);
@@ -77,8 +81,8 @@ public abstract class MongoDataProvider extends JacksonDataProvider {
     @Override
     public Collection<PrestoTopic> getTopicsByIds(Collection<String> topicIds) {        
         Collection<PrestoTopic> result = new ArrayList<PrestoTopic>();
-        aggregateTopicsById(topicIds, result);
-        return result;
+        aggregateTopicsById(topicIds, result);        
+        return includeLazyTopics(result, topicIds);
     }
 
     @Override

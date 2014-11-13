@@ -49,7 +49,11 @@ public abstract class RiakDataProvider extends JacksonDataProvider {
     public PrestoTopic getTopicById(String topicId) {
         try {
             Bucket bucket = riakClient.fetchBucket(bucketId).execute();
-            return existing(bucket.fetch(topicId, ObjectNode.class).execute());
+            PrestoTopic topic = existing(bucket.fetch(topicId, ObjectNode.class).execute());
+            if (topic == null) {
+                topic = lazyLoad(topicId);
+            }
+            return topic;
         } catch (RiakRetryFailedException e) {
             throw new RuntimeException(e);
         }
@@ -64,7 +68,7 @@ public abstract class RiakDataProvider extends JacksonDataProvider {
                 result.add(topic);
             }
         }
-        return null;
+        return includeLazyTopics(result, topicIds);
     }
 
     @Override
