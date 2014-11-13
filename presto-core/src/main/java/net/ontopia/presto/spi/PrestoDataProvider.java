@@ -1,13 +1,8 @@
 package net.ontopia.presto.spi;
 
 import java.util.Collection;
-import java.util.List;
 
-import net.ontopia.presto.spi.PrestoTopic.PagedValues;
-import net.ontopia.presto.spi.PrestoTopic.Projection;
-import net.ontopia.presto.spi.utils.PrestoVariableResolver;
-
-import com.fasterxml.jackson.databind.JsonNode;
+import net.ontopia.presto.spi.resolve.PrestoResolver;
 
 public interface PrestoDataProvider {
 
@@ -35,11 +30,6 @@ public interface PrestoDataProvider {
         
     }
 
-    List<? extends Object> resolveValues(PrestoTopic topic, PrestoField field);
-
-    PagedValues resolveValues(PrestoTopic topic, PrestoField field, Projection projection);
-
-    PagedValues resolveValues(Collection<? extends Object> objects,
-            PrestoField field, Projection projection, JsonNode resolveConfig, PrestoVariableResolver variableResolver);
+    PrestoResolver getResolver();
     
 }

@@ -146,7 +146,7 @@ public abstract class EditorResource implements PrestoAttributes {
                 return Response.status(Status.NOT_FOUND).build();
             }
 
-            PrestoContext context = PrestoContext.create(type, type.getCreateView());
+            PrestoContext context = PrestoContext.create(session.getResolver(), type, type.getCreateView());
 
             TopicView result = session.getTopicViewTemplate(context);
             return Response.ok(result).build();
@@ -900,7 +900,7 @@ public abstract class EditorResource implements PrestoAttributes {
         public URI getBaseUri() {
             return uriInfo.getBaseUri();
         }
-        
+
         @Override
         protected ChangeSetHandler getChangeSetHandler() {
             return new DefaultChangeSetHandler() {

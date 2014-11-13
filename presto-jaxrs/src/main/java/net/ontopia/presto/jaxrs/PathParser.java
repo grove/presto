@@ -56,9 +56,9 @@ public class PathParser {
         
         PrestoContext currentContext;
         if (isNewTopic) {
-            currentContext = PrestoContext.create(currentType, currentView);
+            currentContext = PrestoContext.create(session.getResolver(), currentType, currentView);
         } else {
-            currentContext = PrestoContext.create(currentTopic, currentType, currentView);
+            currentContext = PrestoContext.create(session.getResolver(), currentTopic, currentType, currentView);
         }
 //        System.out.println("T1: " + startTopicId + " V: " + startViewId + " F: " + startFieldId);
         
@@ -72,10 +72,10 @@ public class PathParser {
                 currentTopic = null;
                 currentType = PrestoContext.getTypeOfNewTopic(topicId, schemaProvider);
                 currentView = currentType.getViewById(viewId);
-                currentContext = PrestoContext.createSubContext(dataProvider, schemaProvider, currentContext, currentField, topicId, viewId);
+                currentContext = PrestoContext.createSubContext(currentContext, currentField, topicId, viewId);
             } else {
                 // find topic amongst parent field values
-                currentTopic = findInParentField(currentTopic, currentField, topicId);
+                currentTopic = findInParentField(currentContext, currentField, topicId);
                 if (currentTopic == null) {
                     return null;
                 }
@@ -91,23 +91,19 @@ public class PathParser {
     }
     
     public static PrestoContext getTopicByPath(Presto session, String path, String topicId, String viewId) {
-        PrestoDataProvider dataProvider = session.getDataProvider();
-        PrestoSchemaProvider schemaProvider = session.getSchemaProvider();
-
         if (path == null || path.equals("_")) {
-            return PrestoContext.create(dataProvider, schemaProvider, PathParser.deskull(topicId), viewId);
+            return PrestoContext.create(session.getResolver(), PathParser.deskull(topicId), viewId);
         }
 
         PrestoContextField contextField = getContextField(session, path);
         
         PrestoContext currentContext = contextField.getContext();
-        PrestoTopic currentTopic = currentContext.getTopic();
         PrestoField currentField = contextField.getField();
         
         if (PrestoContext.isNewTopic(topicId)) {
-            return PrestoContext.createSubContext(dataProvider, schemaProvider, currentContext, currentField, PathParser.deskull(topicId), viewId);
+            return PrestoContext.createSubContext(currentContext, currentField, PathParser.deskull(topicId), viewId);
         } else {
-            PrestoTopic resultTopic = findInParentField(currentTopic, currentField, topicId);
+            PrestoTopic resultTopic = findInParentField(currentContext, currentField, topicId);
             if (resultTopic == null) {
                 return null;
             } else {
@@ -119,9 +115,9 @@ public class PathParser {
         }
     }
 
-    private static PrestoTopic findInParentField(PrestoTopic currentTopic, PrestoField currentField, String topicId) {
+    private static PrestoTopic findInParentField(PrestoContext currentContext, PrestoField currentField, String topicId) {
         if (currentField.isReferenceField()) {
-            for (Object value : currentTopic.getValues(currentField)) {
+            for (Object value : currentContext.resolveValues(currentField)) {
                 PrestoTopic valueTopic = (PrestoTopic)value;
                 if (topicId.equals(valueTopic.getId())) {
                     return valueTopic;

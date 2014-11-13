@@ -16,12 +16,12 @@ import net.ontopia.presto.spi.jackson.InMemoryJacksonDataProvider;
 
 public class PrestoTestContext {
 
-    private final PrestoDataProvider dataProvider;
     private final PrestoSchemaProvider schemaProvider;
+    private final PrestoDataProvider dataProvider;
 
     PrestoTestContext(String contextId) {
-        dataProvider = PrestoTestService.createDataProvider(contextId);
-        schemaProvider = PrestoTestService.createSchemaProvider(contextId);
+        this.schemaProvider = PrestoTestService.createSchemaProvider(contextId);
+        this.dataProvider = PrestoTestService.createDataProvider(contextId, schemaProvider);
     }
 
     public static PrestoTestContext create(String databaseId) {
@@ -64,7 +64,7 @@ public class PrestoTestContext {
 
     public List<? extends Object> getValues(PrestoTopic topic, String fieldId) {
         PrestoField field = getFieldById(topic, fieldId);
-        return topic.getValues(field);
+        return topic.getStoredValues(field);
     }
 
     // -- assert methods

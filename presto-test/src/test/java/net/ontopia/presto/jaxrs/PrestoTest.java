@@ -99,8 +99,8 @@ public class PrestoTest extends AbstractPrestoTest {
 
     private void compareFieldValues(PrestoField field, Collection<? extends Object> values, 
             PrestoTopic t1, PrestoTopic t2) {
-        assertCollectionsEqual(t2.getValues(field), t1.getValues(field));
-        assertCollectionsEqual(t2.getValues(field), values);
+        assertCollectionsEqual(t2.getStoredValues(field), t1.getStoredValues(field));
+        assertCollectionsEqual(t2.getStoredValues(field), values);
     }
 
     private void assertCollectionsEqual(Collection<? extends Object> c1, Collection<? extends Object> c2) {

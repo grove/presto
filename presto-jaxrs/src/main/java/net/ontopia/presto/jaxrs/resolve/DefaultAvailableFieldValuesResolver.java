@@ -6,7 +6,6 @@ import java.util.List;
 
 import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoField;
-import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
 import net.ontopia.presto.spi.PrestoTopic.Projection;
@@ -31,14 +30,14 @@ public class DefaultAvailableFieldValuesResolver extends AvailableFieldValuesRes
             if (dataProvider instanceof JacksonDataProvider) {
                 Projection projection = null; // new PrestoPaging(0, 100);
                 
-                PrestoVariableResolver variableResolver = new QueryFilterVariableResolver(field.getSchemaProvider(), query);
-                
                 PrestoContext context = rules.getContext();
+                PrestoVariableResolver variableResolver = new QueryFilterVariableResolver(context, query);
+                
                 PrestoTopic topic = context.getTopic();
                 
                 Collection<? extends Object> objects = (topic == null ? Collections.emptyList() : Collections.singleton(topic));
                 
-                PagedValues result = dataProvider.resolveValues(objects, field, projection, resolveConfig, variableResolver);
+                PagedValues result = context.resolveValues(objects, field, projection, resolveConfig, variableResolver);
                 return result.getValues();
             }
         }
@@ -50,9 +49,9 @@ public class DefaultAvailableFieldValuesResolver extends AvailableFieldValuesRes
         private final PrestoVariableResolver variableResolver;
         private final String query;
 
-        QueryFilterVariableResolver(PrestoSchemaProvider schemaProvider, String query) {
+        QueryFilterVariableResolver(PrestoContext context, String query) {
             this.query = query;
-            this.variableResolver = new PrestoTopicFieldVariableResolver(schemaProvider);
+            this.variableResolver = new PrestoTopicFieldVariableResolver(context.getResolver());
         }
 
         @Override

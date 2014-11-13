@@ -165,7 +165,7 @@ public abstract class PrestoDefaultChangeSet implements PrestoChangeSet {
         for (PrestoField field : type.getFields()) {
             if (field.getInverseFieldId() != null) {
                 boolean isNew = false;
-                removeInverseFieldValue(isNew, topic, field, topic.getValues(field));
+                removeInverseFieldValues(isNew, topic, field, topic.getStoredValues(field)); // HACK: set to stored for now
             }
         }
     }
@@ -193,7 +193,7 @@ public abstract class PrestoDefaultChangeSet implements PrestoChangeSet {
         for (PrestoField field : type.getFields()) {
             if (field.isReferenceField() && field.isCascadingDelete()) { 
                 PrestoSchemaProvider schemaProvider = type.getSchemaProvider();
-                for (Object value : topic.getValues(field)) {
+                for (Object value : topic.getStoredValues(field)) { // HACK: set to stored for now
                     PrestoTopic valueTopic = (PrestoTopic)value;
                     String typeId = valueTopic.getTypeId();
                     PrestoType valueType = schemaProvider.getTypeById(typeId);
@@ -267,7 +267,7 @@ public abstract class PrestoDefaultChangeSet implements PrestoChangeSet {
         }
     }
 
-    void removeInverseFieldValue(boolean isNew, PrestoTopic topic, PrestoField field, Collection<?> values) {
+    void removeInverseFieldValues(boolean isNew, PrestoTopic topic, PrestoField field, Collection<?> values) {
         if (!isNew) {
             String inverseFieldId = field.getInverseFieldId();
             if (inverseFieldId != null) {

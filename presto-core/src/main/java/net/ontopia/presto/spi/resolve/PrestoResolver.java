@@ -4,12 +4,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
 import net.ontopia.presto.spi.PrestoTopic.Projection;
-import net.ontopia.presto.spi.jackson.JacksonDataProvider;
+import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoPagedValues;
 import net.ontopia.presto.spi.utils.PrestoTopicFieldVariableResolver;
 import net.ontopia.presto.spi.utils.PrestoVariableContext;
@@ -23,30 +24,54 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public abstract class PrestoResolver {
+public class PrestoResolver {
 
     private static Logger log = LoggerFactory.getLogger(PrestoResolver.class);
 
-    protected abstract JacksonDataProvider getDataProvider();
+    private final PrestoDataProvider dataProvider;
+    private final PrestoSchemaProvider schemaProvider;
 
-    public List<? extends Object>  resolveValues(PrestoTopic topic, PrestoField field) {
+    public PrestoResolver(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider) {
+        this.dataProvider = dataProvider;
+        this.schemaProvider = schemaProvider;
+    }
+
+    public PrestoDataProvider getDataProvider() {
+        return dataProvider;
+    }
+
+    public PrestoSchemaProvider getSchemaProvider() {
+        return schemaProvider;
+    }
+
+    public List<? extends Object> resolveValues(PrestoContext context, PrestoField field) {
+        PrestoTopic topic = context.getTopic();
+        return resolveValues(topic, field);
+    }
+    
+    public PagedValues resolveValues(PrestoContext context, PrestoField field, Projection projection) {
+        PrestoTopic topic = context.getTopic();
+        return resolveValues(topic, field, projection);
+    }
+
+    public List<? extends Object> resolveValues(PrestoTopic topic, PrestoField field) {
         // get field values from data provider
         ObjectNode extra = (ObjectNode)field.getExtra();
         if (extra != null && extra.has("resolve")) {
             JsonNode resolveConfig = extra.get("resolve");
             Projection projection = null;
-            PrestoVariableResolver variableResolver = new PrestoTopicFieldVariableResolver(field.getSchemaProvider());
+            PrestoVariableResolver variableResolver = new PrestoTopicFieldVariableResolver(this);
             return resolveValues(Collections.singleton(topic), field, projection, resolveConfig, variableResolver).getValues();
         }
         return topic.getStoredValues(field);
     }
-
+    
     public PagedValues resolveValues(PrestoTopic topic, PrestoField field, Projection projection) {
         // get field values from data provider
         ObjectNode extra = (ObjectNode)field.getExtra();
         if (extra != null && extra.has("resolve")) {
             JsonNode resolveConfig = extra.get("resolve");
-            PrestoVariableResolver variableResolver = new PrestoTopicFieldVariableResolver(field.getSchemaProvider());
+            PrestoVariableResolver variableResolver = new PrestoTopicFieldVariableResolver(this);
             return resolveValues(Collections.singleton(topic), field, projection, resolveConfig, variableResolver);
         }
         return topic.getStoredValues(field, projection);
@@ -80,30 +105,29 @@ public abstract class PrestoResolver {
             PrestoField field, boolean isReference, ObjectNode resolveConfig, 
             Projection projection, PrestoVariableResolver variableResolver) {
 
-        PrestoFieldResolver resolver = createFieldResolver(field.getSchemaProvider(), resolveConfig);
+        PrestoFieldResolver resolver = createFieldResolver(resolveConfig);
         if (resolver == null) {
             return new PrestoPagedValues(Collections.emptyList(), projection, 0);            
         } else {
-            return resolver.resolve(objects, field, isReference, projection, variableResolver);
+            return resolver.resolve(objects, field, isReference, projection, this, variableResolver);
         }
     }
 
-    protected PrestoFieldResolver createFieldResolver(PrestoSchemaProvider schemaProvider, ObjectNode resolveConfig) {
+    protected PrestoFieldResolver createFieldResolver(ObjectNode resolveConfig) {
         String type = resolveConfig.get("type").textValue();
         if (type == null) {
             log.error("'type' not specified on resolve item: " + resolveConfig);
             return null;
         } else {
-            return createFieldResolver(type, schemaProvider, resolveConfig);
+            return createFieldResolver(type, resolveConfig);
         }
     }
 
-    protected PrestoFieldResolver createFieldResolver(String type, PrestoSchemaProvider schemaProvider, ObjectNode resolveConfig) {
-        String className = getFieldResolverClassName(type, schemaProvider, resolveConfig);
+    protected PrestoFieldResolver createFieldResolver(String type, ObjectNode resolveConfig) {
+        String className = getFieldResolverClassName(type, getSchemaProvider(), resolveConfig);
         if (className != null) {
             PrestoFieldResolver fieldResolver = Utils.newInstanceOf(className, PrestoFieldResolver.class);
-            JacksonDataProvider dataProvider = getDataProvider();
-            PrestoVariableContext context = new PrestoVariableContext(schemaProvider, dataProvider, dataProvider.getObjectMapper());
+            PrestoVariableContext context = new PrestoVariableContext(getSchemaProvider(), getDataProvider());
             fieldResolver.setVariableContext(context);
             fieldResolver.setConfig(resolveConfig);
             return fieldResolver;

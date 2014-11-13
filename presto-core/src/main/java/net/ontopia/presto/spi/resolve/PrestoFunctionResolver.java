@@ -18,7 +18,8 @@ public class PrestoFunctionResolver extends PrestoFieldResolver {
 
     @Override
     public PagedValues resolve(Collection<? extends Object> objects,
-            PrestoField field, boolean isReference, Projection projection, PrestoVariableResolver variableResolver) {
+            PrestoField field, boolean isReference, Projection projection, 
+            PrestoResolver prestoResolver, PrestoVariableResolver variableResolver) {
         
         PrestoResolverFunction func = getFunction(getConfig());
         if (func != null) {

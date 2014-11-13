@@ -24,7 +24,7 @@ public class JacksonTopicTest {
     @Before
     public void setUp() {
         this.schemaProvider = JacksonTest.createSchemaProvider("topic", "topic.schema.json");
-        this.dataProvider = JacksonTest.createDataProvider();
+        this.dataProvider = JacksonTest.createDataProvider(schemaProvider);
     }
 
     private PrestoTopic createTopic(PrestoType type, String topicId) {
@@ -84,11 +84,11 @@ public class JacksonTopicTest {
         
         // set A, B 
         topic.setValue(field, strings("A", "B"));        
-        JacksonTest.assertValuesEquals(strings("A", "B"), topic.getValues(field));
+        JacksonTest.assertValuesEquals(strings("A", "B"), topic.getStoredValues(field));
         
         // set []
         topic.setValue(field, strings());        
-        JacksonTest.assertValuesEquals(strings(), topic.getValues(field));
+        JacksonTest.assertValuesEquals(strings(), topic.getStoredValues(field));
     }
 
     @Test
@@ -102,19 +102,19 @@ public class JacksonTopicTest {
         
         // add A, B (at end)
         topic.addValue(field, strings("A", "B"), -1);        
-        JacksonTest.assertValuesEquals(strings("A", "B"), topic.getValues(field));
+        JacksonTest.assertValuesEquals(strings("A", "B"), topic.getStoredValues(field));
         
         // add C, D, E (at end)
         topic.addValue(field, strings("C", "D", "E"), -1);        
-        JacksonTest.assertValuesEquals(strings("A", "B", "C", "D", "E"), topic.getValues(field));
+        JacksonTest.assertValuesEquals(strings("A", "B", "C", "D", "E"), topic.getStoredValues(field));
         
         // add F, G at index 0
         topic.addValue(field, strings("F", "G"), 0);        
-        JacksonTest.assertValuesEquals(strings("F", "G", "A", "B", "C", "D", "E"), topic.getValues(field));
+        JacksonTest.assertValuesEquals(strings("F", "G", "A", "B", "C", "D", "E"), topic.getStoredValues(field));
 
         // add H, I at index 4
         topic.addValue(field, strings("H", "I"), 4);        
-        JacksonTest.assertValuesEquals(strings("F", "G", "A", "B", "H", "I", "C", "D", "E"), topic.getValues(field));
+        JacksonTest.assertValuesEquals(strings("F", "G", "A", "B", "H", "I", "C", "D", "E"), topic.getStoredValues(field));
     }
 
     @Test
@@ -128,23 +128,23 @@ public class JacksonTopicTest {
         
         // add A, B, C, D, E, F, G, H, I (at end)
         topic.addValue(field, strings("A", "B", "C", "D", "E", "F", "G", "H", "I"), -1);        
-        JacksonTest.assertValuesEquals(strings("A", "B", "C", "D", "E", "F", "G", "H", "I"), topic.getValues(field));
+        JacksonTest.assertValuesEquals(strings("A", "B", "C", "D", "E", "F", "G", "H", "I"), topic.getStoredValues(field));
         
         // remove A, B
         topic.removeValue(field, strings("A", "B"));        
-        JacksonTest.assertValuesEquals(strings("C", "D", "E", "F", "G", "H", "I"), topic.getValues(field));
+        JacksonTest.assertValuesEquals(strings("C", "D", "E", "F", "G", "H", "I"), topic.getStoredValues(field));
         
         // remove D, F
         topic.removeValue(field, strings("F", "D"));        
-        JacksonTest.assertValuesEquals(strings("C", "E", "G", "H", "I"), topic.getValues(field));
+        JacksonTest.assertValuesEquals(strings("C", "E", "G", "H", "I"), topic.getStoredValues(field));
         
         // remove C, I
         topic.removeValue(field, strings("C", "I"));        
-        JacksonTest.assertValuesEquals(strings("E", "G", "H"), topic.getValues(field));
+        JacksonTest.assertValuesEquals(strings("E", "G", "H"), topic.getStoredValues(field));
         
         // remove E, G, H
         topic.removeValue(field, strings("G", "E", "H"));        
-        JacksonTest.assertValuesEquals(strings(), topic.getValues(field));
+        JacksonTest.assertValuesEquals(strings(), topic.getStoredValues(field));
     }
 
     private void isReferenceField(PrestoField field) {
@@ -165,11 +165,11 @@ public class JacksonTopicTest {
         
         // set A, B 
         topic.setValue(field, topics(vtype, "A", "B"));        
-        JacksonTest.assertValuesEquals(topics(vtype, "A", "B"), topic.getValues(field));
+        JacksonTest.assertValuesEquals(topics(vtype, "A", "B"), topic.getStoredValues(field));
         
         // set []
         topic.setValue(field, topics(vtype));        
-        JacksonTest.assertValuesEquals(topics(vtype), topic.getValues(field));
+        JacksonTest.assertValuesEquals(topics(vtype), topic.getStoredValues(field));
     }
 
     @Test
@@ -184,19 +184,19 @@ public class JacksonTopicTest {
         
         // add A, B (at end)
         topic.addValue(field, topics(vtype, "A", "B"), -1);        
-        JacksonTest.assertValuesEquals(topics(vtype, "A", "B"), topic.getValues(field));
+        JacksonTest.assertValuesEquals(topics(vtype, "A", "B"), topic.getStoredValues(field));
         
         // add C, D, E (at end)
         topic.addValue(field, topics(vtype, "C", "D", "E"), -1);        
-        JacksonTest.assertValuesEquals(topics(vtype, "A", "B", "C", "D", "E"), topic.getValues(field));
+        JacksonTest.assertValuesEquals(topics(vtype, "A", "B", "C", "D", "E"), topic.getStoredValues(field));
         
         // add F, G at index 0
         topic.addValue(field, topics(vtype, "F", "G"), 0);        
-        JacksonTest.assertValuesEquals(topics(vtype, "F", "G", "A", "B", "C", "D", "E"), topic.getValues(field));
+        JacksonTest.assertValuesEquals(topics(vtype, "F", "G", "A", "B", "C", "D", "E"), topic.getStoredValues(field));
 
         // add H, I at index 4
         topic.addValue(field, topics(vtype, "H", "I"), 4);        
-        JacksonTest.assertValuesEquals(topics(vtype, "F", "G", "A", "B", "H", "I", "C", "D", "E"), topic.getValues(field));
+        JacksonTest.assertValuesEquals(topics(vtype, "F", "G", "A", "B", "H", "I", "C", "D", "E"), topic.getStoredValues(field));
     }
 
     @Test
@@ -211,27 +211,27 @@ public class JacksonTopicTest {
         
         // add A, B (at end)
         topic.addValue(field, topics(vtype, "A", "B", "A", "B"), -1);        
-        JacksonTest.assertValuesEquals(topics(vtype, "A", "B"), topic.getValues(field));
+        JacksonTest.assertValuesEquals(topics(vtype, "A", "B"), topic.getStoredValues(field));
         
         // add C, D, E (at end)
         topic.addValue(field, topics(vtype, "C", "D", "E", "C", "D", "E"), -1);        
-        JacksonTest.assertValuesEquals(topics(vtype, "A", "B", "C", "D", "E"), topic.getValues(field));
+        JacksonTest.assertValuesEquals(topics(vtype, "A", "B", "C", "D", "E"), topic.getStoredValues(field));
         
         // add F, G at index 0
         topic.addValue(field, topics(vtype, "F", "G", "F", "G"), 0);        
-        JacksonTest.assertValuesEquals(topics(vtype, "F", "G", "A", "B", "C", "D", "E"), topic.getValues(field));
+        JacksonTest.assertValuesEquals(topics(vtype, "F", "G", "A", "B", "C", "D", "E"), topic.getStoredValues(field));
 
         // add H, I at index 4
         topic.addValue(field, topics(vtype, "H", "I", "H", "I"), 4);        
-        JacksonTest.assertValuesEquals(topics(vtype, "F", "G", "A", "B", "H", "I", "C", "D", "E"), topic.getValues(field));
+        JacksonTest.assertValuesEquals(topics(vtype, "F", "G", "A", "B", "H", "I", "C", "D", "E"), topic.getStoredValues(field));
 
         // add J at index 9
         topic.addValue(field, topics(vtype, "J"), 9);        
-        JacksonTest.assertValuesEquals(topics(vtype, "F", "G", "A", "B", "H", "I", "C", "D", "E", "J"), topic.getValues(field));
+        JacksonTest.assertValuesEquals(topics(vtype, "F", "G", "A", "B", "H", "I", "C", "D", "E", "J"), topic.getStoredValues(field));
 
         // add K at index 100
         topic.addValue(field, topics(vtype, "K"), 100);        
-        JacksonTest.assertValuesEquals(topics(vtype, "F", "G", "A", "B", "H", "I", "C", "D", "E", "J", "K"), topic.getValues(field));
+        JacksonTest.assertValuesEquals(topics(vtype, "F", "G", "A", "B", "H", "I", "C", "D", "E", "J", "K"), topic.getStoredValues(field));
     }
 
     @Test
@@ -246,23 +246,23 @@ public class JacksonTopicTest {
         
         // add A, B, C, D, E, F, G, H, I (at end)
         topic.addValue(field, topics(vtype, "A", "B", "C", "D", "E", "F", "G", "H", "I"), -1);        
-        JacksonTest.assertValuesEquals(topics(vtype, "A", "B", "C", "D", "E", "F", "G", "H", "I"), topic.getValues(field));
+        JacksonTest.assertValuesEquals(topics(vtype, "A", "B", "C", "D", "E", "F", "G", "H", "I"), topic.getStoredValues(field));
         
         // remove A, B
         topic.removeValue(field, topics(vtype, "A", "B"));        
-        JacksonTest.assertValuesEquals(topics(vtype, "C", "D", "E", "F", "G", "H", "I"), topic.getValues(field));
+        JacksonTest.assertValuesEquals(topics(vtype, "C", "D", "E", "F", "G", "H", "I"), topic.getStoredValues(field));
         
         // remove D, F
         topic.removeValue(field, topics(vtype, "F", "D"));        
-        JacksonTest.assertValuesEquals(topics(vtype, "C", "E", "G", "H", "I"), topic.getValues(field));
+        JacksonTest.assertValuesEquals(topics(vtype, "C", "E", "G", "H", "I"), topic.getStoredValues(field));
         
         // remove C, I, X (non-existent)
         topic.removeValue(field, topics(vtype, "C", "I", "X"));        
-        JacksonTest.assertValuesEquals(topics(vtype, "E", "G", "H"), topic.getValues(field));
+        JacksonTest.assertValuesEquals(topics(vtype, "E", "G", "H"), topic.getStoredValues(field));
         
         // remove E, G, H
         topic.removeValue(field, topics(vtype, "G", "E", "H"));        
-        JacksonTest.assertValuesEquals(topics(vtype), topic.getValues(field));
+        JacksonTest.assertValuesEquals(topics(vtype), topic.getStoredValues(field));
     }
 
     @Test
@@ -277,23 +277,23 @@ public class JacksonTopicTest {
         
         // add A, B, C, D, E, F, G, H, I (at end)
         topic.addValue(field, topics(vtype, "A", "B", "C", "D", "E", "F", "G", "H", "I"), -1);        
-        JacksonTest.assertValuesEquals(topics(vtype, "A", "B", "C", "D", "E", "F", "G", "H", "I"), topic.getValues(field));
+        JacksonTest.assertValuesEquals(topics(vtype, "A", "B", "C", "D", "E", "F", "G", "H", "I"), topic.getStoredValues(field));
         
         // remove A, B
         topic.removeValue(field, topics(vtype, "A", "B", "A", "B"));        
-        JacksonTest.assertValuesEquals(topics(vtype, "C", "D", "E", "F", "G", "H", "I"), topic.getValues(field));
+        JacksonTest.assertValuesEquals(topics(vtype, "C", "D", "E", "F", "G", "H", "I"), topic.getStoredValues(field));
         
         // remove D, F
         topic.removeValue(field, topics(vtype, "F", "D", "F", "D"));        
-        JacksonTest.assertValuesEquals(topics(vtype, "C", "E", "G", "H", "I"), topic.getValues(field));
+        JacksonTest.assertValuesEquals(topics(vtype, "C", "E", "G", "H", "I"), topic.getStoredValues(field));
         
         // remove C, I, X (non-existent)
         topic.removeValue(field, topics(vtype, "C", "I", "X", "C", "I", "X"));        
-        JacksonTest.assertValuesEquals(topics(vtype, "E", "G", "H"), topic.getValues(field));
+        JacksonTest.assertValuesEquals(topics(vtype, "E", "G", "H"), topic.getStoredValues(field));
         
         // remove E, G, H
         topic.removeValue(field, topics(vtype, "G", "E", "H", "G", "E", "H"));        
-        JacksonTest.assertValuesEquals(topics(vtype), topic.getValues(field));
+        JacksonTest.assertValuesEquals(topics(vtype), topic.getStoredValues(field));
     }
 
     private void isInlineReferenceField(PrestoField field) {
@@ -314,11 +314,11 @@ public class JacksonTopicTest {
         
         // set A, B 
         topic.setValue(field, inlineTopics(vtype, "A", "B"));        
-        JacksonTest.assertValuesEquals(inlineTopics(vtype, "A", "B"), topic.getValues(field));
+        JacksonTest.assertValuesEquals(inlineTopics(vtype, "A", "B"), topic.getStoredValues(field));
         
         // set []
         topic.setValue(field, inlineTopics(vtype));        
-        JacksonTest.assertValuesEquals(inlineTopics(vtype), topic.getValues(field));
+        JacksonTest.assertValuesEquals(inlineTopics(vtype), topic.getStoredValues(field));
     }
 
     @Test
@@ -333,19 +333,19 @@ public class JacksonTopicTest {
         
         // add A, B (at end)
         topic.addValue(field, inlineTopics(vtype, "A", "B"), -1);        
-        JacksonTest.assertValuesEquals(inlineTopics(vtype, "A", "B"), topic.getValues(field));
+        JacksonTest.assertValuesEquals(inlineTopics(vtype, "A", "B"), topic.getStoredValues(field));
         
         // add C, D, E (at end)
         topic.addValue(field, inlineTopics(vtype, "C", "D", "E"), -1);        
-        JacksonTest.assertValuesEquals(inlineTopics(vtype, "A", "B", "C", "D", "E"), topic.getValues(field));
+        JacksonTest.assertValuesEquals(inlineTopics(vtype, "A", "B", "C", "D", "E"), topic.getStoredValues(field));
         
         // add F, G at index 0
         topic.addValue(field, inlineTopics(vtype, "F", "G"), 0);        
-        JacksonTest.assertValuesEquals(inlineTopics(vtype, "F", "G", "A", "B", "C", "D", "E"), topic.getValues(field));
+        JacksonTest.assertValuesEquals(inlineTopics(vtype, "F", "G", "A", "B", "C", "D", "E"), topic.getStoredValues(field));
 
         // add H, I at index 4
         topic.addValue(field, inlineTopics(vtype, "H", "I"), 4);        
-        JacksonTest.assertValuesEquals(inlineTopics(vtype, "F", "G", "A", "B", "H", "I", "C", "D", "E"), topic.getValues(field));
+        JacksonTest.assertValuesEquals(inlineTopics(vtype, "F", "G", "A", "B", "H", "I", "C", "D", "E"), topic.getStoredValues(field));
     }
 
     @Test
@@ -360,23 +360,23 @@ public class JacksonTopicTest {
         
         // add A, B, C, D, E, F, G, H, I (at end)
         topic.addValue(field, inlineTopics(vtype, "A", "B", "C", "D", "E", "F", "G", "H", "I"), -1);        
-        JacksonTest.assertValuesEquals(inlineTopics(vtype, "A", "B", "C", "D", "E", "F", "G", "H", "I"), topic.getValues(field));
+        JacksonTest.assertValuesEquals(inlineTopics(vtype, "A", "B", "C", "D", "E", "F", "G", "H", "I"), topic.getStoredValues(field));
         
         // remove A, B
         topic.removeValue(field, inlineTopics(vtype, "A", "B"));        
-        JacksonTest.assertValuesEquals(inlineTopics(vtype, "C", "D", "E", "F", "G", "H", "I"), topic.getValues(field));
+        JacksonTest.assertValuesEquals(inlineTopics(vtype, "C", "D", "E", "F", "G", "H", "I"), topic.getStoredValues(field));
         
         // remove D, F
         topic.removeValue(field, inlineTopics(vtype, "F", "D"));        
-        JacksonTest.assertValuesEquals(inlineTopics(vtype, "C", "E", "G", "H", "I"), topic.getValues(field));
+        JacksonTest.assertValuesEquals(inlineTopics(vtype, "C", "E", "G", "H", "I"), topic.getStoredValues(field));
         
         // remove C, I
         topic.removeValue(field, inlineTopics(vtype, "C", "I"));        
-        JacksonTest.assertValuesEquals(inlineTopics(vtype, "E", "G", "H"), topic.getValues(field));
+        JacksonTest.assertValuesEquals(inlineTopics(vtype, "E", "G", "H"), topic.getStoredValues(field));
         
         // remove E, G, H
         topic.removeValue(field, inlineTopics(vtype, "G", "E", "H"));        
-        JacksonTest.assertValuesEquals(inlineTopics(vtype), topic.getValues(field));
+        JacksonTest.assertValuesEquals(inlineTopics(vtype), topic.getStoredValues(field));
     }
     
 }

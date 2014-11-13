@@ -39,14 +39,15 @@ public class IfResolveFieldRule extends BooleanFieldRule {
    
                 Projection projection = PrestoProjection.FIRST_ELEMENT;
    
-                PrestoVariableResolver variableResolver = new PrestoTopicWithParentFieldVariableResolver(getSchemaProvider(), context);
-   
                 PrestoTopic topic = context.getTopic();
    
                 Collection<? extends Object> objects = (topic == null ? Collections.emptyList() : Collections.singleton(topic));
    
                 JsonNode resolveConfig = config.path("resolve");
-                PagedValues values = dataProvider.resolveValues(objects, field, projection, resolveConfig, variableResolver);
+                
+                PrestoVariableResolver variableResolver = new PrestoTopicWithParentFieldVariableResolver(context);
+
+                PagedValues values = context.resolveValues(objects, field, projection, resolveConfig, variableResolver);
    
                 return !values.getValues().isEmpty();
             }

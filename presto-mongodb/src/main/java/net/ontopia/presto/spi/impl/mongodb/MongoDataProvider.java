@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import net.ontopia.presto.spi.PrestoField;
+import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.jackson.JacksonDataProvider;
@@ -35,7 +36,8 @@ public abstract class MongoDataProvider extends JacksonDataProvider {
     private Map<String,Mongo> mongos = new HashMap<String,Mongo>();
     private Map<String,JacksonDBCollection<ObjectNode, Object>> collections = new HashMap<String,JacksonDBCollection<ObjectNode, Object>>();
     
-    public MongoDataProvider() {
+    public MongoDataProvider(PrestoSchemaProvider schemaProvider) {
+        super(schemaProvider);
     }
 
     private static final String DEFAULT_MONGO_URI = "mongodb://localhost";

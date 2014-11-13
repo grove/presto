@@ -88,7 +88,7 @@ public class PrestoProcessor {
 
         for (TopicView topicView : views) {
             String viewId = topicView.getId();
-            PrestoContext subcontext = PrestoContext.newContext(getDataProvider(), getSchemaProvider(), context, viewId);
+            PrestoContext subcontext = PrestoContext.newContext(context, viewId);
             PrestoContextRules subrules = presto.getPrestoContextRules(subcontext);
             
             TopicView newView = processTopicView(topicView, subrules, processType, status);

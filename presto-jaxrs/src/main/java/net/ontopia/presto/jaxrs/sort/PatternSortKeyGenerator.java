@@ -23,7 +23,7 @@ public class PatternSortKeyGenerator extends SortKeyGenerator {
         private PatternSortKeyComparator(PrestoField field, PrestoContextRules rules) {
             this.field = field;
             this.rules = rules;
-            this.variableResolver = new PrestoTopicWithParentFieldVariableResolver(getSchemaProvider(), rules.getContext());
+            this.variableResolver = new PrestoTopicWithParentFieldVariableResolver(rules.getContext());
             this.ascending = rules.isSortedAscendingField(field);
         }
 

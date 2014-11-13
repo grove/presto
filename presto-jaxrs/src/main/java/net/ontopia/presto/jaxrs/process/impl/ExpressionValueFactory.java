@@ -58,7 +58,7 @@ public class ExpressionValueFactory extends ValueFactory {
         if (path == null) {
             return Collections.emptyList();
         }
-        return PathExpressions.getValues(dataProvider, schemaProvider, rules, path);
+        return PathExpressions.getValues(rules, path);
     }
 
     private String getName(PrestoSchemaProvider schemaProvider, 

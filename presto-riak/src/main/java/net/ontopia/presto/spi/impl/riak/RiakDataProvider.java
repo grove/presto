@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.UUID;
 
 import net.ontopia.presto.spi.PrestoField;
+import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.jackson.JacksonDataProvider;
 import net.ontopia.presto.spi.jackson.JacksonTopic;
@@ -23,7 +24,8 @@ public abstract class RiakDataProvider extends JacksonDataProvider {
 
     private final String bucketId;
 
-    public RiakDataProvider(String bucketId) {
+    public RiakDataProvider(PrestoSchemaProvider schemaProvider, String bucketId) {
+        super(schemaProvider);
         this.bucketId = bucketId;
         this.riakClient = createRiakClient();
     }

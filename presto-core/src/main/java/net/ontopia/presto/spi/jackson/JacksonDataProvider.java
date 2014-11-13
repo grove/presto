@@ -1,11 +1,11 @@
 package net.ontopia.presto.spi.jackson;
 
-import java.util.Collection;
 import java.util.List;
 
 import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoInlineTopicBuilder;
+import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
 import net.ontopia.presto.spi.PrestoTopic.Projection;
@@ -15,10 +15,8 @@ import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.Change;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.DefaultDataProvider;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.DefaultTopic;
-import net.ontopia.presto.spi.utils.PrestoVariableResolver;
 import net.ontopia.presto.spi.utils.Utils;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -29,13 +27,19 @@ public abstract class JacksonDataProvider implements DefaultDataProvider {
     protected final JacksonDataStrategy inlineDataStrategy;
     protected final IdentityStrategy identityStrategy;
     protected final PrestoResolver resolver;
+    protected final PrestoSchemaProvider schemaProvider;
     
-    protected JacksonDataProvider() {
+    protected JacksonDataProvider(PrestoSchemaProvider schemaProvider) {
+        this.schemaProvider = schemaProvider;
         this.mapper = createObjectMapper();
         this.dataStrategy = createDataStrategy(mapper);
         this.inlineDataStrategy = createInlineDataStrategy(mapper);
         this.identityStrategy = createIdentityStrategy();
         this.resolver = createResolver();
+    }
+
+    protected PrestoResolver createResolver() {
+        return new PrestoResolver(this, schemaProvider);
     }
 
     protected ObjectMapper createObjectMapper() {
@@ -57,17 +61,12 @@ public abstract class JacksonDataProvider implements DefaultDataProvider {
     }
     
     protected abstract IdentityStrategy createIdentityStrategy();
-    
-    protected PrestoResolver createResolver() {
-        return new PrestoResolver() {
-            @Override
-            protected JacksonDataProvider getDataProvider() {
-                return JacksonDataProvider.this;
-            }
-        };
-    }
 
     // -- JacksonDataProvider
+    
+    public PrestoResolver getResolver() {
+        return resolver;
+    }
     
     public ObjectMapper getObjectMapper() {
         return mapper;
@@ -149,21 +148,13 @@ public abstract class JacksonDataProvider implements DefaultDataProvider {
     public Object serializeFieldValue(PrestoField field, Object value) {
        return value; 
     }
-
-    @Override
-    public List<? extends Object>  resolveValues(PrestoTopic topic, PrestoField field) {
+    
+    public List<? extends Object> resolveValues(PrestoTopic topic, PrestoField field) {
         return resolver.resolveValues(topic, field);
     }
 
-    @Override
     public PagedValues resolveValues(PrestoTopic topic, PrestoField field, Projection projection) {
         return resolver.resolveValues(topic, field, projection);
-    }
-
-    @Override
-    public PagedValues resolveValues(Collection<? extends Object> objects, PrestoField field, Projection projection, 
-            JsonNode resolveConfig, PrestoVariableResolver variableResolver) {
-        return resolver.resolveValues(objects, field, projection, resolveConfig, variableResolver);
     }
 
 }

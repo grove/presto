@@ -130,11 +130,9 @@ public class DefaultSortKeyGenerator extends SortKeyGenerator {
                 return values.isEmpty() ? null : values.get(0);
             }
             private PrestoContextRules getValueTopicContextRules(PrestoTopic valueTopic) {
-                PrestoDataProvider dataProvider = presto.getDataProvider();
-                PrestoSchemaProvider schemaProvider = presto.getSchemaProvider();
                 PrestoContext context = rules.getContext();
 
-                PrestoContext subcontext = PrestoContext.createSubContext(dataProvider, schemaProvider, context, field, valueTopic);
+                PrestoContext subcontext = PrestoContext.createSubContext(context, field, valueTopic);
                 PrestoContextRules subrules = presto.getPrestoContextRules(subcontext);
                 return subrules;
             }
