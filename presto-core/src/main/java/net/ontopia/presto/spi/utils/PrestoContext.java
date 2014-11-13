@@ -166,7 +166,7 @@ public class PrestoContext {
         return schemaProvider.getTypeById(typeId);
     }
     
-    public static PrestoType getTypeOfLazyTopic(String topicId, PrestoSchemaProvider schemaProvider) {
+    private static PrestoType getTypeOfLazyTopic(String topicId, PrestoSchemaProvider schemaProvider) {
         int ix = 0;
         while (true) {
             ix = topicId.indexOf(":", ix+1);

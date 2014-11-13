@@ -10,7 +10,7 @@ public class JacksonLazyTopic extends JacksonTopic {
     
     @Override
     public boolean isLazy() {
-        return false;
+        return true;
     }
 
     @Override
