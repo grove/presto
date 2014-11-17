@@ -189,19 +189,21 @@ public abstract class JacksonDataProvider implements DefaultDataProvider {
             }
         }
         return null;
-//        throw new RuntimeException("Not able to extract type id from topic id '" + topicId + "'");
     }
 
     protected Collection<PrestoTopic> includeLazyTopics(Collection<PrestoTopic> found, Collection<String> topicIds) {
         if (found.size() < topicIds.size()) {
-            Collection<PrestoTopic> result = new ArrayList<PrestoTopic>(found);
             Map<String,PrestoTopic> foundIds = new HashMap<String,PrestoTopic>(topicIds.size());
             for (PrestoTopic topic : found) {
                 foundIds.put(topic.getId(), topic);
             }
-            for (String topicId : topicIds) {                
-                if (!foundIds.containsKey(topicId)) {
-                    PrestoTopic topic = lazyLoad(topicId);
+            Collection<PrestoTopic> result = new ArrayList<PrestoTopic>(topicIds.size());
+            for (String topicId : topicIds) {
+                PrestoTopic topic = foundIds.get(topicId);
+                if (topic != null) {
+                    result.add(topic);
+                } else {
+                    topic = lazyLoad(topicId);
                     if (topic != null) {
                         result.add(topic);
                     }
