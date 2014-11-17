@@ -80,7 +80,7 @@ public abstract class DefaultChangeSetHandler implements ChangeSetHandler {
                     }
 
                 } else if (valuesAssignmentType.equals("first-update")) {
-                    if (topic.getStoredValues(field).isEmpty()) { // HACK: set to stored for now
+                    if (topic.getValues(field).isEmpty()) {
                         JsonNode fields = assignment.path("fields");
                         if (fields.isArray()) {
                             // update only if any of the given fields are updated 

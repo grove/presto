@@ -26,9 +26,9 @@ public class JacksonLazyTopicBuilder implements PrestoLazyTopicBuilder {
         if (type == null) {
             throw new RuntimeException("type is null");
         }
-//        if (topicId == null) {
-//            throw new RuntimeException("topicId is null");
-//        }
+        if (topicId == null) {
+            throw new RuntimeException("topicId is null");
+        }
         this.dataProvider = dataProvider;
         this.type = type;
         this.topicId = topicId;
