@@ -64,7 +64,7 @@ public class PrestoTestContext {
 
     public List<? extends Object> getValues(PrestoTopic topic, String fieldId) {
         PrestoField field = getFieldById(topic, fieldId);
-        return topic.getStoredValues(field);
+        return topic.getValues(field);
     }
 
     // -- assert methods
