@@ -1336,7 +1336,8 @@ public abstract class Presto {
                 PrestoField field = type.getFieldById(fieldId, view);
 
                 // ignore read-only or pageable fields 
-                if (!rules.isReadOnlyField(field) && !rules.isPageableField(field)) {
+                if ((!rules.isReadOnlyField(field) && !rules.isPageableField(field)) ||
+                        rules.isUpdatableOnCreateField(field)) {
 
                     boolean resolveEmbedded = true;
                     boolean includeExisting = false; 
@@ -1351,7 +1352,7 @@ public abstract class Presto {
             return update.getTopicAfterSave();
         }
     }
-
+    
     public FieldData updateFieldValues(PrestoContextRules rules, PrestoField field, FieldData fieldData) {
         PrestoContext updatedContext = updatePrestoTopic(rules, fieldData);
 
@@ -1390,7 +1391,8 @@ public abstract class Presto {
             PrestoField field = type.getFieldById(fieldId, view);
 
             // ignore read-only or pageable fields 
-            if (!rules.isReadOnlyField(field) && !rules.isPageableField(field)) {
+            if ((!rules.isReadOnlyField(field) && !rules.isPageableField(field)) ||
+                    rules.isUpdatableOnCreateField(field)) {
 
                 boolean resolveEmbedded = true;
                 boolean includeExisting = false;

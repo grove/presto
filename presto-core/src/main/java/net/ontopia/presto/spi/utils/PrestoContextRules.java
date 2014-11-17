@@ -353,6 +353,18 @@ public abstract class PrestoContextRules {
         return FieldValues.EMPTY;  
     }
 
+    public boolean isUpdatableOnCreateField(PrestoField field) {
+        PrestoTopic topic = context.getTopic();
+        if (topic != null && topic.isLazy()) {
+            // NOTE: this overrides isReadOnlyField at create time
+            ObjectNode extra = ExtraUtils.getFieldExtraNode(field);
+            if (extra != null) {
+                return extra.has("lazyDefaultValue");
+            }
+        }
+        return false;
+    }
+
     public PrestoDataProvider getDataProvider() {
         return dataProvider;
     }
