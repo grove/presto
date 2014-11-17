@@ -156,7 +156,7 @@ public class JacksonTest {
         String typeId = topic.getTypeId();
         PrestoType type = schemaProvider.getTypeById(typeId);
         PrestoField field = type.getFieldById(fieldId);
-        return topic.getStoredValues(field);
+        return topic.getValues(field);
     }
     
     public static void assertValuesEquals(List<? extends Object> expected, List<? extends Object> actual) {
