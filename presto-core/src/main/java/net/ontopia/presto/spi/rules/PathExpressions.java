@@ -7,13 +7,12 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoField;
-import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.functions.PrestoFieldFunction;
 import net.ontopia.presto.spi.functions.PrestoFieldFunctionUtils;
+import net.ontopia.presto.spi.resolve.PrestoResolver;
 import net.ontopia.presto.spi.utils.PrestoAttributes;
 import net.ontopia.presto.spi.utils.PrestoContext;
 import net.ontopia.presto.spi.utils.PrestoContextRules;
@@ -22,36 +21,34 @@ public class PathExpressions {
 
     private static final Pattern PATTERN = Pattern.compile("^\\$\\{([\\:\\.\\-\\w]+)\\}$");
 
-    public static List<? extends Object> getValues(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, PrestoContextRules rules, String path) {
+    public static List<? extends Object> getValues(PrestoContextRules rules, String path) {
         if (path.charAt(0) == '$') {
-            return getValuesByExpression(dataProvider, schemaProvider, rules, path);
+            return getValuesByExpression(rules, path);
         } else {
-            return getValuesByField(dataProvider, schemaProvider, rules, path);
+            return getValuesByField(rules, path);
         }
     }
 
-    private static List<? extends Object> getValuesByField(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, 
-            PrestoContextRules rules, String fieldId) {
+    private static List<? extends Object> getValuesByField(PrestoContextRules rules, String fieldId) {
         PrestoContext context = rules.getContext();
         PrestoType type = context.getType();
         PrestoField field = type.getFieldById(fieldId);
         return rules.getFieldValues(field).getValues();
     }
 
-    private static List<? extends Object> getValuesByExpression(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, 
-            PrestoContextRules rules, String expr) {
+    private static List<? extends Object> getValuesByExpression(PrestoContextRules rules, String expr) {
         Iterator<String> path = parsePath(expr).iterator();
 
         if (path.hasNext()) {
             PrestoAttributes attributes = rules.getAttributes();
             PrestoContext context = rules.getContext();
-            return getValuesByExpression(dataProvider, schemaProvider, attributes, Collections.singletonList(context), path, expr);
+            return getValuesByExpression(context.getResolver(), attributes, Collections.singletonList(context), path, expr);
         } else {
             return Collections.emptyList();
         }
     }
 
-    private static List<? extends Object> getValuesByExpression(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, 
+    private static List<? extends Object> getValuesByExpression(PrestoResolver resolver, 
             PrestoAttributes attributes, List<PrestoContext> contexts, Iterator<String> path, String expr) {
 
         if (contexts.isEmpty()) {
@@ -79,32 +76,31 @@ public class PathExpressions {
                         for (Object value : topic.getStoredValues(valueField)) {
                             if (value instanceof PrestoTopic) {
                                 PrestoTopic valueTopic = (PrestoTopic)value;
-                                nextContexts.add(PrestoContext.createSubContext(dataProvider, schemaProvider, context, valueField, valueTopic));
+                                nextContexts.add(PrestoContext.createSubContext(context, valueField, valueTopic));
                             }
                         }
                     }
                 } else {
                     PrestoField valueField = type.getFieldById(p);
-                    PrestoFieldFunction function = PrestoFieldFunctionUtils.createFieldFunction(dataProvider, schemaProvider, attributes, valueField);
+                    PrestoFieldFunction function = PrestoFieldFunctionUtils.createFieldFunction(resolver, attributes, valueField);
                     List<? extends Object> fieldValues  = null;
                     if (function != null) {
                         fieldValues = function.execute(context, valueField, null);
                     } else if (!context.isNewTopic()) {
-                        PrestoTopic topic = context.getTopic();
-                        fieldValues = topic.getValues(valueField);
+                        fieldValues = context.resolveValues(valueField);
                     }
                     if (fieldValues != null) {
                         for (Object value : fieldValues) {
                             if (value instanceof PrestoTopic) {
                                 PrestoTopic valueTopic = (PrestoTopic)value;
-                                nextContexts.add(PrestoContext.createSubContext(dataProvider, schemaProvider, context, valueField, valueTopic));
+                                nextContexts.add(PrestoContext.createSubContext(context, valueField, valueTopic));
                             }
                         }
                     }
                 }
             }
             
-            return getValuesByExpression(dataProvider, schemaProvider, attributes, nextContexts, path, expr);
+            return getValuesByExpression(resolver, attributes, nextContexts, path, expr);
         } else {
 
             List<Object> values = new ArrayList<Object>();
@@ -130,12 +126,12 @@ public class PathExpressions {
                     values.add(type.getName());
                 } else {
                     PrestoField field = type.getFieldById(p);
-                    PrestoFieldFunction function = PrestoFieldFunctionUtils.createFieldFunction(dataProvider, schemaProvider, attributes, field);
+                    PrestoFieldFunction function = PrestoFieldFunctionUtils.createFieldFunction(resolver, attributes, field);
                     if (function != null) {
                         values.addAll(function.execute(context, field, null));
                     } else {
                         if (!isNew) {
-                            values.addAll(topic.getValues(field));
+                            values.addAll(context.resolveValues(field));
                         }
                     }
                 }

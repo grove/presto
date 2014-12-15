@@ -1,11 +1,16 @@
 package net.ontopia.presto.spi.jackson;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoInlineTopicBuilder;
+import net.ontopia.presto.spi.PrestoLazyTopicBuilder;
+import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
 import net.ontopia.presto.spi.PrestoTopic.Projection;
@@ -15,10 +20,8 @@ import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.Change;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.DefaultDataProvider;
 import net.ontopia.presto.spi.utils.PrestoDefaultChangeSet.DefaultTopic;
-import net.ontopia.presto.spi.utils.PrestoVariableResolver;
 import net.ontopia.presto.spi.utils.Utils;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -29,13 +32,19 @@ public abstract class JacksonDataProvider implements DefaultDataProvider {
     protected final JacksonDataStrategy inlineDataStrategy;
     protected final IdentityStrategy identityStrategy;
     protected final PrestoResolver resolver;
+    protected final PrestoSchemaProvider schemaProvider;
     
-    protected JacksonDataProvider() {
+    protected JacksonDataProvider(PrestoSchemaProvider schemaProvider) {
+        this.schemaProvider = schemaProvider;
         this.mapper = createObjectMapper();
         this.dataStrategy = createDataStrategy(mapper);
         this.inlineDataStrategy = createInlineDataStrategy(mapper);
         this.identityStrategy = createIdentityStrategy();
         this.resolver = createResolver();
+    }
+
+    protected PrestoResolver createResolver() {
+        return new PrestoResolver(this, schemaProvider);
     }
 
     protected ObjectMapper createObjectMapper() {
@@ -57,17 +66,12 @@ public abstract class JacksonDataProvider implements DefaultDataProvider {
     }
     
     protected abstract IdentityStrategy createIdentityStrategy();
-    
-    protected PrestoResolver createResolver() {
-        return new PrestoResolver() {
-            @Override
-            protected JacksonDataProvider getDataProvider() {
-                return JacksonDataProvider.this;
-            }
-        };
-    }
 
     // -- JacksonDataProvider
+    
+    public PrestoResolver getResolver() {
+        return resolver;
+    }
     
     public ObjectMapper getObjectMapper() {
         return mapper;
@@ -105,10 +109,14 @@ public abstract class JacksonDataProvider implements DefaultDataProvider {
         return new JacksonChangeSet(this, handler);
     }
 
-
     @Override
     public PrestoInlineTopicBuilder createInlineTopic(PrestoType type, String topicId) {
         return new JacksonInlineTopicBuilder(this, type, topicId);
+    }
+
+    @Override
+    public PrestoLazyTopicBuilder createLazyTopic(PrestoType type, String topicId) {
+        return new JacksonLazyTopicBuilder(this, type, topicId);
     }
 
     private static final class JacksonChangeSet extends PrestoDefaultChangeSet {
@@ -149,21 +157,62 @@ public abstract class JacksonDataProvider implements DefaultDataProvider {
     public Object serializeFieldValue(PrestoField field, Object value) {
        return value; 
     }
-
-    @Override
-    public List<? extends Object>  resolveValues(PrestoTopic topic, PrestoField field) {
+    
+    public List<? extends Object> resolveValues(PrestoTopic topic, PrestoField field) {
         return resolver.resolveValues(topic, field);
     }
 
-    @Override
     public PagedValues resolveValues(PrestoTopic topic, PrestoField field, Projection projection) {
         return resolver.resolveValues(topic, field, projection);
     }
 
-    @Override
-    public PagedValues resolveValues(Collection<? extends Object> objects, PrestoField field, Projection projection, 
-            JsonNode resolveConfig, PrestoVariableResolver variableResolver) {
-        return resolver.resolveValues(objects, field, projection, resolveConfig, variableResolver);
+    // lazy topics
+    protected PrestoTopic lazyLoad(String topicId) {
+        PrestoType type = getTypeOfLazyTopic(topicId, schemaProvider);
+        if (type != null) {
+            return resolver.buildLazyTopic(type, topicId);
+        }
+        return null;
+    }
+    
+    private static PrestoType getTypeOfLazyTopic(String topicId, PrestoSchemaProvider schemaProvider) {
+        int ix = 0;
+        while (true) {
+            ix = topicId.indexOf(":", ix+1);
+            if (ix < 0) {
+                break;
+            }
+            String typeId = topicId.substring(0, ix);
+            PrestoType type = schemaProvider.getTypeById(typeId, null);
+            if (type != null && type.isLazy()) {
+                return type;
+            }
+        }
+        return null;
     }
 
+    protected Collection<PrestoTopic> includeLazyTopics(Collection<PrestoTopic> found, Collection<String> topicIds) {
+        if (found.size() < topicIds.size()) {
+            Map<String,PrestoTopic> foundIds = new HashMap<String,PrestoTopic>(topicIds.size());
+            for (PrestoTopic topic : found) {
+                foundIds.put(topic.getId(), topic);
+            }
+            Collection<PrestoTopic> result = new ArrayList<PrestoTopic>(topicIds.size());
+            for (String topicId : topicIds) {
+                PrestoTopic topic = foundIds.get(topicId);
+                if (topic != null) {
+                    result.add(topic);
+                } else {
+                    topic = lazyLoad(topicId);
+                    if (topic != null) {
+                        result.add(topic);
+                    }
+                }
+            }
+            return result;
+        } else {
+            return found;
+        }
+    }
+    
 }

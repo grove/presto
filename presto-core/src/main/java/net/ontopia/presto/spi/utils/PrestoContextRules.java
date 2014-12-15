@@ -1,6 +1,7 @@
 package net.ontopia.presto.spi.utils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import net.ontopia.presto.spi.PrestoDataProvider;
@@ -12,6 +13,7 @@ import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoView;
 import net.ontopia.presto.spi.functions.PrestoFieldFunction;
 import net.ontopia.presto.spi.functions.PrestoFieldFunctionUtils;
+import net.ontopia.presto.spi.resolve.PrestoResolver;
 import net.ontopia.presto.spi.rules.DelegatingContextRules;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -118,6 +120,10 @@ public abstract class PrestoContextRules {
         return context;
     }
 
+    public PrestoResolver getResolver() {
+        return context.getResolver();
+    }
+    
     private boolean isTypeHandlerFlag(TypeFlag flag, boolean defaultValue) {
         Boolean result = handler.getValue(flag, this);
         if (result != null) {
@@ -265,34 +271,42 @@ public abstract class PrestoContextRules {
     
     public FieldValues getFieldValues(PrestoField field, Projection projection) {
         FieldValues result;
-        PrestoFieldFunction function = PrestoFieldFunctionUtils.createFieldFunction(getDataProvider(), getSchemaProvider(), getAttributes(), field);
+        PrestoFieldFunction function = PrestoFieldFunctionUtils.createFieldFunction(getResolver(), getAttributes(), field);
         if (function != null) {
             result = FieldValues.create(function.execute(context, field, projection));
         } else {
             if (context.isNewTopic()) {
-                return getDefaultFieldValues(field);
+                return getDefaultFieldValues(field, projection);
             } else {
                 PrestoTopic topic = context.getTopic();
-
-                // server-side paging (only if not sorting)
-                if (isPageableField(field) && !isSortedField(field, projection)) {
-                    PrestoTopic.PagedValues pagedValues;
-                    if (projection == null) {
-                        pagedValues = topic.getValues(field, PrestoProjection.FIRST_PAGE);
-                    } else {
-                        pagedValues = topic.getValues(field, projection);
-                    }
-                    Projection paging = pagedValues.getProjection();
-                    result = FieldValues.create(pagedValues.getValues(), paging.getOffset(), paging.getLimit(), pagedValues.getTotal());
+                if (topic.isLazy() && !topic.hasValue(field)) {
+                    return getDefaultFieldValues(field, projection);
                 } else {
-                    result = FieldValues.create(topic.getValues(field));
+                    return getResolveFieldValues(field, projection);
                 }
             }
         }
         return result;
     }
+
+    protected FieldValues getResolveFieldValues(PrestoField field, Projection projection) {
+        // server-side paging (only if not sorting)
+        if (isPageableField(field) && !isSortedField(field, projection)) {
+            PrestoTopic.PagedValues pagedValues;
+            if (projection == null) {
+                pagedValues = context.resolveValues(field, PrestoProjection.FIRST_PAGE);
+            } else {
+                pagedValues = context.resolveValues(field, projection);
+            }
+            Projection paging = pagedValues.getProjection();
+            return FieldValues.create(pagedValues.getValues(), paging.getOffset(), paging.getLimit(), pagedValues.getTotal());
+        } else {
+            return FieldValues.create(context.resolveValues(field));
+        }
+    }
     
-    protected FieldValues getDefaultFieldValues(PrestoField field) {
+    protected FieldValues getDefaultFieldValues(PrestoField field, Projection projection) {
+        // TODO: this code should be made extendable
         ObjectNode extra = ExtraUtils.getFieldExtraNode(field);
         if (extra != null) {
             JsonNode dvNode = extra.path("defaultValues");
@@ -321,8 +335,34 @@ public abstract class PrestoContextRules {
                     return (FieldValues) defaultValues;
                 }
             }
+            
+            if (!context.isNewTopic()) {
+                PrestoTopic topic = context.getTopic();
+                if (topic.isLazy()) {
+                    JsonNode lazyDefaultValue = extra.path("lazyDefaultValue");
+                    if (lazyDefaultValue.isTextual()) {
+                        String defaultValue = lazyDefaultValue.textValue();
+                        if (Utils.equals("name", defaultValue)) {
+                            return FieldValues.create(Collections.singletonList(topic.getName(field)));
+                        }
+                    }
+                    return getResolveFieldValues(field, projection);
+                }
+            }            
         }
         return FieldValues.EMPTY;  
+    }
+
+    public boolean isUpdatableOnCreateField(PrestoField field) {
+        PrestoTopic topic = context.getTopic();
+        if (topic != null && topic.isLazy()) {
+            // NOTE: this overrides isReadOnlyField at create time
+            ObjectNode extra = ExtraUtils.getFieldExtraNode(field);
+            if (extra != null) {
+                return extra.has("lazyDefaultValue");
+            }
+        }
+        return false;
     }
 
     public PrestoDataProvider getDataProvider() {

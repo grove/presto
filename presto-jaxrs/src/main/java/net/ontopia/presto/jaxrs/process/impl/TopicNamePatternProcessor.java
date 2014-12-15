@@ -16,7 +16,7 @@ public class TopicNamePatternProcessor extends TopicProcessor {
         if (topicData.getName() == null) {
             PrestoContext context = rules.getContext();
             PrestoTopic topic = context.getTopic();
-            PrestoVariableResolver variableResolver = new PrestoTopicWithParentFieldVariableResolver(getSchemaProvider(), context);
+            PrestoVariableResolver variableResolver = new PrestoTopicWithParentFieldVariableResolver(context);
             String name = PatternValueUtils.getValueByPattern(variableResolver, topic, getConfig());
             if (name != null) {
                 topicData.setName(name);

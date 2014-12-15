@@ -60,6 +60,11 @@ public class JacksonTopic implements DefaultTopic {
         return false;
     }
 
+    @Override
+    public boolean isLazy() {
+        return false;
+    }
+
     protected JacksonDataStrategy getDataStrategy() {
         return dataProvider.getDataStrategy();
     }
@@ -107,12 +112,12 @@ public class JacksonTopic implements DefaultTopic {
     
     @Override
     public List<? extends Object> getValues(PrestoField field) {
-        return dataProvider.resolveValues(this, field);
+        return dataProvider.resolveValues(this, field);            
     }
 
     @Override
     public PagedValues getValues(PrestoField field, Projection projection) {
-        return dataProvider.resolveValues(this, field, projection);
+        return dataProvider.resolveValues(this, field, projection);            
     }
     
     @Override

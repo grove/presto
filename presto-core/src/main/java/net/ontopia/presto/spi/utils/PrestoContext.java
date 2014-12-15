@@ -1,11 +1,19 @@
 package net.ontopia.presto.spi.utils;
 
+import java.util.Collection;
+import java.util.List;
+
 import net.ontopia.presto.spi.PrestoDataProvider;
 import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
+import net.ontopia.presto.spi.PrestoTopic.PagedValues;
+import net.ontopia.presto.spi.PrestoTopic.Projection;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.PrestoView;
+import net.ontopia.presto.spi.resolve.PrestoResolver;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 public class PrestoContext {
 
@@ -21,17 +29,27 @@ public class PrestoContext {
     
     private PrestoContext parentContext;
     private PrestoField parentField;
+
+    private final PrestoResolver resolver;
     
-    private PrestoContext(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, String topicId, String viewId) {
+    private PrestoContext(PrestoResolver resolver, String topicId, String viewId) {
+        this.resolver = resolver;
+        PrestoDataProvider dataProvider = resolver.getDataProvider();
+        PrestoSchemaProvider schemaProvider = resolver.getSchemaProvider();
         if (topicId == null) {
             throw new RuntimeException("topicId cannot be null");
         } else if (isNewTopic(topicId)) {
-            type = getType(topicId, schemaProvider);
+            type = getTypeOfNewTopic(topicId, schemaProvider);
             topic = null;
             isNewTopic = true;
         } else {
-            topic = dataProvider.getTopicById(topicId);
-            type = topic == null ? null : schemaProvider.getTypeById(topic.getTypeId());
+            PrestoTopic t = dataProvider.getTopicById(topicId);
+            if (t != null) {
+                type = schemaProvider.getTypeById(t.getTypeId());
+            } else {
+                type = null;
+            }
+            topic = t;
             isNewTopic = false;
         }
         if (type != null) {
@@ -46,11 +64,12 @@ public class PrestoContext {
         this.topicId = topicId;
     }
 
-    private PrestoContext(PrestoType type, PrestoView view) {
-        this(null, type, view);
+    private PrestoContext(PrestoResolver resolver, PrestoType type, PrestoView view) {
+        this(resolver, null, type, view);
     }
 
-    private PrestoContext(PrestoTopic topic, PrestoType type, PrestoView view) {
+    private PrestoContext(PrestoResolver resolver, PrestoTopic topic, PrestoType type, PrestoView view) {
+        this.resolver = resolver;
         this.topic = topic;
         this.topicId = (topic == null ? NEW_TOPICID_PREFIX + type.getId() : topic.getId());
         this.type = type;
@@ -60,22 +79,23 @@ public class PrestoContext {
     
     // create new contexts
     
-    public static PrestoContext create(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, String topicId, String viewId) {
-        return new PrestoContext(dataProvider, schemaProvider, topicId, viewId);
+    public static PrestoContext create(PrestoResolver resolver, String topicId, String viewId) {
+        return new PrestoContext(resolver, topicId, viewId);
     }
     
-    public static PrestoContext create(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, PrestoTopic topic) {
+    public static PrestoContext create(PrestoResolver resolver, PrestoTopic topic) {
         String typeId = topic.getTypeId();
+        PrestoSchemaProvider schemaProvider = resolver.getSchemaProvider();
         PrestoType type = schemaProvider.getTypeById(typeId);
-        return new PrestoContext(topic, type, type.getDefaultView());
+        return new PrestoContext(resolver, topic, type, type.getDefaultView());
     }
     
-    public static PrestoContext create(PrestoType type, PrestoView view) {
-        return new PrestoContext(type, view);
+    public static PrestoContext create(PrestoResolver resolver, PrestoType type, PrestoView view) {
+        return new PrestoContext(resolver, type, view);
     }
     
-    public static PrestoContext create(PrestoTopic topic, PrestoType type, PrestoView view) {
-        return new PrestoContext(topic, type, view);
+    public static PrestoContext create(PrestoResolver resolver, PrestoTopic topic, PrestoType type, PrestoView view) {
+        return new PrestoContext(resolver, topic, type, view);
     }
     
     public static PrestoContext newContext(PrestoContext context, PrestoTopic topic) {
@@ -83,40 +103,51 @@ public class PrestoContext {
         PrestoField parentField = context.getParentField();
         PrestoType type = context.getType();
         PrestoView view = context.getView();
-        return PrestoContext.createSubContext(parentContext, parentField, topic, type, view);
+        PrestoContext result = new PrestoContext(context.getResolver(), topic, type, view);
+        result.setParentContext(parentContext, parentField);
+        return result;
     }
     
-    public static PrestoContext newContext(PrestoContext context, PrestoView view) {
+    public static PrestoContext newContext(PrestoContext context, String viewId) {
         PrestoContext parentContext = context.getParentContext();
         PrestoField parentField = context.getParentField();
-        PrestoTopic topic = context.getTopic();
-        PrestoType type = context.getType();
-        return PrestoContext.createSubContext(parentContext, parentField, topic, type, view);
+        PrestoContext result;
+        if (context.isNewTopic()) {
+            String topicId = context.getTopicId();
+            result = new PrestoContext(context.getResolver(), topicId, viewId);
+        } else {
+            PrestoTopic topic = context.getTopic();
+            PrestoType type = context.getType();
+            PrestoView view = type.getViewById(viewId);
+            result = new PrestoContext(context.getResolver(), topic, type, view);
+        }
+        result.setParentContext(parentContext, parentField);
+        return result;
     }
     
     // create subcontexts
     
-    public static PrestoContext createSubContext(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, PrestoContext parentContext, PrestoField parentField, PrestoTopic topic) {
+    public static PrestoContext createSubContext(PrestoContext parentContext, PrestoField parentField, PrestoTopic topic) {
         // ISSUE: shouldn't the view be parentField.getValueView(type) instead of type.getDefaultView()
-        PrestoContext context = create(dataProvider, schemaProvider, topic);
+        PrestoContext context = create(parentContext.getResolver(), topic);
         context.setParentContext(parentContext, parentField);
         return context;
     }
     
     public static PrestoContext createSubContext(PrestoContext parentContext, PrestoField parentField, PrestoType type, PrestoView view) {
-        PrestoContext context = new PrestoContext(type, view);
+        PrestoContext context = new PrestoContext(parentContext.getResolver(), type, view);
         context.setParentContext(parentContext, parentField);
         return context;
     }
     
     public static PrestoContext createSubContext(PrestoContext parentContext, PrestoField parentField, PrestoTopic topic, PrestoType type, PrestoView view) {
-        PrestoContext context = new PrestoContext(topic, type, view);
+        PrestoContext context = new PrestoContext(parentContext.getResolver(), topic, type, view);
         context.setParentContext(parentContext, parentField);
         return context;
     }
     
-    public static PrestoContext createSubContext(PrestoDataProvider dataProvider, PrestoSchemaProvider schemaProvider, PrestoContext parentContext, PrestoField parentField, String topicId, String viewId) {
-        PrestoContext context = new PrestoContext(dataProvider, schemaProvider, topicId, viewId);
+    public static PrestoContext createSubContext(PrestoContext parentContext, PrestoField parentField, String topicId, String viewId) {
+        PrestoContext context = new PrestoContext(parentContext.getResolver(), topicId, viewId);
         context.setParentContext(parentContext, parentField);
         return context;
     }
@@ -127,7 +158,7 @@ public class PrestoContext {
         return topicId.startsWith(NEW_TOPICID_PREFIX);
     }
  
-    public static PrestoType getType(String topicId, PrestoSchemaProvider schemaProvider) {
+    public static PrestoType getTypeOfNewTopic(String topicId, PrestoSchemaProvider schemaProvider) {
         String typeId = topicId.substring(1);
         return schemaProvider.getTypeById(typeId);
     }
@@ -160,7 +191,7 @@ public class PrestoContext {
     public boolean isNewTopic() {
         return isNewTopic;
     }
-    
+
     public PrestoTopic getTopic() {
         return topic;
     }
@@ -194,5 +225,22 @@ public class PrestoContext {
         sb.append(view.getId());
         return sb.toString();
     }
+    
+    public PrestoResolver getResolver() {
+        return resolver;
+    }
+    
+    public List<? extends Object> resolveValues(PrestoField field) {
+        return resolver.resolveValues(this, field);
+    }
 
+    public PagedValues resolveValues(PrestoField field, Projection projection) {
+        return resolver.resolveValues(this, field, projection);
+    }
+    
+    public PagedValues resolveValues(Collection<? extends Object> objects,
+            PrestoField field, Projection projection, JsonNode resolveConfig, PrestoVariableResolver variableResolver) {
+        return resolver.resolveValues(objects, field, projection, resolveConfig, variableResolver);
+    }
+    
 }

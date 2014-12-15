@@ -10,6 +10,7 @@ import javax.ws.rs.Path;
 
 import net.ontopia.presto.jaxrs.EditorResource;
 import net.ontopia.presto.jaxrs.Presto;
+import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.impl.couchdb.CouchDataProvider;
 import net.ontopia.presto.spi.impl.pojo.PojoSchemaProvider;
 import net.ontopia.presto.spi.impl.riak.RiakDataProvider;
@@ -54,10 +55,10 @@ public class DemoEditorResource extends EditorResource {
         PojoSchemaProvider schemaProvider = PojoSchemaProvider.getSchemaProvider(databaseId, databaseId + ".presto.json");
         
         // data stored in couchdb
-        final CouchDataProvider dataProvider = createCouchDbDataProvider();
+        final CouchDataProvider dataProvider = createCouchDbDataProvider(schemaProvider);
         
         // data stored in riak
-//        final RiakDataProvider dataProvider = createRiakDataProvider();
+//        final RiakDataProvider dataProvider = createRiakDataProvider(schemaProvider);
 
         return new EditorResourcePresto(databaseId, getDatabaseName(databaseId), schemaProvider, dataProvider, getAttributes()) {
             @Override
@@ -67,8 +68,8 @@ public class DemoEditorResource extends EditorResource {
         };
     }
 
-    private CouchDataProvider createCouchDbDataProvider() {
-        return new CouchDataProvider() {
+    private CouchDataProvider createCouchDbDataProvider(PrestoSchemaProvider schemaProvider) {
+        return new CouchDataProvider(schemaProvider) {
             @Override
             protected CouchDbConnector createCouchDbConnector() {
                 HttpClient httpClient = new StdHttpClient.Builder().build();
@@ -98,9 +99,9 @@ public class DemoEditorResource extends EditorResource {
     }
     
     @SuppressWarnings("unused")
-    private RiakDataProvider createRiakDataProvider() {
+    private RiakDataProvider createRiakDataProvider(PrestoSchemaProvider schemaProvider) {
         try {
-            return new RiakDataProvider(DB_NAME) {
+            return new RiakDataProvider(schemaProvider, DB_NAME) {
                 @Override
                 protected JacksonDataStrategy createDataStrategy(ObjectMapper mapper) {
                     return new JacksonBucketDataStrategy(mapper) {

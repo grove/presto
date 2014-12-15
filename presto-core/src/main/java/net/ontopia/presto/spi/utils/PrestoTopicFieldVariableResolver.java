@@ -4,28 +4,23 @@ import java.util.Collections;
 import java.util.List;
 
 import net.ontopia.presto.spi.PrestoField;
-import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
+import net.ontopia.presto.spi.resolve.PrestoResolver;
 
 public class PrestoTopicFieldVariableResolver implements PrestoVariableResolver {
 
-    private final PrestoSchemaProvider schemaProvider;
+    private final PrestoResolver resolver;
 
-    public PrestoTopicFieldVariableResolver(PrestoSchemaProvider schemaProvider) {
-        this.schemaProvider = schemaProvider;
+    public PrestoTopicFieldVariableResolver(PrestoResolver resolver) {
+        this.resolver = resolver;
     }
     
     @Override
     public List<? extends Object> getValues(Object value, String variable) {
-        return getValues(schemaProvider, value, variable);
-    }
-    
-    public static List<? extends Object> getValues(PrestoSchemaProvider schemaProvider, 
-            Object value, String variable) {
         if (value instanceof PrestoTopic) {
             PrestoTopic topic = (PrestoTopic)value;
-            PrestoType type = Utils.getTopicType(topic, schemaProvider);
+            PrestoType type = Utils.getTopicType(topic, resolver.getSchemaProvider());
             if (variable.equals(":id")) {
                 return Collections.singletonList(topic.getId());                
             } else if (variable.equals(":name")) {
@@ -39,7 +34,7 @@ public class PrestoTopicFieldVariableResolver implements PrestoVariableResolver 
                 return topic.getStoredValues(valueField);
             } else {
                 PrestoField valueField = type.getFieldById(variable);
-                return topic.getValues(valueField);
+                return resolver.resolveValues(topic, valueField);
             }
         } else {
             if (value != null && variable.equals(":value")) {

@@ -16,7 +16,8 @@ public class ValuePatternResolver extends PrestoFieldResolver {
 
     @Override
     public PagedValues resolve(Collection<? extends Object> objects,
-            PrestoField field, boolean isReference, Projection projection, PrestoVariableResolver variableResolver) {
+            PrestoField field, boolean isReference, Projection projection, 
+            PrestoResolver prestoResolver, PrestoVariableResolver variableResolver) {
         List<Object> result = new ArrayList<Object>();
         if (objects.isEmpty()) {
             String value = PatternValueUtils.getValueByPattern(variableResolver, null, getConfig());

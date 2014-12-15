@@ -6,6 +6,7 @@ import java.util.List;
 import net.ontopia.presto.jaxrs.DataLoader;
 import net.ontopia.presto.spi.PrestoChangeSet;
 import net.ontopia.presto.spi.PrestoField;
+import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.impl.pojo.PojoSchemaProvider;
@@ -26,15 +27,15 @@ public class JacksonTest {
     @Before
     public void setUp() {
         this.schemaProvider = createSchemaProvider("test", "test.schema.json");
-        this.dataProvider = createDataProvider();
+        this.dataProvider = createDataProvider(schemaProvider);
     }
 
     static PojoSchemaProvider createSchemaProvider(String databaseId, String schemaFile) {
         return PojoSchemaProvider.getSchemaProvider(databaseId, schemaFile);
     }
 
-    static InMemoryJacksonDataProvider createDataProvider() {
-        return new InMemoryJacksonDataProvider() {
+    static InMemoryJacksonDataProvider createDataProvider(PrestoSchemaProvider schemaProvider) {
+        return new InMemoryJacksonDataProvider(schemaProvider) {
             @Override
             protected IdentityStrategy createIdentityStrategy() {
                 return new UUIDIdentityStrategy();

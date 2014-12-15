@@ -6,6 +6,8 @@ public interface PrestoTopic {
 
     boolean isInline();
 
+    boolean isLazy();
+    
     String getId();
 
     String getName();
@@ -29,9 +31,9 @@ public interface PrestoTopic {
     }
 
     boolean hasValue(PrestoField field);
-    
-    List<? extends Object> getValues(PrestoField field);
 
+    List<? extends Object> getValues(PrestoField field);
+    
     PagedValues getValues(PrestoField field, Projection projection);
     
     List<? extends Object> getStoredValues(PrestoField field);
