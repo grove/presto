@@ -2,6 +2,7 @@ package net.ontopia.presto.spi.impl.pojo;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -28,26 +29,18 @@ public class PojoSchemaModel {
     private static Logger log = LoggerFactory.getLogger(PojoSchemaModel.class);
 
     static PojoSchemaProvider parse(String databaseId, String schemaFilename) {
-        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        ObjectNode objectNode = loadExternalJsonObject(schemaFilename);
+        return createSchemaProvider(databaseId, objectNode);
+    }
+
+    private static ObjectNode loadExternalJsonObject(String href) {
         InputStream istream = null;
         try {
-            File schemaFile = new File(System.getProperty("user.home") + File.separator + schemaFilename);
-            if (schemaFile.exists()) {
-                log.warn("Loading presto schema model from file in user's home directory: " + schemaFile.getAbsolutePath());
-                istream = new FileInputStream(schemaFile);
-            } else {
-                istream = cl.getResourceAsStream(schemaFilename);
-            }
-            if (istream == null) {
-                throw new RuntimeException("Cannot find schema file: " + schemaFilename);
-            }
+            istream = getSchemaInputStream(href);
             Reader reader = new InputStreamReader(istream, "UTF-8");
-            ObjectNode objectNode = Utils.DEFAULT_OBJECT_MAPPER.readValue(reader, ObjectNode.class);
-            
-            return createSchemaProvider(databaseId, objectNode);
-            
+            return Utils.DEFAULT_OBJECT_MAPPER.readValue(reader, ObjectNode.class);
         } catch (Exception e) {
-            throw new RuntimeException("Problems occured when loading '" + schemaFilename + "'", e);
+            throw new RuntimeException("Problems occured when loading '" + href + "'", e);
         } finally {
             try {
                 if (istream != null) istream.close();
@@ -55,7 +48,24 @@ public class PojoSchemaModel {
             }
         }
     }
-    
+
+    private static InputStream getSchemaInputStream(String schemaFilename)
+            throws FileNotFoundException {
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        InputStream istream;
+        File schemaFile = new File(System.getProperty("user.home") + File.separator + schemaFilename);
+        if (schemaFile.exists()) {
+            log.warn("Loading presto schema model from file in user's home directory: " + schemaFile.getAbsolutePath());
+            istream = new FileInputStream(schemaFile);
+        } else {
+            istream = cl.getResourceAsStream(schemaFilename);
+        }
+        if (istream == null) {
+            throw new RuntimeException("Cannot find schema file: " + schemaFilename);
+        }
+        return istream;
+    }
+
     private static PojoSchemaProvider createSchemaProvider(String databaseId, ObjectNode json) {
         PojoSchemaParser parser = new PojoSchemaParser();
         parser.parse(databaseId, json);
@@ -417,15 +427,32 @@ public class PojoSchemaModel {
             return field;
         }
 
+        private ObjectNode resolveExternalConfig(ObjectNode config) {
+            if (config != null) {
+                String href = config.path("href").textValue();
+                if (href != null) {
+                    config = loadExternalJsonObject(href);
+                    if (config.has("href")) {
+                        throw new RuntimeException("Nested object '" + href + "' cannot contain 'href' key.");
+                    }
+                }
+            }
+            return config;
+        }
+
         private Map<String, ObjectNode> createTypesMap(ObjectNode json) {
             Map<String,ObjectNode> typesMap = new HashMap<String,ObjectNode>();
             if (json.has("types")) {
                 ObjectNode typesNode = (ObjectNode)json.get("types");
-                Iterator<String> typeNames = typesNode.fieldNames();
-                while (typeNames.hasNext()) {
-                    String typeName = typeNames.next();
-                    ObjectNode typeConfig = (ObjectNode)typesNode.get(typeName);
-                    typesMap.put(typeName, typeConfig);
+                Iterator<String> typeIds = typesNode.fieldNames();
+                while (typeIds.hasNext()) {
+                    String typeId = typeIds.next();
+                    ObjectNode typeConfig = (ObjectNode)typesNode.get(typeId);
+                    ObjectNode resolvedConfig = resolveExternalConfig(typeConfig);
+                    if (resolvedConfig == null) {
+                        throw new RuntimeException("Not able to resolve type config '" + typeId + "");
+                    }
+                    typesMap.put(typeId, resolvedConfig);
                 }
             }
             return typesMap;
