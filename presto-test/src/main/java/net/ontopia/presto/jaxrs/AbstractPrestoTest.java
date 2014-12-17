@@ -7,12 +7,12 @@ import org.junit.After;
 
 public abstract class AbstractPrestoTest {
     
-    protected PrestoDataProvider dataProvider;
     protected PrestoSchemaProvider schemaProvider;
+    protected PrestoDataProvider dataProvider;
 
     protected void createProviders(String databaseId) {
-        this.dataProvider = PrestoTestService.createDataProvider(databaseId);
         this.schemaProvider = PrestoTestService.createSchemaProvider(databaseId);
+        this.dataProvider = PrestoTestService.createDataProvider(databaseId, schemaProvider);
     }
     
     protected void createProviders(String databaseId, String filename) {

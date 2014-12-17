@@ -24,7 +24,7 @@ public class JacksonTopicTest {
     @Before
     public void setUp() {
         this.schemaProvider = JacksonTest.createSchemaProvider("topic", "topic.schema.json");
-        this.dataProvider = JacksonTest.createDataProvider();
+        this.dataProvider = JacksonTest.createDataProvider(schemaProvider);
     }
 
     private PrestoTopic createTopic(PrestoType type, String topicId) {

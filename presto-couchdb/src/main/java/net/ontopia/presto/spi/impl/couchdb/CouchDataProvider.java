@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import net.ontopia.presto.spi.PrestoField;
+import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoType;
 import net.ontopia.presto.spi.jackson.JacksonDataProvider;
@@ -38,7 +39,8 @@ public abstract class CouchDataProvider extends JacksonDataProvider {
 
     protected String designDocId = "_design/presto";
 
-    public CouchDataProvider() {
+    public CouchDataProvider(PrestoSchemaProvider schemaProvider) {
+        super(schemaProvider);
         this.db = createCouchDbConnector();
     }
     
@@ -64,6 +66,10 @@ public abstract class CouchDataProvider extends JacksonDataProvider {
                 doc = getCouchConnector().get(ObjectNode.class, topicId);
             }
         } catch (DocumentNotFoundException e) {
+            PrestoTopic topic = lazyLoad(topicId);
+            if (topic != null) {
+                return topic;
+            }
             log.warn("Topic with id '" + topicId + "' not found.");
         }
         return existing(doc);
@@ -87,7 +93,7 @@ public abstract class CouchDataProvider extends JacksonDataProvider {
                 result.add(existing((ObjectNode)docNode));
             }
         }
-        return result;
+        return includeLazyTopics(result, topicIds);
     }
 
     @Override

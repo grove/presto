@@ -123,7 +123,7 @@ public class ValueFieldsPostProcessor extends FieldDataProcessor {
             PrestoTopic valueTopic = Utils.getContextualValueTopic(rules, field, valueId);
 
             PrestoContext context = rules.getContext();
-            PrestoContext subcontext = PrestoContext.createSubContext(getDataProvider(), getSchemaProvider(), context, field, valueTopic);
+            PrestoContext subcontext = PrestoContext.createSubContext(context, field, valueTopic);
             PrestoContextRules subrules = getPresto().getPrestoContextRules(subcontext);
             Presto presto = getPresto();
             

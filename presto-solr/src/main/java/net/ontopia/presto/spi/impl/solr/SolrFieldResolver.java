@@ -11,6 +11,7 @@ import net.ontopia.presto.spi.PrestoField;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
 import net.ontopia.presto.spi.PrestoTopic.Projection;
 import net.ontopia.presto.spi.resolve.PrestoFieldResolver;
+import net.ontopia.presto.spi.resolve.PrestoResolver;
 import net.ontopia.presto.spi.utils.PrestoPagedValues;
 import net.ontopia.presto.spi.utils.PrestoVariableContext;
 import net.ontopia.presto.spi.utils.PrestoVariableResolver;
@@ -41,8 +42,8 @@ public abstract class SolrFieldResolver extends PrestoFieldResolver {
 
     @Override
     public PagedValues resolve(Collection<? extends Object> objects,
-            PrestoField field, boolean isReference,
-            Projection projection, PrestoVariableResolver variableResolver) {
+            PrestoField field, boolean isReference, Projection projection, 
+            PrestoResolver prestoResolver, PrestoVariableResolver variableResolver) {
 
         ObjectNode config = getConfig();
         

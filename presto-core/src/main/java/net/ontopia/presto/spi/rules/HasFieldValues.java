@@ -26,7 +26,7 @@ public class HasFieldValues {
         JsonNode fieldNode = config.path("field");
         if (fieldNode.isTextual()) {
             String fieldId = fieldNode.textValue();
-            return PathExpressions.getValues(dataProvider, schemaProvider, rules, fieldId);
+            return PathExpressions.getValues(rules, fieldId);
         } else if (defaultField != null) {
             FieldValues fieldValues = rules.getFieldValues(defaultField);
             return fieldValues.getValues();

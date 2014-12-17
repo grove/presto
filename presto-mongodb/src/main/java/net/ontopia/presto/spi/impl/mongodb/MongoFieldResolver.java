@@ -12,6 +12,7 @@ import net.ontopia.presto.spi.PrestoTopic;
 import net.ontopia.presto.spi.PrestoTopic.PagedValues;
 import net.ontopia.presto.spi.PrestoTopic.Projection;
 import net.ontopia.presto.spi.resolve.PrestoFieldResolver;
+import net.ontopia.presto.spi.resolve.PrestoResolver;
 import net.ontopia.presto.spi.utils.PrestoPagedValues;
 import net.ontopia.presto.spi.utils.PrestoVariableContext;
 import net.ontopia.presto.spi.utils.PrestoVariableResolver;
@@ -49,7 +50,8 @@ public abstract class MongoFieldResolver extends PrestoFieldResolver {
 
     @Override
     public PagedValues resolve(Collection<? extends Object> objects,
-            PrestoField field, boolean isReference, Projection projection, PrestoVariableResolver variableResolver) {
+            PrestoField field, boolean isReference, Projection projection, 
+            PrestoResolver prestoResolver, PrestoVariableResolver variableResolver) {
 
         PrestoVariableContext context = getVariableContext();
         ObjectNode config = getConfig();
@@ -149,9 +151,9 @@ public abstract class MongoFieldResolver extends PrestoFieldResolver {
             while (iter.hasNext()) {
                 String fieldName = iter.next();
                 if (fieldName.startsWith("$$")) {
-                    obj.put(fieldName.substring(1), replaceKeywords(o.get(fieldName)));
+                    obj.set(fieldName.substring(1), replaceKeywords(o.get(fieldName)));
                 } else {
-                    obj.put(fieldName, replaceKeywords(o.get(fieldName)));                    
+                    obj.set(fieldName, replaceKeywords(o.get(fieldName)));                    
                 }
             }
             return obj;

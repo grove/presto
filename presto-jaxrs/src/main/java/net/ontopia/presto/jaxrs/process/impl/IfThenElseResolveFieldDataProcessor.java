@@ -54,7 +54,7 @@ public abstract class IfThenElseResolveFieldDataProcessor extends FieldDataProce
                 Projection projection = PrestoProjection.FIRST_ELEMENT;
     
                 PrestoContext context = rules.getContext();
-                PrestoVariableResolver parentResolver = new PrestoTopicWithParentFieldVariableResolver(field.getSchemaProvider(), context);
+                PrestoVariableResolver parentResolver = new PrestoTopicWithParentFieldVariableResolver(context);
                 PrestoVariableResolver variableResolver = new FieldDataVariableResolver(parentResolver, fieldData, context);
     
                 PrestoTopic topic = context.getTopic();
@@ -62,7 +62,7 @@ public abstract class IfThenElseResolveFieldDataProcessor extends FieldDataProce
                 Collection<? extends Object> objects = (topic == null ? Collections.emptyList() : Collections.singleton(topic));
     
                 JsonNode resolveConfig = config.path("resolve");
-                PagedValues values = dataProvider.resolveValues(objects, field, projection, resolveConfig, variableResolver);
+                PagedValues values = context.resolveValues(objects, field, projection, resolveConfig, variableResolver);
     
                 return !values.getValues().isEmpty();
             }

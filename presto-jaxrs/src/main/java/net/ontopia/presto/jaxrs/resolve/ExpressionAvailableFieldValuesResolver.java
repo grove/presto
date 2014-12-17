@@ -36,15 +36,14 @@ public class ExpressionAvailableFieldValuesResolver extends AvailableFieldValues
         JsonNode excludePathNode = config.path("excludePath");
         if (!excludePathNode.isMissingNode()) {
             String excludePath = excludePathNode.textValue();
-            List<? extends Object> excludeValues = PathExpressions.getValues(dataProvider, schemaProvider, rules, excludePath);
+            List<? extends Object> excludeValues = PathExpressions.getValues(rules, excludePath);
             if (!excludeValues.isEmpty()) {
                 
                 Set<String> existingSet = null;
                 
                 PrestoContext context = rules.getContext();
                 if (!context.isNewTopic()) {
-                    PrestoTopic topic = context.getTopic();
-                    List<? extends Object> existingValues = topic.getValues(field);
+                    List<? extends Object> existingValues = context.resolveValues(field);
                     if (existingValues != null && !excludeValues.isEmpty()) {
                         existingSet = new HashSet<String>(existingValues.size());
                         for (Object value : existingValues) {

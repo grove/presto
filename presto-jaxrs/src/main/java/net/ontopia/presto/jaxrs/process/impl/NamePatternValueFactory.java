@@ -33,7 +33,7 @@ public class NamePatternValueFactory extends ValueFactory {
 
     static String getName(PrestoSchemaProvider schemaProvider, PrestoContextRules rules, PrestoField field, String value, ObjectNode config) {
         PrestoContext context = rules.getContext();
-        PrestoVariableResolver variableResolver = new PrestoTopicWithParentFieldVariableResolver(schemaProvider, context);
+        PrestoVariableResolver variableResolver = new PrestoTopicWithParentFieldVariableResolver(context);
         String name = PatternValueUtils.getValueByPattern(variableResolver, value, config);
         if (name == null) {
             return value;
@@ -44,7 +44,7 @@ public class NamePatternValueFactory extends ValueFactory {
 
     static String getName(PrestoSchemaProvider schemaProvider, PrestoContextRules rules, PrestoField field, PrestoTopic topic, ObjectNode config) {
         PrestoContext context = rules.getContext();
-        PrestoVariableResolver variableResolver = new PrestoTopicWithParentFieldVariableResolver(schemaProvider, context);
+        PrestoVariableResolver variableResolver = new PrestoTopicWithParentFieldVariableResolver(context);
         String name = PatternValueUtils.getValueByPattern(variableResolver, topic, config);
         if (name == null) {
             return topic.getName(field);

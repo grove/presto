@@ -31,7 +31,7 @@ public class PatternValueUtils {
     }
 
     public static String getValueByPattern(PrestoSchemaProvider schemaProvider, PrestoContext context, Object value, String pattern) {
-        PrestoVariableResolver variableResolver = new PrestoTopicWithParentFieldVariableResolver(schemaProvider, context);
+        PrestoVariableResolver variableResolver = new PrestoTopicWithParentFieldVariableResolver(context);
         return PatternValueUtils.getValueByPattern(variableResolver, value, pattern);
     }
 

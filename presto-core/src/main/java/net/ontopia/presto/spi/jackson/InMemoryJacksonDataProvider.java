@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import net.ontopia.presto.spi.PrestoField;
+import net.ontopia.presto.spi.PrestoSchemaProvider;
 import net.ontopia.presto.spi.PrestoTopic;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -15,6 +16,10 @@ public abstract class InMemoryJacksonDataProvider extends JacksonDataProvider {
 
     private Map<String,PrestoTopic> topics = new HashMap<String,PrestoTopic>();
 
+    public InMemoryJacksonDataProvider(PrestoSchemaProvider schemaProvider) {
+        super(schemaProvider);
+    }
+    
     @Override
     public void create(PrestoTopic topic) {
         String topicId = topic.getId();
@@ -61,7 +66,11 @@ public abstract class InMemoryJacksonDataProvider extends JacksonDataProvider {
 
     @Override
     public PrestoTopic getTopicById(String topicId) {
-        return topics.get(topicId);
+        PrestoTopic topic = topics.get(topicId);
+        if (topic == null) {
+            topic = lazyLoad(topicId);
+        }
+        return topic;
     }
 
     @Override
@@ -73,7 +82,7 @@ public abstract class InMemoryJacksonDataProvider extends JacksonDataProvider {
                 result.add(topic);
             }
         }
-        return result;
+        return includeLazyTopics(result, topicIds);
     }
 
     @Override

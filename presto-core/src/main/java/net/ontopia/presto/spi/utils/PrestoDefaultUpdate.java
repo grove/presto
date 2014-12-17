@@ -93,7 +93,7 @@ public class PrestoDefaultUpdate implements PrestoUpdate, PrestoDefaultChangeSet
     @Override
     public void setValues(PrestoField field, Collection<?> values) {
         if (values != null) {
-            Collection<? extends Object> existingValues = topic.getValues(field);
+            Collection<? extends Object> existingValues = topic.getStoredValues(field);
             Collection<Object> remValues = new HashSet<Object>(existingValues);          
             Collection<Object> addValues = new HashSet<Object>();
     
@@ -134,7 +134,7 @@ public class PrestoDefaultUpdate implements PrestoUpdate, PrestoDefaultChangeSet
 
     @Override
     public void clearValues(PrestoField field) {
-        List<? extends Object> values = topic.getValues(field);
+        List<? extends Object> values = topic.getStoredValues(field);
         topic.clearValue(field);
         handleFieldUpdated(field, null, values);
     }
@@ -144,7 +144,7 @@ public class PrestoDefaultUpdate implements PrestoUpdate, PrestoDefaultChangeSet
 
         // update name property
         if (field.isNameField()) {
-            topic.updateNameProperty(topic.getValues(field));
+            topic.updateNameProperty(topic.getStoredValues(field));
         }
         
         if (addValues != null && !addValues.isEmpty()) {
@@ -164,7 +164,7 @@ public class PrestoDefaultUpdate implements PrestoUpdate, PrestoDefaultChangeSet
                     }
                 }
             } else {
-                changeSet.removeInverseFieldValue(isNew, topic, field, remValues);
+                changeSet.removeInverseFieldValues(isNew, topic, field, remValues);
             }
         }
         // mark fields dirty

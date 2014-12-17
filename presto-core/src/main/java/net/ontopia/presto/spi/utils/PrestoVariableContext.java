@@ -23,12 +23,11 @@ public class PrestoVariableContext {
 
     private final PrestoSchemaProvider schemaProvider;
     private final PrestoDataProvider dataProvider;
-    private final ObjectMapper mapper;
+    private final ObjectMapper mapper = Utils.DEFAULT_OBJECT_MAPPER;
 
-    public PrestoVariableContext(PrestoSchemaProvider schemaProvider, PrestoDataProvider dataProvider, ObjectMapper mapper) {
+    public PrestoVariableContext(PrestoSchemaProvider schemaProvider, PrestoDataProvider dataProvider) {
         this.schemaProvider = schemaProvider;
         this.dataProvider = dataProvider;
-        this.mapper = mapper;
     }
     
     public Collection<JsonNode> replaceVariables(PrestoVariableResolver variableResolver, Collection<? extends Object> values, JsonNode key) {
@@ -105,9 +104,9 @@ public class PrestoVariableContext {
             for (String key : keys) {
                 if (isVariable(key)) {
                     Object text = variables.get(getVariable(key));
-                    result.put(toValueString(text), replaceVariables(variables, onode.get(key)));
+                    result.set(toValueString(text), replaceVariables(variables, onode.get(key)));
                 } else {
-                    result.put(getKey(key), replaceVariables(variables, onode.get(key)));
+                    result.set(getKey(key), replaceVariables(variables, onode.get(key)));
                 }
             }
             return result;

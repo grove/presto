@@ -43,15 +43,15 @@ public class PrestoTestService {
         return PojoSchemaProvider.getSchemaProvider(databaseId, databaseId + ".schema.json");
     }
 
-    public static PrestoDataProvider createDataProvider(String databaseId) {
-        return createInMemoryDataProvider();
-//        return createCouchDbDataProvider();
-//        return createRiakDataProvider();
-//        return createMongoDataProvider();
+    public static PrestoDataProvider createDataProvider(String databaseId, PrestoSchemaProvider schemaProvider) {
+        return createInMemoryDataProvider(schemaProvider);
+//        return createCouchDbDataProvider(schemaProvider);
+//        return createRiakDataProvider(schemaProvider);
+//        return createMongoDataProvider(schemaProvider);
     }
 
-    private static InMemoryJacksonDataProvider createInMemoryDataProvider() {
-        return new InMemoryJacksonDataProvider() {
+    private static InMemoryJacksonDataProvider createInMemoryDataProvider(PrestoSchemaProvider schemaProvider) {
+        return new InMemoryJacksonDataProvider(schemaProvider) {
             @Override
             protected JacksonDataStrategy createDataStrategy(ObjectMapper mapper) {
                 return new JacksonBucketDataStrategy(mapper) {
@@ -72,8 +72,8 @@ public class PrestoTestService {
         };
     }
     
-    private static CouchDataProvider createCouchDbDataProvider() {
-        return new CouchDataProvider() {
+    private static CouchDataProvider createCouchDbDataProvider(PrestoSchemaProvider schemaProvider) {
+        return new CouchDataProvider(schemaProvider) {
             @Override
             protected CouchDbConnector createCouchDbConnector() {
                 HttpClient httpClient = new StdHttpClient.Builder().build();
@@ -102,9 +102,9 @@ public class PrestoTestService {
         }.designDocId(COUCHDB_DESIGN_DOCUMENT);
     }
     
-    private static RiakDataProvider createRiakDataProvider() {
+    private static RiakDataProvider createRiakDataProvider(PrestoSchemaProvider schemaProvider) {
         try {
-            return new RiakDataProvider(DB_NAME) {
+            return new RiakDataProvider(schemaProvider, DB_NAME) {
                 @Override
                 protected JacksonDataStrategy createDataStrategy(ObjectMapper mapper) {
                     return new JacksonBucketDataStrategy(mapper) {
@@ -128,8 +128,8 @@ public class PrestoTestService {
         }
     }
     
-    private static MongoDataProvider createMongoDataProvider() {
-        return new MongoDataProvider() {
+    private static MongoDataProvider createMongoDataProvider(PrestoSchemaProvider schemaProvider) {
+        return new MongoDataProvider(schemaProvider) {
             
             private static final String COLLECTION_KEY = "test";
             

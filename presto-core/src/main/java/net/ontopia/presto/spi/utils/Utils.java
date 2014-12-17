@@ -102,22 +102,22 @@ public class Utils {
         return schemaProvider.getTypeById(typeId);
     }
 
-    public static List<? extends Object> getFieldValues(PrestoTopic topic, String fieldId, PrestoSchemaProvider schemaProvider) {
-        PrestoType type = getTopicType(topic, schemaProvider);
-        PrestoField field = type.getFieldById(fieldId);
-        return topic.getValues(field);
-    }
-
-    public static Object getFieldValue(PrestoTopic topic, String fieldId, PrestoSchemaProvider schemaProvider) {
-        PrestoType type = getTopicType(topic, schemaProvider);
-        PrestoField field = type.getFieldById(fieldId);
-        List<? extends Object> values = topic.getValues(field);
-        if (values.isEmpty()) {
-            return null;
-        } else {
-            return values.get(0);
-        }
-    }
+//    public static List<? extends Object> getFieldValues(PrestoTopic topic, String fieldId, PrestoSchemaProvider schemaProvider) {
+//        PrestoType type = getTopicType(topic, schemaProvider);
+//        PrestoField field = type.getFieldById(fieldId);
+//        return topic.getValues(field);
+//    }
+//
+//    public static Object getFieldValue(PrestoTopic topic, String fieldId, PrestoSchemaProvider schemaProvider) {
+//        PrestoType type = getTopicType(topic, schemaProvider);
+//        PrestoField field = type.getFieldById(fieldId);
+//        List<? extends Object> values = topic.getValues(field);
+//        if (values.isEmpty()) {
+//            return null;
+//        } else {
+//            return values.get(0);
+//        }
+//    }
     
     public static PrestoTopic getContextualValueTopic(PrestoContextRules rules, PrestoField field, String valueId) {
         if (field.isInline()) {

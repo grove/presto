@@ -20,6 +20,7 @@ public class PojoType implements PrestoType {
     private String name;
     private boolean isInline;
     private boolean isHidden;
+    private boolean isLazy;
     private boolean isCreatable = true;
     private boolean isRemovable;
     private boolean isRemovableCascadingDelete;
@@ -83,6 +84,11 @@ public class PojoType implements PrestoType {
     @Override
     public boolean isHidden() {
         return isHidden;
+    }
+
+    @Override
+    public boolean isLazy() {
+        return isLazy;
     }
 
     @Override
@@ -183,6 +189,10 @@ public class PojoType implements PrestoType {
 
     protected void setHidden(boolean isHidden) {
         this.isHidden = isHidden;
+    }
+
+    protected void setLazy(boolean isLazy) {
+        this.isLazy = isLazy;
     }
 
     protected void setCreatable(boolean isCreatable) {

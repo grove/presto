@@ -2,16 +2,14 @@ package net.ontopia.presto.spi.utils;
 
 import java.util.List;
 
-import net.ontopia.presto.spi.PrestoSchemaProvider;
-
 public class PrestoTopicWithParentFieldVariableResolver extends PrestoTopicFieldVariableResolver {
 
     private static final String PARENT_PREFIX = ":parent.";
     
     private final PrestoContext context;
 
-    public PrestoTopicWithParentFieldVariableResolver(PrestoSchemaProvider schemaProvider, PrestoContext context) {
-        super(schemaProvider);
+    public PrestoTopicWithParentFieldVariableResolver(PrestoContext context) {
+        super(context.getResolver());
         this.context = context;
     }
     

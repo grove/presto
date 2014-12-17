@@ -35,6 +35,7 @@ public abstract class PrestoFieldResolver {
     }
 
     public abstract PagedValues resolve(Collection<? extends Object> objects,
-            PrestoField field, boolean isReference, Projection projection, PrestoVariableResolver variableResolver);
+            PrestoField field, boolean isReference, Projection projection, 
+            PrestoResolver prestoResolver, PrestoVariableResolver variableResolver);
 
 }

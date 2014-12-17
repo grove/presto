@@ -165,7 +165,7 @@ public abstract class PrestoDefaultChangeSet implements PrestoChangeSet {
         for (PrestoField field : type.getFields()) {
             if (field.getInverseFieldId() != null) {
                 boolean isNew = false;
-                removeInverseFieldValue(isNew, topic, field, topic.getValues(field));
+                removeInverseFieldValues(isNew, topic, field, topic.getValues(field));
             }
         }
     }
@@ -267,7 +267,7 @@ public abstract class PrestoDefaultChangeSet implements PrestoChangeSet {
         }
     }
 
-    void removeInverseFieldValue(boolean isNew, PrestoTopic topic, PrestoField field, Collection<?> values) {
+    void removeInverseFieldValues(boolean isNew, PrestoTopic topic, PrestoField field, Collection<?> values) {
         if (!isNew) {
             String inverseFieldId = field.getInverseFieldId();
             if (inverseFieldId != null) {
