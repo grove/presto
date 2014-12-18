@@ -29,6 +29,9 @@ public class PojoSchemaModel {
     private static Logger log = LoggerFactory.getLogger(PojoSchemaModel.class);
 
     static PojoSchemaProvider parse(String databaseId, String schemaFilename) {
+        if (log.isDebugEnabled()) {
+            log.debug("Loading presto schema: " + schemaFilename);
+        }
         ObjectNode objectNode = loadExternalJsonObject(schemaFilename);
         return createSchemaProvider(databaseId, objectNode);
     }
@@ -53,9 +56,11 @@ public class PojoSchemaModel {
             throws FileNotFoundException {
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         InputStream istream;
-        File schemaFile = new File(System.getProperty("user.home") + File.separator + schemaFilename);
+        
+        File schemaDir = new File(System.getProperty("user.home"), "presto-schemas");
+        File schemaFile = new File(schemaDir, schemaFilename);
+        
         if (schemaFile.exists()) {
-            log.warn("Loading presto schema model from file in user's home directory: " + schemaFile.getAbsolutePath());
             istream = new FileInputStream(schemaFile);
         } else {
             istream = cl.getResourceAsStream(schemaFilename);
