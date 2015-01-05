@@ -72,7 +72,7 @@ public abstract class EditorResource implements PrestoAttributes {
 
         List<Link> links = new ArrayList<Link>();
         links.add(new Link(REL_AVAILABLE_DATABASES, uriInfo.getBaseUri() + "editor/available-databases"));
-        result.setLinks(links);      
+        result.setLinks(links);
 
         return Response.ok(result).build();
     }
@@ -99,11 +99,11 @@ public abstract class EditorResource implements PrestoAttributes {
 
             List<Link> links = new ArrayList<Link>();
             links.add(new Link(REL_DATABASE_EDIT, uriInfo.getBaseUri() + "editor/database-info/" + database.getId()));
-            database.setLinks(links);    
+            database.setLinks(links);
 
             databases.add(database);
         }
-        result.setDatabases(databases);      
+        result.setDatabases(databases);
         return result;
     }
 
@@ -124,7 +124,7 @@ public abstract class EditorResource implements PrestoAttributes {
             session.abort();
             throw e;
         } finally {
-            session.close();      
+            session.close();
         }
     }
 
@@ -132,7 +132,7 @@ public abstract class EditorResource implements PrestoAttributes {
     @Produces(APPLICATION_JSON_UTF8)
     @Path("topic-template/{databaseId}/{typeId}")
     public Response getTopicTemplate(
-            @PathParam("databaseId") final String databaseId, 
+            @PathParam("databaseId") final String databaseId,
             @PathParam("typeId") final String typeId) throws Exception {
 
         boolean readOnly = false;
@@ -155,7 +155,7 @@ public abstract class EditorResource implements PrestoAttributes {
             session.abort();
             throw e;
         } finally {
-            session.close();      
+            session.close();
         }
     }
 
@@ -190,10 +190,10 @@ public abstract class EditorResource implements PrestoAttributes {
             session.abort();
             throw e;
         } finally {
-            session.close();      
+            session.close();
         }
     }
-    
+
     @GET
     @Produces(APPLICATION_JSON_UTF8)
     @Path("topic-template-field/{databaseId}/{path}/{typeId}/{viewId}")
@@ -225,7 +225,7 @@ public abstract class EditorResource implements PrestoAttributes {
             session.abort();
             throw e;
         } finally {
-            session.close();      
+            session.close();
         }
     }
 
@@ -233,11 +233,11 @@ public abstract class EditorResource implements PrestoAttributes {
     @Produces(APPLICATION_JSON_UTF8)
     @Path("paging-field/{databaseId}/{topicId}/{viewId}/{fieldId}/{start}/{limit}")
     public Response getFieldPaging(
-            @PathParam("databaseId") final String databaseId, 
-            @PathParam("topicId") final String topicId, 
+            @PathParam("databaseId") final String databaseId,
+            @PathParam("topicId") final String topicId,
             @PathParam("viewId") final String viewId,
-            @PathParam("fieldId") final String fieldId, 
-            @PathParam("start") final int start, 
+            @PathParam("fieldId") final String fieldId,
+            @PathParam("start") final int start,
             @PathParam("limit") final int limit,
             @QueryParam("orderBy") final String orderBy) throws Exception {
         String path = null;
@@ -248,12 +248,12 @@ public abstract class EditorResource implements PrestoAttributes {
     @Produces(APPLICATION_JSON_UTF8)
     @Path("paging-field/{databaseId}/{path}/{topicId}/{viewId}/{fieldId}/{start}/{limit}")
     public Response getFieldPagingPath(
-            @PathParam("databaseId") final String databaseId, 
-            @PathParam("path") final String path, 
-            @PathParam("topicId") final String topicId, 
+            @PathParam("databaseId") final String databaseId,
+            @PathParam("path") final String path,
+            @PathParam("topicId") final String topicId,
             @PathParam("viewId") final String viewId,
-            @PathParam("fieldId") final String fieldId, 
-            @PathParam("start") final int start, 
+            @PathParam("fieldId") final String fieldId,
+            @PathParam("start") final int start,
             @PathParam("limit") final int limit,
             @QueryParam("orderBy") final String orderBy) throws Exception {
 
@@ -281,15 +281,15 @@ public abstract class EditorResource implements PrestoAttributes {
             session.abort();
             throw e;
         } finally {
-            session.close();      
-        } 
+            session.close();
+        }
     }
 
     @DELETE
     @Produces(APPLICATION_JSON_UTF8)
     @Path("topic-view/{databaseId}/{topicId}/{viewId}")
     public Response deleteTopicView(
-            @PathParam("databaseId") final String databaseId, 
+            @PathParam("databaseId") final String databaseId,
             @PathParam("topicId") final String topicId,
             @PathParam("viewId") final String viewId) throws Exception {
         String path = null;
@@ -300,7 +300,7 @@ public abstract class EditorResource implements PrestoAttributes {
     @Produces(APPLICATION_JSON_UTF8)
     @Path("topic-view/{databaseId}/{path}/{topicId}/{viewId}")
     public Response deleteTopicViewPath(
-            @PathParam("databaseId") final String databaseId, 
+            @PathParam("databaseId") final String databaseId,
             @PathParam("path") final String path,
             @PathParam("topicId") final String topicId,
             @PathParam("viewId") final String viewId) throws Exception {
@@ -312,7 +312,7 @@ public abstract class EditorResource implements PrestoAttributes {
             PrestoContext context = PathParser.getTopicByPath(session, path, topicId, viewId);
 
             if (context == null || context.isMissingTopic()) {
-                return Response.status(Status.NOT_FOUND).build();        
+                return Response.status(Status.NOT_FOUND).build();
             } else {
                 PrestoType type = context.getType();
                 if (type.isRemovable()) {
@@ -322,7 +322,7 @@ public abstract class EditorResource implements PrestoAttributes {
                             PrestoContext parentContext = context.getParentContext();
                             PrestoField parentField = context.getParentField();
                             PrestoContextRules parentRules = session.getPrestoContextRules(parentContext);
-                            
+
                             PrestoContext updatedParentContext = session.removeFieldValues(parentRules, parentField, Collections.singletonList(topic));
 
                             // return field data of parent field
@@ -346,7 +346,7 @@ public abstract class EditorResource implements PrestoAttributes {
             session.abort();
             throw e;
         } finally {
-            session.close();      
+            session.close();
         }
     }
 
@@ -354,7 +354,7 @@ public abstract class EditorResource implements PrestoAttributes {
     @Produces(APPLICATION_JSON_UTF8)
     @Path("topic/{databaseId}/{topicId}")
     public Response getTopicInDefaultView(
-            @PathParam("databaseId") final String databaseId, 
+            @PathParam("databaseId") final String databaseId,
             @PathParam("topicId") final String topicId,
             @QueryParam("readOnly") final boolean readOnly) throws Exception {
         String path = null;
@@ -366,7 +366,7 @@ public abstract class EditorResource implements PrestoAttributes {
     @Produces(APPLICATION_JSON_UTF8)
     @Path("topic/{databaseId}/{topicId}/{view}")
     public Response getTopicInView(
-            @PathParam("databaseId") final String databaseId, 
+            @PathParam("databaseId") final String databaseId,
             @PathParam("topicId") final String topicId,
             @PathParam("viewId") final String viewId,
             @QueryParam("readOnly") final boolean readOnly) throws Exception {
@@ -378,7 +378,7 @@ public abstract class EditorResource implements PrestoAttributes {
     @Produces(APPLICATION_JSON_UTF8)
     @Path("topic/{databaseId}/{path}/{topicId}/{viewId}")
     public Response getTopicInViewPath(
-            @PathParam("databaseId") final String databaseId, 
+            @PathParam("databaseId") final String databaseId,
             @PathParam("path") final String path,
             @PathParam("topicId") final String topicId,
             @PathParam("viewId") final String viewId,
@@ -401,7 +401,7 @@ public abstract class EditorResource implements PrestoAttributes {
             session.abort();
             throw e;
         } finally {
-            session.close();      
+            session.close();
         }
     }
 
@@ -409,7 +409,7 @@ public abstract class EditorResource implements PrestoAttributes {
     @Produces(APPLICATION_JSON_UTF8)
     @Path("topic-view/{databaseId}/{topicId}")
     public Response getTopicViewInDefaultView(
-            @PathParam("databaseId") final String databaseId, 
+            @PathParam("databaseId") final String databaseId,
             @PathParam("topicId") final String topicId,
             @QueryParam("readOnly") final boolean readOnly) throws Exception {
         String path = null;
@@ -421,7 +421,7 @@ public abstract class EditorResource implements PrestoAttributes {
     @Produces(APPLICATION_JSON_UTF8)
     @Path("topic-view/{databaseId}/{topicId}/{viewId}")
     public Response getTopicViewInView(
-            @PathParam("databaseId") final String databaseId, 
+            @PathParam("databaseId") final String databaseId,
             @PathParam("topicId") final String topicId,
             @PathParam("viewId") final String viewId,
             @QueryParam("readOnly") final boolean readOnly) throws Exception {
@@ -433,7 +433,7 @@ public abstract class EditorResource implements PrestoAttributes {
     @Produces(APPLICATION_JSON_UTF8)
     @Path("topic-view/{databaseId}/{path}/{topicId}/{viewId}")
     public Response getTopicViewInViewPath(
-            @PathParam("databaseId") final String databaseId, 
+            @PathParam("databaseId") final String databaseId,
             @PathParam("path") final String path,
             @PathParam("topicId") final String topicId,
             @PathParam("viewId") final String viewId,
@@ -456,7 +456,7 @@ public abstract class EditorResource implements PrestoAttributes {
             session.abort();
             throw e;
         } finally {
-            session.close();      
+            session.close();
         }
     }
 
@@ -465,8 +465,8 @@ public abstract class EditorResource implements PrestoAttributes {
     @Consumes(APPLICATION_JSON_UTF8)
     @Path("validate-topic/{databaseId}/{topicId}/{viewId}")
     public Response validateTopic(
-            @PathParam("databaseId") final String databaseId, 
-            @PathParam("topicId") final String topicId, 
+            @PathParam("databaseId") final String databaseId,
+            @PathParam("topicId") final String topicId,
             @PathParam("viewId") final String viewId, TopicView topicView) throws Exception {
         String path = null;
         return validateTopic(databaseId, path, topicId, viewId, topicView);
@@ -477,32 +477,39 @@ public abstract class EditorResource implements PrestoAttributes {
     @Consumes(APPLICATION_JSON_UTF8)
     @Path("validate-topic/{databaseId}/{path}/{topicId}/{viewId}")
     public Response validateTopic(
-            @PathParam("databaseId") final String databaseId, 
-            @PathParam("path") final String path, 
-            @PathParam("topicId") final String topicId, 
+            @PathParam("databaseId") final String databaseId,
+            @PathParam("path") final String path,
+            @PathParam("topicId") final String topicId,
             @PathParam("viewId") final String viewId, TopicView topicView) throws Exception {
 
         boolean readOnly = false;
         Presto session = createPresto(databaseId, readOnly);
 
         try {
-            // NOTE: the topicId is the topic that requested the validation, but the 
-            // validation needs to start with the topicId of the received topicView. The 
+            // NOTE: the topicId is the topic that requested the validation, but the
+            // validation needs to start with the topicId of the received topicView. The
             // former is a descendant of the latter.
             String topicViewTopicId = topicView.getTopicId();
 
-            PrestoContext context = PathParser.getTopicByPath(session, path, topicViewTopicId, viewId);
+            PrestoContext context = PathParser.getTopicByPath(session, path, topicId, viewId);
+
+            while (context != null) {
+                if (context.getTopicId().equals(topicViewTopicId)) {
+            		break;
+            	}
+            	context = context.getParentContext();
+            }
 
             if (context == null || context.isMissingTopic()) {
-                return Response.status(Status.NOT_FOUND).build();
+            	return Response.status(Status.NOT_FOUND).build();
             }
 
             try {
                 TopicView result = session.validateTopic(context, topicView);
                 session.commit();
-    
+
                 return Response.ok(result).build();
-                
+
             } catch (ConstraintException ce) {
                 return getConstraintMessageResponse(ce);
             }
@@ -520,8 +527,8 @@ public abstract class EditorResource implements PrestoAttributes {
     @Consumes(APPLICATION_JSON_UTF8)
     @Path("topic-view/{databaseId}/{topicId}/{viewId}")
     public Response updateTopicView(
-            @PathParam("databaseId") final String databaseId, 
-            @PathParam("topicId") final String topicId, 
+            @PathParam("databaseId") final String databaseId,
+            @PathParam("topicId") final String topicId,
             @PathParam("viewId") final String viewId, TopicView topicView) throws Exception {
         String path = null;
         return updateTopicView(databaseId, path, topicId, viewId, topicView);
@@ -532,9 +539,9 @@ public abstract class EditorResource implements PrestoAttributes {
     @Consumes(APPLICATION_JSON_UTF8)
     @Path("topic-view/{databaseId}/{path}/{topicId}/{viewId}")
     public Response updateTopicView(
-            @PathParam("databaseId") final String databaseId, 
-            @PathParam("path") final String path, 
-            @PathParam("topicId") final String topicId, 
+            @PathParam("databaseId") final String databaseId,
+            @PathParam("path") final String path,
+            @PathParam("topicId") final String topicId,
             @PathParam("viewId") final String viewId, TopicView topicView) throws Exception {
 
         boolean readOnly = false;
@@ -568,11 +575,11 @@ public abstract class EditorResource implements PrestoAttributes {
     @Produces(APPLICATION_JSON_UTF8)
     @Consumes(APPLICATION_JSON_UTF8)
     @Path("add-field-values/{databaseId}/{topicId}/{viewId}/{fieldId}")
-    public Response addFieldValues( 
-            @PathParam("databaseId") final String databaseId, 
-            @PathParam("topicId") final String topicId, 
+    public Response addFieldValues(
+            @PathParam("databaseId") final String databaseId,
+            @PathParam("topicId") final String topicId,
             @PathParam("viewId") final String viewId,
-            @PathParam("fieldId") final String fieldId, 
+            @PathParam("fieldId") final String fieldId,
             @QueryParam("index") final Integer index, FieldData fieldData) throws Exception {
         String path = null;
         return addFieldValuesPath(databaseId, path, topicId, viewId, fieldId, index, fieldData);
@@ -582,18 +589,18 @@ public abstract class EditorResource implements PrestoAttributes {
     @Produces(APPLICATION_JSON_UTF8)
     @Consumes(APPLICATION_JSON_UTF8)
     @Path("add-field-values/{databaseId}/{path}/{topicId}/{viewId}/{fieldId}")
-    public Response addFieldValuesPath( 
-            @PathParam("databaseId") final String databaseId, 
-            @PathParam("path") final String path, 
-            @PathParam("topicId") final String topicId, 
+    public Response addFieldValuesPath(
+            @PathParam("databaseId") final String databaseId,
+            @PathParam("path") final String path,
+            @PathParam("topicId") final String topicId,
             @PathParam("viewId") final String viewId,
-            @PathParam("fieldId") final String fieldId, 
+            @PathParam("fieldId") final String fieldId,
             @QueryParam("index") final Integer index, FieldData fieldData) throws Exception {
         boolean isMove = false;
         return performAddFieldValuesPath(databaseId, path, topicId, viewId, fieldId, index, fieldData, isMove);
     }
 
-    private Response performAddFieldValuesPath(String databaseId, String path, String topicId, 
+    private Response performAddFieldValuesPath(String databaseId, String path, String topicId,
            String viewId, String fieldId, Integer index, FieldData fieldData, boolean isMove) throws Exception {
         boolean readOnly = false;
         Presto session = createPresto(databaseId, readOnly);
@@ -628,17 +635,17 @@ public abstract class EditorResource implements PrestoAttributes {
             session.abort();
             throw e;
         } finally {
-            session.close();      
-        } 
+            session.close();
+        }
     }
 
     @POST
     @Produces(APPLICATION_JSON_UTF8)
     @Consumes(APPLICATION_JSON_UTF8)
     @Path("update-field-values/{databaseId}/{topicId}/{viewId}/{fieldId}")
-    public Response updateFieldValuesPath( 
-            @PathParam("databaseId") final String databaseId, 
-            @PathParam("topicId") final String topicId, 
+    public Response updateFieldValuesPath(
+            @PathParam("databaseId") final String databaseId,
+            @PathParam("topicId") final String topicId,
             @PathParam("viewId") final String viewId,
             @PathParam("fieldId") final String fieldId, FieldData fieldData) throws Exception {
 
@@ -650,10 +657,10 @@ public abstract class EditorResource implements PrestoAttributes {
     @Produces(APPLICATION_JSON_UTF8)
     @Consumes(APPLICATION_JSON_UTF8)
     @Path("update-field-values/{databaseId}/{path}/{topicId}/{viewId}/{fieldId}")
-    public Response updateFieldValuesPath( 
-            @PathParam("databaseId") final String databaseId, 
-            @PathParam("path") final String path, 
-            @PathParam("topicId") final String topicId, 
+    public Response updateFieldValuesPath(
+            @PathParam("databaseId") final String databaseId,
+            @PathParam("path") final String path,
+            @PathParam("topicId") final String topicId,
             @PathParam("viewId") final String viewId,
             @PathParam("fieldId") final String fieldId, FieldData fieldData) throws Exception {
 
@@ -670,7 +677,7 @@ public abstract class EditorResource implements PrestoAttributes {
             PrestoField field = context.getFieldById(fieldId);
             PrestoContextRules rules = session.getPrestoContextRules(context);
 
-            if (!rules.isReadOnlyField(field) && 
+            if (!rules.isReadOnlyField(field) &&
                     (rules.isAddableField(field) || rules.isRemovableField(field) || rules.isCreatableField(field))) { // TODO: what are the rules?
                 try {
                     FieldData result = session.updateFieldValues(rules, field, fieldData);
@@ -690,8 +697,8 @@ public abstract class EditorResource implements PrestoAttributes {
             session.abort();
             throw e;
         } finally {
-            session.close();      
-        } 
+            session.close();
+        }
     }
 
     @POST
@@ -699,8 +706,8 @@ public abstract class EditorResource implements PrestoAttributes {
     @Consumes(APPLICATION_JSON_UTF8)
     @Path("remove-field-values/{databaseId}/{topicId}/{viewId}/{fieldId}")
     public Response removeFieldValues(
-            @PathParam("databaseId") final String databaseId, 
-            @PathParam("topicId") final String topicId, 
+            @PathParam("databaseId") final String databaseId,
+            @PathParam("topicId") final String topicId,
             @PathParam("viewId") final String viewId,
             @PathParam("fieldId") final String fieldId, FieldData fieldData) throws Exception {
         String path = null;
@@ -712,9 +719,9 @@ public abstract class EditorResource implements PrestoAttributes {
     @Consumes(APPLICATION_JSON_UTF8)
     @Path("remove-field-values/{databaseId}/{path}/{topicId}/{viewId}/{fieldId}")
     public Response removeFieldValuesPath(
-            @PathParam("databaseId") final String databaseId, 
+            @PathParam("databaseId") final String databaseId,
             @PathParam("path") final String path,
-            @PathParam("topicId") final String topicId, 
+            @PathParam("topicId") final String topicId,
             @PathParam("viewId") final String viewId,
             @PathParam("fieldId") final String fieldId, FieldData fieldData) throws Exception {
 
@@ -749,19 +756,19 @@ public abstract class EditorResource implements PrestoAttributes {
             session.abort();
             throw e;
         } finally {
-            session.close();      
-        } 
+            session.close();
+        }
     }
 
     @POST
     @Produces(APPLICATION_JSON_UTF8)
     @Consumes(APPLICATION_JSON_UTF8)
     @Path("move-field-values-to-index/{databaseId}/{topicId}/{viewId}/{fieldId}")
-    public Response moveFieldValuesToIndex( 
-            @PathParam("databaseId") final String databaseId, 
-            @PathParam("topicId") final String topicId, 
+    public Response moveFieldValuesToIndex(
+            @PathParam("databaseId") final String databaseId,
+            @PathParam("topicId") final String topicId,
             @PathParam("viewId") final String viewId,
-            @PathParam("fieldId") final String fieldId, 
+            @PathParam("fieldId") final String fieldId,
             @QueryParam("index") final Integer index, FieldData fieldData) throws Exception {
         String path = null;
         return moveFieldValuesToIndexPath(databaseId, path, topicId, viewId, fieldId, index, fieldData);
@@ -771,12 +778,12 @@ public abstract class EditorResource implements PrestoAttributes {
     @Produces(APPLICATION_JSON_UTF8)
     @Consumes(APPLICATION_JSON_UTF8)
     @Path("move-field-values-to-index/{databaseId}/{path}/{topicId}/{viewId}/{fieldId}")
-    public Response moveFieldValuesToIndexPath( 
-            @PathParam("databaseId") final String databaseId, 
-            @PathParam("path") final String path, 
-            @PathParam("topicId") final String topicId, 
+    public Response moveFieldValuesToIndexPath(
+            @PathParam("databaseId") final String databaseId,
+            @PathParam("path") final String path,
+            @PathParam("topicId") final String topicId,
             @PathParam("viewId") final String viewId,
-            @PathParam("fieldId") final String fieldId, 
+            @PathParam("fieldId") final String fieldId,
             @QueryParam("index") final Integer index, FieldData fieldData) throws Exception {
         boolean isMove = true;
         return performAddFieldValuesPath(databaseId, path, topicId, viewId, fieldId, index, fieldData, isMove);
@@ -785,9 +792,9 @@ public abstract class EditorResource implements PrestoAttributes {
     @GET
     @Produces(APPLICATION_JSON_UTF8)
     @Path("available-field-values/{databaseId}/{topicId}/{viewId}/{fieldId}")
-    public Response getAvailableFieldValues( 
-            @PathParam("databaseId") final String databaseId, 
-            @PathParam("topicId") final String topicId, 
+    public Response getAvailableFieldValues(
+            @PathParam("databaseId") final String databaseId,
+            @PathParam("topicId") final String topicId,
             @PathParam("viewId") final String viewId,
             @PathParam("fieldId") final String fieldId,
             @QueryParam("query") final String query) throws Exception {
@@ -798,10 +805,10 @@ public abstract class EditorResource implements PrestoAttributes {
     @GET
     @Produces(APPLICATION_JSON_UTF8)
     @Path("available-field-values/{databaseId}/{path}/{topicId}/{viewId}/{fieldId}")
-    public Response getAvailableFieldValuesPath( 
-            @PathParam("databaseId") final String databaseId, 
-            @PathParam("path") final String path, 
-            @PathParam("topicId") final String topicId, 
+    public Response getAvailableFieldValuesPath(
+            @PathParam("databaseId") final String databaseId,
+            @PathParam("path") final String path,
+            @PathParam("topicId") final String topicId,
             @PathParam("viewId") final String viewId,
             @PathParam("fieldId") final String fieldId,
             @QueryParam("query") final String query) throws Exception {
@@ -826,7 +833,7 @@ public abstract class EditorResource implements PrestoAttributes {
             session.abort();
             throw e;
         } finally {
-            session.close();      
+            session.close();
         }
     }
 
@@ -835,11 +842,11 @@ public abstract class EditorResource implements PrestoAttributes {
     @Consumes(APPLICATION_JSON_UTF8)
     @Path("execute-field-action/{databaseId}/{topicId}/{viewId}/{fieldId}/{actionId}")
     public Response executeFieldAction(
-            @PathParam("databaseId") final String databaseId, 
-            @PathParam("topicId") final String topicId, 
-            @PathParam("viewId") final String viewId, 
-            @PathParam("fieldId") final String fieldId, 
-            @PathParam("actionId") final String actionId, 
+            @PathParam("databaseId") final String databaseId,
+            @PathParam("topicId") final String topicId,
+            @PathParam("viewId") final String viewId,
+            @PathParam("fieldId") final String fieldId,
+            @PathParam("actionId") final String actionId,
             TopicView topicView) throws Exception {
         String path = null;
         return executeFieldActionPath(databaseId, path, topicId, viewId, fieldId, actionId, topicView);
@@ -850,12 +857,12 @@ public abstract class EditorResource implements PrestoAttributes {
     @Consumes(APPLICATION_JSON_UTF8)
     @Path("execute-field-action/{databaseId}/{path}/{topicId}/{viewId}/{fieldId}/{actionId}")
     public Response executeFieldActionPath(
-            @PathParam("databaseId") final String databaseId, 
-            @PathParam("path") final String path, 
-            @PathParam("topicId") final String topicId, 
-            @PathParam("viewId") final String viewId, 
-            @PathParam("fieldId") final String fieldId, 
-            @PathParam("actionId") final String actionId, 
+            @PathParam("databaseId") final String databaseId,
+            @PathParam("path") final String path,
+            @PathParam("topicId") final String topicId,
+            @PathParam("viewId") final String viewId,
+            @PathParam("fieldId") final String fieldId,
+            @PathParam("actionId") final String actionId,
             TopicView topicView) throws Exception {
 
         boolean readOnly = false;
@@ -873,9 +880,9 @@ public abstract class EditorResource implements PrestoAttributes {
 
                 TopicView result = session.executeFieldAction(context, topicView, field, actionId);
                 session.commit();
-    
+
                 return Response.ok(result).build();
-                
+
             } catch (ConstraintException ce) {
                 return getConstraintMessageResponse(ce);
             }
@@ -923,7 +930,7 @@ public abstract class EditorResource implements PrestoAttributes {
                         }
                     }
                     for (PrestoTopic delete : changes.getDeleted()) {
-                        EditorResource.this.onTopicDeleted(delete);                        
+                        EditorResource.this.onTopicDeleted(delete);
                     }
                 }
 
@@ -971,18 +978,18 @@ public abstract class EditorResource implements PrestoAttributes {
     }
 
     protected abstract Presto createPresto(String databaseId, boolean readOnlyMode);
-    
+
     protected abstract Collection<String> getDatabaseIds();
 
     protected abstract String getDatabaseName(String databaseId);
 
-    protected void onTopicCreated(PrestoTopic topic) {      
+    protected void onTopicCreated(PrestoTopic topic) {
     }
 
-    protected void onTopicUpdated(PrestoTopic topic) {      
+    protected void onTopicUpdated(PrestoTopic topic) {
     }
 
-    protected void onTopicDeleted(PrestoTopic topic) {      
+    protected void onTopicDeleted(PrestoTopic topic) {
     }
 
 }

@@ -86,7 +86,7 @@ public class AddOnChangeLinkPostProcessor extends FieldDataProcessor {
             Links lx = presto.getLinks();
             link = lx.fieldOnChangeLink(parentContext, parentField, topicId, type, view, field);
         }
-        return null;
+        return link;
     }
 
 }

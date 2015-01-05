@@ -21,7 +21,12 @@ public class FieldParamsPostProcessor extends FieldDataProcessor {
             // field params
             Map<String, Object> params = ExtraUtils.getExtraParamsMap(extraNode);
             if (params != null) {
-                fieldData.setParams(params);
+            	Map<String, Object> p = fieldData.getParams();
+            	if (p != null) {
+            		p.putAll(params);
+            	} else {
+            		fieldData.setParams(params);            		
+            	}
             }
             // value params
             Map<String, Object> valueParams = ExtraUtils.getParamsMap(extraNode.path("value-params"));
