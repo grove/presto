@@ -489,12 +489,12 @@ public abstract class EditorResource implements PrestoAttributes {
             // NOTE: the topicId is the topic that requested the validation, but the
             // validation needs to start with the topicId of the received topicView. The
             // former is a descendant of the latter.
-            String topicViewTopicId = topicView.getTopicId();
+            String topicTypeId = topicView.getTopicTypeId();
 
             PrestoContext context = PathParser.getTopicByPath(session, path, topicId, viewId);
 
             while (context != null) {
-                if (context.getTopicId().equals(topicViewTopicId)) {
+                if (context.getType().getId().equals(topicTypeId)) {
             		break;
             	}
             	context = context.getParentContext();
