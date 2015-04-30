@@ -1,5 +1,7 @@
 package net.ontopia.presto.jaxb;
 
+import java.util.Map;
+
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -13,6 +15,7 @@ public class TopicMessage {
     private String type;
     private String title;
     private String message;
+    private Map<String, Object> params;
 
     public TopicMessage() {
     }
@@ -49,6 +52,14 @@ public class TopicMessage {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public Map<String, Object> getParams() {
+        return params;
+    }
+
+    public void setParams(Map<String, Object> params) {
+        this.params = params;
     }
 
 }
