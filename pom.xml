@@ -5,7 +5,7 @@
   <groupId>net.ontopia.presto</groupId>
   <artifactId>presto</artifactId>
   <packaging>pom</packaging>
-  <version>0.7.26-SNAPSHOT</version>
+  <version>0.7.27-SNAPSHOT</version>
 
   <developers>
     <developer>
@@ -50,8 +50,8 @@
   </licenses>
       
   <properties>
-    <jackson.version>2.4.2</jackson.version>
-    <jersey.version>2.12</jersey.version>
+    <jackson.version>2.6.1</jackson.version>
+    <jersey.version>2.21</jersey.version>
   </properties>
 
   <dependencyManagement>
@@ -94,7 +94,7 @@
       <dependency>
         <groupId>org.apache.solr</groupId>
         <artifactId>solr-solrj</artifactId>
-        <version>4.8.1</version>
+        <version>5.2.1</version>
       </dependency>
       <dependency>
         <groupId>javax.ws.rs</groupId>
@@ -134,7 +134,7 @@
       <dependency>
         <groupId>org.mongodb</groupId>
         <artifactId>mongo-java-driver</artifactId>
-        <version>3.0.0</version>
+        <version>3.0.3</version>
       </dependency>
       <dependency>
         <groupId>org.mongojack</groupId>

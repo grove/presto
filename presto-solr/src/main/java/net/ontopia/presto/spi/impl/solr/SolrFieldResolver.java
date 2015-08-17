@@ -7,20 +7,11 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import net.ontopia.presto.spi.PrestoField;
-import net.ontopia.presto.spi.PrestoTopic.PagedValues;
-import net.ontopia.presto.spi.PrestoTopic.Projection;
-import net.ontopia.presto.spi.resolve.PrestoFieldResolver;
-import net.ontopia.presto.spi.resolve.PrestoResolver;
-import net.ontopia.presto.spi.utils.PrestoPagedValues;
-import net.ontopia.presto.spi.utils.PrestoVariableContext;
-import net.ontopia.presto.spi.utils.PrestoVariableResolver;
-
+import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrQuery.SortClause;
 import org.apache.solr.client.solrj.SolrRequest.METHOD;
 import org.apache.solr.client.solrj.SolrServer;
-import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrDocument;
@@ -32,13 +23,22 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import net.ontopia.presto.spi.PrestoField;
+import net.ontopia.presto.spi.PrestoTopic.PagedValues;
+import net.ontopia.presto.spi.PrestoTopic.Projection;
+import net.ontopia.presto.spi.resolve.PrestoFieldResolver;
+import net.ontopia.presto.spi.resolve.PrestoResolver;
+import net.ontopia.presto.spi.utils.PrestoPagedValues;
+import net.ontopia.presto.spi.utils.PrestoVariableContext;
+import net.ontopia.presto.spi.utils.PrestoVariableResolver;
+
 public abstract class SolrFieldResolver extends PrestoFieldResolver {
 
     private static Logger log = LoggerFactory.getLogger(SolrFieldResolver.class);
 
     public abstract URL getSolrServerUrl();
 
-    public abstract SolrServer getSolrServer();
+    public abstract SolrClient getSolrServer();
 
     @Override
     public PagedValues resolve(Collection<? extends Object> objects,
@@ -87,7 +87,7 @@ public abstract class SolrFieldResolver extends PrestoFieldResolver {
 
         PrestoVariableContext context = getVariableContext();
         
-        SolrServer solrServer = getSolrServer();
+        SolrClient solrServer = getSolrServer();
         URL solrServerUrl = getSolrServerUrl();
 
         try {
@@ -120,7 +120,7 @@ public abstract class SolrFieldResolver extends PrestoFieldResolver {
             int total = (int)results.getNumFound();
             return new PrestoPagedValues(result, projection, total);
 
-        } catch (SolrServerException e) {
+        } catch (Exception e) {
             log.error("QE: " + solrServerUrl + "/select?" + solrQuery + "&echoParams=explicit", e);
             return new PrestoPagedValues(Collections.emptyList(), projection, 0);
         }
