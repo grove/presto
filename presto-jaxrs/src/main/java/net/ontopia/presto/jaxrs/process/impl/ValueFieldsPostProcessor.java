@@ -128,6 +128,9 @@ public class ValueFieldsPostProcessor extends FieldDataProcessor {
             Presto presto = getPresto();
             
             for (PrestoField valueField : fields) {
+                if (rules.isHiddenField(valueField)) {
+                    continue;
+                }
                 Projection projection = null;
                 FieldDataValues fieldDataValues = presto.setFieldDataValues(subrules, valueField, projection, null);
                 if  (fieldDataValues.size() > 0) {
