@@ -1,6 +1,7 @@
 package net.ontopia.presto.jaxb;
 
 import java.util.Collection;
+import java.util.Map;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -12,6 +13,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TopicPartial {
     private String format = "topic-partial";
+    private Map<String, Object> params;
     private Collection<TopicView> views;
 
     public Collection<TopicView> getViews() {
@@ -28,6 +30,14 @@ public class TopicPartial {
     
     public void setFormat(String format) {
         this.format = format;
+    }
+
+    public Map<String, Object> getParams() {
+        return params;
+    }
+
+    public void setParams(Map<String, Object> params) {
+        this.params = params;
     }
 
 }
